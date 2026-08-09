@@ -1,0 +1,76 @@
+/* GENERATED from src/Theme/Palette.ts by `npm run build:tokens` - do not edit by hand.
+ *
+ * The raw values live in :root and .dark; the @theme inline block maps each one onto a Tailwind
+ * colour so utilities resolve through the variable rather than baking a hex in. Declaring the
+ * values inside @theme directly would freeze them at build time and the .dark overrides would
+ * never reach the utilities. */
+
+/* Dark mode is driven by a `.dark` class rather than prefers-color-scheme, so a story or a
+   screenshot can be taken under either theme on demand. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --color-surface: #ffffff;
+  --color-foreground: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-primary: #8b5cf6;
+  --color-primary-hover: #7c3aed;
+  --color-primary-foreground: #f8fafc;
+  --color-primary-ring: #a78bfa;
+  --color-secondary: #0ea5e9;
+  --color-secondary-hover: #0284c7;
+  --color-secondary-foreground: #f8fafc;
+  --color-secondary-ring: #38bdf8;
+  --color-disabled: #94a3b8;
+  --color-disabled-hover: #64748b;
+  --color-ring: #94a3b8;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #d63384;
+  --color-info: #06b6d4;
+}
+
+.dark {
+  --color-surface: #0f172a;
+  --color-foreground: #f8fafc;
+  --color-muted: #94a3b8;
+  --color-border: #334155;
+  --color-primary: #7c3aed;
+  --color-primary-hover: #8b5cf6;
+  --color-primary-foreground: #f8fafc;
+  --color-primary-ring: #a78bfa;
+  --color-secondary: #0284c7;
+  --color-secondary-hover: #0ea5e9;
+  --color-secondary-foreground: #f8fafc;
+  --color-secondary-ring: #38bdf8;
+  --color-disabled: #475569;
+  --color-disabled-hover: #334155;
+  --color-ring: #64748b;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f48fb1;
+  --color-info: #22d3ee;
+}
+
+@theme inline {
+  --color-surface: var(--color-surface);
+  --color-foreground: var(--color-foreground);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-primary-ring: var(--color-primary-ring);
+  --color-secondary: var(--color-secondary);
+  --color-secondary-hover: var(--color-secondary-hover);
+  --color-secondary-foreground: var(--color-secondary-foreground);
+  --color-secondary-ring: var(--color-secondary-ring);
+  --color-disabled: var(--color-disabled);
+  --color-disabled-hover: var(--color-disabled-hover);
+  --color-ring: var(--color-ring);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+  --color-info: var(--color-info);
+}
