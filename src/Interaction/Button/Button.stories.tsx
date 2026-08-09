@@ -27,6 +27,12 @@ const meta: Meta<typeof Button> = {
       control: { type: 'text' },
       description: 'Test ID for automated testing',
     },
+    type: {
+      control: { type: 'radio' },
+      options: ['button', 'submit', 'reset'],
+      description:
+        "Native button type; use submit for a form's submitting button",
+    },
   },
 };
 
@@ -87,6 +93,16 @@ export const CustomText: Story = {
   args: {
     children: '🚀 Launch',
     variant: 'primary',
+    onClick$: clickSubject,
+  },
+};
+
+// The button that submits a form
+export const Submit: Story = {
+  args: {
+    children: 'Absenden',
+    variant: 'primary',
+    type: 'submit',
     onClick$: clickSubject,
   },
 };

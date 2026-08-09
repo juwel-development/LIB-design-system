@@ -35,6 +35,10 @@ export interface IButtonProps
   testId?: string;
   /** Accessible label for icon-only buttons where there is no visible text */
   ariaLabel?: string;
+  /** Defaults to `button`. Set `submit` for the button that submits a surrounding form -
+   *  a bare <button> inside a form submits it implicitly, which is rarely what is wanted
+   *  for the secondary actions sitting next to it. */
+  type?: 'button' | 'submit' | 'reset';
 }
 
 /**
@@ -64,10 +68,11 @@ export const Button: FunctionComponent<PropsWithChildren<IButtonProps>> = ({
   shadow,
   onClick$,
   ariaLabel,
+  type = 'button',
 }) => {
   return (
     <button
-      type={'button'}
+      type={type}
       data-testid={testId}
       className={button({ variant, shadow })}
       onClick={() => onClick$?.next()}

@@ -21,6 +21,20 @@ describe('Button Component', () => {
     expect(button).toHaveAttribute('type', 'button');
   });
 
+  it('can submit a surrounding form when asked to', () => {
+    render(<Button type={'submit'}>Absenden</Button>);
+    expect(screen.getByRole('button')).toHaveAttribute('type', 'submit');
+  });
+
+  it('stays a plain button by default, so it cannot submit a form by accident', () => {
+    render(
+      <form>
+        <Button>Abbrechen</Button>
+      </form>,
+    );
+    expect(screen.getByRole('button')).toHaveAttribute('type', 'button');
+  });
+
   it('handles click events via Subjects', () => {
     const onClick$ = new Subject<void>();
 
