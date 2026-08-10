@@ -7,7 +7,11 @@
 			"!**/dist",
 			"!**/storybook-static",
 			"!**/coverage",
-			"!**/src/tokens.css"
+			"!**/src/tokens.css",
+			"!**/.sandcastle",
+			"!**/.claude",
+			"!**/*.grit",
+			"!**/.fallowrc.jsonc"
 		]
 	},
 	"assist": {
@@ -20,15 +24,44 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"a11y": {
 				"noSvgWithoutTitle": "off"
 			},
 			"suspicious": {
 				"noConsole": "error"
+			},
+			"style": {
+				"noRestrictedTypes": {
+					"level": "error",
+					"options": {
+						"types": {
+							"HTMLAttributes": "Design-system components declare an explicit props API; do not extend HTMLAttributes (no `...rest` passthrough).",
+							"AnchorHTMLAttributes": "Design-system components declare an explicit props API; do not extend AnchorHTMLAttributes.",
+							"ButtonHTMLAttributes": "Design-system components declare an explicit props API; do not extend ButtonHTMLAttributes.",
+							"InputHTMLAttributes": "Design-system components declare an explicit props API; do not extend InputHTMLAttributes.",
+							"LabelHTMLAttributes": "Design-system components declare an explicit props API; do not extend LabelHTMLAttributes.",
+							"LiHTMLAttributes": "Design-system components declare an explicit props API; do not extend LiHTMLAttributes.",
+							"OlHTMLAttributes": "Design-system components declare an explicit props API; do not extend OlHTMLAttributes.",
+							"SelectHTMLAttributes": "Design-system components declare an explicit props API; do not extend SelectHTMLAttributes.",
+							"TextareaHTMLAttributes": "Design-system components declare an explicit props API; do not extend TextareaHTMLAttributes.",
+							"DetailedHTMLProps": "Design-system components declare an explicit props API; do not extend DetailedHTMLProps."
+						}
+					}
+				}
 			}
 		}
 	},
+	"plugins": [
+		{
+			"path": "./no-jsx-spread.grit",
+			"includes": ["**/src/**/*.tsx", "!**/src/**/*.stories.tsx"]
+		},
+		{
+			"path": "./no-classname-style-prop.grit",
+			"includes": ["**/src/**/*.tsx", "!**/src/**/*.stories.tsx"]
+		}
+	],
 	"formatter": {
 		"enabled": true
 	},

@@ -1,0 +1,14 @@
+language js(typescript, jsx)
+
+// A closed-surface design-system component never spreads props onto its element — every
+// attribute it forwards is named. Flag `{...rest}` in both self-closing and open tags;
+// object-spread in plain expressions (immutability) is untouched because the match is
+// anchored to a JSX element.
+or {
+  `<$tag $props />`,
+  `<$tag $props>`
+} where {
+  $tag <: r"[a-z].*",
+  $props <: contains bubble `{...$rest}`,
+  register_diagnostic(span=$props, message="Design-system components must not spread props onto an element (`{...rest}`). Declare every forwarded attribute explicitly — map `testId` to `data-testid`.")
+}

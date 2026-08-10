@@ -1,0 +1,72 @@
+{
+  "$schema": "./node_modules/fallow/schema.json",
+
+  // Single package, no workspaces — the whole graph is `src` plus the two scripts that build
+  // around it. Nothing here needs a `workspaces` block.
+
+  // Roots that nothing imports, so a static graph cannot reach them on its own:
+  //
+  // - `src/index.ts` is the published entry point. Everything the package exports is reachable
+  //   only through it; without it listed, every component reads as dead code.
+  // - `scripts/build-tokens.ts` is run by `npm run build:tokens`, by path.
+  // - `.storybook/main.ts` is loaded by Storybook, by path.
+  // - `vitest.setup.ts` is named in vitest.config.ts as a string.
+  //
+  // The `*.stories.tsx` files need no entry of their own: Storybook's own `stories` glob claims
+  // them, and a story that imports a component is not what keeps that component alive anyway —
+  // `src/index.ts` is.
+  "entry": [
+    "src/index.ts",
+    "scripts/build-tokens.ts",
+    ".storybook/main.ts",
+    "vitest.setup.ts"
+  ],
+
+  // Declared, used only through a config file or a lifecycle hook, so no source file imports
+  // them and fallow would otherwise report each as an unused dependency. Everything else is left
+  // to be reported: this is a published package, and a genuinely unused dependency in it is a
+  // dependency someone installs for nothing.
+  "ignoreDependencies": [
+    "husky",
+    "semantic-release",
+    "@semantic-release/changelog",
+    "@semantic-release/git",
+    "@commitlint/cli",
+    "@commitlint/config-conventional"
+  ],
+
+  // `dev-dependencies-in-production` is left ON, unlike in the repository these settings came
+  // from: this package really is published, so a devDependency reached from shipped code is a
+  // dependency a consumer installs and does not get. It reports three inherited findings today,
+  // and a path override does NOT silence them — the finding belongs to the manifest rather than
+  // to the file that imports, so `overrides.files` never reaches it. Read them as:
+  //
+  // - `@ai-hero/sandcastle`, `zod` — reached only from `.sandcastle/main.ts`, the agent
+  //   orchestrator `npm run sandcastle` runs through tsx. `package.json#files` ships `dist` and
+  //   `src` only, so that tree never reaches a consumer. Expected; ignore.
+  // - `tailwindcss` — reached from `src/styles.css`, which IS shipped. A genuine open question
+  //   about how a consumer importing `@juwel-development/design-system/styles.css` gets Tailwind,
+  //   not noise. Resolve it rather than suppressing it.
+  //
+  // Turning the rule off would hide the third along with the first two.
+
+  // Resolve member references through the type checker rather than syntactically. Without it a
+  // call whose receiver fallow cannot type by inspection alone reads as a member nobody calls.
+  // The sidecar builds the tsconfig with its own TypeScript, which has removed `baseUrl` — this
+  // repo already maps source-rooted specifiers with `paths` instead, so it parses clean.
+  //
+  // Turn this off first if `npm run fallow` ever starts erroring on the tsconfig rather than
+  // reporting on the code; the syntactic mode still works.
+  "typeAware": { "enabled": true },
+
+  // `semantic` blinds identifiers and literals, so two components with the same structure and
+  // different vocabulary read as one clone — the only kind a component library tends to grow,
+  // as the roster fills up with primitives that differ by variant names rather than by shape.
+  // `threshold` is left at fallow's 0, so this describes rather than gates.
+  "duplicates": {
+    "mode": "semantic",
+    // Generated from Palette.ts: the light and dark blocks are the same custom properties by
+    // construction, and the file's own header forbids editing either by hand.
+    "ignore": ["src/tokens.css"]
+  }
+}

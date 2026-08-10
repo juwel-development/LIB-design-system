@@ -45,6 +45,12 @@
 		"lint:fix": "biome check --write .",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build",
+		"sandcastle": "tsx .sandcastle/main.ts",
+		"sandcastle:image": "sandcastle docker build-image",
+		"fallow": "fallow",
+		"fallow:human": "fallow dead-code && fallow dupes && fallow health",
+		"fallow:agent": "fallow review --brief",
+		"fallow:map": "fallow viz",
 		"prepare": "husky"
 	},
 	"dependencies": {
@@ -56,6 +62,7 @@
 		"rxjs": "^7.8.2"
 	},
 	"devDependencies": {
+		"@ai-hero/sandcastle": "^0.12.0",
 		"@biomejs/biome": "^2.5.7",
 		"@commitlint/cli": "^21.2.1",
 		"@commitlint/config-conventional": "^21.2.0",
@@ -73,6 +80,7 @@
 		"@types/react-dom": "^19.2.4",
 		"@vitejs/plugin-react": "^5.1.0",
 		"@vitest/coverage-v8": "^4.1.10",
+		"fallow": "^3.14.0",
 		"husky": "^9.1.7",
 		"jsdom": "^30.0.1",
 		"react": "^19.2.8",
@@ -85,6 +93,12 @@
 		"typescript": "^5.9.2",
 		"vite": "^8.2.1",
 		"vite-plugin-lib-inject-css": "^2.2.2",
-		"vitest": "^4.1.10"
+		"vitest": "^4.1.10",
+		"zod": "^4.4.3"
+	},
+	"overrides": {
+		"fallow-type-aware": {
+			"typescript": "7.0.2"
+		}
 	}
 }

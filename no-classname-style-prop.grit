@@ -1,0 +1,21 @@
+language js(typescript, jsx)
+
+// Ban `className`/`style` as *props* a component accepts from its consumer (the type member),
+// NOT the `className={recipe(...)}` a CVA component legitimately sets on its own element. The
+// separator-shape enumeration is required: grit matches a type member by its written form.
+or {
+  `className?: $t;` as $member,
+  `className?: $t,` as $member,
+  `className?: $t` as $member,
+  `className: $t;` as $member,
+  `className: $t,` as $member,
+  `className: $t` as $member,
+  `style?: $t;` as $member,
+  `style?: $t,` as $member,
+  `style?: $t` as $member,
+  `style: $t;` as $member,
+  `style: $t,` as $member,
+  `style: $t` as $member
+} where {
+  register_diagnostic(span=$member, message="Design-system components must not accept a `className` or `style` prop. Express styling through the component's CVA variants, not consumer-supplied classes.")
+}
