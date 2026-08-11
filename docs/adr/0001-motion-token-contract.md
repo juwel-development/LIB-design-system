@@ -52,3 +52,11 @@ dimensions — will extend.
 
 The library zeroes only the motion it performs. It deliberately ships no blanket
 `transition-duration` reset, so a consumer's own animations remain the consumer's business.
+
+`transition-colors` covers more than the four properties this contract had in mind: Tailwind's group
+also includes `outline-color`. A component that draws its focus ring with an outline therefore
+animates that ring at `--motion-duration-color` by default, and a focus ring that fades in is
+briefly invisible — an accessibility defect produced by following this ADR's rule, not by breaking
+it. The discharge is structural rather than an exception: set `outline-color` at rest and toggle
+only `outline-width` and `outline-style` on `focus-visible`, so the colour never changes and there
+is nothing to transition. See [ADR 0002](./0002-focus-ring-token-contract.md).

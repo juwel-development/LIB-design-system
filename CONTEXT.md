@@ -15,10 +15,18 @@ A named value the library declares and a consuming product may re-declare. Names
 _Avoid_: Variable, setting, theme value
 
 **Token contract**:
-The set of tokens the library promises to declare and to read. Its two halves are a promise to the
-consumer (these names exist and re-pointing them works) and a constraint on the library (a
-component styles itself from these names and nothing else).
+The set of tokens the library promises to declare and to read. Its parts are a promise to the
+consumer (these names exist and re-pointing them works), a constraint on the library (a component
+styles itself from these names and nothing else), and, where a value has to satisfy a rule to be
+correct, a constraint on the value.
 _Avoid_: Theme API, token schema
+
+**Token constraint**:
+A rule a token's value must satisfy for the component reading it to stay correct. Published as part
+of the contract, so a theme that breaks it is breaking a stated rule rather than making an unlucky
+choice. A constraint the library can only state, never enforce — a consumer's value is beyond its
+reach.
+_Avoid_: Guideline, recommendation, best practice
 
 **Role**:
 What a token is *for*, which is what a token name states. `primary` is a role; `violet-500` is a
@@ -54,6 +62,14 @@ raised-and-depressing material is one brand's opinion rather than a role any bra
 a *floating layer* it is a depth cue rather than decoration, and would be expressed as a token
 rather than hard-coded into a component.
 _Avoid_: Depth, shadow, lift
+
+### Focus
+
+**Focus ring**:
+The one mark the library draws to show which control holds keyboard focus. It states keyboard
+position and nothing else — never the importance of the control it surrounds — so it is one role
+across every focusable primitive rather than one per variant.
+_Avoid_: Focus state, focus highlight, per-variant ring
 
 ### Components
 
