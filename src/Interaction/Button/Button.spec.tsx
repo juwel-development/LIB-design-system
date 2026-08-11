@@ -87,6 +87,21 @@ describe('Button Component', () => {
     },
   );
 
+  it.each(['primary', 'secondary', 'ghost'] as const)(
+    'transitions colour through the motion token on the %s variant, never transition-all or a hard-coded duration',
+    (variant) => {
+      render(<Button variant={variant}>Click Me</Button>);
+      const className = screen.getByRole('button').className;
+
+      // The library's one motion is a colour transition, reached through a named token so a
+      // consumer and prefers-reduced-motion can re-point it. transition-all is banned - paint only.
+      expect(className).toContain('transition-colors');
+      expect(className).toContain('duration-[var(--motion-duration-color)]');
+      expect(className).not.toContain('transition-all');
+      expect(className).not.toContain('duration-200');
+    },
+  );
+
   it('exposes an accessible name for icon-only buttons', () => {
     render(<Button ariaLabel={'Close'} />);
     expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
