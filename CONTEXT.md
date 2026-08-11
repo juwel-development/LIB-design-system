@@ -1,9 +1,11 @@
 # Design System
 
-A shared library of React primitives and the design tokens they are styled from, consumed by
-several JuweL Development products. Its purpose is that one set of components can carry more than
-one brand, so every look-and-feel decision is addressable by the consuming product rather than
-fixed inside a component.
+A shared library of React components — primitives and the page composables that arrange them — and
+the design tokens they are styled from, consumed by several JuweL Development products. Its purpose
+is that one set of components can carry more than one brand, so every look-and-feel decision is
+addressable by the consuming product rather than fixed inside a component. That holds a step up as
+well: a composable that fixes an arrangement must express its differences as variants or tokens, not
+host one product's furniture (see [ADR 0007](docs/adr/0007-the-library-ships-page-composables.md)).
 
 ## Language
 
@@ -110,10 +112,20 @@ _Avoid_: Focus state, focus highlight, per-variant ring
 ### Components
 
 **Primitive**:
-A single component on the library's roster. Its props are its entire contract — there is no
-`className` or `style` escape hatch, so anything a consumer needs to change must exist as a token
-or a variant.
+A component on the roster that owns a single *element* — a button, an input, an eyebrow. Its props
+are its entire contract — there is no `className` or `style` escape hatch, so anything a consumer
+needs to change must exist as a token or a variant.
 _Avoid_: Widget, element
+
+**Composable**:
+A component on the roster that owns an *arrangement* of primitives rather than a single element — a
+section, a header, a footer. It is held to the primitive's contract exactly: a closed prop surface,
+tokens and variants only, no escape hatch. What sets it apart is that its subject is arrangement, and
+arrangement is where brands differ most, so a composable's single-brand rules must be converted into
+variants or tokens before it ships. Brand assets stay out of it: a wordmark or a named person's
+photograph cannot carry a second brand, so it belongs to the consumer, never here (see
+[ADR 0007](docs/adr/0007-the-library-ships-page-composables.md)).
+_Avoid_: Layout, template, section wrapper, molecule
 
 **Control**:
 A primitive the viewer operates through a box of its own — a button, an input, a textarea. Not every
@@ -124,8 +136,10 @@ focus ring, which keys on being focusable rather than on being a control.
 _Avoid_: Interactive element, form element
 
 **Roster**:
-The closed set of primitives the library offers. A genuinely new need is added to the roster, never
-hand-rolled as a styled element in a consuming product.
+The closed set of components the library offers — primitives and composables alike. A genuinely new
+need is added to the roster, never hand-rolled as a styled element in a consuming product. Widening
+it to hold composables widened the *kind* of entry allowed, not the door: the set stays closed and
+each entry is still reviewed on its own.
 _Avoid_: Catalogue, component list
 
 ### Forms
