@@ -28,6 +28,8 @@ interface IPProps extends VariantProps<typeof p> {
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - Where line length matters, place the paragraph inside whatever bounds the reading measure; `P`
  *   does not constrain its own width.
+ * - For a paragraph inside a reading column, reach for `Prose.Body`, which is measure-bounded by its
+ *   `Prose.Root`; `P` is for a paragraph with no reading column around it.
  */
 export const P: FunctionComponent<IPProps> = ({ children, color, testId }) => (
   <p className={p({ color })} data-testid={testId}>
