@@ -4,11 +4,9 @@ import type { FunctionComponent, ReactNode } from 'react';
 // The marker is a rule, not a glyph - and this is worth writing down because it outlives this one
 // component and there is no ADR carrying it. A checkbox character, dingbat or icon is an *invented
 // graphic*, and in a design language built from 1px rules and type an invented graphic is the thing
-// that reads as borrowed. Any list marker a design system ships is a small piece of iconography; a
-// system whose visual language has no icons should say what it does instead of falling back to a
-// bullet. So the tick is the structural hairline already on the page, doing one more job - and it is
-// unconditional: no prop removes it, reshapes it or swaps it. A future primitive needing a marker for
-// some other job has nowhere else to find this stance; it is here on purpose.
+// that reads as borrowed. So the tick is the structural hairline already on the page, doing one more
+// job - and it is unconditional: no prop removes it, reshapes it or swaps it. A future primitive
+// needing a marker for some other job has nowhere else to find this stance; it is here on purpose.
 
 // The ul: an unstyled list. `list-none` strips the browser marker (so no bullet is ever drawn) and
 // resets its default indent; `role="list"` is restored in the markup because `list-style: none`
@@ -22,12 +20,11 @@ const checklistRoot = cva('m-0 list-none p-0');
 // every single item. The li is a flex row so the tick sits in a left gutter with the text hanging
 // indented beside it; `before:mt-[0.7em]` drops the rule to the optical middle of the first line. Its
 // colour is the `rule` role - a table's top rule and a list's tick are one job, a 1px mark at the
-// weight where structure becomes visible - and its length and thickness are the two named tick tokens,
-// so a brand re-points three names (`rule`, `--tick-length`, `--tick-thickness`) to get a different
-// marker without any member gaining a prop. None of the three is a literal here. Hairlines sit
-// *between* items in the `border` colour, with no rule above the first or below the last, so the list
-// is open at both ends - deliberately unlike DefinitionList, which closes at the foot. The between-item
-// gap reads `--space-stack`, split above and below the hairline so it sits centred in the gap.
+// weight where structure becomes visible - its length and thickness the two named tick tokens, no
+// literal here. Hairlines sit *between* items in the `border` colour, with no rule above the first or
+// below the last, so the list is open at both ends - deliberately unlike a closed list, which closes
+// at the foot. The between-item gap reads `--space-stack`, split above and below the hairline so it
+// sits centred in the gap.
 const checklistItem = cva(
   [
     'flex items-start gap-3 font-primary text-body leading-body text-foreground',

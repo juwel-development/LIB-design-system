@@ -62,7 +62,7 @@ describe('Checklist', () => {
     for (const item of screen.getAllByRole('listitem')) {
       // The top rule is gated on :not(:first-child), so the first item takes none and the list is
       // open at the head; there is no border-b at all, so it is open at the foot too - deliberately
-      // unlike DefinitionList, which closes below. The rule is the `border` hairline colour.
+      // unlike a closed list, which closes below. The rule is the `border` hairline colour.
       expect(item.className).toContain('[&:not(:first-child)]:border-t');
       expect(item.className).toContain('[&:not(:first-child)]:border-border');
       expect(item.className).not.toMatch(/(^|[\s[])border-t\b/);
