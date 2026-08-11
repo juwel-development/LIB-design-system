@@ -7,8 +7,7 @@ import type { FunctionComponent, ReactNode } from 'react';
 // escape hatch, whatever place picks is final, so it is a variant: center is the conventional hero and the
 // default; between drops a poster's foot on the fold's bottom edge; start asks for the minimum height
 // without the centring. `end` is deliberately absent - content pinned to the bottom over empty space is
-// not a hero. It reads --fold-height for the floor and --space-stack for the gap Prose and PageHead use;
-// it sets no bleed, band, gutter, margin, max-width or colour - the Section around it owns all of those.
+// not a hero. It reads --fold-height for the floor and --space-stack for the gap Prose and PageHead use.
 const hero = cva(
   'flex flex-col min-h-[var(--fold-height)] gap-[var(--space-stack)]',
   {
