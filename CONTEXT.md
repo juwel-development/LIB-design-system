@@ -33,6 +33,29 @@ What a token is *for*, which is what a token name states. `primary` is a role; `
 shade, and naming a shade is what the token layer exists to prevent.
 _Avoid_: Semantic name, alias
 
+### Typography
+
+**Type role**:
+What a piece of text *is* — a page's one scale event, a title, running body copy, a label. The
+library names and sizes text by role and never by measurement, so a component asks for the role its
+text fills rather than picking a step on a ramp. There is exactly one role per job, which is what
+leaves a component nothing to choose between.
+_Avoid_: Text size, type scale step, heading size
+
+**Heading level**:
+A heading's position in the document outline, `h1` through `h6`. The level *fixes* the type role
+rather than defaulting it: a level-2 heading is the title role and cannot be asked to render as
+anything else. The scale hierarchy therefore holds by construction, across routes as well as down a
+page, instead of depending on every caller getting it right.
+_Avoid_: Heading size, heading variant, heading scale
+
+**Reading measure**:
+The width running text is bounded to, counted in characters rather than in length — because
+character count is what reading tolerance is defined in, and a width held still lets the count drift
+as the type size moves under it. It belongs to whatever owns the reading column, never to the
+paragraph inside it.
+_Avoid_: Max width, line length, content width
+
 ### Motion
 
 **Motion**:
