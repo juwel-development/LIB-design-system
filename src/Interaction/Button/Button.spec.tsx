@@ -149,6 +149,24 @@ describe('Button Component', () => {
     },
   );
 
+  it('draws the ghost hover underline from the library underline tokens, not the browser default', () => {
+    render(<Button variant={'ghost'}>Click Me</Button>);
+    const className = screen.getByRole('button').className;
+
+    // The line appears on hover, so it takes --underline-thickness and --underline-offset like
+    // Link's appearing treatments - never --underline-thickness-hover, which names the thickened
+    // state of a line already on screen (docs/adr/0006). Instant by construction: decoration is off
+    // the transition allowlist (docs/adr/0001), so no transition-* is set on it.
+    expect(className).toContain(
+      'hover:decoration-[length:var(--underline-thickness)]',
+    );
+    expect(className).toContain(
+      'hover:underline-offset-[var(--underline-offset)]',
+    );
+    expect(className).not.toContain('--underline-thickness-hover');
+    expect(className).not.toMatch(/transition-\[?[^ ]*decoration/);
+  });
+
   it('exposes an accessible name for icon-only buttons', () => {
     render(<Button ariaLabel={'Close'} />);
     expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
