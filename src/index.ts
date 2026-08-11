@@ -1,5 +1,19 @@
 import './styles.css';
 
+export type { IH1Props } from 'Display/Typography/H1/H1';
+export { H1 } from 'Display/Typography/H1/H1';
+export type { IH2Props } from 'Display/Typography/H2/H2';
+export { H2 } from 'Display/Typography/H2/H2';
+export type { IH3Props } from 'Display/Typography/H3/H3';
+export { H3 } from 'Display/Typography/H3/H3';
+export type { IH4Props } from 'Display/Typography/H4/H4';
+export { H4 } from 'Display/Typography/H4/H4';
+export type { IH5Props } from 'Display/Typography/H5/H5';
+export { H5 } from 'Display/Typography/H5/H5';
+export type { IH6Props } from 'Display/Typography/H6/H6';
+export { H6 } from 'Display/Typography/H6/H6';
+export type { IPProps } from 'Display/Typography/P/P';
+export { P } from 'Display/Typography/P/P';
 export type { IButtonProps } from 'Interaction/Button/Button';
 export { Button } from 'Interaction/Button/Button';
 export type { IInputProps } from 'Interaction/Input/Input';
