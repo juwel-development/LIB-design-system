@@ -5,10 +5,9 @@ import type { FunctionComponent, ReactNode } from 'react';
 // One recipe, four treatments that behave differently, not one link with a colour prop (see
 // docs/adr/0006). The focus ring is in the base - a link is focusable - drawn with outline, colour at
 // rest so it never fades in (docs/adr/0002); no radius, a link has no box (docs/adr/0003). Colours are
-// semantic tokens re-pointed by `.dark`, so no treatment carries a `dark:` class. Every underline
-// reads the library's --underline-* tokens and arrives instantly, decoration off the transition
-// allowlist (docs/adr/0001): prose thickens its on hover, quiet and label-link have one appear at the
-// rest thickness. graphic paints nothing, so an anchor around a mark keeps its own colour.
+// semantic tokens re-pointed by `.dark`, so no treatment carries a `dark:` class. Underlines read the
+// library's --underline-* tokens and arrive instantly, off the transition allowlist (docs/adr/0001):
+// prose thickens its on hover, quiet and label-link raise one at rest thickness, graphic has none.
 const link = cva(
   'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   {
