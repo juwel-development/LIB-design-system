@@ -93,11 +93,14 @@ const TYPOGRAPHY = `@theme {
 }`;
 
 /* The reading measure is in ch, not rem, so the character count stays held when the body size moves
-   under it; --measure-display is narrower because bigger type wants fewer characters per line. ch has
-   no Tailwind namespace, so it sits in :root beside radius, read as max-w-[var(--measure)]. */
+   under it; --measure-display is narrower because bigger type wants fewer characters per line, and
+   --measure-wide slightly wider - the standfirst of a page head (PageHead #18) is an opening statement,
+   not a reading column, so it runs a little past the reading measure by design. All three in ch and,
+   having no Tailwind namespace, in :root beside radius, read as max-w-[var(--measure)]. */
 const MEASURE = `:root {
   --measure: 66ch;
   --measure-display: 36ch;
+  --measure-wide: 72ch;
 }`;
 
 /* Three spacing roles, not a ladder: --space-stack is the sibling gap in a stack, --space-region the air
