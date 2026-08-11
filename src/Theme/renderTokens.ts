@@ -34,9 +34,8 @@ const FOCUS_RING = `:root {
 
 /* Radius is not a colour: like motion and the focus-ring dimensions it lives in :root only, never
    in @theme inline. One token names the corner every control reads; 0.5rem is exactly what
-   rounded-lg resolved to, so it changes nothing visually and keeps tracking the root font size. No
-   structure radius and no value constraint, both deliberate.
-   See docs/adr/0003-radius-token-contract.md. */
+   rounded-lg resolved to, so nothing changes visually while it keeps tracking the root font size.
+   No structure radius, no value constraint - both deliberate; see docs/adr/0003-radius-token-contract.md. */
 const RADIUS = `:root {
   --radius-control: 0.5rem;
 }`;
