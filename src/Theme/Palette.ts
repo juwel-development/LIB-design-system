@@ -27,10 +27,11 @@ export type PaletteTokens = {
    *  control from the surface. Constraint (WCAG 2.2 SC 1.4.11): at least 3:1 against `surface`
    *  in the same theme. */
   controlBorder: string;
-  /** The structural rule that makes a block read as a table rather than a list: the heavier top
-   *  line above the first row, weightier than `border`'s hairline dividers and lighter than
-   *  `controlBorder`'s control edge. A mid-neutral, so it structures without boxing. Constraint:
-   *  at least 3:1 against `surface` in the same theme. */
+  /** The structural rule that marks where a block's structure is, weightier than `border`'s hairline
+   *  dividers and lighter than `controlBorder`'s control edge. It serves three consumers: a table's
+   *  heavier top line above the first row, a checklist's tick, and a page section's join to the
+   *  section before it. A mid-neutral, so it structures without boxing. Constraint: at least 3:1
+   *  against `surface` in the same theme. */
   rule: string;
   /** The plate behind content that has not painted - an image still loading, or one that failed and
    *  is showing its alt text. Constraint: at least 4.5:1 against `foreground` in the same theme,

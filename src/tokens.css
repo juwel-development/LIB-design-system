@@ -169,6 +169,13 @@
 :root {
   --space-stack: 0.5em;
   --space-region: 1.5em;
+  --space-band: 4em;
+}
+
+/* The gutter is measured against the screen, not the type, so it is the one spacing role not in em; it
+   sits in :root beside the space roles. */
+:root {
+  --gutter: clamp(1.5rem, 5vw, 4rem);
 }
 
 /* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */
