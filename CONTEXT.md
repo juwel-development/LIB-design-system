@@ -160,6 +160,19 @@ Which of `idle`, `sending`, `sent` or `failed` a form is in. Owned by the page, 
 component — a component renders the state it is given and never decides which one it is in.
 _Avoid_: Submission status, loading state
 
+### Links
+
+**Treatment**:
+Which of `Link`'s fixed modes an anchor is rendered in. The set is *closed* and each entry is argued
+on its own merits: `prose` for running text, `quiet` for standing navigation, `label-link` for a link
+acting as a letter-spaced label, and `graphic` for an anchor whose child is not text. A treatment is
+not a style knob — there is no colour, size or decoration prop on a link, and a genuinely new need
+becomes a new treatment rather than an escape hatch (see
+[ADR 0006](docs/adr/0006-link-treatment-contract.md)). A treatment is named for the *job* it serves
+rather than the appearance it produces, which is what keeps "the one that paints nothing" from
+becoming that hatch by another route.
+_Avoid_: Variant, style, kind, link type, link style
+
 ### Media
 
 **Figure**:

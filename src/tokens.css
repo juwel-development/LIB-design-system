@@ -105,7 +105,8 @@
   --radius-control: 0.5rem;
 }
 
-/* The prose link's underline dimensions are not colours either, and sit in :root beside radius. */
+/* The library's underline dimensions are not colours either, and sit in :root beside radius. They are
+   not prose's alone: every Link treatment that draws a line draws it from these (docs/adr/0006). */
 :root {
   --underline-offset: 0.18em;
   --underline-thickness: 1px;
