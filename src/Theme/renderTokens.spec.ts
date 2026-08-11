@@ -142,6 +142,19 @@ describe('renderTokens spacing contract', () => {
   });
 });
 
+describe('renderTokens tick contract', () => {
+  it('emits the two tick dimensions into :root, out of every @theme block', () => {
+    const css = renderTokens();
+    expect(css).toContain('--tick-length: 0.9rem;');
+    expect(css).toContain('--tick-thickness: 1px;');
+    // A plain @theme block would generate utilities; @theme inline would register a bogus colour.
+    const themeBlock = css.match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).not.toContain('--tick-');
+    expect(themeInline).not.toContain('--tick-');
+  });
+});
+
 describe('renderTokens underline contract', () => {
   it('emits the three underline tokens into :root, out of the Tailwind colour map', () => {
     const css = renderTokens();

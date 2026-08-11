@@ -1,5 +1,6 @@
 import './styles.css';
 
+export { Checklist } from 'Display/Checklist/Checklist';
 export { DefinitionList } from 'Display/DefinitionList/DefinitionList';
 export { Table } from 'Display/Table/Table';
 export { Eyebrow } from 'Display/Typography/Eyebrow/Eyebrow';
