@@ -41,7 +41,7 @@ const RADIUS = `:root {
 }`;
 
 /* Typography is not a colour and, unlike the blocks above, not :root-only: Tailwind 4's --font-*,
-   --text-*, --leading- and --tracking-* are theme namespaces, so its own @theme block generates the
+   --text-*, --leading-* and --tracking-* are theme namespaces, so its own @theme block generates the
    font-primary/text-display/leading-body/tracking-label utilities a sealed recipe reaches. No
    Tailwind built-in is re-pointed; only new role names. See docs/adr/0004-typography-token-contract.md. */
 const TYPOGRAPHY = `@theme {
