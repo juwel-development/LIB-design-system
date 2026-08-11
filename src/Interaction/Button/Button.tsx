@@ -6,18 +6,19 @@ import type { Subject } from 'rxjs';
 // No `dark:` classes here by design: every colour below is a semantic token whose value is
 // re-pointed by the `.dark` class in tokens.css, so one set of classes serves both themes.
 // The colour transition is stated once in the base, on the motion token, so no variant can
-// disagree with it - see docs/adr/0001-motion-token-contract.md.
+// disagree with it - see docs/adr/0001-motion-token-contract.md. The one focus ring is in the
+// base too: identical across variants, drawn with outline, colour at rest so it never fades in -
+// see docs/adr/0002-focus-ring-token-contract.md.
 const button = cva(
-  'transition-colors duration-[var(--motion-duration-color)] py-2 sm:py-2 disabled:bg-disabled disabled:hover:bg-disabled-hover cursor-pointer disabled:cursor-not-allowed select-none text-nowrap inline-flex flex-row items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+  'transition-colors duration-[var(--motion-duration-color)] py-2 sm:py-2 disabled:bg-disabled disabled:hover:bg-disabled-hover cursor-pointer disabled:cursor-not-allowed select-none text-nowrap inline-flex flex-row items-center justify-center gap-2 outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   {
     variants: {
       variant: {
         primary:
-          'px-4 sm:px-6 min-w-42 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover focus-visible:ring-primary-ring',
+          'px-4 sm:px-6 min-w-42 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover',
         secondary:
-          'px-4 sm:px-6 min-w-42 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary-hover focus-visible:ring-secondary-ring',
-        ghost:
-          'px-2 min-w-0 bg-transparent text-foreground hover:underline focus-visible:ring-ring',
+          'px-4 sm:px-6 min-w-42 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary-hover',
+        ghost: 'px-2 min-w-0 bg-transparent text-foreground hover:underline',
       },
     },
     defaultVariants: {

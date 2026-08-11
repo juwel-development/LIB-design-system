@@ -17,14 +17,12 @@
   --color-primary: #8b5cf6;
   --color-primary-hover: #7c3aed;
   --color-primary-foreground: #f8fafc;
-  --color-primary-ring: #a78bfa;
   --color-secondary: #0ea5e9;
   --color-secondary-hover: #0284c7;
   --color-secondary-foreground: #f8fafc;
-  --color-secondary-ring: #38bdf8;
   --color-disabled: #94a3b8;
   --color-disabled-hover: #64748b;
-  --color-ring: #94a3b8;
+  --color-focus-ring: var(--color-ring, #475569);
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #d63384;
@@ -39,14 +37,12 @@
   --color-primary: #7c3aed;
   --color-primary-hover: #8b5cf6;
   --color-primary-foreground: #f8fafc;
-  --color-primary-ring: #a78bfa;
   --color-secondary: #0284c7;
   --color-secondary-hover: #0ea5e9;
   --color-secondary-foreground: #f8fafc;
-  --color-secondary-ring: #38bdf8;
   --color-disabled: #475569;
   --color-disabled-hover: #334155;
-  --color-ring: #64748b;
+  --color-focus-ring: var(--color-ring, #cbd5e1);
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-error: #f48fb1;
@@ -61,14 +57,12 @@
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
   --color-primary-foreground: var(--color-primary-foreground);
-  --color-primary-ring: var(--color-primary-ring);
   --color-secondary: var(--color-secondary);
   --color-secondary-hover: var(--color-secondary-hover);
   --color-secondary-foreground: var(--color-secondary-foreground);
-  --color-secondary-ring: var(--color-secondary-ring);
   --color-disabled: var(--color-disabled);
   --color-disabled-hover: var(--color-disabled-hover);
-  --color-ring: var(--color-ring);
+  --color-focus-ring: var(--color-focus-ring);
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
@@ -86,4 +80,10 @@
   :root {
     --motion-duration-color: 0ms;
   }
+}
+
+/* The focus ring's dimensions are not colours either, and sit in :root beside the motion block. */
+:root {
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
 }
