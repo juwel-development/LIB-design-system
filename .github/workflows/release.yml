@@ -37,23 +37,32 @@ jobs:
       - name: Compute the next version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # --dry-run still runs verifyConditions, and @semantic-release/npm checks the token
-          # there. It publishes nothing: the dry run stops before the publish step.
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -o pipefail
-          npx semantic-release --dry-run 2>&1 | tee dry-run.log
+          # Only the two plugins that decide the version. The full plugin list would drag in
+          # @semantic-release/npm, whose verifyConditions authenticates against the registry even
+          # under --dry-run — so the preview would need the publish token, which is the one thing
+          # an ungated job should not hold. These two need no credentials.
+          npx semantic-release --dry-run \
+            --plugins @semantic-release/commit-analyzer,@semantic-release/release-notes-generator \
+            2>&1 | tee dry-run.log
 
-          # `|| true` because "no release" is the case where grep finds nothing, and Actions runs
-          # this with bash -e: an unmatched grep would abort the step before it could report that.
-          version="$(grep -oE 'The next release version is [0-9]+\.[0-9]+\.[0-9]+[^ ]*' dry-run.log \
-            | tail -1 | sed 's/The next release version is //' || true)"
+          # Strip ANSI escapes: semantic-release colours its output, and the codes sit right up
+          # against the version number.
+          sed -e 's/\x1b\[[0-9;]*m//g' dry-run.log > clean.log
+
+          # The version pattern is bounded rather than a `[^ ]*` catch-all so nothing trailing is
+          # taken for part of the version. `|| true` because "no release" is the case where grep
+          # finds nothing, and Actions runs this with bash -e: an unmatched grep would otherwise
+          # abort the step before it could report exactly that.
+          version="$(grep -oE 'The next release version is [0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?' \
+            clean.log | tail -1 | sed 's/The next release version is //' || true)"
 
           {
             echo "## Release preview"
             if [ -n "$version" ]; then
               echo "Approving the **release** job publishes \`$version\`."
-              if grep -q 'BREAKING CHANGE' dry-run.log; then
+              if grep -q 'BREAKING CHANGE' clean.log; then
                 echo ""
                 echo "> :warning: This release contains a **breaking change**."
               fi
@@ -64,7 +73,7 @@ jobs:
             echo "<details><summary>semantic-release dry run</summary>"
             echo ""
             echo '```'
-            cat dry-run.log
+            cat clean.log
             echo '```'
             echo ""
             echo "</details>"
