@@ -99,6 +99,18 @@ const SPACING = `:root {
   --space-region: 1.5em;
 }`;
 
+/* The checklist tick's two dimensions are not colours: like the underline and focus-ring dimensions
+   they live in :root only, never @theme inline, so a brand can re-point them. They are named rather
+   than recipe literals because of ADR 0004's test - whether the library sets the property. The tick is
+   drawn as a `::before` pseudo-element, the strongest possible case of an element a consumer cannot
+   reach: no `className` gets near it, so a value overriding it would have to fight a utility class on
+   an element that is not in the tree at all, and the value therefore needs a name. With `rule` that is
+   three names a brand re-points to get a different marker, and no member of Checklist gains a prop. */
+const TICK = `:root {
+  --tick-length: 0.9rem;
+  --tick-thickness: 1px;
+}`;
+
 const toKebabCase = (name: string): string =>
   name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 
@@ -165,5 +177,8 @@ ${MEASURE}
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
    re-pointing - so the two roles sit in :root beside the measure. */
 ${SPACING}
+
+/* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */
+${TICK}
 `;
 };

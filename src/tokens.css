@@ -151,3 +151,9 @@
   --space-stack: 0.5em;
   --space-region: 1.5em;
 }
+
+/* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */
+:root {
+  --tick-length: 0.9rem;
+  --tick-thickness: 1px;
+}
