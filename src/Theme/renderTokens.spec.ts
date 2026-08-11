@@ -21,6 +21,24 @@ describe('renderTokens motion contract', () => {
   });
 });
 
+describe('renderTokens radius contract', () => {
+  it('names the one corner every control reads, defaulting to what rounded-lg resolved to', () => {
+    expect(renderTokens()).toContain('--radius-control: 0.5rem;');
+  });
+
+  it('declares no structure radius, a value masquerading as a role', () => {
+    expect(renderTokens()).not.toContain('--radius-none');
+  });
+
+  it('keeps radius out of the Tailwind colour map, since it is not a colour', () => {
+    // @theme inline registers each declaration as a Tailwind colour; a radius token in there
+    // would emit --color-radius-control.
+    const themeInline =
+      renderTokens().match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeInline).not.toContain('radius');
+  });
+});
+
 describe('renderTokens focus ring contract', () => {
   it('emits none of the three collapsed per-variant ring roles', () => {
     const css = renderTokens();

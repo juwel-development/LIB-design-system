@@ -47,8 +47,8 @@ is not redundant, and should not be deleted as dead weight.
 
 Because the token is not a colour, it cannot be carried by the palette module or mapped into
 `@theme inline`, and the generated stylesheet's renderer had to grow a second, non-colour block to
-emit it. That block is the shape any future non-colour token contract — radius, focus-ring
-dimensions — will extend.
+emit it. That block is the shape any future non-colour token contract — [radius](./0003-radius-token-contract.md),
+focus-ring dimensions — will extend.
 
 The library zeroes only the motion it performs. It deliberately ships no blanket
 `transition-duration` reset, so a consumer's own animations remain the consumer's business.

@@ -103,6 +103,21 @@ describe('Button Component', () => {
   );
 
   it.each(['primary', 'secondary', 'ghost'] as const)(
+    'styles its corner from the radius token on the %s variant, never a rounded-* literal',
+    (variant) => {
+      render(<Button variant={variant}>Click Me</Button>);
+      const className = screen.getByRole('button').className;
+
+      // The corner is one named token every control reads, set once in the base so no variant can
+      // disagree - a consumer theme re-points --radius-control to move it. rounded-lg (0.5rem) is
+      // what it defaults to, so nothing changes visually.
+      expect(className).toContain('rounded-[var(--radius-control)]');
+      expect(className).not.toContain('rounded-lg');
+      expect(className).not.toMatch(/rounded-(?!\[var\(--radius-)/);
+    },
+  );
+
+  it.each(['primary', 'secondary', 'ghost'] as const)(
     'draws one focus ring as an outline on the %s variant, identical across variants and never a box-shadow ring',
     (variant) => {
       render(<Button variant={variant}>Click Me</Button>);
