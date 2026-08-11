@@ -55,6 +55,8 @@ interface IButtonProps extends VariantProps<typeof button> {
  * - Provide visual feedback on hover/active states
  * - Ensure sufficient touch target size (minimum 44x44px) for mobile users
  * - Position primary actions on the right for multi-button layouts
+ * - A submit button's busy state is a label swap ("Send" to "Sending…"), never a spinner: it costs
+ *   nothing to render server-side and keeps a Form's `sending` state driver-agnostic
  *
  * @Accessibility
  * - Ensure adequate color contrast (4.5:1 minimum ratio)

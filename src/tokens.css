@@ -141,3 +141,10 @@
   --measure: 66ch;
   --measure-display: 36ch;
 }
+
+/* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
+   re-pointing - so the two roles sit in :root beside the measure. */
+:root {
+  --space-stack: 0.5em;
+  --space-region: 1.5em;
+}

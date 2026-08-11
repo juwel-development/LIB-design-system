@@ -59,7 +59,7 @@ export const TextArea: FunctionComponent<ITextAreaProps> = ({
       .join(' ') || undefined;
 
   return (
-    <div className={'flex flex-col gap-1'}>
+    <div className={'flex flex-col gap-[var(--space-stack)]'}>
       <label htmlFor={controlId} className={'font-medium text-foreground'}>
         {label}
       </label>
