@@ -1,5 +1,6 @@
 import './styles.css';
 
+export { Brandmark } from 'Display/Brandmark/Brandmark';
 export { Checklist } from 'Display/Checklist/Checklist';
 export { DefinitionList } from 'Display/DefinitionList/DefinitionList';
 export { Figure } from 'Display/Figure/Figure';
