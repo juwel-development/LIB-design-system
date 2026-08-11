@@ -4,7 +4,7 @@ status: accepted
 
 # A typography token contract of roles, filed ahead of the components that need it
 
-The library declares fourteen typographic tokens — two family roles, five type roles with their
+The library declares sixteen typographic tokens — two family roles, six type roles with their
 leading, a reading measure in two widths, and two tracking roles — and reads none of them yet. Six
 proposals are specified in a vocabulary the token layer could not previously speak: it declared
 colour, motion, focus-ring and radius and nothing typographic, so a proposal whose central
@@ -35,6 +35,29 @@ page's single scale event; `--text-label` is the letter-spaced eyebrow device. T
 role per job, so a component has nothing to choose between: it asks for what its text **is**, the same
 move the palette makes offering `primary` instead of `violet-500`. A `sm`/`md`/`lg`/`xl` ladder would
 reintroduce exactly the rung-picking that ADR forbids.
+
+## Amended: a third heading role, and `--text-display` corrected
+
+This ADR first shipped **five** type roles with `--text-display` at `clamp(2.25rem, 5vw, 4.25rem)`.
+Both were wrong, and the grilling on [#30](https://github.com/juwel-development/LIB-design-system/issues/30)
+— which concluded after the contract had already been built — corrected them together. The
+implementation was faithful to the contract as filed; the contract was what changed.
+
+`subtitle` is added as a third heading role, so there are now **six** type roles.
+[ADR 0005](./0005-heading-level-fixes-type-role.md) binds each heading level to exactly one type role
+with no size prop, and depot-tracker demonstrates three distinct heading steps above body (`6xl` /
+`4xl` / `2xl` against a `base` body) for levels one to three; the contract declared two. Levels four
+to six do not need roles — they share the body size and separate by weight — so this is one new role,
+not three. It is not a re-opening of *roles, not rungs*: `subtitle` names a job the way `display` and
+`title` do, there is still one role per job, and no component gains a choice between them.
+
+`--text-display` held `clamp(2.25rem, 5vw, 4.25rem)` — which is
+[#18](https://github.com/juwel-development/LIB-design-system/issues/18)'s measured *subpage head*, a
+value that must never out-scale the homepage hero. It sat one rung too high. So `display`, the hero,
+moves up to `clamp(3rem, 7vw, 6rem)`; the old `display` value drops to `--text-title`
+(`--leading-title` tightening from `1.15` to `1.1`); and everything the old `title` described moves
+down to the new `--text-subtitle` (`clamp(1.5rem, 3vw, 2.25rem)`, leading `1.2`). The two changes are
+one change: the scale shifts down one rung and gains a hero at the top.
 
 ## The measure is in `ch`
 

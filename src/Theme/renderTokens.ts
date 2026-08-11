@@ -52,11 +52,15 @@ const TYPOGRAPHY = `@theme {
   --font-primary: inherit;
   --font-secondary: inherit;
 
-  /* Type roles, not a scale: one role per job, so a component asks for what its text is, never a rung. */
-  --text-display: clamp(2.25rem, 5vw, 4.25rem);
+  /* Type roles, not a scale: one role per job, so a component asks for what its text is, never a rung.
+     display > title > subtitle are the three heading steps H1-H3 bind to; H4-H6 share body and split
+     by weight, so there is no fourth role. display is the hero and must out-scale every subpage head. */
+  --text-display: clamp(3rem, 7vw, 6rem);
   --leading-display: 1.05;
-  --text-title: clamp(1.5rem, 3vw, 2.25rem);
-  --leading-title: 1.15;
+  --text-title: clamp(2.25rem, 5vw, 4.25rem);
+  --leading-title: 1.1;
+  --text-subtitle: clamp(1.5rem, 3vw, 2.25rem);
+  --leading-subtitle: 1.2;
   --text-body: 1.0625rem;  /* 17px */
   --leading-body: 1.6;
   --text-small: 0.9375rem;  /* 15px floor: below it tabular figures stop comparing column to column */

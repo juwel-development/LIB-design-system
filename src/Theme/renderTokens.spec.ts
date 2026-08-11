@@ -63,12 +63,26 @@ describe('renderTokens typography contract', () => {
 
   it('declares the type roles, leading and tracking so the utilities exist', () => {
     const theme = themeBlock();
-    expect(theme).toContain('--text-display: clamp(2.25rem, 5vw, 4.25rem);');
-    expect(theme).toContain('--text-title: clamp(1.5rem, 3vw, 2.25rem);');
+    expect(theme).toContain('--text-display: clamp(3rem, 7vw, 6rem);');
+    expect(theme).toContain('--leading-display: 1.05;');
+    expect(theme).toContain('--text-title: clamp(2.25rem, 5vw, 4.25rem);');
+    expect(theme).toContain('--leading-title: 1.1;');
+    expect(theme).toContain('--text-subtitle: clamp(1.5rem, 3vw, 2.25rem);');
+    expect(theme).toContain('--leading-subtitle: 1.2;');
     expect(theme).toContain('--text-body: 1.0625rem;');
     expect(theme).toContain('--leading-body: 1.6;');
     expect(theme).toContain('--tracking-label: 0.14em;');
     expect(theme).toContain('--tracking-display: -0.02em;');
+  });
+
+  it('keeps display the largest role, so a subpage head can never out-scale the hero', () => {
+    // display's clamped ceiling must clear title's, the rung title takes over from the old
+    // subpage-head value it was mistakenly holding. See docs/adr/0004-typography-token-contract.md.
+    const theme = themeBlock();
+    expect(theme).toContain('--text-display: clamp(3rem, 7vw, 6rem);');
+    expect(theme).not.toContain(
+      '--text-display: clamp(2.25rem, 5vw, 4.25rem);',
+    );
   });
 
   it('keeps typography out of the Tailwind colour map, since it is not a colour', () => {
