@@ -100,8 +100,9 @@ const MEASURE = `:root {
   --measure-display: 36ch;
 }`;
 
-/* Three spacing roles, not a ladder: --space-stack is the sibling gap in a stack, --space-region the gap
-   between a form's regions, --space-band the vertical air inside a page section (#9). All three in em so
+/* Three spacing roles, not a ladder: --space-stack is the sibling gap in a stack, --space-region the air
+   around a region of a page - a form's region groups and the shell's bar, above, below and between its
+   nav items (#14) - and --space-band the vertical air inside a page section (#9). All three in em so
    they track the type ramp, not a fixed length. Three names a reader could line up stack < region < band
    is exactly where "roles, not rungs" is tested - and it holds: each is bound to one job with nothing to
    choose between, not to a step on a ramp a component picks from. A numbered scale (--space-1..4) was
