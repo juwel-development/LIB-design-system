@@ -1,6 +1,6 @@
 import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
-import type { FunctionComponent, PropsWithChildren } from 'react';
+import type { FunctionComponent, ReactNode } from 'react';
 import type { Subject } from 'rxjs';
 
 // No `dark:` classes here by design: every colour below is a semantic token whose value is
@@ -28,9 +28,9 @@ const button = cva(
   },
 );
 
-export interface IButtonProps
-  extends VariantProps<typeof button>,
-    PropsWithChildren {
+export interface IButtonProps extends VariantProps<typeof button> {
+  /** Optional: an icon-only button renders none, and names itself with `ariaLabel` instead. */
+  children?: ReactNode;
   onClick$?: Subject<void>;
   disabled?: boolean;
   testId?: string;
@@ -61,7 +61,7 @@ export interface IButtonProps
  * - Provide focus styles for keyboard navigation
  * - Use appropriate ARIA attributes when needed
  */
-export const Button: FunctionComponent<PropsWithChildren<IButtonProps>> = ({
+export const Button: FunctionComponent<IButtonProps> = ({
   children,
   disabled,
   testId,
