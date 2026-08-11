@@ -23,6 +23,15 @@ const MOTION = `:root {
   }
 }`;
 
+/* The ring's width and offset are not colours: like motion they live in :root only, never in
+   @theme inline, so a consumer can re-point them. Constraint: both > 0 - a zero width is no
+   indicator, a zero offset drops the ring onto the fill where the 3:1-against-surface rule fails.
+   See docs/adr/0002-focus-ring-token-contract.md. */
+const FOCUS_RING = `:root {
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
+}`;
+
 const toKebabCase = (name: string): string =>
   name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 
@@ -40,8 +49,13 @@ const declarations = (
  * silently shipping stale colours.
  */
 export const renderTokens = (): string => {
-  const raw = (tokens: PaletteTokens) => (name: string) =>
-    tokens[name as keyof PaletteTokens];
+  // The library no longer declares --color-ring but still reads it as a fallback, so a consumer's
+  // existing value keeps working; the plain hex in the palette is the default and what the contrast
+  // test checks. See docs/adr/0002-focus-ring-token-contract.md.
+  const raw = (tokens: PaletteTokens) => (name: string) => {
+    const value = tokens[name as keyof PaletteTokens];
+    return name === 'focusRing' ? `var(--color-ring, ${value})` : value;
+  };
   const reference = () => (name: string) => `var(--color-${toKebabCase(name)})`;
 
   return `${GENERATED_HEADER}
@@ -64,5 +78,8 @@ ${declarations(light, reference())}
 
 /* Motion is not a colour: it is carried in :root only, never mapped into @theme inline. */
 ${MOTION}
+
+/* The focus ring's dimensions are not colours either, and sit in :root beside the motion block. */
+${FOCUS_RING}
 `;
 };

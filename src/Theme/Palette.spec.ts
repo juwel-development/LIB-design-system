@@ -10,6 +10,20 @@ const tokensCss = readFileSync(
   'utf8',
 );
 
+const relativeLuminance = (hex: string): number => {
+  const channel = (offset: number): number => {
+    const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+};
+
+const contrastRatio = (a: string, b: string): number => {
+  const first = relativeLuminance(a);
+  const second = relativeLuminance(b);
+  return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+};
+
 describe('Palette', () => {
   it('keeps tokens.css in sync with the palette', () => {
     // tokens.css is generated. If this fails, run `npm run build:tokens`.
@@ -32,6 +46,18 @@ describe('Palette', () => {
     expect(dark.surface).not.toBe(light.surface);
     expect(dark.foreground).not.toBe(light.foreground);
   });
+
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ] as const)(
+    'keeps the focus ring at least 3:1 against surface in the %s theme (WCAG 2.2 SC 1.4.11)',
+    (_theme, tokens) => {
+      expect(
+        contrastRatio(tokens.focusRing, tokens.surface),
+      ).toBeGreaterThanOrEqual(3);
+    },
+  );
 
   it('uses plain hex values the stylesheet can consume directly', () => {
     for (const tokens of [light, dark]) {

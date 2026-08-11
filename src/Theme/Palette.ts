@@ -29,14 +29,11 @@ export type PaletteTokens = {
   primaryHover: string;
   /** Text and icons drawn on top of `primary`. */
   primaryForeground: string;
-  /** Focus ring for primary surfaces - lighter than the fill so it reads against it. */
-  primaryRing: string;
 
   /** The alternative action fill, for choices that sit beside a primary one. */
   secondary: string;
   secondaryHover: string;
   secondaryForeground: string;
-  secondaryRing: string;
 
   /** Fill for controls that cannot be interacted with. */
   disabled: string;
@@ -44,8 +41,10 @@ export type PaletteTokens = {
    *  appearing to respond to it. */
   disabledHover: string;
 
-  /** Focus ring for surfaces that have no fill of their own, such as a ghost button. */
-  ring: string;
+  /** The one focus ring, drawn by every focusable primitive regardless of variant - a focus ring
+   *  states keyboard position, not the control's importance. Constraint (WCAG 2.2 SC 1.4.11): at
+   *  least 3:1 against `surface` in the same theme. */
+  focusRing: string;
 
   /** Status colours. Not yet consumed by a component - they complete the role set so the
    *  first Alert or Toast has names to reach for instead of inventing them. */
@@ -64,17 +63,15 @@ export const light: PaletteTokens = {
   primary: '#8b5cf6',
   primaryHover: '#7c3aed',
   primaryForeground: '#f8fafc',
-  primaryRing: '#a78bfa',
 
   secondary: '#0ea5e9',
   secondaryHover: '#0284c7',
   secondaryForeground: '#f8fafc',
-  secondaryRing: '#38bdf8',
 
   disabled: '#94a3b8',
   disabledHover: '#64748b',
 
-  ring: '#94a3b8',
+  focusRing: '#475569',
 
   success: '#10b981',
   warning: '#f59e0b',
@@ -97,17 +94,15 @@ export const dark: PaletteTokens = {
   primary: '#7c3aed',
   primaryHover: '#8b5cf6',
   primaryForeground: '#f8fafc',
-  primaryRing: '#a78bfa',
 
   secondary: '#0284c7',
   secondaryHover: '#0ea5e9',
   secondaryForeground: '#f8fafc',
-  secondaryRing: '#38bdf8',
 
   disabled: '#475569',
   disabledHover: '#334155',
 
-  ring: '#64748b',
+  focusRing: '#cbd5e1',
 
   success: '#34d399',
   warning: '#fbbf24',

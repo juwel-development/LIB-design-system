@@ -68,7 +68,7 @@ describe('Button Component', () => {
     // A `dark:` class would mean the variant hard-codes one theme's colour.
     expect(className).not.toContain('dark:');
     // Numeric ramp steps are what the semantic layer replaced. Scoped to the colour utilities
-    // so unrelated numbers - duration-200, ring-offset-2 - do not trip it.
+    // so an unrelated number like a duration does not trip it.
     expect(className).not.toMatch(
       /(?:bg|text|ring|border|from|via|to)-[a-z]+-(?:50|[1-9]00)\b/,
     );
@@ -99,6 +99,38 @@ describe('Button Component', () => {
       expect(className).toContain('duration-[var(--motion-duration-color)]');
       expect(className).not.toContain('transition-all');
       expect(className).not.toContain('duration-200');
+    },
+  );
+
+  it.each(['primary', 'secondary', 'ghost'] as const)(
+    'draws one focus ring as an outline on the %s variant, identical across variants and never a box-shadow ring',
+    (variant) => {
+      render(<Button variant={variant}>Click Me</Button>);
+      const className = screen.getByRole('button').className;
+
+      // One ring for every variant - colour, width and offset from the shared tokens, drawn with
+      // outline. Tailwind's ring compiles to box-shadow, which is not rendered in forced-colors
+      // mode, so no ring-*/ring-offset-*/outline-none survives on any variant.
+      expect(className).toContain('outline-focus-ring');
+      expect(className).toContain('outline-offset-[var(--focus-ring-offset)]');
+      expect(className).toContain(
+        'focus-visible:outline-[length:var(--focus-ring-width)]',
+      );
+      expect(className).not.toMatch(/(?:^|\s|:)ring-/);
+      expect(className).not.toContain('outline-none');
+    },
+  );
+
+  it.each(['primary', 'secondary', 'ghost'] as const)(
+    'sets the focus-ring colour at rest on the %s variant, so it cannot fade in on focus',
+    (variant) => {
+      render(<Button variant={variant}>Click Me</Button>);
+      const className = screen.getByRole('button').className;
+
+      // outline-color is in Tailwind's colours group and would transition; a ring that fades is
+      // briefly invisible. Colour at rest, only width and style toggle on focus-visible.
+      expect(className).toContain('outline-focus-ring');
+      expect(className).not.toContain('focus-visible:outline-focus-ring');
     },
   );
 
