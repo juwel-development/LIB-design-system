@@ -195,3 +195,31 @@ small slots. Borrowed from type, where it means exactly this. One mark is not on
 legible on a page is usually illegible in a favicon, so which cut is in use is stated wherever a mark
 is placed rather than inferred from its width.
 _Avoid_: Variant, version, size, mark variant
+
+### Page
+
+**Section**:
+The page's structural unit — a band carrying its own vertical air and, unless it bleeds, the gutter.
+It arranges nothing inside itself: what it owns is the join to the section before it, which is why it
+is a composable of the page rather than a container of its contents.
+_Avoid_: Block, panel, container, band, row
+
+**Join**:
+The hairline between two abutting sections. It *is* the separation, and sections never gap: on a page
+with nothing borrowed to show, a gap between blocks reads as missing content while air inside the
+type reads as care. So the levers on a page's rhythm are measure, leading and the air within a
+section, never a space between them. Drawn only between two sections, so whatever precedes the first
+one is left alone.
+_Avoid_: Divider, separator, section border, spacer, gap
+
+**Gutter**:
+The horizontal inset holding a page's content away from the viewport edge. Measured against the
+screen rather than against the type — unlike every other spacing role here — because it answers to
+how much room there is, not to how large the words are.
+_Avoid_: Page padding, container padding, side margin, inset
+
+**Bleed**:
+A section running past the gutter to the viewport edge, which is what a hero or a page head does and
+an ordinary section does not. Named for the thing itself rather than for the grid one product hangs
+it on, so a brand with no index column and no poster still has the distinction.
+_Avoid_: Full width, edge to edge, full-bleed variant, breakout
