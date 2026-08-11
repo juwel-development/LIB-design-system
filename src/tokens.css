@@ -74,3 +74,16 @@
   --color-error: var(--color-error);
   --color-info: var(--color-info);
 }
+
+/* Motion is not a colour: it is carried in :root only, never mapped into @theme inline. */
+:root {
+  --motion-duration-color: 150ms;
+}
+
+/* Honour prefers-reduced-motion for the one motion the library performs, by re-pointing the token
+   to 0ms. Deliberately no blanket transition reset - only what the library performs is zeroed. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-color: 0ms;
+  }
+}
