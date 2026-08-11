@@ -95,3 +95,35 @@
 :root {
   --radius-control: 0.5rem;
 }
+
+/* Typography is a set of Tailwind theme namespaces, not colours: its own @theme block generates the
+   utilities, so it is not carried in @theme inline with the palette. */
+@theme {
+  /* Both faces default to inherit, so the library ships no @font-face and no face and a one-face
+     consumer renders as today. --font-primary is carried by content, --font-secondary by labels; a
+     component sets font-variant-numeric: tabular-nums only on a --font-primary carrying tnum and
+     font-variant-caps: small-caps only on a --font-secondary carrying smcp - both fail silently otherwise. */
+  --font-primary: inherit;
+  --font-secondary: inherit;
+
+  /* Type roles, not a scale: one role per job, so a component asks for what its text is, never a rung. */
+  --text-display: clamp(2.25rem, 5vw, 4.25rem);
+  --leading-display: 1.05;
+  --text-title: clamp(1.5rem, 3vw, 2.25rem);
+  --leading-title: 1.15;
+  --text-body: 1.0625rem;  /* 17px */
+  --leading-body: 1.6;
+  --text-small: 0.9375rem;  /* 15px floor: below it tabular figures stop comparing column to column */
+  --text-label: 0.8125rem;  /* 13px floor: below it the tracking reads as damage, not a device */
+
+  /* Two quantities on one property that must not collapse: --tracking-label is a fixed letter-spaced
+     style, --tracking-display an optical correction that varies with size. See the ADR. */
+  --tracking-label: 0.14em;
+  --tracking-display: -0.02em;
+}
+
+/* The reading measure has no Tailwind namespace, so it sits in :root beside radius. */
+:root {
+  --measure: 66ch;
+  --measure-display: 36ch;
+}
