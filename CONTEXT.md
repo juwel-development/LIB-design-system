@@ -159,3 +159,25 @@ _Avoid_: Transport, submission handler, backend
 Which of `idle`, `sending`, `sent` or `failed` a form is in. Owned by the page, never by the
 component — a component renders the state it is given and never decides which one it is in.
 _Avoid_: Submission status, loading state
+
+### Media
+
+**Figure**:
+An image and, where there is one, the caption naming it — rendered as one unit. The caption is what
+makes it a figure: it is the caption that claims the image is self-contained content the surrounding
+flow refers to, so without one there is no `figure` element and no such claim. Not every framed image
+is a figure, and a thumbnail, a logo or a decorative plate is not one.
+_Avoid_: Image, media, thumbnail, photo, picture
+
+**Aspect role**:
+What shape a frame is *for* — a portrait, a square, a landscape, a wide strip — named rather than
+measured, so a brand re-points the shape and no component ever picks a number. Distinct shapes with
+distinct jobs, not steps on a scale: there is no ordering, so unlike a radius or spacing ladder there
+is no rung to pick and no question of which one means what.
+_Avoid_: Aspect ratio, crop size, image dimensions, frame size
+
+**Focal point**:
+What must survive the crop when an image is fitted to a frame shape it does not share. Stated as
+where the subject sits — a face held high, a horizon held low — never as a length or a percentage,
+and meaningful only where a frame crops at all.
+_Avoid_: Object position, alignment, anchor, image position, crop origin
