@@ -4,6 +4,7 @@ export { Brandmark } from 'Display/Brandmark/Brandmark';
 export { Checklist } from 'Display/Checklist/Checklist';
 export { DefinitionList } from 'Display/DefinitionList/DefinitionList';
 export { Figure } from 'Display/Figure/Figure';
+export { Rail } from 'Display/Rail/Rail';
 export { Table } from 'Display/Table/Table';
 export { Eyebrow } from 'Display/Typography/Eyebrow/Eyebrow';
 export { H1 } from 'Display/Typography/H1/H1';
