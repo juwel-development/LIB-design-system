@@ -163,6 +163,7 @@
 :root {
   --measure: 66ch;
   --measure-display: 36ch;
+  --measure-wide: 72ch;
 }
 
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids

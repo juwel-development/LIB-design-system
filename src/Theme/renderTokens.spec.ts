@@ -124,8 +124,22 @@ describe('renderTokens typography contract', () => {
     const css = renderTokens();
     expect(css).toContain('--measure: 66ch;');
     expect(css).toContain('--measure-display: 36ch;');
+    expect(css).toContain('--measure-wide: 72ch;');
     // ch has no Tailwind namespace, so it must not sit in the utility-generating block.
     expect(themeBlock()).not.toContain('--measure');
+  });
+
+  it('keeps the page-head standfirst measure wider than the reading column and narrower than a display heading', () => {
+    // --measure-wide is the lede of a page head (PageHead #18): a slightly wider opening statement, so
+    // it clears the reading measure - but it is still running text, so it stays inside the display
+    // measure a big heading takes. Assert the ordering, not the exact ch values.
+    const ch = (name: string): number =>
+      Number.parseFloat(
+        renderTokens().match(new RegExp(`--${name}:\\s*([0-9.]+)ch;`))?.[1] ??
+          'NaN',
+      );
+    expect(ch('measure-wide')).toBeGreaterThan(ch('measure'));
+    expect(ch('measure-wide')).toBeGreaterThan(ch('measure-display'));
   });
 
   it('overrides no Tailwind built-in, so a consumer keeps their own type and faces', () => {
