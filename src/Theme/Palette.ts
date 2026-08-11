@@ -23,6 +23,10 @@ export type PaletteTokens = {
   muted: string;
   /** Hairlines and dividers. */
   border: string;
+  /** The boundary of a control with no fill of its own, so it is the only thing separating the
+   *  control from the surface. Constraint (WCAG 2.2 SC 1.4.11): at least 3:1 against `surface`
+   *  in the same theme. */
+  controlBorder: string;
 
   /** The main call-to-action fill. */
   primary: string;
@@ -35,7 +39,8 @@ export type PaletteTokens = {
   secondaryHover: string;
   secondaryForeground: string;
 
-  /** Fill for controls that cannot be interacted with. */
+  /** The tone a control takes when it cannot be interacted with - its fill, or its border when
+   *  the fill is transparent. */
   disabled: string;
   /** Kept distinct from `disabled` so a disabled control still absorbs hover rather than
    *  appearing to respond to it. */
@@ -59,6 +64,7 @@ export const light: PaletteTokens = {
   foreground: '#0f172a',
   muted: '#64748b',
   border: '#e2e8f0',
+  controlBorder: '#64748b',
 
   primary: '#8b5cf6',
   primaryHover: '#7c3aed',
@@ -90,6 +96,7 @@ export const dark: PaletteTokens = {
   foreground: '#f8fafc',
   muted: '#94a3b8',
   border: '#334155',
+  controlBorder: '#94a3b8',
 
   primary: '#7c3aed',
   primaryHover: '#8b5cf6',

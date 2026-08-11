@@ -14,6 +14,7 @@
   --color-foreground: #0f172a;
   --color-muted: #64748b;
   --color-border: #e2e8f0;
+  --color-control-border: #64748b;
   --color-primary: #8b5cf6;
   --color-primary-hover: #7c3aed;
   --color-primary-foreground: #f8fafc;
@@ -34,6 +35,7 @@
   --color-foreground: #f8fafc;
   --color-muted: #94a3b8;
   --color-border: #334155;
+  --color-control-border: #94a3b8;
   --color-primary: #7c3aed;
   --color-primary-hover: #8b5cf6;
   --color-primary-foreground: #f8fafc;
@@ -54,6 +56,7 @@
   --color-foreground: var(--color-foreground);
   --color-muted: var(--color-muted);
   --color-border: var(--color-border);
+  --color-control-border: var(--color-control-border);
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
   --color-primary-foreground: var(--color-primary-foreground);
