@@ -24,6 +24,7 @@
   --color-disabled: #94a3b8;
   --color-disabled-hover: #64748b;
   --color-focus-ring: var(--color-ring, #475569);
+  --color-link: #2563eb;
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #d63384;
@@ -45,6 +46,7 @@
   --color-disabled: #475569;
   --color-disabled-hover: #334155;
   --color-focus-ring: var(--color-ring, #cbd5e1);
+  --color-link: #60a5fa;
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-error: #f48fb1;
@@ -66,6 +68,7 @@
   --color-disabled: var(--color-disabled);
   --color-disabled-hover: var(--color-disabled-hover);
   --color-focus-ring: var(--color-focus-ring);
+  --color-link: var(--color-link);
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
@@ -94,6 +97,13 @@
 /* Radius is not a colour either: one token for the corner every control reads, beside the others. */
 :root {
   --radius-control: 0.5rem;
+}
+
+/* The prose link's underline dimensions are not colours either, and sit in :root beside radius. */
+:root {
+  --underline-offset: 0.18em;
+  --underline-thickness: 1px;
+  --underline-thickness-hover: 2px;
 }
 
 /* Typography is a set of Tailwind theme namespaces, not colours: its own @theme block generates the

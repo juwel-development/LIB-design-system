@@ -40,6 +40,16 @@ const RADIUS = `:root {
   --radius-control: 0.5rem;
 }`;
 
+/* The prose link's underline is not a colour: like the focus-ring dimensions it lives in :root only,
+   never @theme inline. Constraint: --underline-thickness-hover > --underline-thickness (the thicken on
+   hover is the only cue telling a prose link apart, never hue) and both > 0; the change is instant,
+   thickness being off the transition allowlist. See docs/adr/0006-link-treatment-contract.md. */
+const UNDERLINE = `:root {
+  --underline-offset: 0.18em;
+  --underline-thickness: 1px;
+  --underline-thickness-hover: 2px;
+}`;
+
 /* Typography is not a colour and, unlike the blocks above, not :root-only: Tailwind 4's --font-*,
    --text-*, --leading-* and --tracking-* are theme namespaces, so its own @theme block generates the
    font-primary/text-display/leading-body/tracking-label utilities a sealed recipe reaches. No
@@ -132,6 +142,9 @@ ${FOCUS_RING}
 
 /* Radius is not a colour either: one token for the corner every control reads, beside the others. */
 ${RADIUS}
+
+/* The prose link's underline dimensions are not colours either, and sit in :root beside radius. */
+${UNDERLINE}
 
 /* Typography is a set of Tailwind theme namespaces, not colours: its own @theme block generates the
    utilities, so it is not carried in @theme inline with the palette. */
