@@ -14,7 +14,11 @@ jobs:
     name: preview
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      # Write, despite this job publishing nothing: semantic-release verifies it *could* push
+      # before it will report anything, even under --dry-run, and fails EGITNOPERMISSION with a
+      # read-only token. The dry run stops before prepare/publish, so no tag or commit is pushed.
+      # The gate that matters is the environment on the release job below, not this permission.
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,8 +44,10 @@ jobs:
           set -o pipefail
           npx semantic-release --dry-run 2>&1 | tee dry-run.log
 
+          # `|| true` because "no release" is the case where grep finds nothing, and Actions runs
+          # this with bash -e: an unmatched grep would abort the step before it could report that.
           version="$(grep -oE 'The next release version is [0-9]+\.[0-9]+\.[0-9]+[^ ]*' dry-run.log \
-            | tail -1 | sed 's/The next release version is //')"
+            | tail -1 | sed 's/The next release version is //' || true)"
 
           {
             echo "## Release preview"
