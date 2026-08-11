@@ -20,5 +20,6 @@ export { Link } from 'Interaction/Link/Link';
 export { TextArea } from 'Interaction/TextArea/TextArea';
 export type { FormState } from 'Layout/Form/Form';
 export { Form } from 'Layout/Form/Form';
+export { Section } from 'Layout/Section/Section';
 export type { PaletteTokens } from 'Theme/Palette';
 export { dark, light } from 'Theme/Palette';

@@ -97,13 +97,26 @@ const MEASURE = `:root {
   --measure-display: 36ch;
 }`;
 
-/* Two spacing roles, not a ladder: --space-stack is the sibling gap in a stack, --space-region the gap
-   between a form's regions. Both in em so they track the type ramp, not a fixed length. A numbered scale
-   (--space-1..4) was considered and rejected - ADR 0003/0004: a scale lets each component pick a rung and
-   no rule says which means what. em has no Tailwind namespace, so like --measure these sit in :root. */
+/* Three spacing roles, not a ladder: --space-stack is the sibling gap in a stack, --space-region the gap
+   between a form's regions, --space-band the vertical air inside a page section (#9). All three in em so
+   they track the type ramp, not a fixed length. Three names a reader could line up stack < region < band
+   is exactly where "roles, not rungs" is tested - and it holds: each is bound to one job with nothing to
+   choose between, not to a step on a ramp a component picks from. A numbered scale (--space-1..4) was
+   rejected for that reason - ADR 0003/0004. em has no Tailwind namespace, so like --measure these sit in
+   :root. The gutter is a spacing role too but not a --space-* one and not in em - see GUTTER below. */
 const SPACING = `:root {
   --space-stack: 0.5em;
   --space-region: 1.5em;
+  --space-band: 4em;
+}`;
+
+/* The gutter is the horizontal inset holding content off the viewport edge (#9), and the one spacing role
+   measured against the screen rather than the type: it answers to how much room there is, not how large
+   the words are, so it is in rem/vw and never em. A clamp() lets it grow with the viewport with no
+   breakpoint, the device --text-display already uses. Not a --space-* role and no Tailwind namespace, so
+   it sits in :root beside the space roles, read as px-[var(--gutter)]. */
+const GUTTER = `:root {
+  --gutter: clamp(1.5rem, 5vw, 4rem);
 }`;
 
 /* Four aspect roles in a @theme block like typography: --aspect-* is a Tailwind 4 namespace, so it
@@ -197,8 +210,11 @@ ${ASPECT}
 ${MEASURE}
 
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
-   re-pointing - so the two roles sit in :root beside the measure. */
+   re-pointing - so the three roles sit in :root beside the measure. */
 ${SPACING}
+
+/* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
+${GUTTER}
 
 /* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */
 ${TICK}

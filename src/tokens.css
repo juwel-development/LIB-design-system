@@ -165,10 +165,16 @@
 }
 
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
-   re-pointing - so the two roles sit in :root beside the measure. */
+   re-pointing - so the three roles sit in :root beside the measure. */
 :root {
   --space-stack: 0.5em;
   --space-region: 1.5em;
+  --space-band: 4em;
+}
+
+/* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
+:root {
+  --gutter: clamp(1.5rem, 5vw, 4rem);
 }
 
 /* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */

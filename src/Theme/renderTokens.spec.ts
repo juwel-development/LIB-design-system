@@ -184,10 +184,12 @@ describe('renderTokens aspect contract', () => {
 });
 
 describe('renderTokens spacing contract', () => {
-  it('emits the two spacing roles into :root, expressed in em so they track the type ramp', () => {
+  it('emits the three spacing roles into :root, expressed in em so they track the type ramp', () => {
     const css = renderTokens();
     expect(css).toMatch(/--space-stack:\s*[0-9.]+em;/);
     expect(css).toMatch(/--space-region:\s*[0-9.]+em;/);
+    // The vertical air inside a page section (Section #9), in em like the others so it tracks the type.
+    expect(css).toMatch(/--space-band:\s*[0-9.]+em;/);
   });
 
   it('keeps spacing out of every @theme block, since --space-* has no Tailwind namespace', () => {
@@ -201,6 +203,24 @@ describe('renderTokens spacing contract', () => {
 
   it('declares no numbered spacing rung, a value masquerading as a role', () => {
     expect(renderTokens()).not.toContain('--space-1');
+  });
+});
+
+describe('renderTokens gutter contract', () => {
+  it('emits the gutter into :root as a clamp, out of every @theme block', () => {
+    const css = renderTokens();
+    expect(css).toContain('--gutter: clamp(1.5rem, 5vw, 4rem);');
+    // No Tailwind namespace: a plain @theme block would generate a utility, @theme inline a bogus colour.
+    const themeBlock = css.match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).not.toContain('--gutter');
+    expect(themeInline).not.toContain('--gutter');
+  });
+
+  it('measures the gutter against the screen, not the type, so it is the one spacing role not in em', () => {
+    // It answers to how much room there is, not how large the words are - the one spacing role not in em.
+    // A bare em unit is a digit directly before "em"; rem is excluded because an "r" sits between.
+    expect(renderTokens()).not.toMatch(/--gutter:[^;]*[0-9.]em/);
   });
 });
 
