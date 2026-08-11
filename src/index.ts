@@ -1,5 +1,6 @@
 import './styles.css';
 
+export { DefinitionList } from 'Display/DefinitionList/DefinitionList';
 export { Table } from 'Display/Table/Table';
 export { Eyebrow } from 'Display/Typography/Eyebrow/Eyebrow';
 export { H1 } from 'Display/Typography/H1/H1';
