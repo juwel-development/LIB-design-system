@@ -1,0 +1,119 @@
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Link } from './Link';
+
+const meta: Meta<typeof Link> = {
+  title: 'Interaction/Link',
+  component: Link,
+  parameters: {
+    layout: 'centered',
+  },
+  tags: ['autodocs'],
+  argTypes: {
+    treatment: {
+      control: { type: 'radio' },
+      options: ['prose', 'quiet', 'label-link'],
+      description: 'Which of the three link treatments to render',
+    },
+    external: {
+      control: { type: 'boolean' },
+      description: 'Opens in a new tab and sets rel="noopener noreferrer"',
+    },
+    current: {
+      control: { type: 'boolean' },
+      description: 'Marks the link as the current page (aria-current="page")',
+    },
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Prose: Story = {
+  args: {
+    href: '/pricing',
+    treatment: 'prose',
+    children: 'the pricing page',
+  },
+};
+
+export const Quiet: Story = {
+  args: {
+    href: '/about',
+    treatment: 'quiet',
+    children: 'About',
+  },
+};
+
+export const LabelLink: Story = {
+  args: {
+    href: '/tags/design',
+    treatment: 'label-link',
+    children: 'DESIGN',
+  },
+};
+
+export const External: Story = {
+  args: {
+    href: 'https://example.com',
+    treatment: 'quiet',
+    external: true,
+    children: 'Documentation',
+  },
+};
+
+export const Current: Story = {
+  args: {
+    href: '/about',
+    treatment: 'quiet',
+    current: true,
+    children: 'About',
+  },
+};
+
+// All three treatments, so the prose underline, the quiet hover shift and the inherited label link
+// can be compared side by side. Prose sits in running text because that is where its underline does
+// its work.
+const AllTreatments = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <p style={{ maxWidth: '32ch' }}>
+      Running text with <Link href={'/pricing'}>a prose link</Link> that is told
+      apart by its underline.
+    </p>
+    <nav style={{ display: 'flex', gap: '1rem' }}>
+      <Link href={'/about'} treatment={'quiet'}>
+        About
+      </Link>
+      <Link href={'/work'} treatment={'quiet'}>
+        Work
+      </Link>
+      <Link href={'/contact'} treatment={'quiet'}>
+        Contact
+      </Link>
+    </nav>
+    <Link href={'/tags/design'} treatment={'label-link'}>
+      DESIGN
+    </Link>
+  </div>
+);
+
+// Both themes at once: the second block re-points the tokens through the `.dark` class, so a reviewer
+// sees every treatment under light and dark without touching the toolbar.
+export const Treatments: Story = {
+  render: () => <AllTreatments />,
+};
+
+export const BothThemes: Story = {
+  render: () => (
+    <div style={{ display: 'flex', gap: '2rem' }}>
+      <div style={{ background: 'var(--color-surface)', padding: '1.5rem' }}>
+        <AllTreatments />
+      </div>
+      <div
+        className={'dark'}
+        style={{ background: 'var(--color-surface)', padding: '1.5rem' }}
+      >
+        <AllTreatments />
+      </div>
+    </div>
+  ),
+};

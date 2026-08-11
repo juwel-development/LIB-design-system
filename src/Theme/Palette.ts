@@ -51,6 +51,11 @@ export type PaletteTokens = {
    *  least 3:1 against `surface` in the same theme. */
   focusRing: string;
 
+  /** The colour of a prose link. A link is told apart by its underline, never by hue, so this
+   *  carries the text threshold, not the 3:1 the ring takes. Constraint (WCAG 2.2 SC 1.4.3): at
+   *  least 4.5:1 against `surface` in the same theme. */
+  link: string;
+
   /** Status colours. Not yet consumed by a component - they complete the role set so the
    *  first Alert or Toast has names to reach for instead of inventing them. */
   success: string;
@@ -78,6 +83,8 @@ export const light: PaletteTokens = {
   disabledHover: '#64748b',
 
   focusRing: '#475569',
+
+  link: '#2563eb',
 
   success: '#10b981',
   warning: '#f59e0b',
@@ -110,6 +117,8 @@ export const dark: PaletteTokens = {
   disabledHover: '#334155',
 
   focusRing: '#cbd5e1',
+
+  link: '#60a5fa',
 
   success: '#34d399',
   warning: '#fbbf24',
