@@ -77,7 +77,13 @@ _Avoid_: Focus state, focus highlight, per-variant ring
 A single component on the library's roster. Its props are its entire contract — there is no
 `className` or `style` escape hatch, so anything a consumer needs to change must exist as a token
 or a variant.
-_Avoid_: Widget, element, control
+_Avoid_: Widget, element
+
+**Control**:
+A primitive the viewer operates — a button, an input, a textarea. Not every primitive is one, and
+the distinction is what decides whether a token applies: the focus ring and the corner radius are a
+control's, and a structural primitive takes neither.
+_Avoid_: Interactive element, form element
 
 **Roster**:
 The closed set of primitives the library offers. A genuinely new need is added to the roster, never
