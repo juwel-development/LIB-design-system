@@ -198,6 +198,20 @@ _Avoid_: Variant, version, size, mark variant
 
 ### Page
 
+**Shell**:
+The neutral frame around a page's content — its top and bottom edges. It carries none of the page's
+own matter: a standing link, a short nav, and whatever a footer files are the product speaking, not
+the page. Deliberately small, because a shell that scales with the page competes with whatever the
+page is actually for.
+_Avoid_: Chrome, frame, layout, wrapper, masthead
+
+**Standing link**:
+The link that names where you are — a place name, a mark, or a home link. It sits in the shell and
+never in the nav, which is what *standing* says: it does not change as the visitor moves through the
+site. What fills it belongs to the consumer, a mark being a brand asset and a place name a product's
+own word.
+_Avoid_: Logo link, home link, brand link, masthead
+
 **Section**:
 The page's structural unit — a band carrying its own vertical air and, unless it bleeds, the gutter.
 It arranges nothing inside itself: what it owns is the join to the section before it, which is why it
