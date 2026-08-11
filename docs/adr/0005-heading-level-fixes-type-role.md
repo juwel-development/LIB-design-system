@@ -62,13 +62,44 @@ prose, on the precedent that structure being square is *"a decision the library 
 prose, not a token it exposes"* ([ADR 0003](./0003-radius-token-contract.md)). The consequence is
 recorded below rather than hidden.
 
+## Amended: one escape valve, not two — the hero's `h1` is `H1`
+
+This ADR was written **waiting on** the two amendments its own text calls outstanding, and the
+consequence below was reasoned from the contract as it stood *before* they landed. One of them landed
+and dissolved half of it.
+
+At the time, `--text-display` held `clamp(2.25rem, 5vw, 4.25rem)` — the *subpage* head's measured size
+— so `H1` rendered at the subpage head's scale and a poster hero genuinely had nowhere to go. That is
+why two composite primitives were promised. [ADR 0004](./0004-typography-token-contract.md)'s amendment
+then moved `display` up to `clamp(3rem, 7vw, 6rem)` and **named it the hero**, which is the value this
+ADR asked for when it said *"the hero role needs a value clearing it."*
+
+So **a poster hero's lead is a plain `<H1>`.** The two `h1` treatments are now `H1` itself and
+`PageHead` ([#18](https://github.com/juwel-development/LIB-design-system/issues/18)), which renders an
+`h1` at the `title` role — the role this ADR binds to level *two*. **`PageHead` is the only escape
+valve, and there is no second one.**
+
+The poster hero shipped instead as `Hero`
+([#17](https://github.com/juwel-development/LIB-design-system/issues/17)) — a frame holding a minimum
+height and placing an opaque slot within it. It renders **no heading of its own**: what goes in it is
+the consumer's composition, because a hero varies in its structure the way a footer varies only in its
+contents, and there is no arrangement every brand shares. It is therefore not a heading-bearing
+primitive and is not a party to this decision at all.
+
+Nothing about the decision itself moves: a heading's level still fixes its type role, `H1`–`H6` still
+expose no size prop, and the ladder still holds by construction. What changed is the count of
+components needed to keep it that way.
+
 ## Consequences
 
-**Two `h1` treatments still exist, and they live in composite primitives.** A poster-style hero and a
-subpage head are both `h1` at different roles. They are separate primitives on the roster, each
-rendering its own heading markup at its own role, and that is the sanctioned escape valve. `H1` the
-generic primitive is for ordinary page titles. The cost is that there is more than one way to render
-an `h1`, so the by-construction guarantee covers the ladder rather than every heading in the codebase.
+**One `h1` treatment lives outside `H1`, and it lives in a composable.** A subpage head is an `h1` at
+the `title` role — a separate entry on the roster rendering its own heading markup at its own role,
+and that is the sanctioned escape valve. `H1` the generic primitive is for ordinary page titles and
+for a hero, which share the `display` role. The cost is that there is more than one way to render an
+`h1`, so the by-construction guarantee covers the ladder rather than every heading in the codebase.
+*(As first written this said **two** treatments in **composite primitives** — see the amendment above
+for why it is one, and note that "composite primitive" predates the **Composable** term
+[ADR 0007](./0007-the-library-ships-page-composables.md) introduced.)*
 
 **A `font-*` weight literal is permitted where a `text-*` size literal is not.** This is a deliberate
 asymmetry, not an oversight, and it is written down so a later reviewer does not "fix" it. Size is

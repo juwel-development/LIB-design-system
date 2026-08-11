@@ -250,3 +250,11 @@ A section running past the gutter to the viewport edge, which is what a hero or 
 an ordinary section does not. Named for the thing itself rather than for the grid one product hangs
 it on, so a brand with no index column and no poster still has the distinction.
 _Avoid_: Full width, edge to edge, full-bleed variant, breakout
+
+**Fold**:
+The least height a page's first screen takes, measured against the screen rather than against the
+type — the vertical counterpart to the gutter. It is a floor and never a ceiling, and it deliberately
+stops short of the viewport: a first screen that fills the screen exactly guarantees a top-heavy page,
+because nothing is left to say the page continues. Leaving the following unit's edge just inside the
+viewport is what makes it a fold rather than a screen.
+_Avoid_: Above the fold, viewport height, hero height, full-screen, first screen
