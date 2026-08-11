@@ -87,3 +87,8 @@
   --focus-ring-width: 3px;
   --focus-ring-offset: 2px;
 }
+
+/* Radius is not a colour either: one token for the corner every control reads, beside the others. */
+:root {
+  --radius-control: 0.5rem;
+}
