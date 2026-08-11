@@ -33,7 +33,8 @@ const header = cva(
 export interface IHeaderProps extends VariantProps<typeof header> {
   /** The standing link: a place name, a mark, or a home link. The consumer supplies the whole anchor -
    *  Header renders no link of its own. A place name uses `<Link treatment="quiet" href="/">…</Link>`; a
-   *  mark wraps `Brandmark` in the anchor, the composition its own story shows. */
+   *  mark uses `<Link treatment="graphic" href="/"><Brandmark …/></Link>`, whose `graphic` treatment
+   *  paints nothing over a `currentColor` mark. */
   standing?: ReactNode;
   /** Names the nav for assistive technology. Omit unless the page has more than one nav. */
   navName?: string;
