@@ -2,13 +2,12 @@ import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent, ReactNode } from 'react';
 
-// One recipe, three treatments that behave differently, not one link with a colour prop. The one
-// focus ring is in the base - a link is focusable, so it takes the ring - drawn with outline, colour
+// One recipe, three treatments that behave differently, not one link with a colour prop (see
+// docs/adr/0006). The focus ring is in the base - a link is focusable - drawn with outline, colour
 // at rest so it never fades in (docs/adr/0002). No radius: a link has no box, so a corner would
 // paint nothing (docs/adr/0003, CONTEXT.md 'Control'). Colours are semantic tokens re-pointed by
 // `.dark`, so no treatment carries a `dark:` class. prose is told apart by its underline, never by
-// hue, and thickens it on hover instantly - text-decoration-thickness is off the transition
-// allowlist (docs/adr/0001), so no `transition-*` touches it. See docs/adr/0006.
+// hue, and thickens it on hover instantly - thickness is off the transition allowlist (docs/adr/0001).
 const link = cva(
   'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   {
