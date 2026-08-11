@@ -87,6 +87,34 @@ describe('Palette', () => {
     },
   );
 
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ] as const)(
+    'keeps the table rule at least 3:1 against surface in the %s theme (WCAG 2.2 SC 1.4.11)',
+    (_theme, tokens) => {
+      // `rule` is the heavier top line that makes a block read as a table; a mid-neutral, lighter
+      // than controlBorder and heavier than border's 1.23:1 hairline, so it carries the same
+      // 3:1-against-surface floor rather than border's hairline threshold.
+      expect(contrastRatio(tokens.rule, tokens.surface)).toBeGreaterThanOrEqual(
+        3,
+      );
+    },
+  );
+
+  it('keeps the rule a mid-neutral between the border hairline and the control edge', () => {
+    // The rule reads heavier than the row dividers but must not box like a control edge. Assert the
+    // ordering per theme rather than pinning the hex, so a re-theme keeps the relationship.
+    for (const tokens of [light, dark]) {
+      expect(contrastRatio(tokens.rule, tokens.surface)).toBeGreaterThan(
+        contrastRatio(tokens.border, tokens.surface),
+      );
+      expect(contrastRatio(tokens.rule, tokens.surface)).toBeLessThan(
+        contrastRatio(tokens.controlBorder, tokens.surface),
+      );
+    }
+  });
+
   it('uses plain hex values the stylesheet can consume directly', () => {
     for (const tokens of [light, dark]) {
       for (const value of Object.values(tokens)) {
