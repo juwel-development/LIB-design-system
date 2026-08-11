@@ -18,6 +18,7 @@ export { Button } from 'Interaction/Button/Button';
 export { Input } from 'Interaction/Input/Input';
 export { Link } from 'Interaction/Link/Link';
 export { TextArea } from 'Interaction/TextArea/TextArea';
+export { Footer } from 'Layout/Footer/Footer';
 export type { FormState } from 'Layout/Form/Form';
 export { Form } from 'Layout/Form/Form';
 export { Header } from 'Layout/Header/Header';
