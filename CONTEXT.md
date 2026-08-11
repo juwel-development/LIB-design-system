@@ -89,11 +89,12 @@ _Avoid_: Depth, shadow, lift
 ### Focus
 
 **Focus ring**:
-The one mark the library draws to show which control holds keyboard focus. It states keyboard
-position and nothing else — never the importance of the control it surrounds — so it is one role
-across every focusable primitive rather than one per variant. It is also the *only* thing that
-changes on focus: a control's boundary, fill and geometry hold still, so focus reads as a mark
-appearing rather than as the control thickening.
+The one mark the library draws to show which primitive holds keyboard focus. It states keyboard
+position and nothing else — never the importance of the thing it surrounds — so it is one role
+across every focusable primitive rather than one per variant, and it follows focusability rather
+than control-ness: a primitive the viewer can tab to takes it whether or not it is a control. It is
+also the *only* thing that changes on focus: a boundary, fill and geometry hold still, so focus
+reads as a mark appearing rather than as the thing thickening.
 _Avoid_: Focus state, focus highlight, per-variant ring
 
 ### Components
@@ -105,9 +106,11 @@ or a variant.
 _Avoid_: Widget, element
 
 **Control**:
-A primitive the viewer operates — a button, an input, a textarea. Not every primitive is one, and
-the distinction is what decides whether a token applies: the focus ring and the corner radius are a
-control's, and a structural primitive takes neither.
+A primitive the viewer operates through a box of its own — a button, an input, a textarea. Not every
+primitive is one, and the distinction is what decides whether a token applies: the corner radius is a
+control's, and a structural primitive takes none. A link sits deliberately outside the term. It is
+operated, but it has no box, so a radius on it would paint nothing; what it takes instead is the
+focus ring, which keys on being focusable rather than on being a control.
 _Avoid_: Interactive element, form element
 
 **Roster**:
