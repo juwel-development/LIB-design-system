@@ -74,7 +74,7 @@ describe('renderTokens typography contract', () => {
     expect(theme).toContain('--text-body: 1.0625rem;');
     expect(theme).toContain('--leading-body: 1.6;');
     expect(theme).toContain('--tracking-label: 0.14em;');
-    expect(theme).toContain('--tracking-display: -0.02em;');
+    expect(theme).toContain('--tracking-optical: -0.02em;');
   });
 
   it('sizes the lede role above body and below the subtitle floor, a paragraph not a heading', () => {

@@ -6,8 +6,9 @@ import type { FunctionComponent, ReactNode } from 'react';
 // of the index column a default Section sits in (#9) by spanning the full content width - the text, not
 // the head, owns every measure. The title is the title role, one rung below the hero's display: the cap
 // on out-scaling the homepage hero is the display > title token relationship renderTokens pins (ADR
-// 0004/0005), never a local clamp, so tracking-display is the head's only optical touch and no size
-// literal appears. The stack gap is --space-stack, the sibling gap Prose uses. Colours are semantic
+// 0004/0005), never a local clamp, so tracking-optical is the head's only optical touch and no size
+// literal appears. That tracking is the title role's, not this component's (#57): H2 binds to the same
+// role and carries the same correction, so the role reads one way wherever it is rendered. The stack gap is --space-stack, the sibling gap Prose uses. Colours are semantic
 // tokens re-pointed by `.dark`, so no `dark:` class.
 const pageHead = cva(
   'flex flex-col gap-[var(--space-stack)] py-[var(--space-band)] px-[var(--gutter)]',
@@ -16,7 +17,7 @@ const pageHead = cva(
 // The scale event: the title role, led and tracked as a large heading, foreground. No measure - the
 // head is full-bleed and the consumer keeps titles short.
 const pageHeadTitle = cva(
-  'font-primary text-title leading-title tracking-display text-foreground',
+  'font-primary text-title leading-title tracking-optical text-foreground',
 );
 
 // The standfirst: the lede role, foreground, run one measure wider than the reading column (#18).

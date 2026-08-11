@@ -4,9 +4,10 @@ import type { FunctionComponent, ReactNode } from 'react';
 
 // Level fixes role: an h1 is always the display role, with no size prop to invert the ladder
 // (docs/adr/0005). Weight inherits - Tailwind's preflight resets h1-h6 to font-weight: inherit, so
-// the sized levels carry no weight class. Colour is a semantic token re-pointed by `.dark`, so no
-// variant carries a `dark:` class.
-const h1 = cva('font-primary text-display leading-display', {
+// the sized levels carry no weight class. --tracking-optical is the large-type correction, carried by
+// the title role and above (#57), so the biggest type on the page is the first to take it. Colour is a
+// semantic token re-pointed by `.dark`, so no variant carries a `dark:` class.
+const h1 = cva('font-primary text-display leading-display tracking-optical', {
   variants: {
     color: { foreground: 'text-foreground', muted: 'text-muted' },
   },
@@ -23,7 +24,8 @@ interface IH1Props extends VariantProps<typeof h1> {
  *
  * @Guarantees — enforced on every render
  * - Renders an `h1`; its outline level and the display role are one choice, not two (docs/adr/0005).
- * - Reads `--font-primary`, sized by `--text-display` and led by `--leading-display`.
+ * - Reads `--font-primary`, sized by `--text-display`, led by `--leading-display` and optically
+ *   corrected by `--tracking-optical`, the large-type correction every role from title up carries.
  * - `color` selects the `foreground` or `muted` role; nothing else paints text.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them

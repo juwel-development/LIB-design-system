@@ -95,10 +95,44 @@ An optical tracking correction and a letter-spaced label are different quantitie
 the `letter-spacing` property. A site-wide optical curve — which correctly tightens display sizes and
 loosens small ones — was applied across a page's text and silently collapsed a label's `0.14em` to
 `0.029em`, deleting the one device whose entire job is to be letter-spaced, with no error. So the two
-are named apart: `--tracking-label` is a fixed style that does not vary with size, `--tracking-display`
+are named apart: `--tracking-label` is a fixed style that does not vary with size, `--tracking-optical`
 a correction that does and is meaningless on its own. This is [ADR 0002](./0002-focus-ring-token-contract.md)
 run in reverse — there four ring tokens collapsed to one because they encoded a distinction that did
 not exist; here one property carries two quantities that do, and the fix is to name both.
+
+*(This token shipped as `--tracking-display` and was renamed in the amendment below.)*
+
+## Amended: the correction is size-scoped, and its name now says so
+
+The section above named the correction after the `display` role and left **who carries it** unwritten.
+Nothing then carried it, and the gap closed the worst way: `PageHead` shipped with the correction on
+its `title`-role heading while `H1`, the largest type in the system, went without — inverting the
+correction's own logic and rendering one type role two ways, since `H2` binds to `title` too. It
+reached `main` through a clause in an agent brief, which is precisely the *"settled as a side effect of
+one component's recipe"* outcome [#57](https://github.com/juwel-development/LIB-design-system/issues/57)
+was filed to prevent.
+
+**The correction is scoped by size, not by role.** It is carried by the `title` role and above — `H1`,
+`H2` and `PageHead`'s `h1` — and by nothing below it. Two consequences are worth stating because they
+are what the tests now pin:
+
+- **A role reads one way wherever it is rendered.** `H2` and `PageHead`'s `h1` are both the `title`
+  role, so they carry the same correction. This is [ADR 0005](./0005-heading-level-fixes-type-role.md)'s
+  premise applied to a property it did not originally mention.
+- **The subtitle role is the floor**, and `H3`'s spec pins it. An optical correction reaching ordinary
+  type is the failure this ADR already records, one rung earlier.
+
+**The token is renamed `--tracking-optical`.** Naming it for the `display` role was accurate while
+nothing used it and became under-inclusive the moment the scope was settled — a name saying `display`
+while the token serves `title` invites exactly the drift the section above warns about. `optical` names
+the *kind* of quantity instead, so the pair reads as **a style and a correction** without the ADR in
+hand, which is the distinction the whole section exists to protect. `--tracking-tight` was rejected: it
+names the effect and loses the reason.
+
+This is a **breaking change to the published token contract** — a consumer re-pointing
+`--tracking-display` silently loses the override — and it ships as a major version rather than quietly.
+That cost was accepted because the alternative is a permanent mismatch between a token's name and its
+scope, in the one place in this contract where a name being read carelessly has already caused damage.
 
 ## Two family roles
 

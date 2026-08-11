@@ -87,9 +87,11 @@ const TYPOGRAPHY = `@theme {
   --text-label: 0.8125rem;  /* 13px floor: below it the tracking reads as damage, not a device */
 
   /* Two quantities on one property that must not collapse: --tracking-label is a fixed letter-spaced
-     style, --tracking-display an optical correction that varies with size. See the ADR. */
+     style, --tracking-optical a correction that varies with size. The names say which is which, so the
+     distinction survives without the ADR in hand. Scope: the title role and above - H1, H2 and the page
+     head's h1 - and never below it, where the correction would read as damage. See the ADR. */
   --tracking-label: 0.14em;
-  --tracking-display: -0.02em;
+  --tracking-optical: -0.02em;
 }`;
 
 /* The reading measure is in ch, not rem, so the character count stays held when the body size moves

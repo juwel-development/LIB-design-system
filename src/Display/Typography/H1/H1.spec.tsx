@@ -10,6 +10,16 @@ describe('H1', () => {
     ).toBeInTheDocument();
   });
 
+  it('carries the large-type optical correction and never the label tracking', () => {
+    // Two quantities on one property that must not collapse (docs/adr/0004): the correction belongs to
+    // the biggest type on the page, the fixed letter-spacing to the label device. #57 settled the
+    // scope after the correction shipped on the subpage head while the hero went without.
+    render(<H1 testId={'page-title'}>Welcome</H1>);
+    const heading = screen.getByTestId('page-title');
+    expect(heading).toHaveClass('tracking-optical');
+    expect(heading.className).not.toContain('tracking-label');
+  });
+
   it('exposes the one sanctioned host hook through testId', () => {
     render(<H1 testId={'page-title'}>Welcome</H1>);
     expect(screen.getByTestId('page-title')).toBeInTheDocument();
