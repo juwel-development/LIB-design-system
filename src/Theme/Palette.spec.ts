@@ -102,6 +102,20 @@ describe('Palette', () => {
     },
   );
 
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ] as const)(
+    'keeps the backing plate at least 4.5:1 against foreground in the %s theme (WCAG 2.2 SC 1.4.3)',
+    (_theme, tokens) => {
+      // A failed image renders its alt text on `backing`, so the plate answers to the text threshold
+      // (4.5:1) against `foreground` - which keeps it near `surface` rather than a mid grey.
+      expect(
+        contrastRatio(tokens.backing, tokens.foreground),
+      ).toBeGreaterThanOrEqual(4.5);
+    },
+  );
+
   it('keeps the rule a mid-neutral between the border hairline and the control edge', () => {
     // The rule reads heavier than the row dividers but must not box like a control edge. Assert the
     // ordering per theme rather than pinning the hex, so a re-theme keeps the relationship.

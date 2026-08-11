@@ -32,6 +32,11 @@ export type PaletteTokens = {
    *  `controlBorder`'s control edge. A mid-neutral, so it structures without boxing. Constraint:
    *  at least 3:1 against `surface` in the same theme. */
   rule: string;
+  /** The plate behind content that has not painted - an image still loading, or one that failed and
+   *  is showing its alt text. Constraint: at least 4.5:1 against `foreground` in the same theme,
+   *  because a failed image renders its alt text on this plate and that text must stay legible. That
+   *  keeps it near `surface` rather than a mid grey. */
+  backing: string;
 
   /** The main call-to-action fill. */
   primary: string;
@@ -76,6 +81,7 @@ export const light: PaletteTokens = {
   border: '#e2e8f0',
   controlBorder: '#64748b',
   rule: '#808fa3',
+  backing: '#f1f5f9',
 
   primary: '#8b5cf6',
   primaryHover: '#7c3aed',
@@ -111,6 +117,7 @@ export const dark: PaletteTokens = {
   border: '#334155',
   controlBorder: '#94a3b8',
   rule: '#5b6a80',
+  backing: '#1e293b',
 
   primary: '#7c3aed',
   primaryHover: '#8b5cf6',
