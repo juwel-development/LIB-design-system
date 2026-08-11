@@ -127,6 +127,15 @@ const GUTTER = `:root {
   --gutter: clamp(1.5rem, 5vw, 4rem);
 }`;
 
+/* The fold is the least height a first screen takes (CONTEXT.md): measured against the screen not the
+   type, so in vh/rem and never em, in :root beside the gutter with no Tailwind namespace, read as
+   min-h-[var(--fold-height)]. Constraint: the vh component is < 100vh - a fold that exactly fills the
+   screen guarantees top-heaviness, so the next section's hairline must sit just inside it, and the
+   floor is enforced against the library's own value (ADR 0004), never a consumer's. */
+const FOLD = `:root {
+  --fold-height: min(70vh, 40rem);
+}`;
+
 /* Four aspect roles in a @theme block like typography: --aspect-* is a Tailwind 4 namespace, so it
    generates the aspect-portrait utilities Figure reaches rather than a :root value. Named shapes, not
    a ladder - ADR 0003/0004 rejected a radius and spacing scale (see SPACING) because a scale lets a
@@ -224,6 +233,9 @@ ${SPACING}
 
 /* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
 ${GUTTER}
+
+/* The fold height has no Tailwind namespace either, so it sits in :root beside the gutter. */
+${FOLD}
 
 /* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */
 ${TICK}

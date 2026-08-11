@@ -238,6 +238,28 @@ describe('renderTokens gutter contract', () => {
   });
 });
 
+describe('renderTokens fold contract', () => {
+  it('emits the fold height into :root, out of every @theme block', () => {
+    const css = renderTokens();
+    expect(css).toContain('--fold-height: min(70vh, 40rem);');
+    // No Tailwind namespace: a plain @theme block would generate a utility, @theme inline a bogus colour.
+    const themeBlock = css.match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).not.toContain('--fold-height');
+    expect(themeInline).not.toContain('--fold-height');
+  });
+
+  it('keeps the fold height below the viewport, so a first screen never fills it and reads top-heavy', () => {
+    // The constraint is the point, not the number 70: a fold that exactly fills the screen guarantees
+    // top-heaviness, so the vh component must clear 100 - 60vh or 80vh pass, 100vh fails. Enforced
+    // against the library's own value in ADR 0004's shape, never a consumer's.
+    const viewportComponent = Number.parseFloat(
+      renderTokens().match(/--fold-height:\s*min\(([0-9.]+)vh/)?.[1] ?? 'NaN',
+    );
+    expect(viewportComponent).toBeLessThan(100);
+  });
+});
+
 describe('renderTokens tick contract', () => {
   it('emits the two tick dimensions into :root, out of every @theme block', () => {
     const css = renderTokens();

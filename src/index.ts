@@ -22,6 +22,7 @@ export { Footer } from 'Layout/Footer/Footer';
 export type { FormState } from 'Layout/Form/Form';
 export { Form } from 'Layout/Form/Form';
 export { Header } from 'Layout/Header/Header';
+export { Hero } from 'Layout/Hero/Hero';
 export { PageHead } from 'Layout/PageHead/PageHead';
 export { Section } from 'Layout/Section/Section';
 export type { PaletteTokens } from 'Theme/Palette';
