@@ -6,15 +6,79 @@ on:
       - main
   workflow_dispatch:
 
-# A second release running against a half-published first one would compute its version
-# from stale tags, so releases are serialised rather than cancelled.
-concurrency:
-  group: release
-  cancel-in-progress: false
-
 jobs:
-  release:
+  # What *would* be released, computed and reported without publishing anything. This runs
+  # ungated so the version is on screen before anyone is asked to approve it: a breaking change
+  # below 1.0.0 goes straight to 1.0.0, which is easy to intend and easier to ship by accident.
+  preview:
+    name: preview
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # semantic-release reads the full tag and commit history to work out what the
+          # next version is; a shallow clone makes it think every release is the first.
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Compute the next version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # --dry-run still runs verifyConditions, and @semantic-release/npm checks the token
+          # there. It publishes nothing: the dry run stops before the publish step.
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -o pipefail
+          npx semantic-release --dry-run 2>&1 | tee dry-run.log
+
+          version="$(grep -oE 'The next release version is [0-9]+\.[0-9]+\.[0-9]+[^ ]*' dry-run.log \
+            | tail -1 | sed 's/The next release version is //')"
+
+          {
+            echo "## Release preview"
+            if [ -n "$version" ]; then
+              echo "Approving the **release** job publishes \`$version\`."
+              if grep -q 'BREAKING CHANGE' dry-run.log; then
+                echo ""
+                echo "> :warning: This release contains a **breaking change**."
+              fi
+            else
+              echo "No relevant changes since the last tag — approving would publish nothing."
+            fi
+            echo ""
+            echo "<details><summary>semantic-release dry run</summary>"
+            echo ""
+            echo '```'
+            cat dry-run.log
+            echo '```'
+            echo ""
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    name: release
+    needs: preview
+    runs-on: ubuntu-latest
+    # The approval gate. This environment carries a required reviewer, so the job parks as
+    # "Waiting" until a human approves it — nothing is published before that. The environment
+    # MUST exist with its protection rule: a workflow naming an absent environment gets one
+    # created on the fly with no rules at all, which would publish unattended.
+    environment: release
+    # Serialised here rather than at workflow level on purpose. A run parked awaiting approval
+    # holds its concurrency group for as long as it waits, and a workflow-level group would keep
+    # the *next* merge's preview from running — leaving the newer change with no version report.
+    concurrency:
+      group: release
+      cancel-in-progress: false
     permissions:
       contents: write
       issues: write
@@ -24,8 +88,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # semantic-release reads the full tag and commit history to work out what the
-          # next version is; a shallow clone makes it think every release is the first.
           fetch-depth: 0
           persist-credentials: false
       - name: Setup Node.js
