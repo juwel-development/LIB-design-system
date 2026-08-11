@@ -6,9 +6,9 @@ import type { FunctionComponent, ReactNode } from 'react';
 export type FormState = 'idle' | 'sending' | 'sent' | 'failed';
 
 // The one recipe, and it paints the note only (issue #6): `state` selects the note's tone - muted
-// while the form stands, success on the outcome, error on the failure. Region selection is JSX
-// logic below, not classes, so this axis never grows a layout job. Colours are semantic tokens
-// re-pointed by `.dark`, so no variant carries a `dark:` class.
+// while the form stands, success on the outcome, error on the failure. Region selection is the
+// NOTE_ROLE map below, not classes, so this axis never grows a layout job. Colours are semantic
+// tokens re-pointed by `.dark`, so no variant carries a `dark:` class.
 const form = cva('text-sm', {
   variants: {
     state: {
@@ -20,6 +20,13 @@ const form = cva('text-sm', {
   },
   defaultVariants: { state: 'idle' },
 });
+
+// The note's ARIA role: a settled outcome is a status region, a failure an alert; while the form
+// still stands the note is plain prose and carries none.
+const NOTE_ROLE: Partial<Record<FormState, 'status' | 'alert'>> = {
+  sent: 'status',
+  failed: 'alert',
+};
 
 interface IFormProps {
   /** Where the submission goes. Passed straight to the form element; Form makes no decision about it. */
@@ -63,8 +70,7 @@ export const Form: FunctionComponent<IFormProps> = ({
   }
 
   const showFields = state !== 'sent';
-  const noteRole =
-    state === 'sent' ? 'status' : state === 'failed' ? 'alert' : undefined;
+  const noteRole = NOTE_ROLE[state];
 
   return (
     <form
