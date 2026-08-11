@@ -59,6 +59,21 @@ moves up to `clamp(3rem, 7vw, 6rem)`; the old `display` value drops to `--text-t
 down to the new `--text-subtitle` (`clamp(1.5rem, 3vw, 2.25rem)`, leading `1.2`). The two changes are
 one change: the scale shifts down one rung and gains a hero at the top.
 
+### A lede role, for the reading block
+
+`lede` is added as a **seventh** type role — `--text-lede: 1.25rem`, `--leading-lede: 1.4` — for the
+opening paragraph of a measure-bounded reading block
+([#21](https://github.com/juwel-development/LIB-design-system/issues/21)). It sits above `body`
+(`1.0625rem`) and below `subtitle`'s clamp floor (`1.5rem`), with **running-text leading**: tighter
+than `body`'s `1.6`, but not a heading's `1.2` — it is a multi-line paragraph, not a head.
+
+Reusing `subtitle` was available and free, and rejected. This contract binds every size to its
+leading, so borrowing `subtitle`'s size welds the lede to H3's *and* applies a heading's `1.2` leading
+to running text. It is a role, not a rung, by this ADR's own test: a lede is a job — the one opening
+paragraph of a reading block — so there is still one role per job and no component gains a choice
+between them. Recorded here, in place, rather than as a new ADR, following the `subtitle` precedent
+above.
+
 ## The measure is in `ch`
 
 The reading measure is `66ch`, not a `rem` width. A `rem` measure holds the column still while the

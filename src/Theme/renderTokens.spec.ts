@@ -69,10 +69,33 @@ describe('renderTokens typography contract', () => {
     expect(theme).toContain('--leading-title: 1.1;');
     expect(theme).toContain('--text-subtitle: clamp(1.5rem, 3vw, 2.25rem);');
     expect(theme).toContain('--leading-subtitle: 1.2;');
+    expect(theme).toContain('--text-lede: 1.25rem;');
+    expect(theme).toContain('--leading-lede: 1.4;');
     expect(theme).toContain('--text-body: 1.0625rem;');
     expect(theme).toContain('--leading-body: 1.6;');
     expect(theme).toContain('--tracking-label: 0.14em;');
     expect(theme).toContain('--tracking-display: -0.02em;');
+  });
+
+  it('sizes the lede role above body and below the subtitle floor, a paragraph not a heading', () => {
+    // The lede is the reading block's opening paragraph (Prose #21): larger than body, smaller than
+    // the smallest a subtitle ever gets (its clamp floor), so it never borrows a heading's size.
+    const subtitleFloor = Number.parseFloat(
+      themeBlock().match(/--text-subtitle:\s*clamp\(([0-9.]+)rem/)?.[1] ??
+        'NaN',
+    );
+    expect(remPx('text-lede')).toBeGreaterThan(remPx('text-body'));
+    expect(remPx('text-lede')).toBeLessThan(subtitleFloor * 16);
+  });
+
+  it('emits the lede role in the typography @theme block, not :root or the colour map', () => {
+    // A Tailwind --text-*/--leading-* namespace: it generates the text-lede/leading-lede utilities
+    // Prose.Lede reaches, so it belongs in the plain @theme block, never in @theme inline.
+    expect(themeBlock()).toContain('--text-lede');
+    expect(themeBlock()).toContain('--leading-lede');
+    const themeInline =
+      renderTokens().match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeInline).not.toContain('lede');
   });
 
   it('keeps display the largest role, so a subpage head can never out-scale the hero', () => {

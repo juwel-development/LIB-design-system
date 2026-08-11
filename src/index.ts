@@ -9,6 +9,7 @@ export { H4 } from 'Display/Typography/H4/H4';
 export { H5 } from 'Display/Typography/H5/H5';
 export { H6 } from 'Display/Typography/H6/H6';
 export { P } from 'Display/Typography/P/P';
+export { Prose } from 'Display/Typography/Prose/Prose';
 export { Button } from 'Interaction/Button/Button';
 export { Input } from 'Interaction/Input/Input';
 export { Link } from 'Interaction/Link/Link';

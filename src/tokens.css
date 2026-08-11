@@ -128,6 +128,13 @@
   --leading-title: 1.1;
   --text-subtitle: clamp(1.5rem, 3vw, 2.25rem);
   --leading-subtitle: 1.2;
+
+  /* The reading block's opening paragraph (Prose #21): sized above body and below subtitle, led
+     tighter than body's 1.6 but not as tight as a heading's 1.2 - it is running text, not a head, so
+     it keeps running-text leading. A role, not a rung: one lede per block, nothing to choose. Reusing
+     subtitle was rejected in ADR 0004 - it welds the lede's size to H3's and its leading to a head's. */
+  --text-lede: 1.25rem;  /* 20px */
+  --leading-lede: 1.4;
   --text-body: 1.0625rem;  /* 17px */
   --leading-body: 1.6;
   --text-small: 0.9375rem;  /* 15px floor: below it tabular figures stop comparing column to column */
