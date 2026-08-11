@@ -13,7 +13,7 @@ const h4 = cva('font-primary text-body leading-body font-bold', {
   defaultVariants: { color: 'foreground' },
 });
 
-export interface IH4Props extends VariantProps<typeof h4> {
+interface IH4Props extends VariantProps<typeof h4> {
   children: ReactNode;
   testId?: string;
 }

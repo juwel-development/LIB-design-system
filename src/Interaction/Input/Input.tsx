@@ -21,7 +21,7 @@ const input = cva(
   },
 );
 
-export interface IInputProps extends VariantProps<typeof input> {
+interface IInputProps extends VariantProps<typeof input> {
   /** Always rendered and associated with the control; never replaced by the placeholder. */
   label: string;
   /** How the surrounding form reads the value on submit. */

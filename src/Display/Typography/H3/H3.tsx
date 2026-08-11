@@ -13,7 +13,7 @@ const h3 = cva('font-primary text-subtitle leading-subtitle', {
   defaultVariants: { color: 'foreground' },
 });
 
-export interface IH3Props extends VariantProps<typeof h3> {
+interface IH3Props extends VariantProps<typeof h3> {
   children: ReactNode;
   testId?: string;
 }

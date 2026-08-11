@@ -24,7 +24,7 @@ const link = cva(
   },
 );
 
-export interface ILinkProps extends VariantProps<typeof link> {
+interface ILinkProps extends VariantProps<typeof link> {
   /** Where the link points. Carried on the anchor, so the link navigates with JavaScript disabled. */
   href: string;
   /** The link text. */

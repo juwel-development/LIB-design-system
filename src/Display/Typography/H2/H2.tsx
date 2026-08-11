@@ -13,7 +13,7 @@ const h2 = cva('font-primary text-title leading-title', {
   defaultVariants: { color: 'foreground' },
 });
 
-export interface IH2Props extends VariantProps<typeof h2> {
+interface IH2Props extends VariantProps<typeof h2> {
   children: ReactNode;
   testId?: string;
 }
