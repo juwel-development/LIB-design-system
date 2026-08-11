@@ -181,3 +181,17 @@ What must survive the crop when an image is fitted to a frame shape it does not 
 where the subject sits — a face held high, a horizon held low — never as a length or a percentage,
 and meaningful only where a frame crops at all.
 _Avoid_: Object position, alignment, anchor, image position, crop origin
+
+**Brandmark**:
+A product's mark — text that has stopped being text. Because it is drawn rather than set, it carries
+no name of its own and must be given one. The library names a mark and never hosts one: an asset
+belongs to a single brand and so belongs to the consumer, which is the boundary
+[ADR 0007](docs/adr/0007-the-library-ships-page-composables.md) draws.
+_Avoid_: Logo, wordmark, lockup, brand image
+
+**Cut**:
+One of several drawings of a mark, each for a different size — a full lockup and a short crop for
+small slots. Borrowed from type, where it means exactly this. One mark is not one asset: a lockup
+legible on a page is usually illegible in a favicon, so which cut is in use is stated wherever a mark
+is placed rather than inferred from its width.
+_Avoid_: Variant, version, size, mark variant
