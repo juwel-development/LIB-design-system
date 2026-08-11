@@ -258,3 +258,12 @@ stops short of the viewport: a first screen that fills the screen exactly guaran
 because nothing is left to say the page continues. Leaving the following unit's edge just inside the
 viewport is what makes it a fold rather than a screen.
 _Avoid_: Above the fold, viewport height, hero height, full-screen, first screen
+
+**Index**:
+The standing marker naming where you are in a long page — a filing numeral and the section's name, set
+*beside* the section rather than above it and staying with it while it scrolls. The staying is what
+makes it an index: a marker that scrolls away at the top of its section is a heading that happens to
+sit beside the text. It *files* a section without *heading* it — the section's own heading stays in its
+matter and the index repeats that name — so it is a visual device and says nothing of its own to a
+screen reader.
+_Avoid_: Sidebar, aside, table of contents, section nav, breadcrumb
