@@ -68,7 +68,9 @@ _Avoid_: Depth, shadow, lift
 **Focus ring**:
 The one mark the library draws to show which control holds keyboard focus. It states keyboard
 position and nothing else — never the importance of the control it surrounds — so it is one role
-across every focusable primitive rather than one per variant.
+across every focusable primitive rather than one per variant. It is also the *only* thing that
+changes on focus: a control's boundary, fill and geometry hold still, so focus reads as a mark
+appearing rather than as the control thickening.
 _Avoid_: Focus state, focus highlight, per-variant ring
 
 ### Components
