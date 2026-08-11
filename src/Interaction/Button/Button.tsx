@@ -19,7 +19,8 @@ const button = cva(
           'px-4 sm:px-6 min-w-42 bg-primary text-primary-foreground hover:bg-primary-hover',
         secondary:
           'px-4 sm:px-6 min-w-42 bg-secondary text-secondary-foreground hover:bg-secondary-hover',
-        ghost: 'px-2 min-w-0 bg-transparent text-foreground hover:underline',
+        ghost:
+          'px-2 min-w-0 bg-transparent text-foreground hover:underline hover:decoration-[length:var(--underline-thickness)] hover:underline-offset-[var(--underline-offset)]',
       },
     },
     defaultVariants: {
