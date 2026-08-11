@@ -76,13 +76,15 @@ describe('renderTokens typography contract', () => {
   });
 
   it('keeps display the largest role, so a subpage head can never out-scale the hero', () => {
-    // display's clamped ceiling must clear title's, the rung title takes over from the old
-    // subpage-head value it was mistakenly holding. See docs/adr/0004-typography-token-contract.md.
-    const theme = themeBlock();
-    expect(theme).toContain('--text-display: clamp(3rem, 7vw, 6rem);');
-    expect(theme).not.toContain(
-      '--text-display: clamp(2.25rem, 5vw, 4.25rem);',
-    );
+    // Enforce the invariant, not a fixed pair of values: display's clamp ceiling must clear title's,
+    // which now holds the subpage-head value display mistakenly carried. See the ADR (0004).
+    const ceilingRem = (role: string): number => {
+      const match = themeBlock().match(
+        new RegExp(`--text-${role}:\\s*clamp\\([^)]*,\\s*([0-9.]+)rem\\)`),
+      );
+      return match ? Number.parseFloat(match[1] as string) : Number.NaN;
+    };
+    expect(ceilingRem('display')).toBeGreaterThan(ceilingRem('title'));
   });
 
   it('keeps typography out of the Tailwind colour map, since it is not a colour', () => {
