@@ -76,13 +76,11 @@ describe('DefinitionList', () => {
     // closes at the foot - the last item keeps its bottom rule.
     const { container } = renderSpecList();
     const items = container.querySelectorAll('dl > div');
-    items.forEach((item, index) => {
+    for (const item of items) {
       expect(item.className).toMatch(/\bborder-b\b/);
       expect(item.className).toMatch(/\bborder-border\b/);
-      const promotedToTop = /\bfirst:border-t\b/.test(item.className);
-      expect(promotedToTop).toBe(true);
-      expect(index).toBeGreaterThanOrEqual(0);
-    });
+      expect(item.className).toMatch(/\bfirst:border-t\b/);
+    }
   });
 
   it("draws no card, box, fill, icon or bullet anywhere - the issue's explicit Must not list", () => {

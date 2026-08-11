@@ -1,13 +1,10 @@
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent, ReactNode } from 'react';
 
-// Rules are the layout (issue #11). Each Item owns its two-track grid and its hairlines, so the block
-// reads as a list of terms from the rules alone - no card, box, fill, icon or bullet. Because the term
-// track is a fixed width, per-item grids still line up and no subgrid is needed. Single column below
-// 64rem with the term above its description; two baseline-aligned columns at and above it (Tailwind
-// `lg` = 64rem). A second `dt` is pinned to the term column so it cannot auto-place into the
-// description column and break the row silently. Colours are semantic tokens re-pointed by `.dark`,
-// so no class carries a `dark:` prefix.
+// Rules are the layout. Each Item owns its two-track grid and its hairlines. The term track is a fixed
+// width, so per-item grids line up without a subgrid. At `lg` (64rem) a second `dt` is pinned to the
+// term column so it cannot auto-place into the description column and break the row silently. Colours
+// are semantic tokens re-pointed by `.dark`, so no class carries a `dark:` prefix.
 const item = cva(
   [
     'grid gap-[var(--space-stack)] py-6',
