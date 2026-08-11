@@ -11,8 +11,8 @@ const meta: Meta<typeof Link> = {
   argTypes: {
     treatment: {
       control: { type: 'radio' },
-      options: ['prose', 'quiet', 'label-link'],
-      description: 'Which of the three link treatments to render',
+      options: ['prose', 'quiet', 'label-link', 'graphic'],
+      description: 'Which of the four link treatments to render',
     },
     external: {
       control: { type: 'boolean' },
@@ -52,6 +52,26 @@ export const LabelLink: Story = {
   },
 };
 
+// The child is a mark, not text, so graphic is the only treatment that leaves it alone: no colour
+// shift and no underline, at rest or on hover.
+export const Graphic: Story = {
+  args: {
+    href: '/',
+    treatment: 'graphic',
+    children: (
+      <svg
+        width={'24'}
+        height={'24'}
+        viewBox={'0 0 24 24'}
+        role={'img'}
+        aria-label={'Home'}
+      >
+        <rect width={'24'} height={'24'} rx={'4'} fill={'currentColor'} />
+      </svg>
+    ),
+  },
+};
+
 export const External: Story = {
   args: {
     href: 'https://example.com',
@@ -70,9 +90,9 @@ export const Current: Story = {
   },
 };
 
-// All three treatments, so the prose underline, the quiet hover shift and the inherited label link
-// can be compared side by side. Prose sits in running text because that is where its underline does
-// its work.
+// All four treatments, so the prose underline, the quiet hover shift, the inherited label link and
+// the untouched graphic mark can be compared side by side. Prose sits in running text because that is
+// where its underline does its work.
 const AllTreatments = () => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
     <p style={{ maxWidth: '32ch' }}>
@@ -92,6 +112,17 @@ const AllTreatments = () => (
     </nav>
     <Link href={'/tags/design'} treatment={'label-link'}>
       DESIGN
+    </Link>
+    <Link href={'/'} treatment={'graphic'}>
+      <svg
+        width={'24'}
+        height={'24'}
+        viewBox={'0 0 24 24'}
+        role={'img'}
+        aria-label={'Home'}
+      >
+        <rect width={'24'} height={'24'} rx={'4'} fill={'currentColor'} />
+      </svg>
     </Link>
   </div>
 );

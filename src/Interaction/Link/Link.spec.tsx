@@ -9,7 +9,7 @@ describe('Link', () => {
     expect(link).toHaveAttribute('href', '/pricing');
   });
 
-  it.each(['prose', 'quiet', 'label-link'] as const)(
+  it.each(['prose', 'quiet', 'label-link', 'graphic'] as const)(
     'renders a navigable link for the %s treatment',
     (treatment) => {
       render(
