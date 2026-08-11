@@ -27,6 +27,11 @@ export type PaletteTokens = {
    *  control from the surface. Constraint (WCAG 2.2 SC 1.4.11): at least 3:1 against `surface`
    *  in the same theme. */
   controlBorder: string;
+  /** The structural rule that makes a block read as a table rather than a list: the heavier top
+   *  line above the first row, weightier than `border`'s hairline dividers and lighter than
+   *  `controlBorder`'s control edge. A mid-neutral, so it structures without boxing. Constraint:
+   *  at least 3:1 against `surface` in the same theme. */
+  rule: string;
 
   /** The main call-to-action fill. */
   primary: string;
@@ -70,6 +75,7 @@ export const light: PaletteTokens = {
   muted: '#64748b',
   border: '#e2e8f0',
   controlBorder: '#64748b',
+  rule: '#808fa3',
 
   primary: '#8b5cf6',
   primaryHover: '#7c3aed',
@@ -104,6 +110,7 @@ export const dark: PaletteTokens = {
   muted: '#94a3b8',
   border: '#334155',
   controlBorder: '#94a3b8',
+  rule: '#5b6a80',
 
   primary: '#7c3aed',
   primaryHover: '#8b5cf6',
