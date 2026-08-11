@@ -39,6 +39,72 @@ describe('renderTokens radius contract', () => {
   });
 });
 
+describe('renderTokens typography contract', () => {
+  // The library ships no face, so it holds no font values to read; the type-role sizes are its
+  // own, and the two floors below are checked against them the way the contrast test checks the
+  // ring. 1rem is 16px.
+  const remPx = (name: string): number => {
+    const match = renderTokens().match(
+      new RegExp(`--${name}:\\s*([0-9.]+)rem;`),
+    );
+    return match ? Number.parseFloat(match[1] as string) * 16 : Number.NaN;
+  };
+
+  // A plain @theme block (not @theme inline) is the colour-free one; it generates the
+  // font-*/text-*/leading-*/tracking-* utilities a sealed recipe reaches.
+  const themeBlock = (): string =>
+    renderTokens().match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+
+  it('names two family roles defaulting to inherit, so the library ships no face', () => {
+    const theme = themeBlock();
+    expect(theme).toContain('--font-primary: inherit;');
+    expect(theme).toContain('--font-secondary: inherit;');
+  });
+
+  it('declares the type roles, leading and tracking so the utilities exist', () => {
+    const theme = themeBlock();
+    expect(theme).toContain('--text-display: clamp(2.25rem, 5vw, 4.25rem);');
+    expect(theme).toContain('--text-title: clamp(1.5rem, 3vw, 2.25rem);');
+    expect(theme).toContain('--text-body: 1.0625rem;');
+    expect(theme).toContain('--leading-body: 1.6;');
+    expect(theme).toContain('--tracking-label: 0.14em;');
+    expect(theme).toContain('--tracking-display: -0.02em;');
+  });
+
+  it('keeps typography out of the Tailwind colour map, since it is not a colour', () => {
+    // @theme inline registers each declaration as a Tailwind colour; a type token in there would
+    // emit a bogus --color-font-primary.
+    const themeInline =
+      renderTokens().match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeInline).not.toContain('--font-');
+    expect(themeInline).not.toContain('--text-');
+    expect(themeInline).not.toContain('--tracking-');
+  });
+
+  it('carries the reading measure in ch in :root, out of every @theme block', () => {
+    const css = renderTokens();
+    expect(css).toContain('--measure: 66ch;');
+    expect(css).toContain('--measure-display: 36ch;');
+    // ch has no Tailwind namespace, so it must not sit in the utility-generating block.
+    expect(themeBlock()).not.toContain('--measure');
+  });
+
+  it('overrides no Tailwind built-in, so a consumer keeps their own type and faces', () => {
+    const css = renderTokens();
+    expect(css).not.toContain('--text-base');
+    expect(css).not.toContain('--font-sans');
+    expect(css).not.toContain('--font-serif');
+  });
+
+  it('keeps --text-label at least 13px, below which its tracking reads as damage', () => {
+    expect(remPx('text-label')).toBeGreaterThanOrEqual(13);
+  });
+
+  it('keeps --text-small at least 15px, below which tabular figures stop comparing', () => {
+    expect(remPx('text-small')).toBeGreaterThanOrEqual(15);
+  });
+});
+
 describe('renderTokens focus ring contract', () => {
   it('emits none of the three collapsed per-variant ring roles', () => {
     const css = renderTokens();

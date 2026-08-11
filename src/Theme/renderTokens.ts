@@ -40,6 +40,42 @@ const RADIUS = `:root {
   --radius-control: 0.5rem;
 }`;
 
+/* Typography is not a colour and, unlike the blocks above, not :root-only: Tailwind 4's --font-*,
+   --text-*, --leading- and --tracking-* are theme namespaces, so its own @theme block generates the
+   font-primary/text-display/leading-body/tracking-label utilities a sealed recipe reaches. No
+   Tailwind built-in is re-pointed; only new role names. See docs/adr/0004-typography-token-contract.md. */
+const TYPOGRAPHY = `@theme {
+  /* Both faces default to inherit, so the library ships no @font-face and no face and a one-face
+     consumer renders as today. --font-primary is carried by content, --font-secondary by labels; a
+     component sets font-variant-numeric: tabular-nums only on a --font-primary carrying tnum and
+     font-variant-caps: small-caps only on a --font-secondary carrying smcp - both fail silently otherwise. */
+  --font-primary: inherit;
+  --font-secondary: inherit;
+
+  /* Type roles, not a scale: one role per job, so a component asks for what its text is, never a rung. */
+  --text-display: clamp(2.25rem, 5vw, 4.25rem);
+  --leading-display: 1.05;
+  --text-title: clamp(1.5rem, 3vw, 2.25rem);
+  --leading-title: 1.15;
+  --text-body: 1.0625rem;  /* 17px */
+  --leading-body: 1.6;
+  --text-small: 0.9375rem;  /* 15px floor: below it tabular figures stop comparing column to column */
+  --text-label: 0.8125rem;  /* 13px floor: below it the tracking reads as damage, not a device */
+
+  /* Two quantities on one property that must not collapse: --tracking-label is a fixed letter-spaced
+     style, --tracking-display an optical correction that varies with size. See the ADR. */
+  --tracking-label: 0.14em;
+  --tracking-display: -0.02em;
+}`;
+
+/* The reading measure is in ch, not rem, so the character count stays held when the body size moves
+   under it; --measure-display is narrower because bigger type wants fewer characters per line. ch has
+   no Tailwind namespace, so it sits in :root beside radius, read as max-w-[var(--measure)]. */
+const MEASURE = `:root {
+  --measure: 66ch;
+  --measure-display: 36ch;
+}`;
+
 const toKebabCase = (name: string): string =>
   name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 
@@ -92,5 +128,12 @@ ${FOCUS_RING}
 
 /* Radius is not a colour either: one token for the corner every control reads, beside the others. */
 ${RADIUS}
+
+/* Typography is a set of Tailwind theme namespaces, not colours: its own @theme block generates the
+   utilities, so it is not carried in @theme inline with the palette. */
+${TYPOGRAPHY}
+
+/* The reading measure has no Tailwind namespace, so it sits in :root beside radius. */
+${MEASURE}
 `;
 };
