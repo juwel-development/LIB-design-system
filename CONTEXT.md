@@ -49,6 +49,13 @@ anything else. The scale hierarchy therefore holds by construction, across route
 page, instead of depending on every caller getting it right.
 _Avoid_: Heading size, heading variant, heading scale
 
+**Eyebrow**:
+A short line of small, tracked, muted type standing above the thing it files, set at the *label* type
+role. Distinct from a form label: it names no control and cannot be associated with one — the text
+controls carry their own labelling, and the same device inside a table header, a caption or a nav
+belongs to whichever component owns that element.
+_Avoid_: Label, kicker, overline
+
 **Reading measure**:
 The width running text is bounded to, counted in characters rather than in length — because
 character count is what reading tolerance is defined in, and a width held still lets the count drift
