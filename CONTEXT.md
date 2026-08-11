@@ -51,10 +51,13 @@ _Avoid_: Heading size, heading variant, heading scale
 
 **Eyebrow**:
 A short line of small, tracked, muted type standing above the thing it files, set at the *label* type
-role. Distinct from a form label: it names no control and cannot be associated with one — the text
-controls carry their own labelling, and the same device inside a table header, a caption or a nav
-belongs to whichever component owns that element.
-_Avoid_: Label, kicker, overline
+role — and the primitive that renders it, a `p` muted by default. Named apart from "label" on purpose:
+"label" already means the HTML `<label>` a text control renders, the required `label` prop on that
+control, and the label type role the device reads. An Eyebrow carries no `htmlFor` and names no
+control, so it is none of those — a caller writing a form reaches for `Input`/`TextArea`, which label
+themselves — and the same device inside a table header, a caption or a nav belongs to whichever
+component owns that element.
+_Avoid_: Label, kicker, overline, Caption, small-caps
 
 **Reading measure**:
 The width running text is bounded to, counted in characters rather than in length — because
@@ -125,10 +128,20 @@ The closed set of primitives the library offers. A genuinely new need is added t
 hand-rolled as a styled element in a consuming product.
 _Avoid_: Catalogue, component list
 
-**Eyebrow**:
-The primitive for the letter-spaced eyebrow / caption device — a `p` at the label type role, muted by
-default. Named apart from "label" on purpose: "label" already means the HTML `<label>` a text control
-renders, the required `label` prop on that control, and the label *type role* the device reads. An
-`Eyebrow` carries no `htmlFor` and labels no control, so it is not one of those; a caller writing a
-form reaches for `Input`/`TextArea`, which label themselves.
-_Avoid_: Label, Caption, small-caps
+### Forms
+
+**Field**:
+The label, control and messages a text control renders as one unit. Not a primitive — `Input` and
+`TextArea` each *are* a field, and the library offers no wrapper for composing one.
+_Avoid_: Field wrapper, form group, form row
+
+**Driver**:
+Whatever performs a form's submission and carries its state — a native round-trip or a hydrated
+island. The library commits to neither: it declares where a submission goes and renders the state it
+is told, so a product can change driver without changing markup.
+_Avoid_: Transport, submission handler, backend
+
+**Form state**:
+Which of `idle`, `sending`, `sent` or `failed` a form is in. Owned by the page, never by the
+component — a component renders the state it is given and never decides which one it is in.
+_Avoid_: Submission status, loading state
