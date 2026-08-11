@@ -144,6 +144,45 @@ describe('renderTokens typography contract', () => {
   });
 });
 
+describe('renderTokens aspect contract', () => {
+  // The four aspect roles are a Tailwind --aspect-* namespace, so they generate the aspect-*
+  // utilities Figure's recipe reaches and belong in a plain @theme block, never :root or the colour map.
+  const aspectBlock = (): string =>
+    (renderTokens().match(/@theme \{[\s\S]*?\}/g) ?? []).find((block) =>
+      block.includes('--aspect-portrait'),
+    ) ?? '';
+
+  it('emits the four aspect roles inside a @theme block, so the aspect-* utilities exist', () => {
+    const block = aspectBlock();
+    expect(block).toContain('--aspect-portrait:  4 / 5;');
+    expect(block).toContain('--aspect-square:    1 / 1;');
+    expect(block).toContain('--aspect-landscape: 3 / 2;');
+    expect(block).toContain('--aspect-wide:     16 / 9;');
+  });
+
+  it('keeps the aspect roles out of :root and the Tailwind colour map, since a @theme namespace generates the utilities', () => {
+    const css = renderTokens();
+    // @theme inline would register a bogus --color-aspect-*; :root would generate no utility.
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeInline).not.toContain('aspect');
+    const root = css.match(/:root \{([^}]*)\}/)?.[1] ?? '';
+    expect(root).not.toContain('aspect');
+  });
+
+  it('emits the aspect block after the typography block, where a reader meets both theme namespaces', () => {
+    const css = renderTokens();
+    expect(css.indexOf('--aspect-portrait')).toBeGreaterThan(
+      css.indexOf('--text-display'),
+    );
+  });
+
+  it('re-points no Tailwind built-in, leaving --aspect-video alone', () => {
+    // ADR 0004: only new role names. --aspect-wide resolves to today's 16/9 and diverges the moment
+    // a brand re-points ours, which is the point; the built-in --aspect-video is never touched.
+    expect(renderTokens()).not.toContain('--aspect-video');
+  });
+});
+
 describe('renderTokens spacing contract', () => {
   it('emits the two spacing roles into :root, expressed in em so they track the type ramp', () => {
     const css = renderTokens();

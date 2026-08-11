@@ -106,6 +106,17 @@ const SPACING = `:root {
   --space-region: 1.5em;
 }`;
 
+/* Four aspect roles in a @theme block like typography: --aspect-* is a Tailwind 4 namespace, so it
+   generates the aspect-portrait utilities Figure reaches rather than a :root value. Named shapes, not
+   a ladder - ADR 0003/0004 rejected a radius and spacing scale (see SPACING) because a scale lets a
+   component pick a rung with no rule saying which; four shapes with distinct jobs and no ordering do not. */
+const ASPECT = `@theme {
+  --aspect-portrait:  4 / 5;
+  --aspect-square:    1 / 1;
+  --aspect-landscape: 3 / 2;
+  --aspect-wide:     16 / 9;
+}`;
+
 /* The checklist tick's two dimensions are not colours: like the underline and focus-ring dimensions
    they live in :root only, never @theme inline, so a brand can re-point them. They are named rather
    than recipe literals because of ADR 0004's test - whether the library sets the property. The tick is
@@ -177,6 +188,10 @@ ${UNDERLINE}
 /* Typography is a set of Tailwind theme namespaces, not colours: its own @theme block generates the
    utilities, so it is not carried in @theme inline with the palette. */
 ${TYPOGRAPHY}
+
+/* The aspect roles are Tailwind theme namespaces like typography, so they take their own @theme block
+   after it and are not carried in @theme inline with the palette. */
+${ASPECT}
 
 /* The reading measure has no Tailwind namespace, so it sits in :root beside radius. */
 ${MEASURE}

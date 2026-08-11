@@ -16,6 +16,7 @@
   --color-border: #e2e8f0;
   --color-control-border: #64748b;
   --color-rule: #808fa3;
+  --color-backing: #f1f5f9;
   --color-primary: #8b5cf6;
   --color-primary-hover: #7c3aed;
   --color-primary-foreground: #f8fafc;
@@ -39,6 +40,7 @@
   --color-border: #334155;
   --color-control-border: #94a3b8;
   --color-rule: #5b6a80;
+  --color-backing: #1e293b;
   --color-primary: #7c3aed;
   --color-primary-hover: #8b5cf6;
   --color-primary-foreground: #f8fafc;
@@ -62,6 +64,7 @@
   --color-border: var(--color-border);
   --color-control-border: var(--color-control-border);
   --color-rule: var(--color-rule);
+  --color-backing: var(--color-backing);
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
   --color-primary-foreground: var(--color-primary-foreground);
@@ -144,6 +147,15 @@
      style, --tracking-display an optical correction that varies with size. See the ADR. */
   --tracking-label: 0.14em;
   --tracking-display: -0.02em;
+}
+
+/* The aspect roles are Tailwind theme namespaces like typography, so they take their own @theme block
+   after it and are not carried in @theme inline with the palette. */
+@theme {
+  --aspect-portrait:  4 / 5;
+  --aspect-square:    1 / 1;
+  --aspect-landscape: 3 / 2;
+  --aspect-wide:     16 / 9;
 }
 
 /* The reading measure has no Tailwind namespace, so it sits in :root beside radius. */
