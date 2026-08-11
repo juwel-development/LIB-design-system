@@ -72,9 +72,7 @@ export const PageHead: FunctionComponent<IPageHeadProps> = ({
 }) => (
   <header className={pageHead()} data-testid={testId}>
     <h1 className={pageHeadTitle()}>{title}</h1>
-    {lede === undefined ? undefined : <p className={pageHeadLede()}>{lede}</p>}
-    {intro === undefined ? undefined : (
-      <p className={pageHeadIntro()}>{intro}</p>
-    )}
+    {lede !== undefined && <p className={pageHeadLede()}>{lede}</p>}
+    {intro !== undefined && <p className={pageHeadIntro()}>{intro}</p>}
   </header>
 );
