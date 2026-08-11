@@ -13,7 +13,7 @@ const h5 = cva('font-primary text-body leading-body font-semibold', {
   defaultVariants: { color: 'foreground' },
 });
 
-export interface IH5Props extends VariantProps<typeof h5> {
+interface IH5Props extends VariantProps<typeof h5> {
   children: ReactNode;
   testId?: string;
 }

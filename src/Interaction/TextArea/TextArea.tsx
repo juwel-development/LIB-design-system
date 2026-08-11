@@ -13,7 +13,7 @@ const textArea = cva(
   'block min-h-24 w-full rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent px-3 py-2 text-foreground transition-colors duration-[var(--motion-duration-color)] outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)] [&:user-invalid]:border-error aria-[invalid=true]:border-error disabled:cursor-not-allowed disabled:border-disabled disabled:text-muted',
 );
 
-export interface ITextAreaProps {
+interface ITextAreaProps {
   /** Always rendered and associated with the control; never replaced by the placeholder. */
   label: string;
   /** How the surrounding form reads the value on submit. */

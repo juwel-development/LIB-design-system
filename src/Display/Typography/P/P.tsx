@@ -12,7 +12,7 @@ const p = cva('font-primary text-body leading-body', {
   defaultVariants: { color: 'foreground' },
 });
 
-export interface IPProps extends VariantProps<typeof p> {
+interface IPProps extends VariantProps<typeof p> {
   children: ReactNode;
   testId?: string;
 }

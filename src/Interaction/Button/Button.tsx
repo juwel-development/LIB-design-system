@@ -28,7 +28,7 @@ const button = cva(
   },
 );
 
-export interface IButtonProps extends VariantProps<typeof button> {
+interface IButtonProps extends VariantProps<typeof button> {
   /** Optional: an icon-only button renders none, and names itself with `ariaLabel` instead. */
   children?: ReactNode;
   onClick$?: Subject<void>;
