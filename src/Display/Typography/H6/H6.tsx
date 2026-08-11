@@ -4,8 +4,8 @@ import type { FunctionComponent, ReactNode } from 'react';
 
 // Level fixes role: an h6 shares the body size with h4, h5 and p, told apart by weight alone
 // (docs/adr/0005). The `font-medium` is load-bearing - Tailwind's preflight resets h1-h6 to
-// font-weight: inherit, so without it an h6 renders identically to a paragraph. It is the lightest
-// heading; the weight lever runs out here. Colour is a token re-pointed by `.dark`, so no `dark:`.
+// font-weight: inherit, so without it an h6 renders identically to a paragraph. Colour is a semantic
+// token re-pointed by `.dark`, so no variant carries a `dark:` class.
 const h6 = cva('font-primary text-body leading-body font-medium', {
   variants: {
     color: { foreground: 'text-foreground', muted: 'text-muted' },
