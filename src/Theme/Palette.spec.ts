@@ -73,6 +73,20 @@ describe('Palette', () => {
     },
   );
 
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ] as const)(
+    'keeps the link colour at least 4.5:1 against surface in the %s theme (WCAG 2.2 SC 1.4.3)',
+    (_theme, tokens) => {
+      // A prose link is told apart by its underline, never by hue, so the link colour answers to the
+      // text threshold (4.5:1) rather than the 3:1 the ring and control border take. See ADR 0006.
+      expect(contrastRatio(tokens.link, tokens.surface)).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    },
+  );
+
   it('uses plain hex values the stylesheet can consume directly', () => {
     for (const tokens of [light, dark]) {
       for (const value of Object.values(tokens)) {

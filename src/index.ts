@@ -9,6 +9,7 @@ export { H6 } from 'Display/Typography/H6/H6';
 export { P } from 'Display/Typography/P/P';
 export { Button } from 'Interaction/Button/Button';
 export { Input } from 'Interaction/Input/Input';
+export { Link } from 'Interaction/Link/Link';
 export { TextArea } from 'Interaction/TextArea/TextArea';
 export type { PaletteTokens } from 'Theme/Palette';
 export { dark, light } from 'Theme/Palette';

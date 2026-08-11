@@ -121,6 +121,32 @@ describe('renderTokens typography contract', () => {
   });
 });
 
+describe('renderTokens underline contract', () => {
+  it('emits the three underline tokens into :root, out of the Tailwind colour map', () => {
+    const css = renderTokens();
+    expect(css).toContain('--underline-offset: 0.18em;');
+    expect(css).toContain('--underline-thickness: 1px;');
+    expect(css).toContain('--underline-thickness-hover: 2px;');
+    // Not colours, so they must not register a bogus --color-underline-* utility.
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeInline).not.toContain('underline');
+  });
+
+  it('keeps the hover underline thicker than the rest one, so the hover cue is visible', () => {
+    // The thickening on hover is the only cue distinguishing a prose link, never hue, so it has to
+    // grow. Parse both and assert the ordering rather than pinning the pair. See ADR 0006.
+    const px = (name: string): number => {
+      const match = renderTokens().match(
+        new RegExp(`--${name}:\\s*([0-9.]+)px;`),
+      );
+      return match ? Number.parseFloat(match[1] as string) : Number.NaN;
+    };
+    expect(px('underline-thickness-hover')).toBeGreaterThan(
+      px('underline-thickness'),
+    );
+  });
+});
+
 describe('renderTokens focus ring contract', () => {
   it('emits none of the three collapsed per-variant ring roles', () => {
     const css = renderTokens();
