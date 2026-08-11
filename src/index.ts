@@ -1,5 +1,6 @@
 import './styles.css';
 
+export { Eyebrow } from 'Display/Typography/Eyebrow/Eyebrow';
 export { H1 } from 'Display/Typography/H1/H1';
 export { H2 } from 'Display/Typography/H2/H2';
 export { H3 } from 'Display/Typography/H3/H3';

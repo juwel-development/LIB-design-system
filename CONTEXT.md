@@ -117,3 +117,11 @@ _Avoid_: Interactive element, form element
 The closed set of primitives the library offers. A genuinely new need is added to the roster, never
 hand-rolled as a styled element in a consuming product.
 _Avoid_: Catalogue, component list
+
+**Eyebrow**:
+The primitive for the letter-spaced eyebrow / caption device — a `p` at the label type role, muted by
+default. Named apart from "label" on purpose: "label" already means the HTML `<label>` a text control
+renders, the required `label` prop on that control, and the label *type role* the device reads. An
+`Eyebrow` carries no `htmlFor` and labels no control, so it is not one of those; a caller writing a
+form reaches for `Input`/`TextArea`, which label themselves.
+_Avoid_: Label, Caption, small-caps
