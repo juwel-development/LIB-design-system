@@ -90,6 +90,15 @@ const MEASURE = `:root {
   --measure-display: 36ch;
 }`;
 
+/* Two spacing roles, not a ladder: --space-stack is the sibling gap in a stack, --space-region the gap
+   between a form's regions. Both in em so they track the type ramp, not a fixed length. A numbered scale
+   (--space-1..4) was considered and rejected - ADR 0003/0004: a scale lets each component pick a rung and
+   no rule says which means what. em has no Tailwind namespace, so like --measure these sit in :root. */
+const SPACING = `:root {
+  --space-stack: 0.5em;
+  --space-region: 1.5em;
+}`;
+
 const toKebabCase = (name: string): string =>
   name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 
@@ -152,5 +161,9 @@ ${TYPOGRAPHY}
 
 /* The reading measure has no Tailwind namespace, so it sits in :root beside radius. */
 ${MEASURE}
+
+/* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
+   re-pointing - so the two roles sit in :root beside the measure. */
+${SPACING}
 `;
 };

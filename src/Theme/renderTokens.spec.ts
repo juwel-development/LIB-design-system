@@ -121,6 +121,27 @@ describe('renderTokens typography contract', () => {
   });
 });
 
+describe('renderTokens spacing contract', () => {
+  it('emits the two spacing roles into :root, expressed in em so they track the type ramp', () => {
+    const css = renderTokens();
+    expect(css).toMatch(/--space-stack:\s*[0-9.]+em;/);
+    expect(css).toMatch(/--space-region:\s*[0-9.]+em;/);
+  });
+
+  it('keeps spacing out of every @theme block, since --space-* has no Tailwind namespace', () => {
+    const css = renderTokens();
+    // A plain @theme block would generate utilities; @theme inline would register a bogus colour.
+    const themeBlock = css.match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).not.toContain('--space-');
+    expect(themeInline).not.toContain('--space-');
+  });
+
+  it('declares no numbered spacing rung, a value masquerading as a role', () => {
+    expect(renderTokens()).not.toContain('--space-1');
+  });
+});
+
 describe('renderTokens underline contract', () => {
   it('emits the three underline tokens into :root, out of the Tailwind colour map', () => {
     const css = renderTokens();
