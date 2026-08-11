@@ -1,14 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { TextArea } from './TextArea';
+import { Input } from './Input';
 
-const meta: Meta<typeof TextArea> = {
-  title: 'Form/TextArea',
-  component: TextArea,
+const meta: Meta<typeof Input> = {
+  title: 'Interaction/Input',
+  component: Input,
   parameters: {
     layout: 'centered',
   },
   tags: ['autodocs'],
   argTypes: {
+    variant: {
+      control: { type: 'radio' },
+      options: ['text', 'email', 'url'],
+      description: 'Selects the underlying input type',
+    },
     required: {
       control: { type: 'boolean' },
       description:
@@ -30,49 +35,55 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    label: 'Message',
-    name: 'message',
-    placeholder: 'Tell us what you need',
+    label: 'Email',
+    name: 'email',
+    variant: 'email',
+    placeholder: 'you@example.com',
   },
 };
 
 export const Optional: Story = {
   args: {
-    label: 'Notes',
-    name: 'notes',
+    label: 'Company',
+    name: 'company',
   },
 };
 
 export const Required: Story = {
   args: {
-    label: 'Message',
-    name: 'message',
+    label: 'Email',
+    name: 'email',
+    variant: 'email',
     required: true,
   },
 };
 
 export const WithHint: Story = {
   args: {
-    label: 'Message',
-    name: 'message',
-    hint: 'A few sentences is plenty',
+    label: 'Website',
+    name: 'website',
+    variant: 'url',
+    hint: 'Include https://',
   },
 };
 
 export const Invalid: Story = {
   args: {
-    label: 'Message',
-    name: 'message',
+    label: 'Email',
+    name: 'email',
+    variant: 'email',
     invalid: true,
-    errorMessage: 'This field is required',
+    errorMessage: 'Enter a valid email address',
+    defaultValue: 'not-an-email',
   },
 };
 
 export const Disabled: Story = {
   args: {
-    label: 'Message',
-    name: 'message',
+    label: 'Email',
+    name: 'email',
+    variant: 'email',
     disabled: true,
-    defaultValue: 'Sent already',
+    defaultValue: 'you@example.com',
   },
 };

@@ -1,19 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Input } from './Input';
+import { TextArea } from './TextArea';
 
-const meta: Meta<typeof Input> = {
-  title: 'Form/Input',
-  component: Input,
+const meta: Meta<typeof TextArea> = {
+  title: 'Interaction/TextArea',
+  component: TextArea,
   parameters: {
     layout: 'centered',
   },
   tags: ['autodocs'],
   argTypes: {
-    variant: {
-      control: { type: 'radio' },
-      options: ['text', 'email', 'url'],
-      description: 'Selects the underlying input type',
-    },
     required: {
       control: { type: 'boolean' },
       description:
@@ -35,55 +30,49 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    label: 'Email',
-    name: 'email',
-    variant: 'email',
-    placeholder: 'you@example.com',
+    label: 'Message',
+    name: 'message',
+    placeholder: 'Tell us what you need',
   },
 };
 
 export const Optional: Story = {
   args: {
-    label: 'Company',
-    name: 'company',
+    label: 'Notes',
+    name: 'notes',
   },
 };
 
 export const Required: Story = {
   args: {
-    label: 'Email',
-    name: 'email',
-    variant: 'email',
+    label: 'Message',
+    name: 'message',
     required: true,
   },
 };
 
 export const WithHint: Story = {
   args: {
-    label: 'Website',
-    name: 'website',
-    variant: 'url',
-    hint: 'Include https://',
+    label: 'Message',
+    name: 'message',
+    hint: 'A few sentences is plenty',
   },
 };
 
 export const Invalid: Story = {
   args: {
-    label: 'Email',
-    name: 'email',
-    variant: 'email',
+    label: 'Message',
+    name: 'message',
     invalid: true,
-    errorMessage: 'Enter a valid email address',
-    defaultValue: 'not-an-email',
+    errorMessage: 'This field is required',
   },
 };
 
 export const Disabled: Story = {
   args: {
-    label: 'Email',
-    name: 'email',
-    variant: 'email',
+    label: 'Message',
+    name: 'message',
     disabled: true,
-    defaultValue: 'you@example.com',
+    defaultValue: 'Sent already',
   },
 };
