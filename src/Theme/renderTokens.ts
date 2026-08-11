@@ -210,11 +210,10 @@ ${ASPECT}
 ${MEASURE}
 
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
-   re-pointing - so the two roles sit in :root beside the measure. */
+   re-pointing - so the three roles sit in :root beside the measure. */
 ${SPACING}
 
-/* The gutter is measured against the screen, not the type, so it is the one spacing role not in em; it
-   sits in :root beside the space roles. */
+/* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
 ${GUTTER}
 
 /* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */
