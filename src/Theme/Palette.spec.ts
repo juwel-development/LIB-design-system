@@ -59,6 +59,20 @@ describe('Palette', () => {
     },
   );
 
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ] as const)(
+    'keeps the control border at least 3:1 against surface in the %s theme (WCAG 2.2 SC 1.4.11)',
+    (_theme, tokens) => {
+      // controlBorder is a transparent control's only boundary, so it carries the same
+      // 3:1-against-surface floor the focus ring does - it cannot borrow border's 1.23:1 hairline.
+      expect(
+        contrastRatio(tokens.controlBorder, tokens.surface),
+      ).toBeGreaterThanOrEqual(3);
+    },
+  );
+
   it('uses plain hex values the stylesheet can consume directly', () => {
     for (const tokens of [light, dark]) {
       for (const value of Object.values(tokens)) {
