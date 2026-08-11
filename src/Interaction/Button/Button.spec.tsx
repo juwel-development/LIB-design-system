@@ -74,6 +74,19 @@ describe('Button Component', () => {
     );
   });
 
+  it.each(['primary', 'secondary', 'ghost'] as const)(
+    'carries no elevation on the %s variant, so press has no geometry',
+    (variant) => {
+      render(<Button variant={variant}>Click Me</Button>);
+      const className = screen.getByRole('button').className;
+
+      // Elevation - a raised card that depresses when pressed - is not part of the
+      // colour-by-role token contract. No shadow at any state, and press has no shift.
+      expect(className).not.toMatch(/shadow-/);
+      expect(className).not.toMatch(/translate-/);
+    },
+  );
+
   it('exposes an accessible name for icon-only buttons', () => {
     render(<Button ariaLabel={'Close'} />);
     expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
