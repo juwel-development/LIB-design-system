@@ -134,6 +134,28 @@ This is a **breaking change to the published token contract** — a consumer re-
 That cost was accepted because the alternative is a permanent mismatch between a token's name and its
 scope, in the one place in this contract where a name being read carelessly has already caused damage.
 
+## Amended: `display ≥ title` is a default, not a contract on the consumer
+
+The amendment above moved `--text-display` up off *"a value that must never out-scale the homepage
+hero"*. That phrasing, read out of context, sounds like a rule binding any page's tokens. It is not.
+It describes the relationship the library's own default values hold, and the test that guards it in
+`renderTokens.spec.ts` checks only those shipped values — *"enforced against the library's own
+values, never against a consumer's"*, the shape every constraint in this contract takes. No
+component compares the two tokens at runtime: `H1` reads `--text-display`, `H2` and `PageHead` read
+`--text-title`, each independently, so nothing breaks when their order is reversed.
+
+`display ≥ title` holds because the hero is assumed to be a **text** scale event, and a text-led
+hero should out-scale a subpage head. That assumption is a consumer's to make, not the library's. On
+a site whose first-screen scale event is a **drawn mark** — an inline-SVG wordmark, not text — the
+largest *text* on the home page is deliberately small: a one-line lead that must not compete with the
+mark, ~31px, while the subpage head (the `title` role) is that page's single scale event, set larger,
+up to ~68px. Such a consumer re-points `--text-display` **below** `--text-title` on purpose. That is
+sanctioned: it inverts a default, not a contract, and breaks nothing.
+
+So `display ≥ title` is the library's shipped default and the expectation for a text-led hero, and
+the test protects that self-consistency so the display/title swap the amendment above records cannot
+regress. It is not a constraint on what a consumer's re-pointed tokens may render.
+
 ## Two family roles
 
 `--font-primary` is the face content is set in, `--font-secondary` the face labels are set in, and the
