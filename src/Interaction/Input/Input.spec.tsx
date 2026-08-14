@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { Subject } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { Input } from './Input';
@@ -87,5 +87,26 @@ describe('Input Component', () => {
   it('marks the disabled control so it cannot be edited', () => {
     render(<Input label={'Name'} name={'name'} disabled={true} />);
     expect(screen.getByRole('textbox')).toBeDisabled();
+  });
+
+  it('empties the control in place when reset$ emits, so focus and composition survive', () => {
+    const reset$ = new Subject<void>();
+    render(
+      <Input
+        label={'Name'}
+        name={'name'}
+        defaultValue={'Ada'}
+        reset$={reset$}
+      />,
+    );
+    const control = screen.getByRole('textbox');
+    control.focus();
+    expect(control).toHaveValue('Ada');
+    expect(control).toHaveFocus();
+
+    act(() => reset$.next());
+
+    expect(control).toHaveValue('');
+    expect(control).toHaveFocus();
   });
 });
