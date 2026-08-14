@@ -262,30 +262,32 @@ ${declarations(dark, raw(dark))}
 
 ${colourMapAndTail()}`;
 
-/**
- * Renders the light-only variant (issue #62): the light set unconditionally in `:root`, then the
- * shared colour map and non-colour tokens - no `.dark` rule and no `dark:` variant. A light-only
- * consumer imports this instead of the default, so its bundle carries no dark rule it cannot remove.
- * Pinned to `src/tokens.light.css` by the same regeneration test that pins {@link renderTokens}.
- */
-export const renderLightTokens = (): string => `${GENERATED_LIGHT_HEADER}
+/* The single-theme variants (issue #62) share one shape: the chosen set unconditionally in `:root`,
+   then the shared colour map and non-colour tokens - no `.dark` rule and no `dark:` variant. They
+   differ only in header and which palette set lands in `:root`, so both render through here. */
+const renderSingleTheme = (
+  header: string,
+  tokens: PaletteTokens,
+): string => `${header}
 
 :root {
-${declarations(light, raw(light))}
+${declarations(tokens, raw(tokens))}
 }
 
 ${colourMapAndTail()}`;
 
 /**
- * Renders the dark-only variant (issue #62): the dark set unconditionally in `:root` - no `.dark`
- * gating, since it is the only theme - then the shared colour map and non-colour tokens. A dark-only
- * consumer imports this instead of the default. Pinned to `src/tokens.dark.css` by the same
- * regeneration test that pins {@link renderTokens}.
+ * Renders the light-only variant (issue #62): the light set in `:root`, no `.dark` rule and no
+ * `dark:` variant, so a light-only consumer's bundle carries no dark theme it cannot remove. Pinned
+ * to `src/tokens.light.css` by the same regeneration test that pins {@link renderTokens}.
  */
-export const renderDarkTokens = (): string => `${GENERATED_DARK_HEADER}
+export const renderLightTokens = (): string =>
+  renderSingleTheme(GENERATED_LIGHT_HEADER, light);
 
-:root {
-${declarations(dark, raw(dark))}
-}
-
-${colourMapAndTail()}`;
+/**
+ * Renders the dark-only variant (issue #62): the dark set in `:root`, ungated since it is the only
+ * theme. A dark-only consumer imports this instead of the default. Pinned to `src/tokens.dark.css`
+ * by the same regeneration test that pins {@link renderTokens}.
+ */
+export const renderDarkTokens = (): string =>
+  renderSingleTheme(GENERATED_DARK_HEADER, dark);
