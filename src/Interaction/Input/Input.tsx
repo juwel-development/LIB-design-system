@@ -1,6 +1,6 @@
 import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
-import { type FunctionComponent, useId } from 'react';
+import { type FunctionComponent, useEffect, useId, useRef } from 'react';
 import type { Subject } from 'rxjs';
 
 // One recipe, deliberately not shared with TextArea (issue #5): each control owns its whole recipe
@@ -35,6 +35,8 @@ interface IInputProps extends VariantProps<typeof input> {
   hint?: string;
   errorMessage?: string;
   onInput$?: Subject<string>;
+  /** Emit to empty the control in place, keeping the same node so focus and IME composition survive. */
+  reset$?: Subject<void>;
   testId?: string;
 }
 
@@ -56,6 +58,7 @@ export const Input: FunctionComponent<IInputProps> = ({
   hint,
   errorMessage,
   onInput$,
+  reset$,
   testId,
 }) => {
   const id = useId();
@@ -67,12 +70,26 @@ export const Input: FunctionComponent<IInputProps> = ({
       .filter(Boolean)
       .join(' ') || undefined;
 
+  // reset$ is an inbound command, so the component subscribes here (coding.md#asynchrony), unlike
+  // onInput$ which it emits on. Emptying the live node keeps focus and any in-flight IME composition,
+  // which a `key` remount would discard (issue #64).
+  const controlRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const subscription = reset$?.subscribe(() => {
+      if (controlRef.current) {
+        controlRef.current.value = '';
+      }
+    });
+    return () => subscription?.unsubscribe();
+  }, [reset$]);
+
   return (
     <div className={'flex flex-col gap-[var(--space-stack)]'}>
       <label htmlFor={controlId} className={'font-medium text-foreground'}>
         {label}
       </label>
       <input
+        ref={controlRef}
         id={controlId}
         name={name}
         type={variant ?? 'text'}

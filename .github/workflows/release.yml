@@ -123,6 +123,7 @@ jobs:
       - name: Release
         run: npx semantic-release
         env:
+          # No npm token: publishing is OIDC-based (npm trusted publishing), which needs the
+          # `id-token: write` permission above plus the trusted publisher configured on npmjs.com.
+          # GITHUB_TOKEN is genuinely used, to push the tag and create the GitHub release.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

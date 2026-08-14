@@ -52,6 +52,15 @@ const RADIUS = `:root {
   --radius-control: 0.5rem;
 }`;
 
+/* The control's minimum width is not a colour: like radius it lives in :root only, never in
+   @theme inline, so a consumer theme can re-point it. One token names the floor primary and
+   secondary share; 10.5rem is exactly what min-w-42 resolved to, so nothing changes visually while
+   it keeps tracking the root font size. ghost owns a distinct zero - an intentional role, not this
+   token set to 0 - so it keeps its literal min-w-0 and does not read this. */
+const CONTROL_MIN_WIDTH = `:root {
+  --control-min-width: 10.5rem;
+}`;
+
 /* The library's underline is not a colour: like the focus-ring dimensions it lives in :root only,
    never @theme inline. Not prose's alone - every Link treatment that draws a line draws it from these.
    Constraint: --underline-thickness-hover > --underline-thickness (the thicken on hover is the only
@@ -212,6 +221,9 @@ ${FOCUS_RING}
 
 /* Radius is not a colour either: one token for the corner every control reads, beside the others. */
 ${RADIUS}
+
+/* The control minimum width is not a colour either, and sits in :root beside radius. */
+${CONTROL_MIN_WIDTH}
 
 /* The library's underline dimensions are not colours either, and sit in :root beside radius. They are
    not prose's alone: every Link treatment that draws a line draws it from these (docs/adr/0006). */

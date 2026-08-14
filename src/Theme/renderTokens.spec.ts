@@ -44,6 +44,18 @@ describe('renderTokens radius contract', () => {
   });
 });
 
+describe('renderTokens control-min-width contract', () => {
+  it('names the width floor primary and secondary share, defaulting to what min-w-42 resolved to', () => {
+    expect(renderTokens()).toContain('--control-min-width: 10.5rem;');
+  });
+
+  it('keeps the width floor out of the Tailwind colour map, since it is not a colour', () => {
+    const themeInline =
+      renderTokens().match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeInline).not.toContain('control-min-width');
+  });
+});
+
 describe('renderTokens typography contract', () => {
   // The library ships no face, so it holds no font values to read; the type-role sizes are its
   // own, and the two floors below are checked against them the way the contrast test checks the
@@ -103,9 +115,11 @@ describe('renderTokens typography contract', () => {
     expect(themeInline).not.toContain('lede');
   });
 
-  it('keeps display the largest role, so a subpage head can never out-scale the hero', () => {
-    // Enforce the invariant, not a fixed pair of values: display's clamp ceiling must clear title's,
-    // which now holds the subpage-head value display mistakenly carried. See the ADR (0004).
+  it('keeps display outscaling title in the shipped defaults, guarding the historical swap from regressing', () => {
+    // Guards the library's own values, never a consumer's (ADR 0004): display's clamp ceiling must
+    // clear title's, which now holds the subpage-head value display mistakenly carried. A consumer
+    // whose hero is a drawn mark may re-point display below title deliberately — sanctioned, and this
+    // test cannot see it. It only stops the display/title swap the ADR records from coming back.
     const ceilingRem = (role: string): number => {
       const match = themeBlock().match(
         new RegExp(`--text-${role}:\\s*clamp\\([^)]*,\\s*([0-9.]+)rem\\)`),

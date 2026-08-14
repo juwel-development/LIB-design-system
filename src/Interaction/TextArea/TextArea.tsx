@@ -1,5 +1,5 @@
 import { cva } from 'class-variance-authority';
-import { type FunctionComponent, useId } from 'react';
+import { type FunctionComponent, useEffect, useId, useRef } from 'react';
 import type { Subject } from 'rxjs';
 
 // One recipe, deliberately not shared with Input (issue #5): each control owns its whole recipe so
@@ -27,6 +27,8 @@ interface ITextAreaProps {
   hint?: string;
   errorMessage?: string;
   onInput$?: Subject<string>;
+  /** Emit to empty the control in place, keeping the same node so focus and IME composition survive. */
+  reset$?: Subject<void>;
   testId?: string;
 }
 
@@ -47,6 +49,7 @@ export const TextArea: FunctionComponent<ITextAreaProps> = ({
   hint,
   errorMessage,
   onInput$,
+  reset$,
   testId,
 }) => {
   const id = useId();
@@ -58,12 +61,26 @@ export const TextArea: FunctionComponent<ITextAreaProps> = ({
       .filter(Boolean)
       .join(' ') || undefined;
 
+  // reset$ is an inbound command, so the component subscribes here (coding.md#asynchrony), unlike
+  // onInput$ which it emits on. Emptying the live node keeps focus and any in-flight IME composition,
+  // which a `key` remount would discard (issue #64).
+  const controlRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const subscription = reset$?.subscribe(() => {
+      if (controlRef.current) {
+        controlRef.current.value = '';
+      }
+    });
+    return () => subscription?.unsubscribe();
+  }, [reset$]);
+
   return (
     <div className={'flex flex-col gap-[var(--space-stack)]'}>
       <label htmlFor={controlId} className={'font-medium text-foreground'}>
         {label}
       </label>
       <textarea
+        ref={controlRef}
         id={controlId}
         name={name}
         className={textArea()}

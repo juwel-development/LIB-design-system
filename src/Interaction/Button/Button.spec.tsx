@@ -117,6 +117,30 @@ describe('Button Component', () => {
     },
   );
 
+  it.each(['primary', 'secondary'] as const)(
+    'floors its width from the control-min-width token on the %s variant, never a raw min-w-* literal',
+    (variant) => {
+      render(<Button variant={variant}>Click Me</Button>);
+      const className = screen.getByRole('button').className;
+
+      // The minimum width is one named token primary and secondary share, so a consumer theme can
+      // re-point --control-min-width to lower or zero the floor under a compact actions row. 10.5rem
+      // is what it defaults to, so nothing changes visually. ghost keeps its own explicit zero.
+      expect(className).toContain('min-w-[var(--control-min-width)]');
+      expect(className).not.toMatch(/min-w-(?!\[var\(--control-min-width)/);
+    },
+  );
+
+  it('keeps its distinct zero floor on the ghost variant, not the shared token', () => {
+    render(<Button variant={'ghost'}>Click Me</Button>);
+    const className = screen.getByRole('button').className;
+
+    // ghost carrying no minimum is an intentional role, not the token set to zero, so it stays a
+    // literal min-w-0 and is untouched by --control-min-width.
+    expect(className).toContain('min-w-0');
+    expect(className).not.toContain('--control-min-width');
+  });
+
   it.each(['primary', 'secondary', 'ghost'] as const)(
     'draws one focus ring as an outline on the %s variant, identical across variants and never a box-shadow ring',
     (variant) => {
