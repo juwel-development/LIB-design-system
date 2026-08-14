@@ -1,3 +1,12 @@
+# [2.1.0](https://github.com/juwel-development/LIB-design-system/compare/v2.0.0...v2.1.0) (2026-08-14)
+
+
+### Features
+
+* **button:** lift the primary/secondary width floor onto a token ([f593e2e](https://github.com/juwel-development/LIB-design-system/commit/f593e2e2fd95e7f638e37e3c877d94f29fdf9975)), closes [#61](https://github.com/juwel-development/LIB-design-system/issues/61)
+* **form:** add reset$ to clear Input and TextArea in place ([7cfbad8](https://github.com/juwel-development/LIB-design-system/commit/7cfbad894d5670126accfd416629d9229b3073ea)), closes [#64](https://github.com/juwel-development/LIB-design-system/issues/64)
+* **tokens:** add opt-in light-only and dark-only CSS exports ([5826d45](https://github.com/juwel-development/LIB-design-system/commit/5826d45a6cd2d550009b31897cd5ce9c50b4b9fd)), closes [#62](https://github.com/juwel-development/LIB-design-system/issues/62)
+
 # [2.0.0](https://github.com/juwel-development/LIB-design-system/compare/v1.1.0...v2.0.0) (2026-08-11)
 
 
