@@ -98,9 +98,11 @@ describe('renderTokens typography contract', () => {
     expect(themeInline).not.toContain('lede');
   });
 
-  it('keeps display the largest role, so a subpage head can never out-scale the hero', () => {
-    // Enforce the invariant, not a fixed pair of values: display's clamp ceiling must clear title's,
-    // which now holds the subpage-head value display mistakenly carried. See the ADR (0004).
+  it('keeps display outscaling title in the shipped defaults, guarding the historical swap from regressing', () => {
+    // Guards the library's own values, never a consumer's (ADR 0004): display's clamp ceiling must
+    // clear title's, which now holds the subpage-head value display mistakenly carried. A consumer
+    // whose hero is a drawn mark may re-point display below title deliberately — sanctioned, and this
+    // test cannot see it. It only stops the display/title swap the ADR records from coming back.
     const ceilingRem = (role: string): number => {
       const match = themeBlock().match(
         new RegExp(`--text-${role}:\\s*clamp\\([^)]*,\\s*([0-9.]+)rem\\)`),
