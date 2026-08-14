@@ -30,7 +30,11 @@
 			"default": "./dist/design-system.js"
 		},
 		"./styles.css": "./src/styles.css",
+		"./styles.light.css": "./src/styles.light.css",
+		"./styles.dark.css": "./src/styles.dark.css",
 		"./tokens.css": "./src/tokens.css",
+		"./tokens.light.css": "./src/tokens.light.css",
+		"./tokens.dark.css": "./src/tokens.dark.css",
 		"./package.json": "./package.json"
 	},
 	"scripts": {

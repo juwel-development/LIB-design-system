@@ -7,6 +7,18 @@ const GENERATED_HEADER = `/* GENERATED from src/Theme/Palette.ts by \`npm run bu
  * values inside @theme directly would freeze them at build time and the .dark overrides would
  * never reach the utilities. */`;
 
+const GENERATED_LIGHT_HEADER = `/* GENERATED from src/Theme/Palette.ts by \`npm run build:tokens\` - do not edit by hand.
+ *
+ * The light-only variant (issue #62): the light values live in :root and the @theme inline block
+ * maps each onto a Tailwind colour. It carries no dark rule, so a light-only consumer imports it
+ * instead of tokens.css and bundles no second theme it cannot remove. */`;
+
+const GENERATED_DARK_HEADER = `/* GENERATED from src/Theme/Palette.ts by \`npm run build:tokens\` - do not edit by hand.
+ *
+ * The dark-only variant (issue #62): the dark values live in :root, ungated, and the @theme inline
+ * block maps each onto a Tailwind colour. A dark-only consumer imports it instead of tokens.css; it
+ * is the only theme, so no class toggle or variant is needed to select it. */`;
+
 /* The library performs exactly one motion - a colour transition - so its motion contract is this
    single token. 150ms matches Tailwind's default, so it changes nothing visually; its job is to
    have a name a consumer theme and the reduced-motion query can reach.
@@ -172,36 +184,23 @@ const declarations = (
     .map((name) => `  --color-${toKebabCase(name)}: ${value(name)};`)
     .join('\n');
 
-/**
- * Renders the stylesheet form of the palette. Shared by the build script and the test that pins
- * `src/tokens.css` to it, so a palette edit that was never regenerated fails the suite instead of
- * silently shipping stale colours.
- */
-export const renderTokens = (): string => {
-  // The library no longer declares --color-ring but still reads it as a fallback, so a consumer's
-  // existing value keeps working; the plain hex in the palette is the default and what the contrast
-  // test checks. See docs/adr/0002-focus-ring-token-contract.md.
-  const raw = (tokens: PaletteTokens) => (name: string) => {
-    const value = tokens[name as keyof PaletteTokens];
-    return name === 'focusRing' ? `var(--color-ring, ${value})` : value;
-  };
-  const reference = () => (name: string) => `var(--color-${toKebabCase(name)})`;
+// The library no longer declares --color-ring but still reads it as a fallback, so a consumer's
+// existing value keeps working; the plain hex in the palette is the default and what the contrast
+// test checks. See docs/adr/0002-focus-ring-token-contract.md.
+const raw = (tokens: PaletteTokens) => (name: string) => {
+  const value = tokens[name as keyof PaletteTokens];
+  return name === 'focusRing' ? `var(--color-ring, ${value})` : value;
+};
+const reference = () => (name: string) => `var(--color-${toKebabCase(name)})`;
 
-  return `${GENERATED_HEADER}
-
-/* Dark mode is driven by a \`.dark\` class rather than prefers-color-scheme, so a story or a
+// Only the combined tokens.css carries the dark set; this gates it behind .dark and defines dark:.
+const DARK_VARIANT = `/* Dark mode is driven by a \`.dark\` class rather than prefers-color-scheme, so a story or a
    screenshot can be taken under either theme on demand. */
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *));`;
 
-:root {
-${declarations(light, raw(light))}
-}
-
-.dark {
-${declarations(dark, raw(dark))}
-}
-
-@theme inline {
+// The @theme inline colour map and every non-colour token block: identical across all three
+// variants, since the map references the role variables :root declares rather than any hex.
+const colourMapAndTail = (): string => `@theme inline {
 ${declarations(light, reference())}
 }
 
@@ -242,4 +241,51 @@ ${FOLD}
 /* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */
 ${TICK}
 `;
-};
+
+/**
+ * Renders the combined stylesheet form of the palette: the light set in `:root`, the dark set under
+ * `.dark`, the `dark:` custom variant, then the shared colour map and non-colour tokens. This is
+ * the default `src/tokens.css`, unchanged by issue #62. Shared by the build script and the test that
+ * pins `src/tokens.css` to it, so a palette edit that was never regenerated fails the suite.
+ */
+export const renderTokens = (): string => `${GENERATED_HEADER}
+
+${DARK_VARIANT}
+
+:root {
+${declarations(light, raw(light))}
+}
+
+.dark {
+${declarations(dark, raw(dark))}
+}
+
+${colourMapAndTail()}`;
+
+/**
+ * Renders the light-only variant (issue #62): the light set unconditionally in `:root`, then the
+ * shared colour map and non-colour tokens - no `.dark` rule and no `dark:` variant. A light-only
+ * consumer imports this instead of the default, so its bundle carries no dark rule it cannot remove.
+ * Pinned to `src/tokens.light.css` by the same regeneration test that pins {@link renderTokens}.
+ */
+export const renderLightTokens = (): string => `${GENERATED_LIGHT_HEADER}
+
+:root {
+${declarations(light, raw(light))}
+}
+
+${colourMapAndTail()}`;
+
+/**
+ * Renders the dark-only variant (issue #62): the dark set unconditionally in `:root` - no `.dark`
+ * gating, since it is the only theme - then the shared colour map and non-colour tokens. A dark-only
+ * consumer imports this instead of the default. Pinned to `src/tokens.dark.css` by the same
+ * regeneration test that pins {@link renderTokens}.
+ */
+export const renderDarkTokens = (): string => `${GENERATED_DARK_HEADER}
+
+:root {
+${declarations(dark, raw(dark))}
+}
+
+${colourMapAndTail()}`;

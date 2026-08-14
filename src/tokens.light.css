@@ -1,0 +1,164 @@
+/* GENERATED from src/Theme/Palette.ts by `npm run build:tokens` - do not edit by hand.
+ *
+ * The light-only variant (issue #62): the light values live in :root and the @theme inline block
+ * maps each onto a Tailwind colour. It carries no dark rule, so a light-only consumer imports it
+ * instead of tokens.css and bundles no second theme it cannot remove. */
+
+:root {
+  --color-surface: #ffffff;
+  --color-foreground: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-control-border: #64748b;
+  --color-rule: #808fa3;
+  --color-backing: #f1f5f9;
+  --color-primary: #8b5cf6;
+  --color-primary-hover: #7c3aed;
+  --color-primary-foreground: #f8fafc;
+  --color-secondary: #0ea5e9;
+  --color-secondary-hover: #0284c7;
+  --color-secondary-foreground: #f8fafc;
+  --color-disabled: #94a3b8;
+  --color-disabled-hover: #64748b;
+  --color-focus-ring: var(--color-ring, #475569);
+  --color-link: #2563eb;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #d63384;
+  --color-info: #06b6d4;
+}
+
+@theme inline {
+  --color-surface: var(--color-surface);
+  --color-foreground: var(--color-foreground);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-control-border: var(--color-control-border);
+  --color-rule: var(--color-rule);
+  --color-backing: var(--color-backing);
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-secondary: var(--color-secondary);
+  --color-secondary-hover: var(--color-secondary-hover);
+  --color-secondary-foreground: var(--color-secondary-foreground);
+  --color-disabled: var(--color-disabled);
+  --color-disabled-hover: var(--color-disabled-hover);
+  --color-focus-ring: var(--color-focus-ring);
+  --color-link: var(--color-link);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-error: var(--color-error);
+  --color-info: var(--color-info);
+}
+
+/* Motion is not a colour: it is carried in :root only, never mapped into @theme inline. */
+:root {
+  --motion-duration-color: 150ms;
+}
+
+/* Honour prefers-reduced-motion for the one motion the library performs, by re-pointing the token
+   to 0ms. Deliberately no blanket transition reset - only what the library performs is zeroed. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-color: 0ms;
+  }
+}
+
+/* The focus ring's dimensions are not colours either, and sit in :root beside the motion block. */
+:root {
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
+}
+
+/* Radius is not a colour either: one token for the corner every control reads, beside the others. */
+:root {
+  --radius-control: 0.5rem;
+}
+
+/* The library's underline dimensions are not colours either, and sit in :root beside radius. They are
+   not prose's alone: every Link treatment that draws a line draws it from these (docs/adr/0006). */
+:root {
+  --underline-offset: 0.18em;
+  --underline-thickness: 1px;
+  --underline-thickness-hover: 2px;
+}
+
+/* Typography is a set of Tailwind theme namespaces, not colours: its own @theme block generates the
+   utilities, so it is not carried in @theme inline with the palette. */
+@theme {
+  /* Both faces default to inherit, so the library ships no @font-face and no face and a one-face
+     consumer renders as today. --font-primary is carried by content, --font-secondary by labels; a
+     component sets font-variant-numeric: tabular-nums only on a --font-primary carrying tnum and
+     font-variant-caps: small-caps only on a --font-secondary carrying smcp - both fail silently otherwise. */
+  --font-primary: inherit;
+  --font-secondary: inherit;
+
+  /* Type roles, not a scale: one role per job, so a component asks for what its text is, never a rung.
+     display > title > subtitle are the three heading steps H1-H3 bind to; H4-H6 share body and split
+     by weight, so there is no fourth role. display is the hero and must out-scale every subpage head. */
+  --text-display: clamp(3rem, 7vw, 6rem);
+  --leading-display: 1.05;
+  --text-title: clamp(2.25rem, 5vw, 4.25rem);
+  --leading-title: 1.1;
+  --text-subtitle: clamp(1.5rem, 3vw, 2.25rem);
+  --leading-subtitle: 1.2;
+
+  /* The reading block's opening paragraph (Prose #21): sized above body and below subtitle, led
+     tighter than body's 1.6 but not as tight as a heading's 1.2 - it is running text, not a head, so
+     it keeps running-text leading. A role, not a rung: one lede per block, nothing to choose. Reusing
+     subtitle was rejected in ADR 0004 - it welds the lede's size to H3's and its leading to a head's. */
+  --text-lede: 1.25rem;  /* 20px */
+  --leading-lede: 1.4;
+  --text-body: 1.0625rem;  /* 17px */
+  --leading-body: 1.6;
+  --text-small: 0.9375rem;  /* 15px floor: below it tabular figures stop comparing column to column */
+  --text-label: 0.8125rem;  /* 13px floor: below it the tracking reads as damage, not a device */
+
+  /* Two quantities on one property that must not collapse: --tracking-label is a fixed letter-spaced
+     style, --tracking-optical a correction that varies with size. The names say which is which, so the
+     distinction survives without the ADR in hand. Scope: the title role and above - H1, H2 and the page
+     head's h1 - and never below it, where the correction would read as damage. See the ADR. */
+  --tracking-label: 0.14em;
+  --tracking-optical: -0.02em;
+}
+
+/* The aspect roles are Tailwind theme namespaces like typography, so they take their own @theme block
+   after it and are not carried in @theme inline with the palette. */
+@theme {
+  --aspect-portrait:  4 / 5;
+  --aspect-square:    1 / 1;
+  --aspect-landscape: 3 / 2;
+  --aspect-wide:     16 / 9;
+}
+
+/* The reading measure has no Tailwind namespace, so it sits in :root beside radius. */
+:root {
+  --measure: 66ch;
+  --measure-display: 36ch;
+  --measure-wide: 72ch;
+}
+
+/* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
+   re-pointing - so the three roles sit in :root beside the measure. */
+:root {
+  --space-stack: 0.5em;
+  --space-region: 1.5em;
+  --space-band: 4em;
+}
+
+/* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
+:root {
+  --gutter: clamp(1.5rem, 5vw, 4rem);
+}
+
+/* The fold height has no Tailwind namespace either, so it sits in :root beside the gutter. */
+:root {
+  --fold-height: min(70vh, 40rem);
+}
+
+/* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */
+:root {
+  --tick-length: 0.9rem;
+  --tick-thickness: 1px;
+}

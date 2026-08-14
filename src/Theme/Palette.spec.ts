@@ -3,12 +3,19 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { dark, light } from './Palette';
-import { renderTokens } from './renderTokens';
+import {
+  renderDarkTokens,
+  renderLightTokens,
+  renderTokens,
+} from './renderTokens';
 
-const tokensCss = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), '..', 'tokens.css'),
-  'utf8',
-);
+const readSrc = (file: string): string =>
+  readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '..', file),
+    'utf8',
+  );
+
+const tokensCss = readSrc('tokens.css');
 
 const relativeLuminance = (hex: string): number => {
   const channel = (offset: number): number => {
@@ -28,6 +35,13 @@ describe('Palette', () => {
   it('keeps tokens.css in sync with the palette', () => {
     // tokens.css is generated. If this fails, run `npm run build:tokens`.
     expect(tokensCss).toBe(renderTokens());
+  });
+
+  it('keeps the single-theme token variants in sync with the palette, so the three cannot drift', () => {
+    // The light-only and dark-only variants (issue #62) are generated from the same palette.
+    // If this fails, run `npm run build:tokens`.
+    expect(readSrc('tokens.light.css')).toBe(renderLightTokens());
+    expect(readSrc('tokens.dark.css')).toBe(renderDarkTokens());
   });
 
   it('defines every role in both themes, so no component needs a dark: fallback', () => {
