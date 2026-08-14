@@ -1,4 +1,6 @@
+import { Button } from 'Interaction/Button/Button';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Subject } from 'rxjs';
 import { TextArea } from './TextArea';
 
 const meta: Meta<typeof TextArea> = {
@@ -75,4 +77,23 @@ export const Disabled: Story = {
     disabled: true,
     defaultValue: 'Sent already',
   },
+};
+
+// A chat-composer pattern: Send empties the box in place, so focus and any in-flight IME
+// composition survive where a `key` remount would drop them (issue #64).
+const composerReset$ = new Subject<void>();
+
+export const SendAndClear: Story = {
+  args: {
+    label: 'Message',
+    name: 'message',
+    placeholder: 'Type a message, then Send',
+    reset$: composerReset$,
+  },
+  render: (args) => (
+    <div className={'flex flex-col items-start gap-[var(--space-stack)]'}>
+      <TextArea {...args} />
+      <Button onClick$={composerReset$}>Send</Button>
+    </div>
+  ),
 };

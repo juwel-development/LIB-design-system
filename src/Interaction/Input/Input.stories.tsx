@@ -1,4 +1,6 @@
+import { Button } from 'Interaction/Button/Button';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Subject } from 'rxjs';
 import { Input } from './Input';
 
 const meta: Meta<typeof Input> = {
@@ -86,4 +88,23 @@ export const Disabled: Story = {
     disabled: true,
     defaultValue: 'you@example.com',
   },
+};
+
+// A search-and-add pattern: Add empties the field in place, so focus and any in-flight IME
+// composition survive where a `key` remount would drop them (issue #64).
+const entryReset$ = new Subject<void>();
+
+export const SendAndClear: Story = {
+  args: {
+    label: 'Tag',
+    name: 'tag',
+    placeholder: 'Type a tag, then Add',
+    reset$: entryReset$,
+  },
+  render: (args) => (
+    <div className={'flex flex-col items-start gap-[var(--space-stack)]'}>
+      <Input {...args} />
+      <Button onClick$={entryReset$}>Add</Button>
+    </div>
+  ),
 };
