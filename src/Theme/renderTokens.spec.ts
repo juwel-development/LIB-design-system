@@ -39,6 +39,18 @@ describe('renderTokens radius contract', () => {
   });
 });
 
+describe('renderTokens control-min-width contract', () => {
+  it('names the width floor primary and secondary share, defaulting to what min-w-42 resolved to', () => {
+    expect(renderTokens()).toContain('--control-min-width: 10.5rem;');
+  });
+
+  it('keeps the width floor out of the Tailwind colour map, since it is not a colour', () => {
+    const themeInline =
+      renderTokens().match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeInline).not.toContain('control-min-width');
+  });
+});
+
 describe('renderTokens typography contract', () => {
   // The library ships no face, so it holds no font values to read; the type-role sizes are its
   // own, and the two floors below are checked against them the way the contrast test checks the
