@@ -42,16 +42,32 @@ on an ancestor re-points every token underneath it.
 A product re-themes the whole system by supplying its own values for the same role
 names, which is what lets one design system serve several brands.
 
+### Single-theme builds
+
+`styles.css` and `tokens.css` carry both colour sets, so a product that ships only one
+theme still emits a `.dark` block it can never remove. Two opt-in exports carry a single
+theme's values in `:root` with no `.dark` block and no `dark:` variant:
+
+```tsx
+// a light-only product
+import '@juwel-development/design-system/styles.light.css';
+// a dark-only product
+import '@juwel-development/design-system/styles.dark.css';
+```
+
+The tokens-only equivalents are `tokens.light.css` and `tokens.dark.css`. All three
+variants are generated from the same palette, so they cannot drift.
+
 ### Changing the palette
 
-`src/Theme/Palette.ts` is the single source of truth. `src/tokens.css` is generated
-from it:
+`src/Theme/Palette.ts` is the single source of truth. `src/tokens.css` and its
+single-theme siblings `tokens.light.css` and `tokens.dark.css` are generated from it:
 
 ```bash
 npm run build:tokens
 ```
 
-The generated file is committed, and a test pins it to the palette - editing the
+The generated files are committed, and a test pins each to the palette - editing the
 palette without regenerating fails the suite rather than shipping stale colours.
 
 ## Development

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { renderTokens } from './renderTokens';
+import { dark, light } from './Palette';
+import {
+  renderDarkTokens,
+  renderLightTokens,
+  renderTokens,
+} from './renderTokens';
 
 describe('renderTokens motion contract', () => {
   it('names the one motion the library performs, so a consumer and the reduced-motion query can reach it', () => {
@@ -338,5 +343,66 @@ describe('renderTokens focus ring contract', () => {
     const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
     expect(themeInline).not.toContain('--focus-ring-width');
     expect(themeInline).not.toContain('--focus-ring-offset');
+  });
+});
+
+describe('single-theme token variants (issue #62)', () => {
+  // A colour value carried by exactly one theme, so its presence proves which set landed in :root.
+  const lightOnly = '#ffffff'; // light surface; the dark set has no white
+  const darkOnly = '#60a5fa'; //  dark link; the light set never uses it
+
+  it('keeps the combined default carrying both sets and the .dark selector, so no consumer migrates', () => {
+    const css = renderTokens();
+    expect(css).toMatch(/\.dark\s*\{/);
+    expect(css).toContain('@custom-variant dark');
+    expect(css).toContain(lightOnly);
+    expect(css).toContain(darkOnly);
+  });
+
+  it('emits the light values unconditionally in :root with no dark rule, so a light-only bundle carries none', () => {
+    const css = renderLightTokens();
+    expect(css).toContain('--color-surface: #ffffff;');
+    expect(css).toContain(lightOnly);
+    // No dark block and no dark: variant to bake an unremovable second theme into the bundle.
+    expect(css).not.toMatch(/\.dark\s*\{/);
+    expect(css).not.toContain('@custom-variant dark');
+    expect(css).not.toContain(darkOnly);
+  });
+
+  it('emits the dark values unconditionally in :root with no .dark gating, so a dark-only bundle carries no light theme', () => {
+    const css = renderDarkTokens();
+    expect(css).toContain('--color-surface: #0f172a;');
+    expect(css).toContain(darkOnly);
+    // The dark set is the only theme, so it sits in :root ungated - no light values, no .dark class.
+    expect(css).not.toMatch(/\.dark\s*\{/);
+    expect(css).not.toContain('@custom-variant dark');
+    expect(css).not.toContain(lightOnly);
+  });
+
+  it('draws every variant from the one palette, so the three cannot drift', () => {
+    // The colour values are never hand-duplicated: each variant renders the same Palette export.
+    for (const [name, value] of Object.entries(light)) {
+      const rendered =
+        name === 'focusRing' ? `var(--color-ring, ${value})` : value;
+      expect(renderLightTokens()).toContain(rendered);
+    }
+    for (const [name, value] of Object.entries(dark)) {
+      const rendered =
+        name === 'focusRing' ? `var(--color-ring, ${value})` : value;
+      expect(renderDarkTokens()).toContain(rendered);
+    }
+  });
+
+  it('gives both single-theme variants the same @theme inline map and non-colour tokens as the default', () => {
+    const inline = (css: string): string =>
+      css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    const combinedInline = inline(renderTokens());
+    expect(inline(renderLightTokens())).toBe(combinedInline);
+    expect(inline(renderDarkTokens())).toBe(combinedInline);
+    for (const css of [renderLightTokens(), renderDarkTokens()]) {
+      expect(css).toContain('--radius-control: 0.5rem;');
+      expect(css).toContain('--motion-duration-color: 150ms;');
+      expect(css).toContain('--text-display: clamp(3rem, 7vw, 6rem);');
+    }
   });
 });
