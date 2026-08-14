@@ -70,10 +70,9 @@ export const Input: FunctionComponent<IInputProps> = ({
       .filter(Boolean)
       .join(' ') || undefined;
 
-  // reset$ is an inbound command, so the component is the subscriber here rather than the emitter
-  // it is for onInput$ (coding.md#asynchrony). Emptying the live node keeps focus and any in-flight
-  // IME composition, which a `key` remount discards (issue #64). It owns this subscription's teardown
-  // and never completes the Subject - the consumer owns its lifetime.
+  // reset$ is an inbound command, so the component subscribes here (coding.md#asynchrony), unlike
+  // onInput$ which it emits on. Emptying the live node keeps focus and any in-flight IME composition,
+  // which a `key` remount would discard (issue #64).
   const controlRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const subscription = reset$?.subscribe(() => {
