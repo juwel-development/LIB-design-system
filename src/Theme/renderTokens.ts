@@ -44,7 +44,7 @@ const RADIUS = `:root {
    @theme inline, so a consumer theme can re-point it. One token names the floor primary and
    secondary share; 10.5rem is exactly what min-w-42 resolved to, so nothing changes visually while
    it keeps tracking the root font size. ghost owns a distinct zero - an intentional role, not this
-   token set to 0 - so it keeps its literal min-w-0 and does not read this. See docs/adr/0003. */
+   token set to 0 - so it keeps its literal min-w-0 and does not read this. */
 const CONTROL_MIN_WIDTH = `:root {
   --control-min-width: 10.5rem;
 }`;
