@@ -36,8 +36,13 @@ If the host already imports Tailwind and only wants the palette, take the tokens
 
 Colour is addressed by **role**, never by shade - `bg-primary`, `text-muted`,
 `border-border`. No component contains a `dark:` class: `src/tokens.css` declares one
-complete set of values under `:root` and another under `.dark`, so toggling that class
-on an ancestor re-points every token underneath it.
+complete set of values under `:root`, so a light-only product emits no dark rule it
+cannot remove. The dark set lives in a separate, opt-in stylesheet - import it after the
+components' styles to make toggling a `.dark` class on an ancestor re-point every token:
+
+```css
+@import "@juwel-development/design-system/tokens.dark.css";
+```
 
 A product re-themes the whole system by supplying its own values for the same role
 names, which is what lets one design system serve several brands.

@@ -8,6 +8,7 @@
 			"!**/storybook-static",
 			"!**/coverage",
 			"!**/src/tokens.css",
+			"!**/src/tokens.dark.css",
 			"!**/.sandcastle",
 			"!**/.claude",
 			"!**/*.grit",

@@ -1,5 +1,37 @@
 import { describe, expect, it } from 'vitest';
-import { renderTokens } from './renderTokens';
+import { renderDarkTokens, renderTokens } from './renderTokens';
+
+describe('renderTokens light-only contract', () => {
+  // Issue #62: the stylesheet the component barrel bakes into every consumer bundle must carry no
+  // dark rule, so a light-only product can assert none is emitted. The dark set is a separate opt-in.
+  it('emits no dark rule, so a light-only consumer bundle carries none', () => {
+    const css = renderTokens();
+    expect(css).not.toContain('.dark {');
+    expect(css).not.toContain('@custom-variant dark');
+  });
+
+  it('keeps the light :root and the Tailwind colour map every consumer needs', () => {
+    const css = renderTokens();
+    expect(css).toContain(':root {');
+    expect(css).toContain('@theme inline {');
+    expect(css).toContain('--color-surface: #ffffff;');
+  });
+});
+
+describe('renderDarkTokens contract', () => {
+  it('re-points the colour variables onto the dark set under .dark and defines the dark: variant', () => {
+    const css = renderDarkTokens();
+    expect(css).toContain('@custom-variant dark (&:where(.dark, .dark *));');
+    expect(css).toContain('.dark {');
+    expect(css).toContain('--color-surface: #0f172a;');
+  });
+
+  it('repeats none of the light layer, since a dark consumer imports tokens.css alongside it', () => {
+    const css = renderDarkTokens();
+    expect(css).not.toContain('@theme inline');
+    expect(css).not.toContain(':root {');
+  });
+});
 
 describe('renderTokens motion contract', () => {
   it('names the one motion the library performs, so a consumer and the reduced-motion query can reach it', () => {
@@ -309,12 +341,15 @@ describe('renderTokens focus ring contract', () => {
   });
 
   it('reads the old general-ring variable as a fallback, defaulting per theme when it is undeclared', () => {
-    const css = renderTokens();
     // A CSS fallback reaches its default only when the variable is undeclared, so a consumer who
     // still sets --color-ring keeps their value while an undeclared one falls through to the new
-    // per-theme default.
-    expect(css).toContain('--color-focus-ring: var(--color-ring, #475569);');
-    expect(css).toContain('--color-focus-ring: var(--color-ring, #cbd5e1);');
+    // per-theme default. The light default lives in tokens.css, the dark one in tokens.dark.css.
+    expect(renderTokens()).toContain(
+      '--color-focus-ring: var(--color-ring, #475569);',
+    );
+    expect(renderDarkTokens()).toContain(
+      '--color-focus-ring: var(--color-ring, #cbd5e1);',
+    );
   });
 
   it('carries the width and offset as re-pointable non-colour tokens, kept out of the Tailwind colour map', () => {

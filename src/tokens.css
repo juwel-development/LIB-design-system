@@ -1,13 +1,9 @@
 /* GENERATED from src/Theme/Palette.ts by `npm run build:tokens` - do not edit by hand.
  *
- * The raw values live in :root and .dark; the @theme inline block maps each one onto a Tailwind
- * colour so utilities resolve through the variable rather than baking a hex in. Declaring the
- * values inside @theme directly would freeze them at build time and the .dark overrides would
- * never reach the utilities. */
-
-/* Dark mode is driven by a `.dark` class rather than prefers-color-scheme, so a story or a
-   screenshot can be taken under either theme on demand. */
-@custom-variant dark (&:where(.dark, .dark *));
+ * The light values live in :root; the @theme inline block maps each onto a Tailwind colour so
+ * utilities resolve through the variable rather than baking a hex in. The dark set is the optional
+ * tokens.dark.css a dark-mode consumer imports alongside this file (issue #62); a light-only
+ * consumer imports neither it nor the dark: variant and so emits no dark rule. */
 
 :root {
   --color-surface: #ffffff;
@@ -31,30 +27,6 @@
   --color-warning: #f59e0b;
   --color-error: #d63384;
   --color-info: #06b6d4;
-}
-
-.dark {
-  --color-surface: #0f172a;
-  --color-foreground: #f8fafc;
-  --color-muted: #94a3b8;
-  --color-border: #334155;
-  --color-control-border: #94a3b8;
-  --color-rule: #5b6a80;
-  --color-backing: #1e293b;
-  --color-primary: #7c3aed;
-  --color-primary-hover: #8b5cf6;
-  --color-primary-foreground: #f8fafc;
-  --color-secondary: #0284c7;
-  --color-secondary-hover: #0ea5e9;
-  --color-secondary-foreground: #f8fafc;
-  --color-disabled: #475569;
-  --color-disabled-hover: #334155;
-  --color-focus-ring: var(--color-ring, #cbd5e1);
-  --color-link: #60a5fa;
-  --color-success: #34d399;
-  --color-warning: #fbbf24;
-  --color-error: #f48fb1;
-  --color-info: #22d3ee;
 }
 
 @theme inline {

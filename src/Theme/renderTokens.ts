@@ -2,10 +2,16 @@ import { dark, light, type PaletteTokens } from './Palette';
 
 const GENERATED_HEADER = `/* GENERATED from src/Theme/Palette.ts by \`npm run build:tokens\` - do not edit by hand.
  *
- * The raw values live in :root and .dark; the @theme inline block maps each one onto a Tailwind
- * colour so utilities resolve through the variable rather than baking a hex in. Declaring the
- * values inside @theme directly would freeze them at build time and the .dark overrides would
- * never reach the utilities. */`;
+ * The light values live in :root; the @theme inline block maps each onto a Tailwind colour so
+ * utilities resolve through the variable rather than baking a hex in. The dark set is the optional
+ * tokens.dark.css a dark-mode consumer imports alongside this file (issue #62); a light-only
+ * consumer imports neither it nor the dark: variant and so emits no dark rule. */`;
+
+const GENERATED_DARK_HEADER = `/* GENERATED from src/Theme/Palette.ts by \`npm run build:tokens\` - do not edit by hand.
+ *
+ * The optional dark layer (issue #62): it re-points the colour variables tokens.css declares in
+ * :root onto the dark set under a .dark class, and defines the dark: variant. A dark-mode consumer
+ * imports it after tokens.css; a light-only one imports neither and its bundle carries no dark rule. */`;
 
 /* The library performs exactly one motion - a colour transition - so its motion contract is this
    single token. 150ms matches Tailwind's default, so it changes nothing visually; its job is to
@@ -172,33 +178,28 @@ const declarations = (
     .map((name) => `  --color-${toKebabCase(name)}: ${value(name)};`)
     .join('\n');
 
+// The library no longer declares --color-ring but still reads it as a fallback, so a consumer's
+// existing value keeps working; the plain hex in the palette is the default and what the contrast
+// test checks. See docs/adr/0002-focus-ring-token-contract.md.
+const raw = (tokens: PaletteTokens) => (name: string) => {
+  const value = tokens[name as keyof PaletteTokens];
+  return name === 'focusRing' ? `var(--color-ring, ${value})` : value;
+};
+
 /**
- * Renders the stylesheet form of the palette. Shared by the build script and the test that pins
- * `src/tokens.css` to it, so a palette edit that was never regenerated fails the suite instead of
- * silently shipping stale colours.
+ * Renders the light-only stylesheet form of the palette: the :root values and the @theme inline
+ * colour map, plus every non-colour token block. Carries no `.dark` rule (issue #62), so the bundle
+ * the component barrel bakes it into stays free of dark rules a light-only consumer cannot remove;
+ * the dark set is {@link renderDarkTokens}. Shared by the build script and the test that pins
+ * `src/tokens.css` to it, so a palette edit that was never regenerated fails the suite.
  */
 export const renderTokens = (): string => {
-  // The library no longer declares --color-ring but still reads it as a fallback, so a consumer's
-  // existing value keeps working; the plain hex in the palette is the default and what the contrast
-  // test checks. See docs/adr/0002-focus-ring-token-contract.md.
-  const raw = (tokens: PaletteTokens) => (name: string) => {
-    const value = tokens[name as keyof PaletteTokens];
-    return name === 'focusRing' ? `var(--color-ring, ${value})` : value;
-  };
   const reference = () => (name: string) => `var(--color-${toKebabCase(name)})`;
 
   return `${GENERATED_HEADER}
 
-/* Dark mode is driven by a \`.dark\` class rather than prefers-color-scheme, so a story or a
-   screenshot can be taken under either theme on demand. */
-@custom-variant dark (&:where(.dark, .dark *));
-
 :root {
 ${declarations(light, raw(light))}
-}
-
-.dark {
-${declarations(dark, raw(dark))}
 }
 
 @theme inline {
@@ -243,3 +244,21 @@ ${FOLD}
 ${TICK}
 `;
 };
+
+/**
+ * Renders the optional dark layer (issue #62): the `.dark` class re-pointing every colour variable
+ * onto the dark set, and the `dark:` custom variant. A dark-mode consumer imports the generated
+ * `src/tokens.dark.css` after `tokens.css`; a light-only one imports neither. Pinned to
+ * `src/tokens.dark.css` by the same test that pins {@link renderTokens}.
+ */
+export const renderDarkTokens = (): string =>
+  `${GENERATED_DARK_HEADER}
+
+/* Dark mode is driven by a \`.dark\` class rather than prefers-color-scheme, so a story or a
+   screenshot can be taken under either theme on demand. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+${declarations(dark, raw(dark))}
+}
+`;

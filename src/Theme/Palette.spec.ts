@@ -3,10 +3,15 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { dark, light } from './Palette';
-import { renderTokens } from './renderTokens';
+import { renderDarkTokens, renderTokens } from './renderTokens';
 
 const tokensCss = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), '..', 'tokens.css'),
+  'utf8',
+);
+
+const tokensDarkCss = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), '..', 'tokens.dark.css'),
   'utf8',
 );
 
@@ -28,6 +33,11 @@ describe('Palette', () => {
   it('keeps tokens.css in sync with the palette', () => {
     // tokens.css is generated. If this fails, run `npm run build:tokens`.
     expect(tokensCss).toBe(renderTokens());
+  });
+
+  it('keeps tokens.dark.css in sync with the palette', () => {
+    // tokens.dark.css is generated too (issue #62). If this fails, run `npm run build:tokens`.
+    expect(tokensDarkCss).toBe(renderDarkTokens());
   });
 
   it('defines every role in both themes, so no component needs a dark: fallback', () => {
