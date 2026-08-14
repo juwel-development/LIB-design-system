@@ -76,6 +76,11 @@
   --radius-control: 0.5rem;
 }
 
+/* The control minimum width is not a colour either, and sits in :root beside radius. */
+:root {
+  --control-min-width: 10.5rem;
+}
+
 /* The library's underline dimensions are not colours either, and sit in :root beside radius. They are
    not prose's alone: every Link treatment that draws a line draws it from these (docs/adr/0006). */
 :root {
