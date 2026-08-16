@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/juwel-development/LIB-design-system/compare/v2.1.0...v2.1.1) (2026-08-16)
+
+
+### Bug Fixes
+
+* **checklist:** reshape the item marker into a chevron ([ec33105](https://github.com/juwel-development/LIB-design-system/commit/ec33105bbd06408f0bef65488b0528ce3ac1de5a)), closes [#72](https://github.com/juwel-development/LIB-design-system/issues/72)
+
 # [2.1.0](https://github.com/juwel-development/LIB-design-system/compare/v2.0.0...v2.1.0) (2026-08-14)
 
 
