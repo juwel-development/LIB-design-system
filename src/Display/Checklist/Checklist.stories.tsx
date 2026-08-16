@@ -14,7 +14,7 @@ const meta: Meta<typeof Checklist.Root> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A plain list: each item hairline-separated, marked by a short rule in the left indent. */
+/** A plain list: each item hairline-separated, marked by a chevron in the left indent. */
 export const Plain: Story = {
   render: () => (
     <Checklist.Root>

@@ -4,9 +4,13 @@ import type { FunctionComponent, ReactNode } from 'react';
 // The marker is a rule, not a glyph - and this is worth writing down because it outlives this one
 // component and there is no ADR carrying it. A checkbox character, dingbat or icon is an *invented
 // graphic*, and in a design language built from 1px rules and type an invented graphic is the thing
-// that reads as borrowed. So the tick is the structural hairline already on the page, doing one more
-// job - and it is unconditional: no prop removes it, reshapes it or swaps it. A future primitive
-// needing a marker for some other job has nowhere else to find this stance; it is here on purpose.
+// that reads as borrowed. So the tick is drawn from the same hairline vocabulary, doing one more job -
+// and it is unconditional: no prop removes it, reshapes it or swaps it. It began as a horizontal bar,
+// but a bar in the left indent of a to-confirm list sits exactly where a checkbox goes, and in
+// production it was read as a checkbox that failed to draw (issue #72). So it is now a chevron - two
+// hairline strokes meeting at a point, the shape a checkbox never has - still a rule, still no glyph.
+// A future primitive needing a marker for some other job has nowhere else to find this stance; it is
+// here on purpose.
 
 // The ul: an unstyled list. `list-none` strips the browser marker (so no bullet is ever drawn) and
 // resets its default indent; `role="list"` is restored in the markup because `list-style: none`
@@ -17,18 +21,21 @@ const checklistRoot = cva('m-0 list-none p-0');
 // The li: body copy in `foreground` - items are content, not annotation, so they are not muted. The
 // tick is drawn as a `::before` pseudo-element, the only route to a rule: CSS `::marker` styles just
 // colour, font and content, so it cannot draw a line, and a `✓` in the content would be announced on
-// every single item. The li is a flex row so the tick sits in a left gutter with the text hanging
-// indented beside it; `before:mt-[0.7em]` drops the rule to the optical middle of the first line. Its
-// colour is the `rule` role - a table's top rule and a list's tick are one job, a 1px mark at the
-// weight where structure becomes visible - its length and thickness the two named tick tokens, no
-// literal here. Hairlines sit *between* items in the `border` colour, with no rule above the first or
-// below the last, so the list is open at both ends - deliberately unlike a closed list, which closes
-// at the foot. The between-item gap reads `--space-stack`, split above and below the hairline so it
-// sits centred in the gap.
+// every single item. It is a chevron pointing at the text, built as a box carrying only its top and
+// right hairline edges (each at `--tick-thickness`, coloured `--color-rule`) rotated 45deg so the two
+// strokes meet at a point - a drawn rule the way the bar was, but the one shape a checkbox never has.
+// Its box is sized off `--tick-length` (still the only length token), and `before:mt-[0.35em]` drops
+// the point to the optical middle of the first line - re-tuned from the 1px bar, which sat lower. The
+// li is a flex row so the chevron sits in a left gutter with the text hanging indented beside it. Its
+// colour is the `rule` role - a table's top rule and a list's tick are one job, a mark at the weight
+// where structure becomes visible - no literal here. Hairlines sit *between* items in the `border`
+// colour, with no rule above the first or below the last, so the list is open at both ends -
+// deliberately unlike a closed list, which closes at the foot. The between-item gap reads
+// `--space-stack`, split above and below the hairline so it sits centred in the gap.
 const checklistItem = cva(
   [
     'flex items-start gap-3 font-primary text-body leading-body text-foreground',
-    "before:mt-[0.7em] before:h-[var(--tick-thickness)] before:w-[var(--tick-length)] before:shrink-0 before:bg-[var(--color-rule)] before:content-['']",
+    "before:mt-[0.35em] before:h-[calc(var(--tick-length)*0.7)] before:w-[calc(var(--tick-length)*0.7)] before:shrink-0 before:rotate-45 before:[border-top:var(--tick-thickness)_solid_var(--color-rule)] before:[border-right:var(--tick-thickness)_solid_var(--color-rule)] before:content-['']",
     '[&:not(:first-child)]:mt-[var(--space-stack)] [&:not(:first-child)]:border-border [&:not(:first-child)]:border-t [&:not(:first-child)]:border-solid [&:not(:first-child)]:pt-[var(--space-stack)]',
   ].join(' '),
 );
@@ -58,13 +65,14 @@ const ChecklistItem: FunctionComponent<IChecklistItemProps> = ({
 
 /**
  * A list of things to confirm or prepare, composed from its two members. Each item is hairline-separated
- * and marked by a short rule sitting in the left indent - never a checkbox, bullet, dingbat or icon.
+ * and marked by a chevron drawn in the left indent - never a checkbox, bullet, dingbat or icon.
  * This is a reading device, not a form control: it renders no interactive checkbox and owns no state.
  *
  * @Guarantees — enforced on every render
  * - `Root` renders a `ul` carrying `role="list"`; `Item` renders an `li`. Works with JavaScript off.
- * - The marker is a `::before` rule reading `--color-rule`, `--tick-length` and `--tick-thickness` - no
- *   glyph, character, dingbat, icon or `::marker` content, and nothing is announced on each item.
+ * - The marker is a `::before` chevron reading `--color-rule`, `--tick-length` and `--tick-thickness` -
+ *   two hairline strokes meeting at a point, no glyph, character, dingbat, icon or `::marker` content,
+ *   and nothing is announced on each item.
  * - Items render at the body type role in `foreground`; they are content, not annotation.
  * - Hairlines in `border` separate items, with no rule above the first or below the last, so the list
  *   is open at both ends. The between-item gap reads `--space-stack`.

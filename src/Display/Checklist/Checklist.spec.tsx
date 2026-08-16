@@ -42,6 +42,26 @@ describe('Checklist', () => {
     }
   });
 
+  it('shapes the marker as a chevron - two hairline strokes meeting at a point, rotated toward the text, never a bar', () => {
+    // The marker was a horizontal bar (height = thickness, width = length); in production that bar
+    // read as a checkbox that failed to draw (issue #72). It is now a chevron: a pseudo-element box
+    // carrying only its top and right hairline edges, rotated to point at the item text. Still a drawn
+    // rule, never a glyph - the shape a checkbox never has.
+    renderSpecChecklist();
+    for (const item of screen.getAllByRole('listitem')) {
+      // Two strokes - the box's top and right edges - each at the tick weight, meeting at the corner.
+      expect(item.className).toContain(
+        'border-top:var(--tick-thickness)_solid_var(--color-rule)',
+      );
+      expect(item.className).toContain(
+        'border-right:var(--tick-thickness)_solid_var(--color-rule)',
+      );
+      // Rotated so the corner points toward the text; no filled bar remains.
+      expect(item.className).toMatch(/\bbefore:rotate-45\b/);
+      expect(item.className).not.toContain('before:bg-[var(--color-rule)]');
+    }
+  });
+
   it('renders no interactive checkbox: this is a reading device, not a form control', () => {
     const { container } = renderSpecChecklist();
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
