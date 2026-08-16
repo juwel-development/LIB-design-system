@@ -35,7 +35,7 @@ const checklistRoot = cva('m-0 list-none p-0');
 const checklistItem = cva(
   [
     'flex items-start gap-3 font-primary text-body leading-body text-foreground',
-    "before:mt-[0.35em] before:h-[calc(var(--tick-length)*0.7)] before:w-[calc(var(--tick-length)*0.7)] before:shrink-0 before:rotate-45 before:[border-top:var(--tick-thickness)_solid_var(--color-rule)] before:[border-right:var(--tick-thickness)_solid_var(--color-rule)] before:content-['']",
+    "before:mt-[0.35em] before:size-[calc(var(--tick-length)*0.7)] before:shrink-0 before:rotate-45 before:[border-top:var(--tick-thickness)_solid_var(--color-rule)] before:[border-right:var(--tick-thickness)_solid_var(--color-rule)] before:content-['']",
     '[&:not(:first-child)]:mt-[var(--space-stack)] [&:not(:first-child)]:border-border [&:not(:first-child)]:border-t [&:not(:first-child)]:border-solid [&:not(:first-child)]:pt-[var(--space-stack)]',
   ].join(' '),
 );
