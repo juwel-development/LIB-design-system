@@ -277,6 +277,53 @@ Three consequences worth stating, since they are what the specs pin:
 This amendment **reclassifies nothing**. Every family already assigned in the library conforms to it
 and is unchanged; what changes is that five components that assigned none now do.
 
+## Amended: the size those same five elements name, which is a different question
+
+The amendment above settled the *face* of the five components that declared none. Auditing it found
+the same elements declaring no **type role** either
+([#92](https://github.com/juwel-development/LIB-design-system/issues/92)), and that gap is not the
+same gap. Family is invisible on the library's own values, because both roles default to `inherit`;
+size is not. `Input`'s and `TextArea`'s `<label>`s and controls, and `Button`'s text, rendered at
+whatever size they inherited, so a component's type changed with where it was placed. *Roles, not
+rungs* says a component asks for what its text **is**; these five asked for nothing, which is a
+different way of failing the same rule — the answer came from the page instead of from a rung, and
+either way it was not the component's.
+
+`Button` shows why it is a defect and not an untidiness. Its recipe fixes vertical padding and sets
+no size, so its **height** was the surrounding page's to decide: `small` in a `Footer`, `label` in a
+`Header`, `body` in a reading column. Its own guidance asks for a 44×44px touch target, which a
+component cannot honour while the quantity driving its height belongs to somebody else.
+
+**All three take `body`.** The control takes it because of the floor recorded below — it is the one
+role clearing 16px. The `<label>` takes the control's role, because a field's label and its value
+should read as one thing; the label's *naming* signal is already carried by the `secondary` face the
+amendment above gave it, so the size does not need to repeat it. `label` was the tempting answer and
+is wrong twice over: `--text-label` is 13px, which would set a field's label **smaller than its own
+hint and error message** at `small`'s 15px, and every use of the label role in this library pairs it
+with `--tracking-label`, so the field would either be the first bare use of the role or a
+letter-spaced device on a form. `Button` takes `body` to match the control it usually stands beside,
+from **the base of its recipe** — the placement the radius, the ring, the colour transition and the
+face already use, so no variant can disagree about the size that drives the button's height.
+
+The annotations do not move: hint, error message and optional marker were pinned at `small` by
+[#79](https://github.com/juwel-development/LIB-design-system/issues/79) and stay there. What changed
+is that the label above them stopped being sized by the page.
+
+**`Link` still declares no type role, in any treatment, and that is not the same omission.** The
+face is constant across placements and the size is not, which is the whole reason the two questions
+sort differently. `prose` sits in running text by definition; `graphic`'s child is not text;
+[ADR 0006](./0006-link-treatment-contract.md) already settles `label-link` — *"sets no size,
+tracking or face"*; and `quiet` **cannot** take one role without breaking a placement, since its two
+documented homes set different sizes on their own roots, `Header` at the label role and `Footer` at
+`small`. That is why `quiet` carries a face and no size. The recipe says so, so the silence is not
+rediscovered as this amendment's gap.
+
+**Leading is not part of this.** All five elements name a size and nothing else, which is the
+position every `--text-small` call site is already in. A line-height on `Button` would move the box
+this amendment deliberately leaves alone — the height defect is fixed by pinning the font-size, not
+by touching the padding — and the opt-in rule the label role's leading established above holds here
+too: a leading is a decision somebody makes per call site, not a default that spreads.
+
 ## Constraints published on the tokens
 
 In the shape [ADR 0002](./0002-focus-ring-token-contract.md) established: stated numerically on the
@@ -286,6 +333,14 @@ token, enforced against the library's own values, never against a consumer's.
   the label's tracking reads as damage and column-against-column figure comparison stops working. Both
   are checked against the library's own rendered values by `renderTokens.spec.ts`, the way the contrast
   test in `Palette.spec.ts` checks the ring — the enforceable half of the contract.
+- **`--text-body` ≥ 16px**, because a text control set below 16px makes iOS Safari zoom the viewport
+  when it takes focus. `Input`'s and `TextArea`'s controls are set at this role (the amendment
+  above), so the floor is the control's and not running text's — it is why the control takes `body`
+  rather than `small`, which at 15px does not clear it. The shipped `1.0625rem` clears it and
+  `renderTokens.spec.ts` pins that, the way the two floors above are pinned; but the value that
+  decides whether a visitor's viewport actually jumps is the **consumer's** re-pointed one, and that
+  half is beyond reach — a `token constraint the library can only state`, published here so a theme
+  dropping the body role below 16px is breaking a stated rule rather than making an unlucky choice.
 - **`--font-primary` must carry `tnum`, `--font-secondary` must carry `smcp`**, before any component
   sets `tabular-nums` or `small-caps`. `font-variant-numeric` and `font-variant-caps` are inert on a
   face without the feature and fail *silently* — figures do not line up, capitals are synthesised. The

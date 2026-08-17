@@ -206,4 +206,38 @@ describe('Button Component', () => {
       expect(screen.getByRole('button').className).toContain('font-primary');
     },
   );
+
+  it.each(['primary', 'secondary', 'ghost'] as const)(
+    'sizes the %s variant at the body role, carried by the base so no variant can disagree (#92)',
+    (variant) => {
+      render(<Button variant={variant}>Send</Button>);
+
+      // docs/adr/0004, the size amendment: the button's own height is driven by its font-size, so
+      // the size sits in the base beside the radius, the ring and the colour transition rather
+      // than being repeated - or contradicted - per variant.
+      expect(screen.getByRole('button').className).toContain('text-body');
+    },
+  );
+
+  it('renders the same size wherever it is placed, so its height belongs to the component and not to the page around it (#92)', () => {
+    // The defect: with no size of its own the button inherited one, so the same variant stood
+    // taller in a reading column than in a header. Two containers set at different type roles is
+    // the smallest reproduction of that; jsdom lays nothing out, so what is checkable is that the
+    // button names a size itself and names the same one in both.
+    render(
+      <>
+        <div className={'text-small'}>
+          <Button testId={'in-footer'}>Send</Button>
+        </div>
+        <div className={'text-label'}>
+          <Button testId={'in-header'}>Send</Button>
+        </div>
+      </>,
+    );
+
+    const inFooter = screen.getByTestId('in-footer').className;
+    const inHeader = screen.getByTestId('in-header').className;
+    expect(inFooter).toContain('text-body');
+    expect(inHeader).toBe(inFooter);
+  });
 });

@@ -89,6 +89,35 @@ describe('Link', () => {
     },
   );
 
+  it.each(['prose', 'quiet', 'label-link', 'graphic'] as const)(
+    'declares no type role for the %s treatment, so a link is sized by whatever it sits in (#92)',
+    (treatment) => {
+      render(
+        <Link href={'/about'} treatment={treatment}>
+          About
+        </Link>,
+      );
+
+      // Deliberate silence, and unlike the face it holds for all four treatments: `prose` sits in
+      // running text, `graphic`'s child is not text, ADR 0006 settles `label-link`, and `quiet`
+      // has two documented homes that set different sizes on their own roots - Header at the
+      // label role, Footer at small - so no one role is right for it. Colour utilities share the
+      // `text-` prefix, so the roles are listed rather than matched by prefix.
+      const className = screen.getByRole('link').className;
+      for (const role of [
+        'text-display',
+        'text-title',
+        'text-subtitle',
+        'text-lede',
+        'text-body',
+        'text-small',
+        'text-label',
+      ]) {
+        expect(className).not.toContain(role);
+      }
+    },
+  );
+
   it('exposes a stable test hook through testId', () => {
     render(
       <Link href={'/x'} testId={'nav-link'}>

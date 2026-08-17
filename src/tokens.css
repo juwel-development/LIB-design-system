@@ -149,7 +149,7 @@
      subtitle was rejected in ADR 0004 - it welds the lede's size to H3's and its leading to a head's. */
   --text-lede: 1.25rem;  /* 20px */
   --leading-lede: 1.4;
-  --text-body: 1.0625rem;  /* 17px */
+  --text-body: 1.0625rem;  /* 17px, floored at 16px: below it iOS Safari zooms the viewport when a control set at this role takes focus (#92) */
   --leading-body: 1.6;
   --text-small: 0.9375rem;  /* 15px floor: below it tabular figures stop comparing column to column */
   --text-label: 0.8125rem;  /* 13px floor: below it the tracking reads as damage, not a device */

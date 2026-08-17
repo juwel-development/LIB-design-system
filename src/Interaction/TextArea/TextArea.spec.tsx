@@ -152,4 +152,41 @@ describe('TextArea Component', () => {
       expect(screen.getByText(naming).className).toContain('font-secondary');
     }
   });
+
+  it('sizes the label and the control at the body role, so neither takes its size from the page the field was dropped into (#92)', () => {
+    render(<TextArea label={'Message'} name={'message'} />);
+
+    // docs/adr/0004, the size amendment: the control takes `body` because a focused control below
+    // 16px zooms iOS Safari, and the label takes the control's role because the two belong
+    // together. Asserted per element, so a size moved up to the wrapper fails here.
+    expect(screen.getByRole('textbox').className).toContain('text-body');
+    expect(screen.getByText('Message').className).toContain('text-body');
+  });
+
+  it('keeps the weight and colour the label already carried, since the size is an addition and not a replacement (#92)', () => {
+    render(<TextArea label={'Message'} name={'message'} />);
+
+    const className = screen.getByText('Message').className;
+    expect(className).toContain('font-medium');
+    expect(className).toContain('text-foreground');
+  });
+
+  it('leaves the hint, the error message and the optional marker at the small role, unmoved by the label taking one (#92)', () => {
+    render(
+      <TextArea
+        label={'Message'}
+        name={'message'}
+        optionalLabel={'optional'}
+        hint={'Keep it short'}
+        invalid={true}
+        errorMessage={'Enter a message'}
+      />,
+    );
+
+    // The annotations were pinned at `small` by #79 and this ticket does not move them: what
+    // changes is that the label they sit under stops being sized by the surrounding page.
+    for (const annotation of ['optional', 'Keep it short', 'Enter a message']) {
+      expect(screen.getByText(annotation).className).toContain('text-small');
+    }
+  });
 });

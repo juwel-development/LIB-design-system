@@ -9,6 +9,12 @@ import type { FunctionComponent, ReactNode } from 'react';
 // library's --underline-* tokens and arrive instantly, off the transition allowlist (docs/adr/0001):
 // prose thickens its on hover, quiet and label-link raise one at rest thickness, graphic has none.
 // Only `quiet` declares a face; the other three decline one deliberately (docs/adr/0004, #90).
+// No treatment declares a type role, including `quiet`, and that asymmetry is the point (#92): a
+// face is constant across placements and a size is not. `prose` sits in running text by definition,
+// `graphic`'s child is not text, ADR 0006 settles `label-link` ("sets no size, tracking or face"),
+// and `quiet` cannot take one role without breaking a placement - its two documented homes set
+// different sizes on their own roots, Header at the label role and Footer at small. So the silence
+// here is a decision, not the omission #92 closed in Button, Input and TextArea.
 const link = cva(
   'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   {

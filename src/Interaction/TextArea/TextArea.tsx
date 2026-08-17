@@ -9,9 +9,11 @@ import type { Subject } from 'rxjs';
 // `aria-invalid` so a server-rendered and a browser-validated invalid state paint identically. Focus
 // adds only the shared ring - the border never changes on focus (docs/adr/0002). Height is the
 // recipe's, not a `rows` prop. The control's face, and the placeholder that follows it, are
-// docs/adr/0004's (#90).
+// docs/adr/0004's (#90). Its size is that ADR's too (#92): `body` is the one role clearing the 16px
+// below which iOS Safari zooms the viewport on focus, a floor published on --text-body because a
+// re-pointed token can break it.
 const textArea = cva(
-  'block min-h-24 w-full rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent px-3 py-2 font-primary text-foreground transition-colors duration-[var(--motion-duration-color)] outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)] [&:user-invalid]:border-error aria-[invalid=true]:border-error disabled:cursor-not-allowed disabled:border-disabled disabled:text-muted',
+  'block min-h-24 w-full rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent px-3 py-2 font-primary text-body text-foreground transition-colors duration-[var(--motion-duration-color)] outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)] [&:user-invalid]:border-error aria-[invalid=true]:border-error disabled:cursor-not-allowed disabled:border-disabled disabled:text-muted',
 );
 
 interface ITextAreaProps {
@@ -84,10 +86,13 @@ export const TextArea: FunctionComponent<ITextAreaProps> = ({
   return (
     <div className={'flex flex-col gap-[var(--space-stack)]'}>
       {/* Each of these declares `font-secondary` on itself, never on the wrapper above - the
-          wrapper would hand the labelling face to the control too (docs/adr/0004, #90). */}
+          wrapper would hand the labelling face to the control too (docs/adr/0004, #90). The
+          label's size is declared here for the same reason, and it is `body` - the control's own
+          role, not `label`, whose 13px would set a field's label smaller than the hint and error
+          message beneath it and would arrive letter-spaced (docs/adr/0004, #92). */}
       <label
         htmlFor={controlId}
-        className={'font-secondary font-medium text-foreground'}
+        className={'font-secondary font-medium text-body text-foreground'}
       >
         {label}
       </label>
