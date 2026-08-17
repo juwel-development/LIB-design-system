@@ -1,3 +1,14 @@
+# [3.0.0](https://github.com/juwel-development/LIB-design-system/compare/v2.1.1...v3.0.0) (2026-08-17)
+
+
+* feat(form)!: word the optional marker through a prop ([5886d8a](https://github.com/juwel-development/LIB-design-system/commit/5886d8a485996fc6c3901dbab9ce913e8dfa6f4f)), closes [#74](https://github.com/juwel-development/LIB-design-system/issues/74)
+
+
+### BREAKING CHANGES
+
+* a non-required Input or TextArea no longer renders an `optional` marker by itself.
+A consumer that wants one passes `optionalLabel` with its own translated wording.
+
 ## [2.1.1](https://github.com/juwel-development/LIB-design-system/compare/v2.1.0...v2.1.1) (2026-08-16)
 
 
