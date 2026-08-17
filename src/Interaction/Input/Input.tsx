@@ -110,16 +110,19 @@ export const Input: FunctionComponent<IInputProps> = ({
         data-testid={testId}
         onInput={(event) => onInput$?.next(event.currentTarget.value)}
       />
+      {/* The three annotations take the `small` type role, never a rung of Tailwind's own `text-*`
+          scale (issue #79): a rung is a framework internal a re-theming consumer neither declares
+          nor owns, so it holds its default while their ladder moves out from under it. */}
       {!required && optionalLabel && (
-        <span className={'text-muted text-sm'}>{optionalLabel}</span>
+        <span className={'text-muted text-small'}>{optionalLabel}</span>
       )}
       {hint && (
-        <p id={hintId} className={'text-muted text-sm'}>
+        <p id={hintId} className={'text-muted text-small'}>
           {hint}
         </p>
       )}
       {invalid && (
-        <p id={errorId} className={'text-error text-sm'}>
+        <p id={errorId} className={'text-error text-small'}>
           {errorMessage}
         </p>
       )}
