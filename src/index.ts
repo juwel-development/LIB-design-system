@@ -15,6 +15,7 @@ export { H3 } from 'Display/Typography/H3/H3';
 export { H4 } from 'Display/Typography/H4/H4';
 export { H5 } from 'Display/Typography/H5/H5';
 export { H6 } from 'Display/Typography/H6/H6';
+export { Note } from 'Display/Typography/Note/Note';
 export { P } from 'Display/Typography/P/P';
 export { Prose } from 'Display/Typography/Prose/Prose';
 export { Button } from 'Interaction/Button/Button';

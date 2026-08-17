@@ -61,6 +61,16 @@ themselves — and the same device inside a table header, a caption or a nav bel
 component owns that element.
 _Avoid_: Label, kicker, overline, Caption, small-caps
 
+**Note**:
+A short annotation at the *small* type role in the secondary family — a routing line above a submit
+button, a privacy line at the point of submission, a line beside a control. It is not reading
+matter: it takes no measure and sits in no reading column, which is what separates it from
+`Prose.Tail` at the same size, and it carries neither the tracking nor the weight that make an
+Eyebrow. The device has three carriers and the primitive is only one: a form's own message belongs
+to `Form`'s note and a table's to the note cell, each painted by the component that owns it, so the
+primitive is for an annotation no other component owns.
+_Avoid_: Caption, hint, small print, helper text, footnote, disclaimer
+
 **Reading measure**:
 The width running text is bounded to, counted in characters rather than in length — because
 character count is what reading tolerance is defined in, and a width held still lets the count drift
