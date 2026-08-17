@@ -30,17 +30,19 @@ const header = cva(
   },
 );
 
+// Not a second recipe - the standing slot has nothing to vary, and the standard allows a component
+// one cva() (design-system-components.md §4), which is the bar's own above. A named constant beside
+// the nav's inline class string, so the comment has something to sit on.
+//
 // The height floor is the nav's own line box, written from the two tokens the recipe above sets the
 // header from, so the declared floor and the rendered line cannot drift (#81). `shrink-0` because an
 // explicit min-width replaces a flex item's automatic minimum - without it the bar squeezes the slot
 // below its content and wraps the place name the floor exists to keep on one line.
-const standingSlot = cva(
-  [
-    'inline-flex shrink-0 items-center',
-    'min-h-[calc(var(--text-label)*var(--leading-label))]',
-    'min-w-[var(--standing-min-width)]',
-  ].join(' '),
-);
+const standingSlot = [
+  'inline-flex shrink-0 items-center',
+  'min-h-[calc(var(--text-label)*var(--leading-label))]',
+  'min-w-[var(--standing-min-width)]',
+].join(' ');
 
 export interface IHeaderProps extends VariantProps<typeof header> {
   /** The standing link: a place name, a mark, or a home link. The consumer supplies the whole anchor -
@@ -77,13 +79,16 @@ export interface IHeaderProps extends VariantProps<typeof header> {
  * - Omitting `navName` emits no `aria-label` at all, not an empty one.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
- * - A mark that should *fill* the standing slot is made able to collapse by whoever placed it -
- *   `flex: 1 1 0; min-width: 0` on the element wrapping it. Measured against a `viewBox`-only SVG, the
- *   common shape: a percentage width cannot resolve against an indefinite basis, so a mark told to fill
- *   renders at its intrinsic width - 278.55px in a slot floored at 120px - and the floor stops
- *   governing. Allowed to collapse, the same mark renders 120 wide in a 120-wide slot, matching a place
- *   name in the same slot exactly. The library cannot apply the rule for you: on a text standing
- *   element `min-width: 0` lets the name shrink below its content and wrap.
+ * - A mark that should *fill* the standing slot is given a **definite width** by whoever placed it -
+ *   `width: var(--standing-min-width)` on the element wrapping it, so the mark and the floor move
+ *   together when a theme re-points the token. Measured against a `viewBox`-only SVG, the common
+ *   shape: it has no intrinsic width to fill from, and `width: 100%` cannot resolve against the slot's
+ *   indefinite basis - so a mark told to fill that way renders at its intrinsic width instead (300px in
+ *   a slot floored at 120px, against 120px on the place-name route) and the floor stops governing,
+ *   which is the jump between routes the floor exists to remove. A definite width holds at any bar
+ *   width; `flex: 1 1 0; min-width: 0` only collapses the mark when the bar is already out of room, so
+ *   it is not the rule to reach for. The library cannot apply either rule for you: the same width on a
+ *   place name would clamp the name and wrap it.
  *
  * @UXGuidelines
  * - Name the nav with `navName` once the page has more than one navigation landmark - a footer nav will
@@ -101,7 +106,7 @@ export const Header: FunctionComponent<IHeaderProps> = ({
   testId,
 }) => (
   <header className={header({ edge })} data-testid={testId}>
-    <div className={standingSlot()}>{standing}</div>
+    <div className={standingSlot}>{standing}</div>
     <nav
       aria-label={navName}
       className={'flex flex-wrap items-baseline gap-[var(--space-region)]'}

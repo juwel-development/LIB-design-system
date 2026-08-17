@@ -22,9 +22,15 @@ const componentSources = (dir: string): string[] =>
       : [];
   });
 
+// Matched on word boundaries rather than a trailing space: a utility written last in a class string
+// has none, and `includes('leading-label ')` would read it as absent. The leading `(?<![\w-])` is what
+// keeps `leading-label` from matching inside a longer name a later rung might introduce.
+const carries = (utility: string, source: string): boolean =>
+  new RegExp(`(?<![\\w-])${utility}(?![\\w-])`).test(source);
+
 const carrying = (utility: string): string[] =>
   componentSources(srcRoot)
-    .filter((path) => readFileSync(path, 'utf8').includes(`${utility} `))
+    .filter((path) => carries(utility, readFileSync(path, 'utf8')))
     .map((path) => relative(srcRoot, path));
 
 describe('label leading opt-in', () => {

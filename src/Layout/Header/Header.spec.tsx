@@ -57,11 +57,11 @@ describe('Header', () => {
     // The label role sizes but did not lead, so the bar's height was inherited from whatever document
     // the shell landed in (#81). Setting the leading here is what makes the height stateable at all.
     render(
-      <Header testId={'h'}>
+      <Header>
         <a href={'/work'}>Work</a>
       </Header>,
     );
-    expect(screen.getByTestId('h').className).toContain('leading-label');
+    expect(screen.getByRole('banner').className).toContain('leading-label');
   });
 
   it('floors the standing slot at the nav line box, written from the same two tokens the nav is set from', () => {
@@ -70,11 +70,11 @@ describe('Header', () => {
     // height names exactly the two tokens the header sets its own type from - a third name, or a
     // literal, would be the drift. The rendered result is Storybook's surface, not this suite's.
     render(
-      <Header standing={<a href={'/'}>JuweL</a>} testId={'h'}>
+      <Header standing={<a href={'/'}>JuweL</a>}>
         <a href={'/work'}>Work</a>
       </Header>,
     );
-    const banner = screen.getByTestId('h');
+    const banner = screen.getByRole('banner');
     const slot = screen.getByRole('link', { name: 'JuweL' })
       .parentElement as HTMLElement;
     expect(slot.className).toContain(
@@ -86,7 +86,7 @@ describe('Header', () => {
 
   it('floors the standing slot at the slot width role and centres what fills it, so a mark and a place name agree', () => {
     render(
-      <Header standing={<a href={'/'}>JuweL</a>} testId={'h'}>
+      <Header standing={<a href={'/'}>JuweL</a>}>
         <a href={'/work'}>Work</a>
       </Header>,
     );
@@ -102,22 +102,23 @@ describe('Header', () => {
     // bar goes on aligning the slot and the nav on their baselines. A flex container's baseline is its
     // first item's, so the standing text's baseline is what the nav is aligned against, as before.
     render(
-      <Header standing={<a href={'/'}>JuweL</a>} testId={'h'}>
+      <Header standing={<a href={'/'}>JuweL</a>}>
         <a href={'/work'}>Work</a>
       </Header>,
     );
-    expect(screen.getByTestId('h').className).toContain('items-baseline');
+    expect(screen.getByRole('banner').className).toContain('items-baseline');
   });
 
   it('floors the standing slot without fixing it, so a long place name grows the slot instead of wrapping inside it', () => {
-    // A definite size was measured and rejected: it fills a mark correctly and clamps a long place
-    // name to the floor, wrapping it (.out-of-scope/brandmark-size-vocabulary.md). So no width or
-    // height utility may appear, and the slot may not shrink below its content - an explicit
-    // min-width replaces a flex item's automatic minimum, which is what would let it be squeezed.
+    // A definite size on the *slot* was measured and rejected: it fills a mark correctly and clamps a
+    // long place name to the floor, wrapping it (.out-of-scope/brandmark-size-vocabulary.md). So no
+    // width or height utility may appear here, and the slot may not shrink below its content - an
+    // explicit min-width replaces a flex item's automatic minimum, which is what would let it be
+    // squeezed. A definite width on the caller's own mark is a different thing and is the rule
+    // `@CallerMustEnsure` states: it sizes what fills the slot, never the slot.
     render(
       <Header
         standing={<a href={'/'}>{'A rather long standing place name'}</a>}
-        testId={'h'}
       >
         <a href={'/work'}>Work</a>
       </Header>,

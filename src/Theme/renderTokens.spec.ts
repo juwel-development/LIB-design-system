@@ -57,7 +57,7 @@ describe('renderTokens control-min-width contract', () => {
 });
 
 describe('renderTokens standing slot contract', () => {
-  it('names the width the chrome standing slot claims, defaulting to the one attested value', () => {
+  it('names the width the shell standing slot claims, defaulting to the one attested value', () => {
     expect(renderTokens()).toContain('--standing-min-width: 7.5rem;');
   });
 

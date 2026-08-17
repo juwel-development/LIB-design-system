@@ -61,7 +61,7 @@ const CONTROL_MIN_WIDTH = `:root {
   --control-min-width: 10.5rem;
 }`;
 
-/* The chrome's standing slot claims a width, and that is what this names: how much of the bar the
+/* The shell's standing slot claims a width, and that is what this names: how much of the bar the
    slot takes, never how wide any drawing is - a slot role, so Brandmark keeps setting no dimension of
    its own (.out-of-scope/brandmark-size-vocabulary.md). Not a colour and no Tailwind namespace, so it
    sits in :root beside the control minimum width. 7.5rem is the one attested value, measured in #81. */
