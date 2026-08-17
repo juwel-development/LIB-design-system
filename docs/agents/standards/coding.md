@@ -153,7 +153,7 @@ budget means the material must be reduced.
 ## Design-system components
 
 Every component follows the full [component-authoring standard](./design-system-components.md)
-(closed prop surface, CVA styling, `const` components). Three of its rules are **review-checked**
+(closed prop surface, CVA styling, `const` components). Four of its rules are **review-checked**
 because biome cannot express them; the rest are machine-enforced by `biome.json`.
 
 - **No raw non-token prop values.** A prop takes a design-system token or variant name
@@ -161,6 +161,11 @@ because biome cannot express them; the rest are machine-enforced by `biome.json`
   CVA variant types — the values live once in the recipe, so a raw value is a TypeScript error —
   but check it in review because biome has no token model. **Good:** `<Stack gap="medium" />`.
   **Bad:** `<Stack gap={16} />`.
+- **No user-visible text of the library's own.** Every string a viewer reads enters through a
+  prop; no component carries an English default for one, and a component handed no wording renders
+  nothing rather than a fallback. The consuming app translates — the library ships no locale
+  mechanism. **Good:** `<Input optionalLabel={t('optional')} />`. **Bad:** a component printing a
+  hardcoded `optional` marker.
 - **Closed roster.** A new UI need becomes a **new component in this package** behind the same
   closed, CVA-styled contract — never a hand-rolled styled `<div>`/`<button>` in a consumer.
   Biome cannot see the consumers, so review catches ad-hoc styled elements there.

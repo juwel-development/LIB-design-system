@@ -44,16 +44,38 @@ describe('TextArea Component', () => {
     expect(control.getAttribute('aria-describedby')).toContain(message.id);
   });
 
-  it('renders the word "optional" only when the field is not required', () => {
+  it("marks a non-required field in the caller's own wording, in whatever language they write", () => {
     const { rerender } = render(
-      <TextArea label={'Message'} name={'message'} />,
+      <TextArea
+        label={'Message'}
+        name={'message'}
+        optionalLabel={'freiwillig'}
+      />,
     );
-    expect(screen.getByText('optional')).toBeInTheDocument();
+    expect(screen.getByText('freiwillig')).toBeInTheDocument();
     expect(screen.getByRole('textbox')).not.toBeRequired();
 
-    rerender(<TextArea label={'Message'} name={'message'} required={true} />);
-    expect(screen.queryByText('optional')).not.toBeInTheDocument();
+    rerender(
+      <TextArea
+        label={'Message'}
+        name={'message'}
+        optionalLabel={'freiwillig'}
+        required={true}
+      />,
+    );
+    expect(screen.queryByText('freiwillig')).not.toBeInTheDocument();
     expect(screen.getByRole('textbox')).toBeRequired();
+  });
+
+  it('marks nothing when the caller supplies no wording, so the library ships no wording of its own', () => {
+    // The assertion is the field's whole rendered text against the one word the caller gave, not
+    // the absence of `optional`: a reintroduced default in any language fails this, an English-only
+    // check would only catch the one that was removed.
+    const { container } = render(
+      <TextArea label={'Message'} name={'message'} />,
+    );
+    expect(screen.getByRole('textbox')).not.toBeRequired();
+    expect(container.textContent).toBe('Message');
   });
 
   it('works with JavaScript disabled: the control carries name, value and required with no onInput$', () => {
