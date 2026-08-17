@@ -3,6 +3,14 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Form } from './Form';
 
+// The note the widening was filed for: a privacy line whose link has to sit inside the `<form>`.
+const privacyNote = (
+  <>
+    {'More in our '}
+    <Link href={'/privacy'}>privacy notice</Link>
+  </>
+);
+
 describe('Form Component', () => {
   it('renders a real form carrying action and the resolved method, so a native submission works with no JavaScript', () => {
     const { container } = render(
@@ -112,17 +120,7 @@ describe('Form Component', () => {
   });
 
   it('renders a note carrying a link inside the form, so the line stays in the element it annotates', () => {
-    const { container } = render(
-      <Form
-        action={'/x'}
-        note={
-          <>
-            {'More in our '}
-            <Link href={'/privacy'}>privacy notice</Link>
-          </>
-        }
-      />,
-    );
+    const { container } = render(<Form action={'/x'} note={privacyNote} />);
 
     const link = screen.getByRole('link', { name: 'privacy notice' });
     expect(link.closest('p')).toBeInTheDocument();
@@ -133,15 +131,9 @@ describe('Form Component', () => {
     ['sent', 'status'],
     ['failed', 'alert'],
   ] as const)(
-    'gives a node note the %s state its own region role, as a string note gets',
+    'gives a node note in the %s state the same region role a string note gets',
     (state, role) => {
-      render(
-        <Form
-          action={'/x'}
-          state={state}
-          note={<Link href={'/privacy'}>privacy notice</Link>}
-        />,
-      );
+      render(<Form action={'/x'} state={state} note={privacyNote} />);
 
       expect(screen.getByRole(role)).toContainElement(
         screen.getByRole('link', { name: 'privacy notice' }),
@@ -152,13 +144,7 @@ describe('Form Component', () => {
   it.each(['idle', 'sending'] as const)(
     'leaves a node note unroled in the %s state, where it is plain prose',
     (state) => {
-      render(
-        <Form
-          action={'/x'}
-          state={state}
-          note={<Link href={'/privacy'}>privacy notice</Link>}
-        />,
-      );
+      render(<Form action={'/x'} state={state} note={privacyNote} />);
 
       expect(
         screen.getByRole('link', { name: 'privacy notice' }).closest('p'),
@@ -172,11 +158,30 @@ describe('Form Component', () => {
     expect(screen.getByRole('status')).toHaveTextContent('0');
   });
 
-  it('renders no note paragraph at all when none was given, so nothing strays into the form', () => {
-    const { container } = render(<Form action={'/x'} />);
+  it.each([
+    ['omitted', undefined],
+    ['null', null],
+    ['a condition that resolved false', false],
+  ])(
+    'renders no note paragraph when the note is %s, so an absent note costs no empty line and no region gap',
+    (_label, note) => {
+      const { container } = render(<Form action={'/x'} note={note} />);
 
-    expect(container.querySelector('form > p')).not.toBeInTheDocument();
-  });
+      expect(container.querySelector('form > p')).not.toBeInTheDocument();
+    },
+  );
+
+  it.each([
+    ['null', null],
+    ['a condition that resolved false', false],
+  ])(
+    'refuses a sent state whose note is %s, since a node that renders nothing is no outcome message',
+    (_label, note) => {
+      expect(() =>
+        render(<Form action={'/x'} state={'sent'} note={note} />),
+      ).toThrow();
+    },
+  );
 
   it('bounds itself with the reading measure and sets no font-size, so ch resolves against body type', () => {
     const { container } = render(<Form action={'/x'} />);

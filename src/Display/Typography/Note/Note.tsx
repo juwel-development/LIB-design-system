@@ -39,9 +39,9 @@ export interface INoteProps extends VariantProps<typeof note> {
  *   component owns. A form's own message belongs to `Form`'s `note` and a table's to its note cell,
  *   each painted by the component that owns it.
  * - Do **not** put a `Note` in `Form`'s `note` slot: that nests a `p` in a `p` and paints the text
- *   twice. Pass the wording straight to `Form` — the slot takes a `string` today, and once it widens
- *   to a node the links go in there too. `Form` cannot delegate here either — the architecture
- *   standard's one-way dependency rule is why `Prose` restates `P`'s utilities.
+ *   twice. The slot takes a node, so pass the wording straight to `Form` and let the links ride
+ *   inside it — inline content only, never a block. `Form` cannot delegate here either — the
+ *   architecture standard's one-way dependency rule is why `Prose` restates `P`'s utilities.
  * - Where the annotation is a form's status message, `Form` owns `role="status"`/`role="alert"` by
  *   state; a `Note` announces nothing.
  */
