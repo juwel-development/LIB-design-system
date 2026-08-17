@@ -10,20 +10,26 @@ Tickets belong to the **Design System** GitHub Project — **project #1**, owner
 **`ready-for-agent`** label in case an item is ready to be implemented by an agent.
 
 Its status field (`PVTSSF_lADOCiHRXs4Bf_F1zhaOAIM`) runs `To Do` → `In Progress` → `In Review` →
-`Done`. **New items must be created with status `To Do`.** The Sandcastle pipeline drives the later
-transitions: **In Progress** when it starts implementing, **In Review** at review, **Done** on merge.
-Move a status by hand only for work outside that pipeline.
+`Done`. **New items must be created with status `To Do`.** The skills drive the later transitions:
+`/implement` moves a ticket to **In Progress** when it picks it up, and `/code-review` moves it to
+**In Review** when the review is done. **`Done` belongs to whoever lands the work** — the human who
+merges the pull request, or `/orca-implement` when it merges a reviewed branch onto the local `main`.
+Neither `/implement` nor `/code-review` ever sets it.
 
 ### Putting a new issue on the board
 
-Use `.sandcastle/set-status.sh` rather than `gh issue create --project`. It is pinned to the board
-by number and node id, and it **adds the issue to the board if it isn't there yet** — so it is the
+Use `scripts/set-status.sh` rather than `gh issue create --project`. It is pinned to the board
+by node id, and it **adds the issue to the board if it isn't there yet** — so it is the
 whole job, not a second step:
 
 ```bash
 gh issue create -R $R --title "…" --body-file ticket.md --label enhancement --label ready-for-agent
-.sandcastle/set-status.sh <ISSUE_NUMBER> "To Do"    # adds to project #1 AND sets the status
+scripts/set-status.sh <ISSUE_NUMBER> "To Do"    # adds to project #1 AND sets the status
 ```
+
+The same script moves a status later — `scripts/set-status.sh <N> "In Progress"` — and is safe to
+call on a ticket already on the board, so no caller has to know whether it is a first add or a
+transition.
 
 Resolving a board by name is worth avoiding on principle: `--project` matches on a title string, and
 the moment a second project shares or nearly shares that title the choice is silent and arbitrary.

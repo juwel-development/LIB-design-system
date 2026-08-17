@@ -40,8 +40,9 @@ Not triage roles — listed so nobody re-invents them under another name.
 | `wayfinder:grilling` | `/wayfinder` | Decision ticket, HITL. |
 | `wayfinder:task` | `/wayfinder` | Decision ticket, HITL or AFK. |
 
-Sandcastle's planner **excludes every `wayfinder:*` issue** from the backlog it works, even one
-carrying `ready-for-agent` — those tickets are human-owned.
+A `wayfinder:*` issue is **never picked up as agent work**, even one carrying `ready-for-agent` —
+those tickets are human-owned, and the label there means the resolution was reached AFK, not that
+an implementation agent should take the ticket.
 
 ## Repository-native labels
 

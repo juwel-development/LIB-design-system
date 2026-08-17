@@ -81,6 +81,18 @@ Present the two reports under `## Standards` and `## Spec` headings, verbatim or
 
 End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes — that's the reranking the separation exists to prevent.
 
+### 6. Move the ticket to In Review
+
+If step 2 found an originating issue on this repo's tracker, move it once the report is out:
+
+```bash
+scripts/set-status.sh <TICKET> "In Review"
+```
+
+This is the transition `/code-review` owns — `/implement` sets `In Progress` at the start, this sets `In Review` at the end, and **`Done` is never yours to set**: it belongs to whoever lands the work.
+
+Skip this step when there is no originating issue (a review of a bare diff or a scratch branch), or when the issue belongs to another repository. Do it whether or not the review found problems — `In Review` records that the work has reached review, not that it passed.
+
 ## Why two axes
 
 A change can pass one axis and fail the other:

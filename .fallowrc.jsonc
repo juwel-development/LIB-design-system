@@ -37,18 +37,15 @@
 
   // `dev-dependencies-in-production` is left ON, unlike in the repository these settings came
   // from: this package really is published, so a devDependency reached from shipped code is a
-  // dependency a consumer installs and does not get. It reports three inherited findings today,
-  // and a path override does NOT silence them — the finding belongs to the manifest rather than
-  // to the file that imports, so `overrides.files` never reaches it. Read them as:
+  // dependency a consumer installs and does not get. It reports one inherited finding today,
+  // and a path override does NOT silence it — the finding belongs to the manifest rather than
+  // to the file that imports, so `overrides.files` never reaches it. Read it as:
   //
-  // - `@ai-hero/sandcastle`, `zod` — reached only from `.sandcastle/main.ts`, the agent
-  //   orchestrator `npm run sandcastle` runs through tsx. `package.json#files` ships `dist` and
-  //   `src` only, so that tree never reaches a consumer. Expected; ignore.
   // - `tailwindcss` — reached from `src/styles.css`, which IS shipped. A genuine open question
   //   about how a consumer importing `@juwel-development/design-system/styles.css` gets Tailwind,
   //   not noise. Resolve it rather than suppressing it.
   //
-  // Turning the rule off would hide the third along with the first two.
+  // Turning the rule off would hide it.
 
   // Resolve member references through the type checker rather than syntactically. Without it a
   // call whose receiver fallow cannot type by inspection alone reads as a member nobody calls.

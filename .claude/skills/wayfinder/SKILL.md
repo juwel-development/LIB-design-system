@@ -177,7 +177,7 @@ expresses its concepts on top of them.
 
   ```bash
   gh issue edit <TICKET> -R $R --add-label "ready-for-human"   # HITL tickets only — see below
-  .sandcastle/set-status.sh <TICKET> "In Review"               # never `gh issue edit --project`
+  scripts/set-status.sh <TICKET> "In Review"                   # never `gh issue edit --project`
   ```
 
   **`ready-for-human` is the HITL tag** — there is no `HITL` label, and one should not be created. It marks a resolution
@@ -186,10 +186,10 @@ expresses its concepts on top of them.
   the one type that closes straight to **Done**.
 
   **`In Review`, not `Done`.** Closing the issue records the decision; the board status records that nobody has checked
-  it yet. The Sandcastle pipeline drives `In Progress → In Review → Done` for *implementation* work, so a wayfinder
-  ticket moving itself to `In Review` is the by-hand case the tracker doc allows for work outside that pipeline. Leave
-  `Done` for the human. Use `.sandcastle/set-status.sh` and never `--project`: the script is pinned to the board by
-  number and node id, and it adds the ticket to the board when it isn't on it yet — so one call is the whole job.
+  it yet. `/implement` and `/code-review` drive `In Progress → In Review` for *implementation* work; a wayfinder ticket
+  carries no implementation, so it sets `In Review` itself rather than passing through those skills. Leave `Done` for
+  the human. Use `scripts/set-status.sh` and never `--project`: the script is pinned to the board by node id, and it
+  adds the ticket to the board when it isn't on it yet — so one call is the whole job.
 
 ## Invocation
 
