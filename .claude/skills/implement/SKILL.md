@@ -16,8 +16,8 @@ scripts/set-status.sh <TICKET> "In Progress"
 The script adds the ticket to the board if it isn't on it yet, so one call is the whole job. Never
 use `gh issue edit --project`; the tracker doc (`docs/agents/issue-tracker.md`) says why.
 
-Implement the work described by the user in the spec or tickets. Check out main before starting, and create a new
-feature branch for your work.
+Implement the work described by the user in the spec or tickets. You are already on the branch your
+work belongs on — commit to it, and don't switch branches or start another one.
 
 Use /tdd where possible, at pre-agreed seams.
 
@@ -26,9 +26,9 @@ Run typechecking regularly, single test files regularly, and the full test suite
 Once done, use /code-review to review the work. That is what moves the ticket to **In Review**, so
 don't set the status yourself at the end.
 
-Commit your work and create a PR with a description of what you did, and any relevant context.
+Commit your work, with a message describing what you did and any relevant context.
 
 Use conventional commit messages, and include the ticket number in the commit message.
 
-**Never merge the PR, and never set the ticket to `Done`.** A human reviews and merges, and the
-`Closes #<id>` line in the PR body closes the issue then.
+**Never push, never merge, and never set the ticket to `Done`.** Landing the work belongs to
+whoever merges the branch — a human, or `/orca-implement` when it merges onto the local `main`.
