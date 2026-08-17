@@ -84,6 +84,8 @@ const RailContent: FunctionComponent<IRailContentProps> = ({
  *   the label role. Colours are semantic tokens re-pointed by `.dark`, so no class carries a `dark:` prefix.
  * - `number` is optional: omitted, the index renders the name alone and no empty numeral element.
  * - `Content` renders its children unmodified and sets no measure cap - `Prose` owns the reading measure.
+ * - `Content` sets no spacing between those children either - a composed `Stack` owns the gap. The slot
+ *   is opaque, so it cannot see the pieces whose rhythm it would set: the same reason it sets no measure.
  * - No margin, max-width, fill, box or vertical rule; no `tabular-nums` or `font-variant-numeric`.
  * - It needs no JavaScript: `position: sticky` is CSS.
  *
@@ -94,6 +96,10 @@ const RailContent: FunctionComponent<IRailContentProps> = ({
  *   consumer that files a section only in the index leaves it without an accessible name.
  *
  * @UXGuidelines
+ * - The heading `Content` is required to carry and the section's matter beneath it are two pieces in one
+ *   opaque slot, and the slot separates nothing. Compose the column inside it -
+ *   `<Rail.Content><Stack gap="…"><H2>Work</H2>{matter}</Stack></Rail.Content>` - and take the space role
+ *   from `Stack`'s own guidance: `Rail` holds no opinion on which of the two roles this position wants.
  * - An index is an information layer, not a layout remedy. Measured on the page that prompted it, the
  *   filing numeral bought 0px of width across three fallback rungs, and the column it sits in closed only
  *   +224px of a 933px deficit - it widens a composition's span, not its content. If a page sags, the

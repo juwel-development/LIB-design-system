@@ -97,6 +97,12 @@ describe('Rail', () => {
     expect(content.className ?? '').not.toMatch(/\bmax-w-/);
   });
 
+  it('carries no class of its own, so it separates the content children by nothing - a composed Stack owns the rhythm', () => {
+    renderRail({ contentId: 'content' });
+    const content = screen.getByTestId('content');
+    expect(content.className).toBe('');
+  });
+
   it('draws no margin, max-width, fill, box or vertical rule anywhere', () => {
     const { container } = renderRail({ number: '02' });
     for (const element of container.querySelectorAll('*')) {
