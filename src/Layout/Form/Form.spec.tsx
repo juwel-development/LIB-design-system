@@ -122,9 +122,8 @@ describe('Form Component', () => {
     (state) => {
       render(<Form action={'/x'} state={state} note={'We never share it'} />);
 
-      // The note annotates the form rather than being what the visitor came for, which is the
-      // face Footer and Table's note already take (docs/adr/0004). It is in the recipe's base, so
-      // no state can disagree about it - state selects the tone and nothing else.
+      // docs/adr/0004, the amendment: a note standing beside the form is apparatus, the face
+      // Footer and Table's note already take. In the base, so state selects the tone alone.
       expect(screen.getByText('We never share it').className).toContain(
         'font-secondary',
       );

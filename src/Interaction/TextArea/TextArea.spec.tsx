@@ -140,10 +140,8 @@ describe('TextArea Component', () => {
       />,
     );
 
-    // The value is what the visitor came to enter, so it reads the content face; the label, the
-    // marker, the hint and the message all name the field, so they read the labelling one
-    // (docs/adr/0004). Declared on each element, never inherited from the wrapper, so no part of
-    // the field can drift to the face of whatever it was placed in.
+    // docs/adr/0004, the amendment: the value is what was come for, everything naming it is
+    // apparatus. Asserted per element, so a face moved up to the wrapper fails here.
     expect(screen.getByRole('textbox').className).toContain('font-primary');
     for (const naming of [
       'Message',

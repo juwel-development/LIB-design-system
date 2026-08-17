@@ -68,8 +68,7 @@ describe('Link', () => {
       </Link>,
     );
 
-    // Standing navigation routes the visitor rather than being what they came for, so it reads
-    // --font-secondary alongside Header and Footer (docs/adr/0004).
+    // docs/adr/0004, the amendment: standing navigation routes rather than being come for.
     expect(screen.getByRole('link').className).toContain('font-secondary');
   });
 
@@ -82,10 +81,11 @@ describe('Link', () => {
         </Link>,
       );
 
-      // Deliberate silence, not the omission #90 fixed: prose sits in a reading column whose face
-      // its owner chose, label-link sets no type at all (docs/adr/0006), and graphic's child is
-      // not text. A face in the base would reach all four, so quiet carries its own.
-      expect(screen.getByRole('link').className).not.toContain('font-');
+      // Deliberate silence, not the omission #90 fixed - docs/adr/0004, the amendment. Only the
+      // two family utilities are banned: a weight here would be a different question.
+      const className = screen.getByRole('link').className;
+      expect(className).not.toContain('font-primary');
+      expect(className).not.toContain('font-secondary');
     },
   );
 

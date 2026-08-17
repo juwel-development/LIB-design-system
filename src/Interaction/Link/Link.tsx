@@ -8,12 +8,7 @@ import type { FunctionComponent, ReactNode } from 'react';
 // semantic tokens re-pointed by `.dark`, so no treatment carries a `dark:` class. Underlines read the
 // library's --underline-* tokens and arrive instantly, off the transition allowlist (docs/adr/0001):
 // prose thickens its on hover, quiet and label-link raise one at rest thickness, graphic has none.
-// The face is per treatment, not in the base, and only `quiet` declares one (docs/adr/0004, issue
-// #90): standing navigation routes the visitor rather than being what they came for, so it takes
-// --font-secondary. The other three declare none deliberately - `prose` sits in running text whose
-// face is the owner of that reading column's choice, `label-link` sets no type at all so the
-// caller supplies it (docs/adr/0006), and `graphic`'s child is not text. A face in the base would
-// reach all four.
+// Only `quiet` declares a face; the other three decline one deliberately (docs/adr/0004, #90).
 const link = cva(
   'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   {

@@ -201,9 +201,8 @@ describe('Button Component', () => {
     (variant) => {
       render(<Button variant={variant}>Send</Button>);
 
-      // An action is what the visitor came to perform, so it takes --font-primary
-      // (docs/adr/0004). It is in the base, so no variant can disagree about it - the same move
-      // the radius, the ring and the colour transition already make.
+      // docs/adr/0004, the amendment: actions are `primary`. It sits in the base, so no variant
+      // can disagree - the move the radius, the ring and the colour transition already make.
       expect(screen.getByRole('button').className).toContain('font-primary');
     },
   );

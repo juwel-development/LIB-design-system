@@ -189,8 +189,8 @@ two tokens whose names are lies.
 ## Amended: the rule that decides which face, stated so an element cannot fall through it
 
 *"`--font-primary` is the face content is set in, `--font-secondary` the face labels are set in"*
-names the two roles and does not decide a case. It failed on the whole `Interaction` category:
-`Button`, `Input`, `Link`, `TextArea` and `Form` shipped declaring **no** family at all
+names the two roles and does not decide a case. It failed on the whole of `Interaction` and on
+`Layout`'s `Form`: `Button`, `Input`, `Link`, `TextArea` and `Form` shipped declaring **no** family at all
 ([#90](https://github.com/juwel-development/LIB-design-system/issues/90)), which on the library's own
 `inherit` values is invisible and to a two-face consumer is the exact failure the pair exists to
 prevent — the face of a label changing with where the component was placed. It also could not sort
@@ -216,6 +216,15 @@ is `secondary` and the value `primary`. A definition list's *term* is what was c
 its description are together the reading matter, with no apparatus around them, so both are
 `primary`. The old wording could not express this because "label" describes a string's grammar; this
 one describes its job on the page.
+
+**Why one note is `secondary` and another `primary`.** The same question, put to the word this
+amendment most often turns on, since "annotation" above would otherwise sweep up four elements that
+do not all sort the same way. `Form`'s note and `Table`'s note stand *beside* the thing they annotate
+— the form the visitor came to submit, the figures they came to read — so they are apparatus and take
+`secondary`. `Prose`'s tail and `PageHead`'s intro are stepped down to the same `small` role but sit
+*inside* the reading matter, as its closing and opening paragraphs, so they are what was come for and
+stay `primary`. Size is not the test and neither is the word: position relative to the thing come for
+is.
 
 Three consequences worth stating, since they are what the specs pin:
 
