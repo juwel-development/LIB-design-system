@@ -10,8 +10,9 @@ import type { Subject } from 'rxjs';
 // base too: identical across variants, drawn with outline, colour at rest so it never fades in -
 // see docs/adr/0002-focus-ring-token-contract.md. The corner is in the base as well, one radius
 // token every variant shares, so none can disagree - see docs/adr/0003-radius-token-contract.md.
+// The face is in the base for the same reason - see docs/adr/0004-typography-token-contract.md (#90).
 const button = cva(
-  'transition-colors duration-[var(--motion-duration-color)] rounded-[var(--radius-control)] py-2 sm:py-2 disabled:bg-disabled disabled:hover:bg-disabled-hover cursor-pointer disabled:cursor-not-allowed select-none text-nowrap inline-flex flex-row items-center justify-center gap-2 outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
+  'font-primary transition-colors duration-[var(--motion-duration-color)] rounded-[var(--radius-control)] py-2 sm:py-2 disabled:bg-disabled disabled:hover:bg-disabled-hover cursor-pointer disabled:cursor-not-allowed select-none text-nowrap inline-flex flex-row items-center justify-center gap-2 outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   {
     variants: {
       variant: {

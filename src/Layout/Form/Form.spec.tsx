@@ -117,6 +117,19 @@ describe('Form Component', () => {
     expect(form?.className).not.toContain('text-');
   });
 
+  it.each(['idle', 'sending', 'sent', 'failed'] as const)(
+    'sets the labelling face on the note in the %s state, so a two-face theme reaches it (#90)',
+    (state) => {
+      render(<Form action={'/x'} state={state} note={'We never share it'} />);
+
+      // docs/adr/0004, the amendment: a note standing beside the form is apparatus, the face
+      // Footer and Table's note already take. In the base, so state selects the tone alone.
+      expect(screen.getByText('We never share it').className).toContain(
+        'font-secondary',
+      );
+    },
+  );
+
   it('maps testId to a data-testid on the form', () => {
     render(<Form action={'/x'} testId={'subscribe-form'} />);
     expect(screen.getByTestId('subscribe-form').tagName).toBe('FORM');

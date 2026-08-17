@@ -195,4 +195,15 @@ describe('Button Component', () => {
     render(<Button ariaLabel={'Close'} />);
     expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
   });
+
+  it.each(['primary', 'secondary', 'ghost'] as const)(
+    'sets the content face for the %s variant, so an action reads in the face the theme gave actions (#90)',
+    (variant) => {
+      render(<Button variant={variant}>Send</Button>);
+
+      // docs/adr/0004, the amendment: actions are `primary`. It sits in the base, so no variant
+      // can disagree - the move the radius, the ring and the colour transition already make.
+      expect(screen.getByRole('button').className).toContain('font-primary');
+    },
+  );
 });

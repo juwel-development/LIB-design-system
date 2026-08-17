@@ -61,6 +61,34 @@ describe('Link', () => {
     );
   });
 
+  it('sets the labelling face on the quiet treatment, the one that stands outside running text (#90)', () => {
+    render(
+      <Link href={'/about'} treatment={'quiet'}>
+        About
+      </Link>,
+    );
+
+    // docs/adr/0004, the amendment: standing navigation routes rather than being come for.
+    expect(screen.getByRole('link').className).toContain('font-secondary');
+  });
+
+  it.each(['prose', 'label-link', 'graphic'] as const)(
+    'declares no face for the %s treatment, so it takes the face around it rather than overriding it (#90)',
+    (treatment) => {
+      render(
+        <Link href={'/about'} treatment={treatment}>
+          About
+        </Link>,
+      );
+
+      // Deliberate silence, not the omission #90 fixed - docs/adr/0004, the amendment. Only the
+      // two family utilities are banned: a weight here would be a different question.
+      const className = screen.getByRole('link').className;
+      expect(className).not.toContain('font-primary');
+      expect(className).not.toContain('font-secondary');
+    },
+  );
+
   it('exposes a stable test hook through testId', () => {
     render(
       <Link href={'/x'} testId={'nav-link'}>

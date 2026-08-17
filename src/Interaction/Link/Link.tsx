@@ -8,6 +8,7 @@ import type { FunctionComponent, ReactNode } from 'react';
 // semantic tokens re-pointed by `.dark`, so no treatment carries a `dark:` class. Underlines read the
 // library's --underline-* tokens and arrive instantly, off the transition allowlist (docs/adr/0001):
 // prose thickens its on hover, quiet and label-link raise one at rest thickness, graphic has none.
+// Only `quiet` declares a face; the other three decline one deliberately (docs/adr/0004, #90).
 const link = cva(
   'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   {
@@ -16,7 +17,7 @@ const link = cva(
         prose:
           'text-link underline decoration-[length:var(--underline-thickness)] underline-offset-[var(--underline-offset)] hover:decoration-[length:var(--underline-thickness-hover)]',
         quiet:
-          'text-muted no-underline decoration-[length:var(--underline-thickness)] underline-offset-[var(--underline-offset)] transition-colors duration-[var(--motion-duration-color)] hover:text-foreground hover:underline',
+          'font-secondary text-muted no-underline decoration-[length:var(--underline-thickness)] underline-offset-[var(--underline-offset)] transition-colors duration-[var(--motion-duration-color)] hover:text-foreground hover:underline',
         'label-link':
           'text-inherit no-underline decoration-[length:var(--underline-thickness)] underline-offset-[var(--underline-offset)] hover:underline',
         graphic: 'text-inherit no-underline',
@@ -42,10 +43,10 @@ interface ILinkProps extends VariantProps<typeof link> {
 
 /**
  * A link in one of four treatments. `prose` for running text (told apart by its underline, never by
- * hue), `quiet` for standing navigation (muted, and foreground with an underline on hover),
- * `label-link` for a link acting as a label (inherits its colour, underlines on hover, sets no type
- * of its own), and `graphic` for an anchor whose child is not text (paints nothing, so a mark keeps
- * its own colour). It renders a plain `<a>`, so it works with no hydration.
+ * hue), `quiet` for standing navigation (muted, set in the labelling face, and foreground with an
+ * underline on hover), `label-link` for a link acting as a label (inherits its colour, underlines
+ * on hover, sets no type of its own), and `graphic` for an anchor whose child is not text (paints
+ * nothing, so a mark keeps its own colour). It renders a plain `<a>`, so it works with no hydration.
  */
 export const Link: FunctionComponent<ILinkProps> = ({
   href,
