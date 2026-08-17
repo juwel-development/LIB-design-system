@@ -50,8 +50,8 @@ export const Optional: Story = {
   },
 };
 
-// The same field in a German app: the wording is the app's, so the marker changes language without
-// the library holding a translation (issue #74).
+// The same field in a German app. A second wording is what makes the marker's language visibly the
+// caller's, which one story alone cannot show (design-system-components.md §1, issue #74).
 export const OptionalInAnotherLanguage: Story = {
   args: {
     label: 'Notizen',

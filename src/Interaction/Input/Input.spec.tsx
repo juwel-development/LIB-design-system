@@ -69,10 +69,13 @@ describe('Input Component', () => {
     expect(screen.getByRole('textbox')).toBeRequired();
   });
 
-  it('marks nothing when the caller supplies no wording, so the library ships no English of its own', () => {
-    render(<Input label={'Name'} name={'name'} />);
-    expect(screen.queryByText('optional')).not.toBeInTheDocument();
+  it('marks nothing when the caller supplies no wording, so the library ships no wording of its own', () => {
+    // The assertion is the field's whole rendered text against the one word the caller gave, not
+    // the absence of `optional`: a reintroduced default in any language fails this, an English-only
+    // check would only catch the one that was removed.
+    const { container } = render(<Input label={'Name'} name={'name'} />);
     expect(screen.getByRole('textbox')).not.toBeRequired();
+    expect(container.textContent).toBe('Name');
   });
 
   it('works with JavaScript disabled: the control carries name, value and required with no onInput$', () => {
