@@ -38,8 +38,12 @@ interface IFormProps {
   children?: ReactNode;
   /** The actions row - the consumer supplies its own submit Button. */
   actions?: ReactNode;
-  /** Standing note in `idle`/`sending`; the outcome message in `sent`/`failed`. */
-  note?: string;
+  /** Standing note in `idle`/`sending`; the outcome message in `sent`/`failed`. Inline content: a
+   *  sentence, with a Link or emphasis inside it. Form renders the paragraph the note sits in and
+   *  owns its ARIA role, so a node that brings its own block element - a second `<p>` - is unnested
+   *  by the parser and the text leaves the region carrying that role. A node that renders nothing
+   *  (`null`, `false`, an omitted prop) is no note: the paragraph is not rendered at all. */
+  note?: ReactNode;
   testId?: string;
 }
 
@@ -52,8 +56,8 @@ interface IFormProps {
  * `sent` drops the fields and actions so a completed submission cannot be resubmitted, while the
  * `<form>` itself is retained in every state so the DOM shape is stable across a runtime change.
  *
- * The note's text is always the consumer's; Form chooses only its element and ARIA role. `sent` is
- * the outcome message, so a `sent` with no `note` is a programmer error and throws.
+ * The note's content is always the consumer's; Form chooses only its element and ARIA role. `sent`
+ * is the outcome message, so a `sent` with no `note` is a programmer error and throws.
  */
 export const Form: FunctionComponent<IFormProps> = ({
   action,
@@ -64,7 +68,16 @@ export const Form: FunctionComponent<IFormProps> = ({
   note,
   testId,
 }) => {
-  if (state === 'sent' && !note) {
+  // Absence, not falsiness: a ReactNode may be falsy and still render (`0` renders as `"0"`), so a
+  // truthiness test would both refuse a legitimate note in `sent` and drop a paragraph React had
+  // written a value into. Absence is React's own set of nothing-to-render nodes rather than
+  // `undefined` alone, because `note={showPrivacy && <>...</>}` hands over `false` when the line is
+  // off - and an empty `<p>` is still a flex item, so it would cost a region gap and, in `sent`, a
+  // status region announcing nothing.
+  const hasNote =
+    note !== undefined && note !== null && typeof note !== 'boolean';
+
+  if (state === 'sent' && !hasNote) {
     throw new Error(
       'Form in the `sent` state must be given a `note` - it is the outcome message.',
     );
@@ -95,7 +108,7 @@ export const Form: FunctionComponent<IFormProps> = ({
           {actions}
         </div>
       )}
-      {note && (
+      {hasNote && (
         <p role={noteRole} className={form({ state })}>
           {note}
         </p>
