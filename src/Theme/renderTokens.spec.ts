@@ -56,6 +56,29 @@ describe('renderTokens control-min-width contract', () => {
   });
 });
 
+describe('renderTokens standing slot contract', () => {
+  it('names the width the chrome standing slot claims, defaulting to the one attested value', () => {
+    expect(renderTokens()).toContain('--standing-min-width: 7.5rem;');
+  });
+
+  it('keeps the standing width in :root, out of every @theme block and the colour map', () => {
+    const css = renderTokens();
+    // A slot role, not a colour and not a Tailwind namespace: a plain @theme block would generate a
+    // utility, @theme inline a bogus --color-standing-min-width.
+    const themeBlock = css.match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).not.toContain('--standing-min-width');
+    expect(themeInline).not.toContain('--standing-min-width');
+  });
+
+  it('emits the standing width beside the control minimum width, the other non-colour width role', () => {
+    const css = renderTokens();
+    expect(css.indexOf('--standing-min-width')).toBeGreaterThan(
+      css.indexOf('--control-min-width'),
+    );
+  });
+});
+
 describe('renderTokens typography contract', () => {
   // The library ships no face, so it holds no font values to read; the type-role sizes are its
   // own, and the two floors below are checked against them the way the contrast test checks the
@@ -127,6 +150,20 @@ describe('renderTokens typography contract', () => {
       return match ? Number.parseFloat(match[1] as string) : Number.NaN;
     };
     expect(ceilingRem('display')).toBeGreaterThan(ceilingRem('title'));
+  });
+
+  it('gives the label role a leading of its own, so a component reading it owns its line box', () => {
+    // Without it the label role sets a size and no leading, so the line box of anything set at it is
+    // whatever the consuming document happens to lead - the defect #81 records, where the shell's
+    // height varied by consumer as well as by route.
+    expect(themeBlock()).toContain('--leading-label: 1.5;');
+  });
+
+  it('leaves the label leading unpaired with the text-label utility, so every existing call site keeps its line box', () => {
+    // Tailwind pairs a line-height into a font-size utility through `--text-<role>--line-height`.
+    // Declaring one would move Eyebrow, Rail, Figure's caption and Table's header cells at once -
+    // the silent change #81 deliberately does not make. The role is opt-in, one utility at a time.
+    expect(renderTokens()).not.toContain('--text-label--line-height');
   });
 
   it('keeps typography out of the Tailwind colour map, since it is not a colour', () => {

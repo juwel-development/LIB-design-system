@@ -61,6 +61,14 @@ const CONTROL_MIN_WIDTH = `:root {
   --control-min-width: 10.5rem;
 }`;
 
+/* The chrome's standing slot claims a width, and that is what this names: how much of the bar the
+   slot takes, never how wide any drawing is - a slot role, so Brandmark keeps setting no dimension of
+   its own (.out-of-scope/brandmark-size-vocabulary.md). Not a colour and no Tailwind namespace, so it
+   sits in :root beside the control minimum width. 7.5rem is the one attested value, measured in #81. */
+const STANDING_MIN_WIDTH = `:root {
+  --standing-min-width: 7.5rem;
+}`;
+
 /* The library's underline is not a colour: like the focus-ring dimensions it lives in :root only,
    never @theme inline. Not prose's alone - every Link treatment that draws a line draws it from these.
    Constraint: --underline-thickness-hover > --underline-thickness (the thicken on hover is the only
@@ -106,6 +114,12 @@ const TYPOGRAPHY = `@theme {
   --leading-body: 1.6;
   --text-small: 0.9375rem;  /* 15px floor: below it tabular figures stop comparing column to column */
   --text-label: 0.8125rem;  /* 13px floor: below it the tracking reads as damage, not a device */
+
+  /* The label role's leading, declared standalone and deliberately not paired into text-label's
+     utility: pairing would move every existing label site's line box at once, silently. A component
+     whose own height is measured against its labels reads leading-label explicitly (Header #81). 1.5
+     is the line height SC 1.4.12 expects text to survive, so a user stylesheet applying it moves nothing. */
+  --leading-label: 1.5;
 
   /* Two quantities on one property that must not collapse: --tracking-label is a fixed letter-spaced
      style, --tracking-optical a correction that varies with size. The names say which is which, so the
@@ -224,6 +238,9 @@ ${RADIUS}
 
 /* The control minimum width is not a colour either, and sits in :root beside radius. */
 ${CONTROL_MIN_WIDTH}
+
+/* The standing slot's minimum width is not a colour either, and sits in :root beside the control one. */
+${STANDING_MIN_WIDTH}
 
 /* The library's underline dimensions are not colours either, and sit in :root beside radius. They are
    not prose's alone: every Link treatment that draws a line draws it from these (docs/adr/0006). */

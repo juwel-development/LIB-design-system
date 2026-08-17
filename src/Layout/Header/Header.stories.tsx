@@ -1,3 +1,4 @@
+import { Brandmark } from 'Display/Brandmark/Brandmark';
 import { Link } from 'Interaction/Link/Link';
 import { Section } from 'Layout/Section/Section';
 import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -62,6 +63,60 @@ export const NoEdge: Story = {
 export const NamedNav: Story = {
   render: () => (
     <Header navName={'Primary'} standing={standing}>
+      {nav}
+    </Header>
+  ),
+};
+
+const mark = (
+  <Link treatment={'graphic'} href={'/'}>
+    <Brandmark name={'JuweL Development'} cut={'compact'}>
+      {/* An obviously generic placeholder, as in Brandmark's own stories - no brand asset ships here
+          (issue #16). It stands in for the consumer's inline SVG, drawn shorter than the slot's floors
+          so what the story shows is the floor holding rather than the drawing setting the height. */}
+      <svg
+        viewBox={'0 0 96 12'}
+        width={'96'}
+        height={'12'}
+        aria-hidden={'true'}
+      >
+        <rect
+          x={'1'}
+          y={'1'}
+          width={'94'}
+          height={'10'}
+          fill={'none'}
+          stroke={'currentColor'}
+        />
+      </svg>
+    </Brandmark>
+  </Link>
+);
+
+/** The two standing routes a product actually ships, stacked: a place name on one page and a mark on
+ *  another. Both sit inside the slot's floors - the nav's line box in height, `--standing-min-width` in
+ *  width - so the two bars are the same height and navigating between the routes moves nothing. A mark
+ *  that should *fill* the slot rather than sit inside it is the caller's opt-in; see `@CallerMustEnsure`. */
+export const StandingRoutes: Story = {
+  render: () => (
+    <>
+      <Header standing={standing}>{nav}</Header>
+      <Header standing={mark}>{nav}</Header>
+    </>
+  ),
+};
+
+/** A standing name wider than the width floor. The floor is a floor: the slot grows to the name, which
+ *  stays on one line rather than being clamped back and wrapped. */
+export const LongStandingName: Story = {
+  render: () => (
+    <Header
+      standing={
+        <Link treatment={'quiet'} href={'/'}>
+          {'JuweL Development and Partners'}
+        </Link>
+      }
+    >
       {nav}
     </Header>
   ),

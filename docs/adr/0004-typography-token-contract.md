@@ -156,6 +156,41 @@ So `display ≥ title` is the library's shipped default and the expectation for 
 the test protects that self-consistency so the display/title swap the amendment above records cannot
 regress. It is not a constraint on what a consumer's re-pointed tokens may render.
 
+## Amended: the label role gains a leading, and only the label role
+
+Every role from `body` up shipped paired with its leading. `label` shipped with a size and none, and
+nothing recorded that as a decision. The consequence surfaced in the shell
+([#81](https://github.com/juwel-development/LIB-design-system/issues/81)): `Header` sets its bar at the
+label role, so its nav's line box — the height of the whole bar — was **inherited from the consuming
+document**. The bar therefore varied by consumer as well as by route, and the one number a consumer
+needed in order to pin the standing slot beside that nav was a number the library could not state,
+because it did not own it. A contract whose test is *"whether the library sets the property"* had a role
+setting size and leaving leading to whoever it landed in.
+
+So `--leading-label: 1.5` is declared and `Header` reads it. Reading it is the load-bearing half: the
+slot's height floor is written as the label size times this leading, so the floor the component declares
+and the line the nav renders are **one expression**, not two values that agree today.
+
+**Declared standalone, never paired into the `text-label` utility.** Tailwind can pair a line-height
+into a font-size utility (`--text-label--line-height`), and that was rejected. `Eyebrow`, `Rail`'s
+numeral and name, `Figure`'s caption and `Table`'s caption and header cells all take `text-label`;
+pairing would move every one of their line boxes at once, silently, for a fix none of them asked for.
+The leading is opt-in per call site — `leading-label` written beside `text-label` — and
+`label-leading-optin.spec.ts` pins the opt-in set at exactly one, so the second site is a decision
+somebody makes rather than a default that spread.
+
+**This is not a leading scale.** It is one role acquiring the leading its siblings already had, so the
+count of roles is unchanged and no component gains anything to choose between: a component set at the
+label role either owns its line box or inherits it, and there is exactly one value it can own. The
+rung-picking *Roles, not rungs* forbids would be `--leading-label-tight` beside it, and there is none.
+`--text-small` is in the same position and is deliberately **not** named here — the same argument
+probably reaches it, but that is a decision about a different role and it is out of scope in #81.
+
+`1.5` is the line height [SC 1.4.12 Text Spacing](https://www.w3.org/WAI/WCAG22/Understanding/text-spacing.html)
+expects text to survive, so a user stylesheet applying it to this role moves nothing. It is looser than
+any heading's, which is correct: a label is short, tracked and may wrap, and a head's `1.2` on a wrapped
+label reads as damage the way the optical correction does one rung lower.
+
 ## Two family roles
 
 `--font-primary` is the face content is set in, `--font-secondary` the face labels are set in, and the
