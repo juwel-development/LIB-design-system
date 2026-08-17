@@ -15,8 +15,15 @@ describe('Note', () => {
     expect(note).toHaveClass('font-secondary', 'text-small');
   });
 
-  it('takes the foreground colour role by default, because an annotation is read at the point of decision where an Eyebrow is skimmed past', () => {
+  it('takes the foreground colour role by default, because an annotation is not defined as muted the way an Eyebrow is', () => {
     render(<Note>We reply within two working days.</Note>);
+    const note = screen.getByText('We reply within two working days.');
+    expect(note).toHaveClass('text-foreground');
+    expect(note).not.toHaveClass('text-muted');
+  });
+
+  it('takes the foreground colour role when asked for by name, and nothing else paints text', () => {
+    render(<Note color={'foreground'}>We reply within two working days.</Note>);
     const note = screen.getByText('We reply within two working days.');
     expect(note).toHaveClass('text-foreground');
     expect(note).not.toHaveClass('text-muted');
@@ -37,9 +44,9 @@ describe('Note', () => {
         'We reply within two working days.',
       ).className;
       expect(className).not.toMatch(/\btracking-/);
-      expect(className).not.toMatch(
-        /\bfont-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)\b/,
-      );
+      // The family is the only `font-` utility, which pins the absence of a weight whatever shape it
+      // is written in - a named rung, an arbitrary `font-[500]`, or a variable.
+      expect(className.match(/\bfont-\S+/g)).toEqual(['font-secondary']);
       expect(className).not.toMatch(/\bmax-w-/);
       expect(className).not.toMatch(/\bm[trblxy]?-/);
     },
