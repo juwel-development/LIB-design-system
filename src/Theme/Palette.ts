@@ -39,13 +39,18 @@ export type PaletteTokens = {
    *  keeps it near `surface` rather than a mid grey. */
   backing: string;
 
-  /** The main call-to-action fill. */
+  /** The main call-to-action fill. A filled control draws no border, so the fill is the only thing
+   *  separating the control from the surface - what `controlBorder` is for an unfilled one.
+   *  Constraint (WCAG 2.2 SC 1.4.11): at least 3:1 against `surface` in the same theme,
+   *  `primaryHover` included, since a hovered control has to stay identifiable too. */
   primary: string;
   primaryHover: string;
   /** Text and icons drawn on top of `primary`. */
   primaryForeground: string;
 
-  /** The alternative action fill, for choices that sit beside a primary one. */
+  /** The alternative action fill, for choices that sit beside a primary one. Filled like `primary`
+   *  and so identified the same way. Constraint (WCAG 2.2 SC 1.4.11): at least 3:1 against
+   *  `surface` in the same theme, `secondaryHover` included. */
   secondary: string;
   secondaryHover: string;
   secondaryForeground: string;
@@ -88,7 +93,11 @@ export const light: PaletteTokens = {
   primaryHover: '#7c3aed',
   primaryForeground: '#f8fafc',
 
-  secondary: '#0ea5e9',
+  // Half a step down the sky ramp from the #0ea5e9 this used to be, which measured 2.77:1 and so
+  // failed the fill constraint above (issue #78). Sky's rest step is simply too light on white;
+  // the shallowest move that clears 3:1 sits between it and the #0284c7 hover, at 3.33:1 - the
+  // same headroom `rule` carries over its own 3:1 floor, and still clearly the lighter of the pair.
+  secondary: '#0895d8',
   secondaryHover: '#0284c7',
   secondaryForeground: '#f8fafc',
 
