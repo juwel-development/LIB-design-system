@@ -87,6 +87,44 @@ describe('Palette', () => {
     },
   );
 
+  it.each(
+    (
+      [
+        ['light', light],
+        ['dark', dark],
+      ] as const
+    ).flatMap(([theme, tokens]) =>
+      (['primary', 'primaryHover', 'secondary', 'secondaryHover'] as const).map(
+        (role) => [theme, role, tokens] as const,
+      ),
+    ),
+  )(
+    "keeps the %s theme's `%s` fill at least 3:1 against surface (WCAG 2.2 SC 1.4.11)",
+    (_theme, role, tokens) => {
+      // A filled control draws no border, so the fill is the only thing separating it from the
+      // surface - the job controlBorder does for an unfilled control, so it carries the same
+      // 3:1-against-surface floor. The hover fills answer to it too: a hover state identifies the
+      // control just as the rest state does, and covering both is what stops a rest fill from
+      // ending up the only one below the floor (issue #78).
+      expect(
+        contrastRatio(tokens[role], tokens.surface),
+      ).toBeGreaterThanOrEqual(3);
+    },
+  );
+
+  it('keeps each light fill distinct from the hover it steps into, with hover the darker of the two', () => {
+    // Light hover steps *darker* than rest; dark inverts that (see the palette's dark comment).
+    // Pinned so correcting a fill that fails its floor cannot be done by promoting the hover value
+    // into the rest slot, which would collapse the two into one colour.
+    for (const [rest, hover] of [
+      [light.primary, light.primaryHover],
+      [light.secondary, light.secondaryHover],
+    ] as const) {
+      expect(rest).not.toBe(hover);
+      expect(relativeLuminance(hover)).toBeLessThan(relativeLuminance(rest));
+    }
+  });
+
   it.each([
     ['light', light],
     ['dark', dark],
