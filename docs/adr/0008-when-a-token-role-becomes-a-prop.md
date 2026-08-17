@@ -1,0 +1,198 @@
+---
+status: accepted
+---
+
+# When a token role becomes a prop
+
+A prop that selects among **token roles** requires a second role independently attested serving a
+distinct job in the same position. One attested role and the recipe fixes it; zero and the value is
+refused.
+
+A prop that selects among **structural options** — an axis, a distribution — carries no token, so it is
+decided instead on whether the alternative is ever right.
+
+The library already had a rule against turning a role into a *scale*.
+[ADR 0003](./0003-radius-token-contract.md) rejected a radius scale because *"a scale invites each
+component to pick a rung, which is how a library ends up with five corner radii and no rule about which
+one means what"*; [ADR 0004](./0004-typography-token-contract.md) reaffirmed it for type; the spacing
+roles carry the same argument in their own source comment — three names *"bound to one job with nothing
+to choose between, not to a step on a ramp a component picks from"*. What no document stated is when a
+role may become selectable **at all**, and *never* is plainly not the library's answer: `Link`'s
+`treatment` is a closed set of named choices, argued entry by entry in
+[ADR 0006](./0006-link-treatment-contract.md). So every proposal wanting a `gap`, a `size` or a
+`measure` prop re-argued the same ground from first principles, and the answer depended on who triaged
+it. This settles the ground once.
+
+## The token-role test
+
+Four terms carry the weight, and each is meant literally.
+
+**Position** is where in the component the value lands, not which token it is. The gap between a
+stack's children, the bound on a container's width, and the gap between a cluster's *wrapped lines* are
+three positions. A role used elsewhere in the library in a different position is no evidence for this
+one: `--space-band` being real and named says nothing about whether it is ever a gap.
+
+**Attested** means some site already renders that role in that position — a recipe in this library, or
+a call site in a proposal's filed evidence. A value a reader can imagine wanting is not attestation,
+and neither is symmetry with a token that happens to exist.
+
+**Independently** disqualifies a site that reaches for a role because something *else* is missing. Such
+a site is evidence for the missing thing, not for the role, and counting it lets a gap in one component
+open a prop on another.
+
+**A distinct job** means the two roles answer different questions about the content, so a caller
+choosing between them is describing what they hold rather than picking a size. Two roles that differ
+only in how much air they produce are a ladder with two rungs.
+
+The outcomes are the whole rule:
+
+- **Two or more roles attested** — the prop exists, and its options are exactly the attested roles.
+  Not the token family, not "the three `--space-*` roles because there are three": a role that reached
+  no site does not reach the prop either.
+- **Exactly one** — the recipe fixes it. There is nothing to choose between, so a prop offering the
+  choice is an escape hatch with one door. A second role attested later is what re-opens it, and that
+  is a change to this ADR's evidence rather than a judgement call at the call site.
+- **Zero** — the value is refused. A caller asking for a value no role serves is asking for a
+  measurement, which ADR 0003 and ADR 0004 already answer. Naming a new role to satisfy the prop is a
+  separate decision, argued on the role's own merits and never as a side effect of a prop surface.
+
+The test is applied per position, not per component. A component may fix one value and expose another —
+that is the ordinary outcome, not a compromise.
+
+## The structural test
+
+A structural prop selects an arrangement, not a value: which axis a thing runs on, whether it wraps,
+how leftover space is distributed, whether a bound applies at all. Nothing in it reaches the token
+layer, so the ladder argument has no purchase and a different question is asked: **is the alternative
+ever right?** If it is, the prop exists with named options — two or three named for the job, never the
+CSS keyword set. If it is not, the component fixes the correct behaviour and offers no prop, exactly as
+a component fixes a value nobody should choose.
+
+Structural props already ship, twice: `Hero`'s `place` distributes its slot in the leftover space, and
+`Table`'s `align` sets a cell's text alignment on `Cell` and `HeaderCell` alike. Both are correct and
+neither could survive the token-role test, because neither carries a token to be tested.
+
+## Why the halves stay apart
+
+The distinction is load-bearing and is the reason this ADR is two rules rather than one. The token-role
+half exists to stop the token layer becoming a ladder — it is the half ADR 0003 and ADR 0004's
+reasoning reaches, and the only one. Reading it as governing *every* prop would refuse an axis prop the
+library already ships twice, and would make the library's own `Hero` retroactively wrong.
+
+Reading it the other way is the commoner error and costs more: treating a token-role choice as merely
+structural — *"the caller knows how much air the page wants"* — is how three spacing roles become a
+spacing scale without anyone deciding to build one.
+
+The question to ask first is therefore not *should this be a prop?* but **does this prop carry a
+token?** The answer picks the test, and the test gives the answer.
+
+## The case that produced it: `Stack` and `Cluster`
+
+[#75](https://github.com/juwel-development/LIB-design-system/issues/75) and
+[#76](https://github.com/juwel-development/LIB-design-system/issues/76) each arrived with a prop
+surface offering a role per column of their evidence tables. Worked through the test above, both shrink.
+
+**This ADR is the later decision and supersedes those two bodies.** Where a suggested shape in #75 or
+#76 disagrees with what follows, this ADR is what ships; the proposal bodies stay as filed because they
+are the evidence, not the specification.
+
+`Stack`'s gap has two roles attested in the same position and doing different work — `--space-stack`
+separates siblings inside one block, `--space-region` separates a page region from the next. Two, so
+the prop exists, and it holds those two. Its measure has one — `--measure`, the reading column — so the
+recipe fixes the role, and whether the stack is bounded at all remains a structural choice under the
+second test: an unbounded column is right where the children are not running text, so both alternatives
+are real. That leaves a `gap` of two roles and a bound that is on or off, not a measure to pick from.
+
+`Cluster` keeps less. Its wrapped-line gap is one attested role, its alignment is baseline at every
+site, and once `--gutter` is set aside (below) its inline gap has one attested `--space-*` role too —
+`--space-region`, in `Header`'s private row and both footer rows that use a space token. So on the
+evidence filed, `Cluster`'s recipe fixes all three, and the prop that survives the tests is the
+distribution — `justify`, where start and end-to-end are both genuinely right. A second inline role
+attested in that position is what would open a `gap` prop, and that is a new evidence table rather than
+a judgement at the call site.
+
+## Considered options
+
+**`band` as a stack gap.** Rejected. `--space-band` is never a gap anywhere in the library; it is
+vertical padding, exclusively — the air *inside* a page section. `Section`'s own guidance argues
+against the idea directly: a gap between blocks *"reads as missing content"*, which is why `Section`
+offers no gap and no margin, and why the levers on a page's rhythm are measure, leading and the air
+within a section. The two consumer sites reaching for it are working around the missing `bleed` variant
+([#83](https://github.com/juwel-development/LIB-design-system/issues/83)), not around a missing gap, so
+they are not independent attestation — they are #83's evidence, counted twice.
+
+**`--measure-wide` and `--measure-display` as container bounds.** Rejected. Both bound an individual
+paragraph, never a container: `--measure-wide` is a wider *reading* line and `--measure-display` bounds
+nothing at all today — `Hero` names it in prose guidance only, which is
+[#87](https://github.com/juwel-development/LIB-design-system/issues/87) and is not a `Stack`. A role
+that has never bounded a container is not attested in that position, whatever it bounds elsewhere.
+
+**A `rowGap` prop on `Cluster`.** Rejected. Every site that splits its two axes uses the same role for
+the wrapped-line gap — `--space-stack`, at all three footer rows. One attested value, so the recipe
+fixes it. That the *other* axis takes a different role is what the recipe encodes; it is not a reason
+for the caller to choose this one.
+
+**An `align` prop on `Cluster`.** Rejected. Every site is baseline-aligned and none is centred. #76
+argues baseline is *correct* rather than merely conventional, because these rows mix type at different
+roles — nav links at the label role beside a credit line at the small role — and centring them makes
+the type look mis-set. Under the structural test the question is whether the alternative is ever right,
+and on this evidence it is not; a prop here would offer a caller the wrong answer in a named form.
+
+**`--gutter` inside a space prop.** Rejected. The gutter is measured against the screen and the
+`--space-*` roles against the type — `--gutter` is a `clamp()` on `vw` and the space roles are in `em`
+so they track the type ramp. One prop cannot honestly range over both: a caller choosing between them
+is not choosing how much air, they are choosing what the air answers to. The footer's widest row wants
+the gutter deliberately, and that is a horizontal-rhythm concern the row's container owns, in the same
+way `Section` and not `Stack` owns the page gutter.
+
+**Writing the rule as one test covering every prop.** Rejected — see *Why the halves stay apart*. A
+single test either refuses `Hero`'s `place` or dissolves into "argue it each time", which is the state
+this ADR exists to leave.
+
+**Leaving the rule unwritten and triaging each proposal on its merits.** Rejected. That is the status
+quo, and its cost is visible: two proposals filed within days of each other proposed the same three
+`--space-*` roles as prop options, neither having been asked to show a second role doing a distinct job.
+A rule that lives only in reviewers' heads is re-derived, and it is re-derived differently.
+
+## Consequences
+
+**The rule pre-decides three open proposals.** Each turns on whether a role becomes selectable, and
+each is now argued against the test rather than from scratch:
+
+- [#82](https://github.com/juwel-development/LIB-design-system/issues/82) (`Brandmark` has no size
+  vocabulary) asks for a `size` prop over roles that do not exist yet — zero attested, so the prop is
+  refused in that shape. What survives is the separable half: naming a mark-width role at all is its
+  own decision, and "fills its slot or does not" is structural.
+- [#83](https://github.com/juwel-development/LIB-design-system/issues/83) (`Section` has no `bleed`
+  variant that keeps content inset) is structural throughout — it selects no token, it separates a band
+  from its content — so it is decided on whether the alternative is ever right, and this ADR hands it
+  the two `band`-gap sites above as further evidence that it is.
+- [#87](https://github.com/juwel-development/LIB-design-system/issues/87) (`Hero` names
+  `--measure-display` and offers no way to apply it) is a token-role prop with exactly one role
+  attested in that position, so whatever ships caps at `--measure-display` from its recipe. A
+  `measure?: 'display' | …` prop is not available to it.
+
+**`Stack` and `Cluster` ship smaller than they were proposed.** #75 loses `band` from `gap` and loses
+its measure roster; #76 loses `rowGap`, `align`, and — on the evidence filed — its `gap`. Both keep
+what the evidence carries. An implementer of either follows this ADR where the ticket body differs.
+
+**A proposal now owes an evidence table per position, not per component.** "Three roles exist and a
+caller might want any of them" is not an argument this library accepts; "these two roles are already
+rendered here, doing these two different jobs" is. Triage may ask for that table before a proposal is
+ready, and a proposal that cannot produce it is asking for a measurement.
+
+**The vocabulary gains the Arrangement kind.** `CONTEXT.md` names an **Arrangement** — a component that
+owns an arrangement and *no* page job — beside Primitive and Composable, with `Stack` and `Cluster`
+under it. [ADR 0007](./0007-the-library-ships-page-composables.md) requires a composable to convert
+every single-brand rule into a variant or a token before it ships; an arrangement has nothing to
+convert because every value it emits is a role already named. That emptiness is the entry test rather
+than a way past one, and naming the kind is what lets a reviewer tell a legitimate pass from a dodge.
+`src/Arrangement/` is opened as a sibling of `Display`, `Interaction` and `Layout`, which continues to
+mean "owns a page job".
+
+**Nothing already shipped is re-audited against this.** The rule governs how a role reaches a *new*
+prop surface. No existing recipe is re-opened here, and the rule declares no token: it says when an
+existing role may be selected, never which roles exist.
+
+**What the package exports is unchanged.** Like ADR 0007, this is a decision and documentation change;
+no component ships with it.

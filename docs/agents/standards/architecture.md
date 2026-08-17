@@ -32,7 +32,9 @@ src/
   Theme/
     Palette.ts                 the single source of truth for every colour
     renderTokens.ts            renders the palette into the tokens.css text
-  <Category>/                  a grouping of related primitives, e.g. Interaction/
+  <Category>/                  a grouping of related components: Display/, Interaction/,
+                               Layout/ (owns a page job), Arrangement/ (owns an arrangement
+                               and nothing else — see ADR 0008)
     <Component>/
       <Component>.tsx          the component and its one CVA recipe
       <Component>.spec.tsx     its tests, colocated

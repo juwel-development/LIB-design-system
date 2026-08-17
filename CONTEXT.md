@@ -124,8 +124,30 @@ tokens and variants only, no escape hatch. What sets it apart is that its subjec
 arrangement is where brands differ most, so a composable's single-brand rules must be converted into
 variants or tokens before it ships. Brand assets stay out of it: a wordmark or a named person's
 photograph cannot carry a second brand, so it belongs to the consumer, never here (see
-[ADR 0007](docs/adr/0007-the-library-ships-page-composables.md)).
+[ADR 0007](docs/adr/0007-the-library-ships-page-composables.md)). A component that owns an arrangement
+and *no* page job is an Arrangement rather than a composable — the conversion pass is what separates
+them, so the two are different kinds and not degrees of the same one.
 _Avoid_: Layout, template, section wrapper, molecule
+
+**Arrangement**:
+A component on the roster that owns an arrangement and nothing else — no landmark, no band, no join, no
+gutter, no fill. Unlike a composable it carries no page job, so there is no single-brand rule in it to
+convert: every value it emits is a role already named. That emptiness is the entry test, not a shortcut
+past one (see [ADR 0008](docs/adr/0008-when-a-token-role-becomes-a-prop.md)).
+_Avoid_: Layout, wrapper, box, flex container
+
+**Stack**:
+A vertical arrangement: children in a column, separated by one named space role and optionally bounded
+by the reading measure. One axis and one gap. It takes no outer space, so whatever holds it owns the
+rhythm around it.
+_Avoid_: Column, VStack, flex column, spacer
+
+**Cluster**:
+A horizontal arrangement that wraps: children in a row, aligned on their baselines, with a wider gap
+along a line than between wrapped lines — a wrapped line sitting as far from its neighbour as its items
+sit from each other stops reading as one group. It declares no landmark, so a nav inside it is the
+caller's to name.
+_Avoid_: Row, HStack, inline list, nav, toolbar
 
 **Control**:
 A primitive the viewer operates through a box of its own — a button, an input, a textarea. Not every
@@ -136,10 +158,10 @@ focus ring, which keys on being focusable rather than on being a control.
 _Avoid_: Interactive element, form element
 
 **Roster**:
-The closed set of components the library offers — primitives and composables alike. A genuinely new
-need is added to the roster, never hand-rolled as a styled element in a consuming product. Widening
-it to hold composables widened the *kind* of entry allowed, not the door: the set stays closed and
-each entry is still reviewed on its own.
+The closed set of components the library offers — primitives, composables and arrangements alike. A
+genuinely new need is added to the roster, never hand-rolled as a styled element in a consuming
+product. Widening it to hold composables, and again to hold arrangements, widened the *kind* of entry
+allowed, not the door: the set stays closed and each entry is still reviewed on its own.
 _Avoid_: Catalogue, component list
 
 ### Forms
