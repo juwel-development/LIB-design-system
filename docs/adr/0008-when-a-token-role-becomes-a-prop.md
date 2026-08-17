@@ -128,9 +128,11 @@ alignment and selects nothing else.
 vertical padding, exclusively — the air *inside* a page section. `Section`'s own guidance argues
 against the idea directly: a gap between blocks *"reads as missing content"*, which is why `Section`
 offers no gap and no margin, and why the levers on a page's rhythm are measure, leading and the air
-within a section. The two consumer sites reaching for it are working around the missing `bleed` variant
-([#83](https://github.com/juwel-development/LIB-design-system/issues/83)), not around a missing gap, so
-they are not independent attestation — they are #83's evidence, counted twice.
+within a section. The two consumer sites reaching for it sit on a page that declines `Section`
+altogether, and reproduce its band of air by hand: what they want is a page unit carrying the gutter
+without the band and the join `Section` couples to it. That is a site working around something missing,
+which *independently* excludes, so they attest no gap role. (An earlier revision of this paragraph
+described them as working around a missing `bleed` variant — see *Amendments*.)
 
 **`--measure-wide` and `--measure-display` as container bounds.** Rejected. Both bound an individual
 paragraph, never a container: `--measure-wide` is a wider *reading* line and `--measure-display` bounds
@@ -179,8 +181,11 @@ each is now argued against the test rather than from scratch:
   own decision, and "fills its slot or does not" is structural.
 - [#83](https://github.com/juwel-development/LIB-design-system/issues/83) (`Section` has no `bleed`
   variant that keeps content inset) is structural throughout — it selects no token, it separates a band
-  from its content — so it is decided on whether the alternative is ever right, and this ADR hands it
-  the two `band`-gap sites above as further evidence that it is.
+  from its content — so it is decided on whether the alternative is ever right. Asked that question in
+  triage it was closed as **already implemented**: `Section` paints no background and takes no
+  `max-width`, so `bleed` governs only where the content's padding sits, and the join spans the full
+  element width under either value. The proposed third value renders identically to the `inset` default,
+  so there was no alternative to decide on. See *Amendments*.
 - [#87](https://github.com/juwel-development/LIB-design-system/issues/87) (`Hero` names
   `--measure-display` and offers no way to apply it) is a token-role prop with exactly one role
   attested in that position, so whatever ships caps at `--measure-display` from its recipe. A
@@ -212,3 +217,36 @@ existing role may be selected, never which roles exist.
 
 **What the package exports is unchanged.** Like ADR 0007, this is a decision and documentation change;
 no component ships with it.
+
+## Amendments
+
+**Two claims about [#83](https://github.com/juwel-development/LIB-design-system/issues/83) were wrong
+and are corrected above.** Both assumed `Section` was missing a `bleed` value that keeps content inset
+while the band bleeds. It is not: `Section` paints no background, takes no `max-width` and draws no
+inline border, so `bleed` changes only the content's padding — and the join, being a border, spans the
+full element width under either value, which the component's own guarantee already states. The proposed
+`band` value therefore renders identically to the `inset` default, and #83 closed as already
+implemented.
+
+What changed:
+
+- The `band`-as-a-stack-gap rejection said its two consumer sites were *"working around the missing
+  `bleed` variant (#83) … #83's evidence, counted twice."* There is no missing variant, so that was the
+  wrong diagnosis. Both sites are on a page that declines `Section` because it wants the gutter without
+  the band and the join — which still disqualifies them under *independently*, so **the rejection stands
+  on unchanged grounds**. The primary argument never depended on the diagnosis: `--space-band` is
+  vertical padding exclusively and is a gap nowhere in the library.
+- The Consequences bullet said this ADR *"hands [#83] the two `band`-gap sites above as further evidence"*
+  that its alternative is sometimes right. It hands it nothing; there was no alternative to weigh.
+
+Nothing in the rule itself moves. Both halves of the test, every other rejection, and the `Stack` and
+`Cluster` outcomes are untouched — what was wrong was a pre-decision about one open proposal, which is
+evidence rather than rule. The pre-decisions for
+[#82](https://github.com/juwel-development/LIB-design-system/issues/82) and
+[#87](https://github.com/juwel-development/LIB-design-system/issues/87) stand as written.
+
+The lesson worth keeping is narrower than the correction: **a prop that appears to select a structural
+alternative may be selecting nothing at all.** The structural test asks whether the alternative is ever
+right and takes for granted that there *is* one. Where a component paints no surface of its own, two
+values that sound different — *bleed the band, inset the band* — can describe the same rendered box, so
+the question to ask before either test is whether the two options differ in anything the viewer can see.
