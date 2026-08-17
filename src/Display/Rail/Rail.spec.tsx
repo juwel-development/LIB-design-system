@@ -97,14 +97,10 @@ describe('Rail', () => {
     expect(content.className ?? '').not.toMatch(/\bmax-w-/);
   });
 
-  it('separates the content children by nothing - the opaque slot leaves the rhythm to a composed Stack', () => {
-    // Deliberate, not an oversight: Content cannot see the heading and the matter it is handed, so it
-    // does not own the gap between them. A caller that wants one composes a Stack inside the slot.
+  it('carries no class of its own, so it separates the content children by nothing - a composed Stack owns the rhythm', () => {
     renderRail({ contentId: 'content' });
     const content = screen.getByTestId('content');
-    expect(content.className ?? '').not.toMatch(/\bgap-/);
-    expect(content.className ?? '').not.toMatch(/\bspace-y-/);
-    expect(content.className ?? '').not.toMatch(/\bflex\b/);
+    expect(content.className).toBe('');
   });
 
   it('draws no margin, max-width, fill, box or vertical rule anywhere', () => {
