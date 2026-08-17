@@ -8,9 +8,7 @@ export type FormState = 'idle' | 'sending' | 'sent' | 'failed';
 // The one recipe, and it paints the note only (issue #6): `state` selects the note's tone - muted
 // while the form stands, success on the outcome, error on the failure. Region selection is the
 // NOTE_ROLE map below, not classes, so this axis never grows a layout job. Colours are semantic
-// tokens re-pointed by `.dark`, so no variant carries a `dark:` class. The size is the `small` type
-// role and never a rung of Tailwind's own `text-*` scale (issue #79) - a rung is a framework
-// internal a re-theming consumer neither declares nor owns, so it sits off whatever ladder they set.
+// tokens re-pointed by `.dark`, so no variant carries a `dark:` class.
 const form = cva('text-small', {
   variants: {
     state: {
