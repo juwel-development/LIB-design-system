@@ -2,25 +2,26 @@ import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent, ReactNode } from 'react';
 
-// One recipe on a plain <div>, and the variant order is load-bearing: measure, then direction, then
-// gap emits the same class string six existing components hand-write, and the spec pins it - they
-// cannot import this one (architecture standard, the import test). The roster is the evidence and
-// not the token family: `band` is vertical padding and never a gap, and only `--measure` has ever
-// bounded a container, so the bound is on-or-off rather than a set of named measures (docs/adr/0008).
+// One recipe on a plain <div>, its variants declared in the order the prop table reads. Six existing
+// components hand-write this same set of utilities and the spec pins each against it - they cannot
+// import this one (architecture standard, the import test) - but that pinning compares the utilities
+// as a set, so nothing here is ordered to satisfy a test. The roster is the evidence and not the
+// token family: `band` is vertical padding and never a gap, and only `--measure` has ever bounded a
+// container, so the bound is on-or-off rather than a set of named measures (docs/adr/0008).
 // `split` turns at `lg`, the threshold Rail and DefinitionList already use.
 const stack = cva('flex', {
   variants: {
+    gap: {
+      stack: 'gap-[var(--space-stack)]',
+      region: 'gap-[var(--space-region)]',
+    },
     measure: { true: 'max-w-[var(--measure)]', false: '' },
     direction: {
       column: 'flex-col',
       split: 'flex-col lg:flex-row lg:items-start',
     },
-    gap: {
-      stack: 'gap-[var(--space-stack)]',
-      region: 'gap-[var(--space-region)]',
-    },
   },
-  defaultVariants: { measure: false, direction: 'column', gap: 'stack' },
+  defaultVariants: { gap: 'stack', measure: false, direction: 'column' },
 });
 
 export interface IStackProps extends VariantProps<typeof stack> {

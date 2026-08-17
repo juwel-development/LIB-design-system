@@ -6,6 +6,12 @@ import { Stack } from './Stack';
 const meta: Meta<typeof Stack> = {
   title: 'Arrangement/Stack',
   component: Stack,
+  // Fullscreen, as the other viewport-sensitive components are: Stack takes no outer space of its
+  // own, so a padded canvas would add inset it refuses to add and move where 64rem falls under the
+  // `split` story.
+  parameters: {
+    layout: 'fullscreen',
+  },
   tags: ['autodocs'],
   argTypes: {
     gap: {

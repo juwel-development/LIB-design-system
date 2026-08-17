@@ -142,7 +142,11 @@ describe('Stack', () => {
   });
 
   it('renders testId as the test attribute and emits none when it is omitted', () => {
-    const { container } = render(<Stack>Matter</Stack>);
+    const { rerender, container } = render(
+      <Stack testId={'stack'}>Matter</Stack>,
+    );
+    expect(container.firstElementChild).toHaveAttribute('data-testid', 'stack');
+    rerender(<Stack>Matter</Stack>);
     expect(container.firstElementChild).not.toHaveAttribute('data-testid');
   });
 
@@ -162,6 +166,21 @@ describe('Stack', () => {
   // (no component imports a sibling), so the duplication is deliberate and permanent - the same
   // mechanism, and the same reason, as Prose's spec pinning `Prose.Body` against `P`. What these
   // catch is drift: a recipe edited on one side and not the other.
+  //
+  // They compare the utilities as a *set*. Which order the class attribute lists them in decides
+  // nothing - precedence comes from the stylesheet - so pinning the string would pin the order two
+  // recipes happen to declare their variants in, and red on a reorder that changes no pixel. The
+  // guarantee is that both sides emit the same utilities; that is what is asserted.
+  const expectSameArrangement = (
+    stack: Element | null,
+    pinned: Element | null | undefined,
+  ) => {
+    expect(stack).not.toBeNull();
+    expect(pinned).toBeTruthy();
+    const utilities = (element: Element) =>
+      new Set(element.className.split(/\s+/).filter(Boolean));
+    expect(utilities(stack as Element)).toEqual(utilities(pinned as Element));
+  };
 
   it('renders the same arrangement as the prose reading column', () => {
     render(
@@ -174,8 +193,9 @@ describe('Stack', () => {
         </Stack>
       </>,
     );
-    expect(screen.getByTestId('stack').className).toBe(
-      screen.getByTestId('pinned').className,
+    expectSameArrangement(
+      screen.getByTestId('stack'),
+      screen.getByTestId('pinned'),
     );
   });
 
@@ -190,8 +210,9 @@ describe('Stack', () => {
         </Stack>
       </>,
     );
-    expect(screen.getByTestId('stack').className).toBe(
-      screen.getByTestId('pinned').className,
+    expectSameArrangement(
+      screen.getByTestId('stack'),
+      screen.getByTestId('pinned'),
     );
   });
 
@@ -205,7 +226,7 @@ describe('Stack', () => {
       </>,
     );
     const fields = screen.getByTestId('form').firstElementChild;
-    expect(screen.getByTestId('stack').className).toBe(fields?.className);
+    expectSameArrangement(screen.getByTestId('stack'), fields);
   });
 
   it("renders the same arrangement as the figure's caption column", () => {
@@ -223,7 +244,7 @@ describe('Stack', () => {
       </>,
     );
     const figure = container.querySelector('figure');
-    expect(screen.getByTestId('stack').className).toBe(figure?.className);
+    expectSameArrangement(screen.getByTestId('stack'), figure);
   });
 
   it("renders the same arrangement as the input's field column", () => {
@@ -234,7 +255,7 @@ describe('Stack', () => {
       </>,
     );
     const field = container.firstElementChild;
-    expect(screen.getByTestId('stack').className).toBe(field?.className);
+    expectSameArrangement(screen.getByTestId('stack'), field);
   });
 
   it("renders the same arrangement as the textarea's field column", () => {
@@ -245,6 +266,6 @@ describe('Stack', () => {
       </>,
     );
     const field = container.firstElementChild;
-    expect(screen.getByTestId('stack').className).toBe(field?.className);
+    expectSameArrangement(screen.getByTestId('stack'), field);
   });
 });
