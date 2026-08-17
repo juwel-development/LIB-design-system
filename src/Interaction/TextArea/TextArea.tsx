@@ -19,6 +19,11 @@ interface ITextAreaProps {
   /** How the surrounding form reads the value on submit. */
   name: string;
   required?: boolean;
+  /**
+   * How a non-required field says so, in the consuming app's language. Left out, the field carries
+   * no marker at all: the library translates nothing and ships no wording of its own (issue #74).
+   */
+  optionalLabel?: string;
   invalid?: boolean;
   disabled?: boolean;
   defaultValue?: string;
@@ -41,6 +46,7 @@ export const TextArea: FunctionComponent<ITextAreaProps> = ({
   label,
   name,
   required,
+  optionalLabel,
   invalid,
   disabled,
   defaultValue,
@@ -94,7 +100,9 @@ export const TextArea: FunctionComponent<ITextAreaProps> = ({
         data-testid={testId}
         onInput={(event) => onInput$?.next(event.currentTarget.value)}
       />
-      {!required && <span className={'text-muted text-sm'}>optional</span>}
+      {!required && optionalLabel && (
+        <span className={'text-muted text-sm'}>{optionalLabel}</span>
+      )}
       {hint && (
         <p id={hintId} className={'text-muted text-sm'}>
           {hint}

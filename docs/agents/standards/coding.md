@@ -153,7 +153,7 @@ budget means the material must be reduced.
 ## Design-system components
 
 Every component follows the full [component-authoring standard](./design-system-components.md)
-(closed prop surface, CVA styling, `const` components). Three of its rules are **review-checked**
+(closed prop surface, CVA styling, `const` components). Four of its rules are **review-checked**
 because biome cannot express them; the rest are machine-enforced by `biome.json`.
 
 - **No raw non-token prop values.** A prop takes a design-system token or variant name
@@ -164,6 +164,11 @@ because biome cannot express them; the rest are machine-enforced by `biome.json`
 - **Closed roster.** A new UI need becomes a **new component in this package** behind the same
   closed, CVA-styled contract — never a hand-rolled styled `<div>`/`<button>` in a consumer.
   Biome cannot see the consumers, so review catches ad-hoc styled elements there.
+- **No user-visible text of the library's own.** Every string a viewer reads enters through a
+  prop; no component carries an English default for one, and a component handed no wording renders
+  nothing rather than a fallback. The consuming app translates — the library ships no locale
+  mechanism. **Good:** `<Input optionalLabel={t('optional')} />`. **Bad:** a component printing a
+  hardcoded `optional` marker.
 - **The barrel exports components, not props interfaces.** `src/index.ts` gets one line per
   component; `I<Component>Props` stays in the component's own module and a consumer derives it
   with `ComponentProps<typeof Component>`. **Good:** `export { Figure } from 'Display/Figure/Figure'`.

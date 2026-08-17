@@ -18,8 +18,12 @@ const meta: Meta<typeof Input> = {
     },
     required: {
       control: { type: 'boolean' },
+      description: 'Maps to the HTML required attribute; hides the marker',
+    },
+    optionalLabel: {
+      control: { type: 'text' },
       description:
-        'Maps to the HTML required attribute; hides the "optional" marker',
+        'The marker a non-required field carries, worded by the consuming app; left out, no marker renders and the library supplies no wording of its own',
     },
     invalid: {
       control: { type: 'boolean' },
@@ -48,6 +52,17 @@ export const Optional: Story = {
   args: {
     label: 'Company',
     name: 'company',
+    optionalLabel: 'optional',
+  },
+};
+
+// The same field in a German app: the wording is the app's, so the marker changes language without
+// the library holding a translation (issue #74).
+export const OptionalInAnotherLanguage: Story = {
+  args: {
+    label: 'Firma',
+    name: 'company',
+    optionalLabel: 'freiwillig',
   },
 };
 

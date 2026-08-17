@@ -53,6 +53,12 @@ hatch onto the underlying element.
 
 - **Accessibility props are named, never spread** — `ariaLabel` mapped to `aria-label` for the
   icon-only case, not an open `aria-*` bag.
+- **No user-visible text of the component's own.** Every string a viewer reads — a label, a
+  marker, a message — enters through a prop, and no component carries an English default for one.
+  The library takes no part in translation and ships no locale mechanism: the consuming app words
+  everything. A component handed no wording for an optional piece of text renders **nothing**,
+  never a fallback — `Input`/`TextArea` take `optionalLabel` and mark a non-required field only
+  when the app supplies its wording (issue #74).
 
 The principle governs, not a blessed fixed set: each component declares only what its role needs,
 nothing speculative, no catch-all.
@@ -238,13 +244,14 @@ What is machine-enforced (in `biome.json`) versus reviewed:
 | No `{...rest}` spread onto a host element | **biome** — `no-jsx-spread.grit` plugin |
 | No `className` / `style` **prop** on a props type | **biome** — `no-classname-style-prop.grit` plugin |
 | No raw non-token prop values | **CVA variant types** + review — biome has no token model |
+| No built-in user-visible text | review — biome cannot tell a viewer-facing string from a class |
 | Closed roster | review — biome cannot see the consumers |
 | No props interface in the barrel | review — biome cannot tell a props type from a theme type |
 
 The two grit plugins are scoped to `src/**/*.tsx` and skip `*.stories.tsx`, where a story
 legitimately spreads args into the component under demonstration.
 
-The last three rules are stated as checkable rules in the
+The four review rules are stated as checkable rules in the
 [coding standard](./coding.md#design-system-components), surfaced through the `/code-review`
 Standards axis.
 
