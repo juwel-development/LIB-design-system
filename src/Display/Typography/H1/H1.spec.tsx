@@ -20,6 +20,26 @@ describe('H1', () => {
     expect(heading.className).not.toContain('tracking-label');
   });
 
+  it('bounds its line at the display measure under every colour, so the bound sits on the base', () => {
+    // Rendering every `color` and asserting the same bound on each is what pins it to the base: a
+    // refactor that moved it onto one variant leaves the others unbounded and fails here. The set is
+    // exact rather than a `toContain`, so a literal `ch` count beside the token - the token's value
+    // copied, which a consumer re-pointing `--measure-display` would then not move - fails too.
+    render(
+      <>
+        <H1>Welcome</H1>
+        <H1 color={'foreground'}>Welcome</H1>
+        <H1 color={'muted'}>Welcome</H1>
+      </>,
+    );
+    for (const heading of screen.getAllByRole('heading', { level: 1 })) {
+      const bounds = heading.className
+        .split(/\s+/)
+        .filter((utility) => utility.startsWith('max-w-'));
+      expect(bounds).toEqual(['max-w-[var(--measure-display)]']);
+    }
+  });
+
   it('exposes the one sanctioned host hook through testId', () => {
     render(<H1 testId={'page-title'}>Welcome</H1>);
     expect(screen.getByTestId('page-title')).toBeInTheDocument();
