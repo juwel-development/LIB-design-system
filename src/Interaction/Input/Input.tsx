@@ -8,9 +8,12 @@ import type { Subject } from 'rxjs';
 // `.dark`, so no variant carries a `dark:` class. The border is the only boundary of a transparent
 // control, drawn in `controlBorder` (>=3:1 against surface) and turned `error` on both `:user-invalid`
 // and `aria-invalid` so a server-rendered and a browser-validated invalid state paint identically.
-// Focus adds only the shared ring - the border never changes on focus (docs/adr/0002).
+// Focus adds only the shared ring - the border never changes on focus (docs/adr/0002). The control
+// carries `font-primary`: its value is what the visitor came to enter, so it reads the content face
+// while everything naming the field reads the labelling one (docs/adr/0004, issue #90). The
+// placeholder sits in this same element and follows it, so it needs no rule of its own.
 const input = cva(
-  'block w-full rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent px-3 py-2 text-foreground transition-colors duration-[var(--motion-duration-color)] outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)] [&:user-invalid]:border-error aria-[invalid=true]:border-error disabled:cursor-not-allowed disabled:border-disabled disabled:text-muted',
+  'block w-full rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent px-3 py-2 font-primary text-foreground transition-colors duration-[var(--motion-duration-color)] outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)] [&:user-invalid]:border-error aria-[invalid=true]:border-error disabled:cursor-not-allowed disabled:border-disabled disabled:text-muted',
   {
     variants: {
       // text/email/url are visually identical; the axis only selects the control's `type`
@@ -91,7 +94,13 @@ export const Input: FunctionComponent<IInputProps> = ({
 
   return (
     <div className={'flex flex-col gap-[var(--space-stack)]'}>
-      <label htmlFor={controlId} className={'font-medium text-foreground'}>
+      {/* Every element below names the field rather than being what the visitor came for, so each
+          declares `font-secondary` on itself - never on the wrapper above, which would leave the
+          control inheriting the labelling face too (docs/adr/0004, issue #90). */}
+      <label
+        htmlFor={controlId}
+        className={'font-secondary font-medium text-foreground'}
+      >
         {label}
       </label>
       <input
@@ -111,15 +120,17 @@ export const Input: FunctionComponent<IInputProps> = ({
         onInput={(event) => onInput$?.next(event.currentTarget.value)}
       />
       {!required && optionalLabel && (
-        <span className={'text-muted text-small'}>{optionalLabel}</span>
+        <span className={'font-secondary text-muted text-small'}>
+          {optionalLabel}
+        </span>
       )}
       {hint && (
-        <p id={hintId} className={'text-muted text-small'}>
+        <p id={hintId} className={'font-secondary text-muted text-small'}>
           {hint}
         </p>
       )}
       {invalid && (
-        <p id={errorId} className={'text-error text-small'}>
+        <p id={errorId} className={'font-secondary text-error text-small'}>
           {errorMessage}
         </p>
       )}

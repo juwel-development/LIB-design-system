@@ -127,4 +127,31 @@ describe('TextArea Component', () => {
     expect(control).toHaveValue('');
     expect(control).toHaveFocus();
   });
+
+  it('sets the labelling face on everything that names the field and the content face on the value, so a two-face theme reaches every part (#90)', () => {
+    render(
+      <TextArea
+        label={'Message'}
+        name={'message'}
+        optionalLabel={'optional'}
+        hint={'Keep it short'}
+        invalid={true}
+        errorMessage={'Enter a message'}
+      />,
+    );
+
+    // The value is what the visitor came to enter, so it reads the content face; the label, the
+    // marker, the hint and the message all name the field, so they read the labelling one
+    // (docs/adr/0004). Declared on each element, never inherited from the wrapper, so no part of
+    // the field can drift to the face of whatever it was placed in.
+    expect(screen.getByRole('textbox').className).toContain('font-primary');
+    for (const naming of [
+      'Message',
+      'optional',
+      'Keep it short',
+      'Enter a message',
+    ]) {
+      expect(screen.getByText(naming).className).toContain('font-secondary');
+    }
+  });
 });

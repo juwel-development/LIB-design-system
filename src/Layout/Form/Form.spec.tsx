@@ -117,6 +117,20 @@ describe('Form Component', () => {
     expect(form?.className).not.toContain('text-');
   });
 
+  it.each(['idle', 'sending', 'sent', 'failed'] as const)(
+    'sets the labelling face on the note in the %s state, so a two-face theme reaches it (#90)',
+    (state) => {
+      render(<Form action={'/x'} state={state} note={'We never share it'} />);
+
+      // The note annotates the form rather than being what the visitor came for, which is the
+      // face Footer and Table's note already take (docs/adr/0004). It is in the recipe's base, so
+      // no state can disagree about it - state selects the tone and nothing else.
+      expect(screen.getByText('We never share it').className).toContain(
+        'font-secondary',
+      );
+    },
+  );
+
   it('maps testId to a data-testid on the form', () => {
     render(<Form action={'/x'} testId={'subscribe-form'} />);
     expect(screen.getByTestId('subscribe-form').tagName).toBe('FORM');

@@ -61,6 +61,34 @@ describe('Link', () => {
     );
   });
 
+  it('sets the labelling face on the quiet treatment, the one that stands outside running text (#90)', () => {
+    render(
+      <Link href={'/about'} treatment={'quiet'}>
+        About
+      </Link>,
+    );
+
+    // Standing navigation routes the visitor rather than being what they came for, so it reads
+    // --font-secondary alongside Header and Footer (docs/adr/0004).
+    expect(screen.getByRole('link').className).toContain('font-secondary');
+  });
+
+  it.each(['prose', 'label-link', 'graphic'] as const)(
+    'declares no face for the %s treatment, so it takes the face around it rather than overriding it (#90)',
+    (treatment) => {
+      render(
+        <Link href={'/about'} treatment={treatment}>
+          About
+        </Link>,
+      );
+
+      // Deliberate silence, not the omission #90 fixed: prose sits in a reading column whose face
+      // its owner chose, label-link sets no type at all (docs/adr/0006), and graphic's child is
+      // not text. A face in the base would reach all four, so quiet carries its own.
+      expect(screen.getByRole('link').className).not.toContain('font-');
+    },
+  );
+
   it('exposes a stable test hook through testId', () => {
     render(
       <Link href={'/x'} testId={'nav-link'}>

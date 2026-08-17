@@ -186,6 +186,53 @@ as roles, and by the alternative being worse: `--font-reading`/`--font-labelling
 does which job, and a product whose grotesk sets its body and whose serif sets its labels would hold
 two tokens whose names are lies.
 
+## Amended: the rule that decides which face, stated so an element cannot fall through it
+
+*"`--font-primary` is the face content is set in, `--font-secondary` the face labels are set in"*
+names the two roles and does not decide a case. It failed on the whole `Interaction` category:
+`Button`, `Input`, `Link`, `TextArea` and `Form` shipped declaring **no** family at all
+([#90](https://github.com/juwel-development/LIB-design-system/issues/90)), which on the library's own
+`inherit` values is invisible and to a two-face consumer is the exact failure the pair exists to
+prevent — the face of a label changing with where the component was placed. It also could not sort
+the library's own practice: `Table`'s header cell and `DefinitionList`'s term are both a short string
+naming the thing beside them, and they take different faces.
+
+The operative rule, which is descriptive of what the library already does:
+
+> **`--font-primary`** — what the visitor came for: text they came to read, values they came to
+> enter, actions they came to perform.
+> **`--font-secondary`** — what names it or routes them to it: labels, column headers, captions,
+> eyebrows, nav, footer, annotations.
+
+**Actions are `primary`.** `Button` is the only instance in the library and the clause most likely to
+be rediscovered wrongly, because a button's text reads like a label in the ordinary sense. It is not
+one: a viewer came to a form to *submit* it, so the action is the thing itself and not the apparatus
+naming it. The face sits in `Button`'s recipe base, so no variant can disagree.
+
+**Why the header cell and the term sort differently.** The rule does not ask whether a string names
+its neighbour — both of those do — it asks which of the two the visitor came for. A table's figures
+are what was come for and the header cell is the apparatus routing the eye down a column, so the cell
+is `secondary` and the value `primary`. A definition list's *term* is what was come for: the term and
+its description are together the reading matter, with no apparatus around them, so both are
+`primary`. The old wording could not express this because "label" describes a string's grammar; this
+one describes its job on the page.
+
+Three consequences worth stating, since they are what the specs pin:
+
+- **The face is declared on the element that renders the text**, never on a wrapper it shares with
+  text of the other face. A field's control and its label sit in one column and take different faces,
+  so a family on the column would be wrong for one of them.
+- **A treatment may carry the face where its component's base cannot.** `Link` declares
+  `font-secondary` on `quiet` alone: `prose` sits in running text whose face belongs to the owner of
+  that reading column, `label-link` sets no type at all
+  ([ADR 0006](./0006-link-treatment-contract.md)), and `graphic`'s child is not text. Declaring
+  nothing there is a decision, not the omission this amendment closes.
+- **A control's `placeholder` follows its value.** It is painted by the same element, so it needs no
+  rule and must not be given one.
+
+This amendment **reclassifies nothing**. Every family already assigned in the library conforms to it
+and is unchanged; what changes is that five components that assigned none now do.
+
 ## Constraints published on the tokens
 
 In the shape [ADR 0002](./0002-focus-ring-token-contract.md) established: stated numerically on the
