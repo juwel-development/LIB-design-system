@@ -2,6 +2,9 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Section } from './Section';
 
+const classesOf = (element: Element): string[] =>
+  element.className.split(/\s+/).filter(Boolean);
+
 describe('Section', () => {
   it('renders a section element carrying data-section, so the join can key off the preceding sibling', () => {
     const { container } = render(<Section testId={'intro'}>Intro</Section>);
@@ -67,6 +70,60 @@ describe('Section', () => {
     const full = screen.getByTestId('s');
     expect(full.className).not.toContain('px-[var(--gutter)]');
     expect(full.className).toContain('py-[var(--space-band)]');
+  });
+
+  it('is a positioning context on the base recipe, so a bleed refactor cannot drop the anchor', () => {
+    // Asserted on what the two bleeds share rather than on each in turn: were `relative` to move into a
+    // bleed option, one value would silently stop being anchorable while a per-variant test stayed green.
+    const { rerender } = render(<Section testId={'s'}>Body</Section>);
+    const inset = classesOf(screen.getByTestId('s'));
+
+    rerender(
+      <Section bleed={'full'} testId={'s'}>
+        Body
+      </Section>,
+    );
+    const full = new Set(classesOf(screen.getByTestId('s')));
+
+    expect(inset.filter((className) => full.has(className))).toContain(
+      'relative',
+    );
+  });
+
+  it('is a positioning context whether or not the section is named or carries a test id', () => {
+    const { container } = render(<Section>Body</Section>);
+    const bare = container.querySelector('section');
+    expect(bare).toBeInTheDocument();
+    expect(bare && classesOf(bare)).toContain('relative');
+
+    render(
+      <Section name={'Pricing'} testId={'named'}>
+        Body
+      </Section>,
+    );
+    expect(
+      classesOf(screen.getByRole('region', { name: 'Pricing' })),
+    ).toContain('relative');
+  });
+
+  it('anchors without becoming a stacking context: no offset, no z-index, no isolation', () => {
+    // Consumer decoration hangs off the join at z-index:-1 to sit behind reading type, which works only
+    // while it can escape to an outer stacking context. `relative` with `z-index: auto` makes none, so
+    // the absence of z-index/isolate is the load-bearing half of the guarantee and is asserted as such.
+    const { rerender } = render(<Section testId={'s'}>Body</Section>);
+    for (const bleed of ['inset', 'full'] as const) {
+      rerender(
+        <Section bleed={bleed} testId={'s'}>
+          Body
+        </Section>,
+      );
+      const { className } = screen.getByTestId('s');
+      expect(className).not.toMatch(/(^|\s)-?(top|right|bottom|left|inset)-/);
+      expect(className).not.toMatch(/(^|\s)-?z-/);
+      expect(className).not.toMatch(/(^|\s)isolate(\s|$)/);
+      // The section stays in flow: it is an anchor, not a placement.
+      expect(className).not.toMatch(/(^|\s)(absolute|fixed|sticky)(\s|$)/);
+    }
   });
 
   it('sets no margin and no max-width: sections abut and Prose owns the reading measure', () => {
