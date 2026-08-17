@@ -64,7 +64,8 @@ export const Between: Story = {
  *  ordinary `Section`. The fold stops short of the viewport by design, so the next section's join sits
  *  just inside the bottom edge and the page announces that it continues: the whole reason the fold height
  *  is `min(70vh, 40rem)` and never `100vh`. The lead is a plain `<H1>` the consumer places in the slot;
- *  `Hero` renders no heading of its own. */
+ *  `Hero` renders no heading of its own, and the display measure arrives with the heading rather than
+ *  with the slot, which would cap the mark above it too. */
 export const PosterAboveSection: Story = {
   render: () => (
     <>

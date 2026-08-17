@@ -40,3 +40,13 @@ export const Muted: Story = {
     color: 'muted',
   },
 };
+
+/** A lead longer than the display measure wraps rather than running on: the heading is bounded at
+ *  `--measure-display`, 36ch against the reading column's 66ch, because bigger type wants fewer
+ *  characters per line. The bound is the recipe's and holds under every colour - a hero's lead gets it
+ *  by being an `H1`, which is why `Hero` leaves its own slot uncapped. */
+export const AtTheDisplayMeasure: Story = {
+  args: {
+    children: 'A studio for the long read, not for the first glance at it.',
+  },
+};
