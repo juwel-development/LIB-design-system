@@ -63,8 +63,9 @@ export interface ISectionProps extends VariantProps<typeof section> {
  * @CallerMustEnsure
  * - Where `name` is given it matches the section's visible heading. The component labels the region with
  *   that string because it cannot reach the heading's id to reference it with `aria-labelledby` instead.
- * - An absolutely-positioned descendant written against an ancestor *outside* the section carries its own
- *   containing block, since the section is now the nearer one. The re-anchoring is silent - no error.
+ * - A descendant meant to position against an ancestor *outside* the section is given its own positioned
+ *   wrapper, since the section is now the nearer positioned ancestor and takes the anchor. The
+ *   re-anchoring is silent - no error and no warning, only a descendant that lands somewhere else.
  *
  * @UXGuidelines
  * - On a page with no borrowed proof - no logos, no testimonials, no credits - a gap between blocks reads

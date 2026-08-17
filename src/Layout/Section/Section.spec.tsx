@@ -5,6 +5,10 @@ import { Section } from './Section';
 const classesOf = (element: Element): string[] =>
   element.className.split(/\s+/).filter(Boolean);
 
+// Every bleed the recipe exposes. The positioning guarantee is stated for all of them, so the tests that
+// pin it walk the list rather than the default alone.
+const BLEEDS = ['inset', 'full'] as const;
+
 describe('Section', () => {
   it('renders a section element carrying data-section, so the join can key off the preceding sibling', () => {
     const { container } = render(<Section testId={'intro'}>Intro</Section>);
@@ -72,31 +76,30 @@ describe('Section', () => {
     expect(full.className).toContain('py-[var(--space-band)]');
   });
 
-  it('is a positioning context on the base recipe, so a bleed refactor cannot drop the anchor', () => {
-    // Asserted on what the two bleeds share rather than on each in turn: were `relative` to move into a
-    // bleed option, one value would silently stop being anchorable while a per-variant test stayed green.
+  it('is a positioning context under the default bleed and under every bleed value, so a bleed refactor cannot drop the anchor', () => {
+    // Whether `relative` sits on the recipe's base or is duplicated into each option is not something the
+    // DOM can tell apart, so what is pinned here is the guarantee itself rather than the recipe's shape:
+    // no bleed value renders an unanchorable section. Moving it onto one option would fail on the other.
     const { rerender } = render(<Section testId={'s'}>Body</Section>);
-    const inset = classesOf(screen.getByTestId('s'));
+    expect(classesOf(screen.getByTestId('s'))).toContain('relative');
 
-    rerender(
-      <Section bleed={'full'} testId={'s'}>
-        Body
-      </Section>,
-    );
-    const full = new Set(classesOf(screen.getByTestId('s')));
-
-    expect(inset.filter((className) => full.has(className))).toContain(
-      'relative',
-    );
+    for (const bleed of BLEEDS) {
+      rerender(
+        <Section bleed={bleed} testId={'s'}>
+          Body
+        </Section>,
+      );
+      expect(classesOf(screen.getByTestId('s'))).toContain('relative');
+    }
   });
 
   it('is a positioning context whether or not the section is named or carries a test id', () => {
-    const { container } = render(<Section>Body</Section>);
+    const { container, rerender } = render(<Section>Body</Section>);
     const bare = container.querySelector('section');
     expect(bare).toBeInTheDocument();
     expect(bare && classesOf(bare)).toContain('relative');
 
-    render(
+    rerender(
       <Section name={'Pricing'} testId={'named'}>
         Body
       </Section>,
@@ -110,19 +113,28 @@ describe('Section', () => {
     // Consumer decoration hangs off the join at z-index:-1 to sit behind reading type, which works only
     // while it can escape to an outer stacking context. `relative` with `z-index: auto` makes none, so
     // the absence of z-index/isolate is the load-bearing half of the guarantee and is asserted as such.
+    // Each pattern allows a leading variant prefix, since `[[data-section]+&]:` is this recipe's own
+    // idiom and `[[data-section]+&]:z-10` would create the stacking context just as plain `z-10` would.
+    const OFFSET_OR_LAYER =
+      /(^|[\s:])-?(top|right|bottom|left|start|end|inset|z)-/;
+    const POSITION_OR_ISOLATION =
+      /(^|[\s:])(absolute|fixed|sticky|isolate)(\s|$)/;
+    // The same declarations written out longhand, which no utility-shaped pattern would catch.
+    const ARBITRARY_PROPERTY =
+      /\[(top|right|bottom|left|inset|inset-block|inset-inline|z-index|isolation|position):/;
+
     const { rerender } = render(<Section testId={'s'}>Body</Section>);
-    for (const bleed of ['inset', 'full'] as const) {
+    for (const bleed of BLEEDS) {
       rerender(
         <Section bleed={bleed} testId={'s'}>
           Body
         </Section>,
       );
       const { className } = screen.getByTestId('s');
-      expect(className).not.toMatch(/(^|\s)-?(top|right|bottom|left|inset)-/);
-      expect(className).not.toMatch(/(^|\s)-?z-/);
-      expect(className).not.toMatch(/(^|\s)isolate(\s|$)/);
+      expect(className).not.toMatch(OFFSET_OR_LAYER);
       // The section stays in flow: it is an anchor, not a placement.
-      expect(className).not.toMatch(/(^|\s)(absolute|fixed|sticky)(\s|$)/);
+      expect(className).not.toMatch(POSITION_OR_ISOLATION);
+      expect(className).not.toMatch(ARBITRARY_PROPERTY);
     }
   });
 

@@ -89,7 +89,9 @@ export const Named: Story = {
  *  and it is absolutely positioned against the section, flush under the join above it. An abspos child's
  *  containing block is the padding box, so `top: 0` sits directly beneath the hairline and `left`/`right`
  *  reach the section's outer edges without having to back out of the gutter. It sits behind the reading
- *  type at `z-index: -1`, which resolves outside the section because the section makes no stacking context. */
+ *  type at `z-index: -1`, which resolves outside the section because the section makes no stacking context.
+ *  Its height is two bands: one clears the section's own top padding, the second carries the fade past the
+ *  first line of type, so the band is spent by the time the reading starts. */
 export const AnchoredDecoration: Story = {
   render: () => (
     <>
@@ -104,7 +106,7 @@ export const AnchoredDecoration: Story = {
             top: 0,
             left: 0,
             right: 0,
-            height: '170px',
+            height: 'calc(var(--space-band) * 2)',
             zIndex: -1,
             background: 'linear-gradient(var(--color-backing), transparent)',
           }}
