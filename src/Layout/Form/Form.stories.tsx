@@ -1,5 +1,6 @@
 import { Button } from 'Interaction/Button/Button';
 import { Input } from 'Interaction/Input/Input';
+import { Link } from 'Interaction/Link/Link';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Form } from './Form';
 
@@ -46,6 +47,23 @@ export const Idle: Story = {
     action: '/subscribe',
     state: 'idle',
     note: 'We only email about releases.',
+    children: fields,
+    actions,
+  },
+};
+
+/** The note takes inline content, so a privacy line with a Link in it stays inside the `<form>`
+ *  rather than being rendered beside it. */
+export const LinkedNote: Story = {
+  args: {
+    action: '/subscribe',
+    state: 'idle',
+    note: (
+      <>
+        We only email about releases — more in our{' '}
+        <Link href={'/privacy'}>privacy notice</Link>.
+      </>
+    ),
     children: fields,
     actions,
   },

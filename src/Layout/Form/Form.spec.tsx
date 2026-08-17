@@ -1,3 +1,4 @@
+import { Link } from 'Interaction/Link/Link';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Form } from './Form';
@@ -108,6 +109,73 @@ describe('Form Component', () => {
 
   it('refuses a sent state with no note, the outcome message it exists to show', () => {
     expect(() => render(<Form action={'/x'} state={'sent'} />)).toThrow();
+  });
+
+  it('renders a note carrying a link inside the form, so the line stays in the element it annotates', () => {
+    const { container } = render(
+      <Form
+        action={'/x'}
+        note={
+          <>
+            {'More in our '}
+            <Link href={'/privacy'}>privacy notice</Link>
+          </>
+        }
+      />,
+    );
+
+    const link = screen.getByRole('link', { name: 'privacy notice' });
+    expect(link.closest('p')).toBeInTheDocument();
+    expect(container.querySelector('form')).toContainElement(link);
+  });
+
+  it.each([
+    ['sent', 'status'],
+    ['failed', 'alert'],
+  ] as const)(
+    'gives a node note the %s state its own region role, as a string note gets',
+    (state, role) => {
+      render(
+        <Form
+          action={'/x'}
+          state={state}
+          note={<Link href={'/privacy'}>privacy notice</Link>}
+        />,
+      );
+
+      expect(screen.getByRole(role)).toContainElement(
+        screen.getByRole('link', { name: 'privacy notice' }),
+      );
+    },
+  );
+
+  it.each(['idle', 'sending'] as const)(
+    'leaves a node note unroled in the %s state, where it is plain prose',
+    (state) => {
+      render(
+        <Form
+          action={'/x'}
+          state={state}
+          note={<Link href={'/privacy'}>privacy notice</Link>}
+        />,
+      );
+
+      expect(
+        screen.getByRole('link', { name: 'privacy notice' }).closest('p'),
+      ).not.toHaveAttribute('role');
+    },
+  );
+
+  it('accepts a falsy but renderable note in sent and shows its value, since absence is what the outcome message asks about', () => {
+    render(<Form action={'/x'} state={'sent'} note={0} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('0');
+  });
+
+  it('renders no note paragraph at all when none was given, so nothing strays into the form', () => {
+    const { container } = render(<Form action={'/x'} />);
+
+    expect(container.querySelector('form > p')).not.toBeInTheDocument();
   });
 
   it('bounds itself with the reading measure and sets no font-size, so ch resolves against body type', () => {
