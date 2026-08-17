@@ -85,6 +85,41 @@ export const Named: Story = {
   },
 };
 
+/** The positioning context in use. The band below is the *consumer's* - the library ships no decoration -
+ *  and it is absolutely positioned against the section, flush under the join above it. An abspos child's
+ *  containing block is the padding box, so `top: 0` sits directly beneath the hairline and `left`/`right`
+ *  reach the section's outer edges without having to back out of the gutter. It sits behind the reading
+ *  type at `z-index: -1`, which resolves outside the section because the section makes no stacking context.
+ *  Its height is two bands: one clears the section's own top padding, the second carries the fade past the
+ *  first line of type, so the band is spent by the time the reading starts. */
+export const AnchoredDecoration: Story = {
+  render: () => (
+    <>
+      <Section>
+        {filler('Before the join', 'An ordinary section above the hairline.')}
+      </Section>
+      <Section>
+        <div
+          aria-hidden={true}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 'calc(var(--space-band) * 2)',
+            zIndex: -1,
+            background: 'linear-gradient(var(--color-backing), transparent)',
+          }}
+        />
+        {filler(
+          'Anchored to the join',
+          'The band hangs off the join, positioned against the section rather than against a global override.',
+        )}
+      </Section>
+    </>
+  ),
+};
+
 /** A non-Section element before the first section: no rule is drawn on it, because the join keys off a
  *  preceding data-section sibling, not merely being after something. */
 export const HeaderBeforeFirstSection: Story = {

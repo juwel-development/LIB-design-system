@@ -16,6 +16,10 @@ import type { FunctionComponent, ReactNode } from 'react';
 // `.dark`, so no `dark:` class.
 const section = cva(
   [
+    // Anchor, not placement: a consumer hangs its own decoration off the join, and cannot get an anchor
+    // by wrapping the section without costing two joins. No offset and no z-index, so the layout is
+    // unchanged and no stacking context forms - decoration at z-index:-1 must still escape to an outer one.
+    'relative',
     'py-[var(--space-band)]',
     '[[data-section]+&]:border-t [[data-section]+&]:border-solid [[data-section]+&]:border-rule',
   ].join(' '),
@@ -51,10 +55,17 @@ export interface ISectionProps extends VariantProps<typeof section> {
  * - A `bleed="full"` section drops the gutter and runs edge to edge; the vertical band is kept on both
  *   bleed variants, and the join spans the full width of either.
  * - An unnamed section is not a landmark: it emits no `aria-label` and is inert to assistive technology.
+ * - The section is a positioning context, under either bleed, so a consumer may place absolutely-positioned
+ *   decoration against its edges - including the join above it, the one edge only a section knows. It sets
+ *   no offset and no `z-index`, so it is not a stacking context and decoration at a negative `z-index`
+ *   still resolves against an outer one.
  *
  * @CallerMustEnsure
  * - Where `name` is given it matches the section's visible heading. The component labels the region with
  *   that string because it cannot reach the heading's id to reference it with `aria-labelledby` instead.
+ * - A descendant meant to position against an ancestor *outside* the section is given its own positioned
+ *   wrapper, since the section is now the nearer positioned ancestor and takes the anchor. The
+ *   re-anchoring is silent - no error and no warning, only a descendant that lands somewhere else.
  *
  * @UXGuidelines
  * - On a page with no borrowed proof - no logos, no testimonials, no credits - a gap between blocks reads
