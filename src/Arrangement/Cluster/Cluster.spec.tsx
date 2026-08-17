@@ -9,6 +9,27 @@ describe('Cluster', () => {
   const utilities = (element: Element) =>
     element.className.split(/\s+/).filter(Boolean);
 
+  // Every combination of the two props, rendered together and returned by test id. What the base
+  // fixes - the wrap, the baseline, the wrapped-line gap - is guaranteed across all four, so the
+  // tests that assert on the base walk this rather than sampling some of them.
+  const renderEveryCombination = () => {
+    render(
+      <>
+        <Cluster testId={'region-start'}>Matter</Cluster>
+        <Cluster gap={'region'} justify={'between'} testId={'region-between'}>
+          Matter
+        </Cluster>
+        <Cluster gap={'stack'} justify={'start'} testId={'stack-start'}>
+          Matter
+        </Cluster>
+        <Cluster gap={'stack'} justify={'between'} testId={'stack-between'}>
+          Matter
+        </Cluster>
+      </>,
+    );
+    return ['region-start', 'region-between', 'stack-start', 'stack-between'];
+  };
+
   it('renders a plain container that claims no landmark and no nav of its own', () => {
     const { container } = render(<Cluster testId={'cluster'}>Matter</Cluster>);
     const cluster = screen.getByTestId('cluster');
@@ -30,34 +51,23 @@ describe('Cluster', () => {
     expect(child.parentElement).toBe(screen.getByTestId('cluster'));
   });
 
-  it('wraps its children onto further lines rather than overflowing one', () => {
-    render(<Cluster testId={'cluster'}>Matter</Cluster>);
-    const cluster = screen.getByTestId('cluster');
-    expect(utilities(cluster)).toContain('flex');
-    expect(utilities(cluster)).toContain('flex-wrap');
+  it('wraps its children onto further lines rather than overflowing one, at every combination of props', () => {
+    for (const id of renderEveryCombination()) {
+      const cluster = screen.getByTestId(id);
+      expect(utilities(cluster)).toContain('flex');
+      expect(utilities(cluster)).toContain('flex-wrap');
+    }
   });
 
   it('aligns children on their baselines in every combination of props', () => {
-    render(
-      <>
-        <Cluster testId={'default'}>Matter</Cluster>
-        <Cluster gap={'stack'} justify={'between'} testId={'stack-between'}>
-          Matter
-        </Cluster>
-        <Cluster gap={'region'} justify={'start'} testId={'region-start'}>
-          Matter
-        </Cluster>
-      </>,
-    );
     // These rows mix type at different roles - a nav link at the label role beside a credit line at
     // the small role - and centring them makes the type look mis-set, so baseline is not a default
     // to be overridden (docs/adr/0008).
-    for (const id of ['default', 'stack-between', 'region-start']) {
+    for (const id of renderEveryCombination()) {
       const cluster = screen.getByTestId(id);
       expect(utilities(cluster)).toContain('items-baseline');
-      expect(utilities(cluster).join(' ')).not.toMatch(
-        /\bitems-(center|end)\b/,
-      );
+      expect(utilities(cluster)).not.toContain('items-center');
+      expect(utilities(cluster)).not.toContain('items-end');
     }
   });
 
@@ -80,21 +90,10 @@ describe('Cluster', () => {
   });
 
   it('fixes the wrapped-line gap to the sibling role, whichever inline gap is asked for', () => {
-    render(
-      <>
-        <Cluster testId={'default'}>Matter</Cluster>
-        <Cluster gap={'stack'} testId={'stack'}>
-          Matter
-        </Cluster>
-        <Cluster gap={'region'} justify={'between'} testId={'region'}>
-          Matter
-        </Cluster>
-      </>,
-    );
     // One attested role in that position, so the recipe fixes it and no prop can reach it: a wrapped
     // line sitting as far from its neighbour as its items sit from each other stops reading as one
     // group (docs/adr/0008).
-    for (const id of ['default', 'stack', 'region']) {
+    for (const id of renderEveryCombination()) {
       expect(utilities(screen.getByTestId(id))).toContain(
         'gap-y-[var(--space-stack)]',
       );
@@ -117,18 +116,7 @@ describe('Cluster', () => {
   });
 
   it('never emits the band role or the gutter as a gap - neither is on offer (ADR 0008)', () => {
-    render(
-      <>
-        <Cluster testId={'default'}>Matter</Cluster>
-        <Cluster gap={'stack'} testId={'stack'}>
-          Matter
-        </Cluster>
-        <Cluster gap={'region'} justify={'between'} testId={'region'}>
-          Matter
-        </Cluster>
-      </>,
-    );
-    for (const id of ['default', 'stack', 'region']) {
+    for (const id of renderEveryCombination()) {
       const className = screen.getByTestId(id).className;
       expect(className).not.toContain('--space-band');
       expect(className).not.toContain('--gutter');
@@ -151,28 +139,22 @@ describe('Cluster', () => {
   });
 
   it('takes no outer space, so whatever holds it owns the rhythm around it', () => {
-    render(
-      <Cluster gap={'region'} justify={'between'} testId={'cluster'}>
-        Matter
-      </Cluster>,
-    );
-    for (const utility of utilities(screen.getByTestId('cluster'))) {
-      expect(utility).not.toMatch(/^m[trblxy]?-/);
-      expect(utility).not.toMatch(/^p[trblxy]?-/);
+    for (const id of renderEveryCombination()) {
+      for (const utility of utilities(screen.getByTestId(id))) {
+        expect(utility).not.toMatch(/^m[trblxy]?-/);
+        expect(utility).not.toMatch(/^p[trblxy]?-/);
+      }
     }
   });
 
   it('expresses every value through a role, never a length or a numbered spacing rung', () => {
-    render(
-      <Cluster gap={'stack'} justify={'between'} testId={'cluster'}>
-        Matter
-      </Cluster>,
-    );
     // A spacing this component cannot express through a role is a request for a measurement, which
     // docs/adr/0003 and docs/adr/0004 answer.
-    for (const utility of utilities(screen.getByTestId('cluster'))) {
-      expect(utility).not.toMatch(/-\d/);
-      expect(utility).not.toMatch(/\d(px|rem|em|ch|vh|vw)\b/);
+    for (const id of renderEveryCombination()) {
+      for (const utility of utilities(screen.getByTestId(id))) {
+        expect(utility).not.toMatch(/-\d/);
+        expect(utility).not.toMatch(/\d(px|rem|em|ch|vh|vw)\b/);
+      }
     }
   });
 
@@ -199,9 +181,8 @@ describe('Cluster', () => {
     }
   });
 
-  // Nothing here pins Header's private nav row against this component, the way Stack's spec pins the
-  // six columns that hand-write its arrangement. That row sets one shorthand `gap`, so it renders
-  // --space-region between its wrapped lines where a Cluster renders --space-stack: the two now emit
-  // deliberately different classes and an equality spec would be red for a difference that is the
-  // point (docs/adr/0008, "A `rowGap` prop on `Cluster`"). Header is not touched by this ticket.
+  // Nothing here pins Header's private nav row, the way Stack's spec pins the six columns that
+  // hand-write its arrangement. That row sets one shorthand `gap`, so --space-region lands between
+  // its wrapped lines where a Cluster puts --space-stack: an equality spec would be red for the
+  // difference that is the point (docs/adr/0008, "A `rowGap` prop on `Cluster`").
 });
