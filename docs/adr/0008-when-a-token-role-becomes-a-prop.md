@@ -30,7 +30,9 @@ Four terms carry the weight, and each is meant literally.
 **Position** is where in the component the value lands, not which token it is. The gap between a
 stack's children, the bound on a container's width, and the gap between a cluster's *wrapped lines* are
 three positions. A role used elsewhere in the library in a different position is no evidence for this
-one: `--space-band` being real and named says nothing about whether it is ever a gap.
+one: `--space-band` being real and named says nothing about whether it is ever a gap. A position is not
+per-component, though: the gap between children along a line is the same position in `Header`'s nav row
+and in `Form`'s actions row, which is why either can attest for a third component that renders one.
 
 **Attested** means some site already renders that role in that position — a recipe in this library, or
 a call site in a proposal's filed evidence. A value a reader can imagine wanting is not attestation,
@@ -38,7 +40,9 @@ and neither is symmetry with a token that happens to exist.
 
 **Independently** disqualifies a site that reaches for a role because something *else* is missing. Such
 a site is evidence for the missing thing, not for the role, and counting it lets a gap in one component
-open a prop on another.
+open a prop on another. It disqualifies an *inherited* value on the same grounds: where one shorthand
+sets two positions at once, the site chose the value for one of them and the other took it by default,
+and a value nobody chose attests nothing.
 
 **A distinct job** means the two roles answer different questions about the content, so a caller
 choosing between them is describing what they hold rather than picking a size. Two roles that differ
@@ -94,22 +98,29 @@ surface offering a role per column of their evidence tables. Worked through the 
 
 **This ADR is the later decision and supersedes those two bodies.** Where a suggested shape in #75 or
 #76 disagrees with what follows, this ADR is what ships; the proposal bodies stay as filed because they
-are the evidence, not the specification.
+are the evidence, not the specification. Each issue's triage brief is derived from this rule rather
+than from the body it sits under, so where a body and its brief differ, the brief is the specification
+and what follows is why.
 
 `Stack`'s gap has two roles attested in the same position and doing different work — `--space-stack`
 separates siblings inside one block, `--space-region` separates a page region from the next. Two, so
 the prop exists, and it holds those two. Its measure has one — `--measure`, the reading column — so the
 recipe fixes the role, and whether the stack is bounded at all remains a structural choice under the
 second test: an unbounded column is right where the children are not running text, so both alternatives
-are real. That leaves a `gap` of two roles and a bound that is on or off, not a measure to pick from.
+are real. Whether the column turns into a row on a wide viewport is structural in the same way — it
+carries no token, and both answers are right for different content. That leaves a `gap` of two roles, a
+bound that is on or off, and an axis that may change; what it does not leave is a measure to pick from.
 
-`Cluster` keeps less. Its wrapped-line gap is one attested role, its alignment is baseline at every
-site, and once `--gutter` is set aside (below) its inline gap has one attested `--space-*` role too —
-`--space-region`, in `Header`'s private row and both footer rows that use a space token. So on the
-evidence filed, `Cluster`'s recipe fixes all three, and the prop that survives the tests is the
-distribution — `justify`, where start and end-to-end are both genuinely right. A second inline role
-attested in that position is what would open a `gap` prop, and that is a new evidence table rather than
-a judgement at the call site.
+`Cluster` keeps less, but not nothing. Its wrapped-line gap is one attested role and its alignment is
+baseline at every site, so the recipe fixes both. Its inline gap keeps a prop: once `--gutter` is set
+aside (below), two `--space-*` roles are attested along a line and they answer different questions.
+`--space-region` separates one group from the next — `Header`'s private row, and the two footer rows in
+#76's evidence that use a space token. `--space-stack` is the sibling gap between items that belong
+together, which is what `Form`'s actions row renders today — `src/Layout/Form/Form.tsx` carries
+`flex flex-row gap-[var(--space-stack)]`. Two roles, two jobs, one position, so the prop exists and
+holds exactly those two. The other prop that survives is the distribution — `justify`,
+where start and end-to-end are both genuinely right. `Cluster` fixes its wrapped-line gap and its
+alignment and selects nothing else.
 
 ## Considered options
 
@@ -128,9 +139,12 @@ nothing at all today — `Hero` names it in prose guidance only, which is
 that has never bounded a container is not attested in that position, whatever it bounds elsewhere.
 
 **A `rowGap` prop on `Cluster`.** Rejected. Every site that splits its two axes uses the same role for
-the wrapped-line gap — `--space-stack`, at all three footer rows. One attested value, so the recipe
-fixes it. That the *other* axis takes a different role is what the recipe encodes; it is not a reason
-for the caller to choose this one.
+the wrapped-line gap — `--space-stack`, at all three footer rows in #76's evidence. `Header`'s row is
+not a fourth attestation against that: it sets one shorthand `gap`, so the `--space-region` landing
+between its wrapped lines was chosen for the inline axis and inherited by the other, which
+*independently* excludes exactly as it excludes a site working around something missing. One attested
+value, so the recipe fixes it. That the *other* axis takes a different role is what the recipe encodes;
+it is not a reason for the caller to choose this one.
 
 **An `align` prop on `Cluster`.** Rejected. Every site is baseline-aligned and none is centred. #76
 argues baseline is *correct* rather than merely conventional, because these rows mix type at different
@@ -172,9 +186,11 @@ each is now argued against the test rather than from scratch:
   attested in that position, so whatever ships caps at `--measure-display` from its recipe. A
   `measure?: 'display' | …` prop is not available to it.
 
-**`Stack` and `Cluster` ship smaller than they were proposed.** #75 loses `band` from `gap` and loses
-its measure roster; #76 loses `rowGap`, `align`, and — on the evidence filed — its `gap`. Both keep
-what the evidence carries. An implementer of either follows this ADR where the ticket body differs.
+**`Stack` and `Cluster` ship smaller than they were proposed.** As filed, #75 offered `band` inside its
+`gap` and a roster of measures; it loses both. #76 offered `rowGap`, `align`, and `--gutter` inside its
+`gap`; it loses all three. Both keep what the evidence carries — a `gap` holding the two attested space
+roles, plus whatever the structural test earns them. An implementer of either follows this ADR where
+the ticket body differs.
 
 **A proposal now owes an evidence table per position, not per component.** "Three roles exist and a
 caller might want any of them" is not an argument this library accepts; "these two roles are already
