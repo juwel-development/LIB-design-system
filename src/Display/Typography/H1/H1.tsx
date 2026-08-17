@@ -6,11 +6,8 @@ import type { FunctionComponent, ReactNode } from 'react';
 // (docs/adr/0005). Weight inherits - Tailwind's preflight resets h1-h6 to font-weight: inherit, so
 // the sized levels carry no weight class. --tracking-optical is the large-type correction, carried by
 // the title role and above (#57), so the biggest type on the page is the first to take it. Colour is a
-// semantic token re-pointed by `.dark`, so no variant carries a `dark:` class. The measure is on the
-// base for the same reason the size is: the level fixes the role and the role fixes the measure, so
-// --measure-display is not a value a caller picks (docs/adr/0008, #87). It is the display role's own
-// bound - 36ch against the reading column's 66ch, because bigger type wants fewer characters per line
-// - and it holds under every colour, so it is base and not a variant.
+// semantic token re-pointed by `.dark`, so no variant carries a `dark:` class. The measure is base and
+// not a variant because the role fixes it and a caller picks nothing (docs/adr/0008, #87).
 const h1 = cva(
   'font-primary text-display leading-display tracking-optical max-w-[var(--measure-display)]',
   {

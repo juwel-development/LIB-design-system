@@ -58,9 +58,10 @@ export interface IHeroProps extends VariantProps<typeof hero> {
  *   and the bound comes with it (#87). The slot itself stays uncapped, because capping it would cap the
  *   mark too. Measured on the lockup that prompted this: at 24ch a one-sentence lead set five lines and
  *   became a second block competing with the mark; at 36ch, where the token sits, it sets three and reads
- *   as the mark's caption. This is the one place where copy length is a layout parameter - a hero whose
- *   lead sentence can vary in length has its measure re-pointed against the real sentence, not against a
- *   rule of thumb.
+ *   as the mark's caption. This is the one place where copy length is a layout parameter, and the token
+ *   is one value for the whole product - so a hero whose lead runs longer than that measurement assumed
+ *   is a reason to re-measure `--measure-display` against the real sentence, which moves every `H1` with
+ *   it, and never a reason to cap that one hero by hand.
  * - A hero built on a wide lockup is a desktop bet by construction. A 15-character lockup can only be as
  *   wide as the phone, so at 390px the scale contrast between mark and lead is capped by the viewport
  *   rather than chosen - roughly 2:1, against roughly 6:1 at 1440.

@@ -23,16 +23,40 @@ const componentSources = (dir: string): string[] =>
       : [];
   });
 
-// Any utility reading the display measure, in every variant-prefixed form (`lg:max-w-[…]` counts).
-// Not a global regex: `test` on one of those carries `lastIndex` between files and would skip every
-// second match. Prose naming the token without applying it - a docblock, a comment - does not match.
-const displayMeasure = /\S*\[var\(--measure-display\)\]/;
+// Any utility reading the display measure: the arbitrary-value form (`max-w-[var(…)]`), the
+// arbitrary-property form (`[max-width:var(…)]`), and either under a variant prefix. Keyed on
+// `var(--measure-display)` rather than on a `max-w-` prefix, because a second site would not
+// announce itself with the same utility the first one used. Not a global regex: `test` on one of
+// those carries `lastIndex` between files and would skip every second match.
+const displayMeasure = /\S*var\(--measure-display\)\S*/;
+
+// The pattern pinned in both directions, the way type-scale-literal.spec.ts pins its own. A scan that
+// only ever runs over sources it already passes stays green when the pattern itself breaks, so the
+// applying forms are pinned as matches and prose naming the token - a docblock, a comment - as not.
+const applications = [
+  'max-w-[var(--measure-display)]',
+  '[max-width:var(--measure-display)]',
+  'lg:max-w-[var(--measure-display)]',
+];
+const mentions = [
+  'Bounded at `--measure-display`, the display role',
+  'Cap the lead at --measure-display, not at a caption',
+  'max-w-[var(--measure-wide)]',
+];
 
 describe('display measure call site', () => {
   const sources = componentSources(srcRoot);
 
   it('scans at least one component, so an empty roster cannot pass vacuously', () => {
     expect(sources.length).toBeGreaterThan(0);
+  });
+
+  it.each(applications)('counts %s as a call site', (application) => {
+    expect(displayMeasure.test(application)).toBe(true);
+  });
+
+  it.each(mentions)('leaves %s alone, since it applies nothing', (mention) => {
+    expect(displayMeasure.test(mention)).toBe(false);
   });
 
   it('applies the display measure at exactly one call site, and it is the display role', () => {
