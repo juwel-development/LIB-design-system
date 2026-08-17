@@ -98,11 +98,9 @@ describe('Link', () => {
         </Link>,
       );
 
-      // Deliberate silence, and unlike the face it holds for all four treatments: `prose` sits in
-      // running text, `graphic`'s child is not text, ADR 0006 settles `label-link`, and `quiet`
-      // has two documented homes that set different sizes on their own roots - Header at the
-      // label role, Footer at small - so no one role is right for it. Colour utilities share the
-      // `text-` prefix, so the roles are listed rather than matched by prefix.
+      // Deliberate silence, and unlike the face it holds for all four treatments (docs/adr/0004,
+      // #92). Colour utilities share the `text-` prefix, so the seven roles are listed rather
+      // than matched by prefix.
       const className = screen.getByRole('link').className;
       for (const role of [
         'text-display',

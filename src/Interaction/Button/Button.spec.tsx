@@ -221,23 +221,21 @@ describe('Button Component', () => {
 
   it('renders the same size wherever it is placed, so its height belongs to the component and not to the page around it (#92)', () => {
     // The defect: with no size of its own the button inherited one, so the same variant stood
-    // taller in a reading column than in a header. Two containers set at different type roles is
-    // the smallest reproduction of that; jsdom lays nothing out, so what is checkable is that the
-    // button names a size itself and names the same one in both.
+    // taller in a reading column than in a header. jsdom lays nothing out, so what is checkable is
+    // that the button names a size itself and names the same one in both containers.
     render(
       <>
         <div className={'text-small'}>
-          <Button testId={'in-footer'}>Send</Button>
+          <Button>Send</Button>
         </div>
         <div className={'text-label'}>
-          <Button testId={'in-header'}>Send</Button>
+          <Button>Send</Button>
         </div>
       </>,
     );
 
-    const inFooter = screen.getByTestId('in-footer').className;
-    const inHeader = screen.getByTestId('in-header').className;
-    expect(inFooter).toContain('text-body');
-    expect(inHeader).toBe(inFooter);
+    const [inFooter, inHeader] = screen.getAllByRole('button');
+    expect(inFooter?.className).toContain('text-body');
+    expect(inHeader?.className).toBe(inFooter?.className);
   });
 });

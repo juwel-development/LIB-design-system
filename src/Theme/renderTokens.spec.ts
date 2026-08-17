@@ -215,9 +215,7 @@ describe('renderTokens typography contract', () => {
 
   it('keeps --text-body at least 16px, below which iOS Safari zooms the viewport on a focused control', () => {
     // Input's and TextArea's controls are set at this role (#92), so the floor is the control's
-    // and not running text's. Only the shipped value is checkable here - the value that actually
-    // decides whether the viewport jumps is the consumer's, which is why ADR 0004 publishes the
-    // floor on the token as well as pinning it below.
+    // and not running text's. Only the shipped value is checkable here (docs/adr/0004).
     expect(remPx('text-body')).toBeGreaterThanOrEqual(16);
   });
 });

@@ -11,11 +11,8 @@ import type { Subject } from 'rxjs';
 // see docs/adr/0002-focus-ring-token-contract.md. The corner is in the base as well, one radius
 // token every variant shares, so none can disagree - see docs/adr/0003-radius-token-contract.md.
 // The face is in the base for the same reason - see docs/adr/0004-typography-token-contract.md (#90).
-// The size is in the base too, and it is load-bearing rather than tidy: the recipe fixes vertical
-// padding and lets nothing else set the height, so before the button named a type role its height
-// was whatever the surrounding page had sized its text at - `small` in a Footer, `label` in a
-// Header, `body` in a reading column - and the 44x44px touch target below was not the component's
-// to honour. `body` matches the control the button usually stands beside (docs/adr/0004, #92).
+// The size is in the base for the same reason, and here it is load-bearing: the recipe fixes
+// vertical padding and sets no height, so the font-size is what drives it (docs/adr/0004, #92).
 const button = cva(
   'font-primary text-body transition-colors duration-[var(--motion-duration-color)] rounded-[var(--radius-control)] py-2 sm:py-2 disabled:bg-disabled disabled:hover:bg-disabled-hover cursor-pointer disabled:cursor-not-allowed select-none text-nowrap inline-flex flex-row items-center justify-center gap-2 outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   {

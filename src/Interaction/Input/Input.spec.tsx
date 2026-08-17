@@ -156,9 +156,8 @@ describe('Input Component', () => {
   it('sizes the label and the control at the body role, so neither takes its size from the page the field was dropped into (#92)', () => {
     render(<Input label={'Email'} name={'email'} />);
 
-    // docs/adr/0004, the size amendment: the control takes `body` because a focused control below
-    // 16px zooms iOS Safari, and the label takes the control's role because the two belong
-    // together. Asserted per element, so a size moved up to the wrapper fails here.
+    // docs/adr/0004, the size amendment (#92). Asserted per element, so a size moved up to the
+    // shared wrapper fails here.
     expect(screen.getByRole('textbox').className).toContain('text-body');
     expect(screen.getByText('Email').className).toContain('text-body');
   });
