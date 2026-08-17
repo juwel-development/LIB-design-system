@@ -2,6 +2,8 @@ import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent, ReactNode } from 'react';
 
+// Not pinned against Stack (#75): the fold height is this component's own, so the base legitimately
+// differs and an equality spec would only forbid a difference that is the point of the component.
 // One recipe on a plain <div>. It holds the fold - a minimum height taller than its content, so leftover
 // space is guaranteed and how the slot sits in it is a decision, not a default (#17). With no className
 // escape hatch, whatever place picks is final, so it is a variant: center is the conventional hero and the

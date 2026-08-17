@@ -10,6 +10,8 @@ import type { FunctionComponent, ReactNode } from 'react';
 // literal appears. That tracking is the title role's, not this component's (#57): H2 binds to the same
 // role and carries the same correction, so the role reads one way wherever it is rendered. The stack gap is --space-stack, the sibling gap Prose uses. Colours are semantic
 // tokens re-pointed by `.dark`, so no `dark:` class.
+// Not pinned against Stack (#75): the band and the gutter are the head's own page job, so the base
+// legitimately differs and there is no equality to hold - a Stack carries neither.
 const pageHead = cva(
   'flex flex-col gap-[var(--space-stack)] py-[var(--space-band)] px-[var(--gutter)]',
 );

@@ -87,6 +87,8 @@ export const Form: FunctionComponent<IFormProps> = ({
           {children}
         </div>
       )}
+      {/* Not pinned against Stack (#75) as the two columns above are: the actions row runs along the
+          other axis, which is Cluster's arrangement (#76) and not a stack with a different gap. */}
       {showFields && actions && (
         <div className={'flex flex-row gap-[var(--space-stack)]'}>
           {actions}
