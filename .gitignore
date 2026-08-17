@@ -4,14 +4,6 @@ storybook-static/
 coverage/
 *storybook.log
 
-# Agent substrate: the skills and the standards/tracker docs they read. Kept local rather than
-# published with the package. Sandcastle sandboxes are git worktrees and so do not contain
-# ignored files — both trees reach an agent through `copyToWorktree` in `.sandcastle/main.ts`
-# instead. If either is renamed, that list has to move with it.
-.claude/
-.sandcastle/
-docs/agents/
-
 # Fallow: the codebase map `npm run fallow:map` writes, and the vital-signs snapshots
 # `fallow --save-snapshot` keeps for trend comparison. Both are readings of the tree rather
 # than part of it, and both are rewritten every run.
