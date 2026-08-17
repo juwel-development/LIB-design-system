@@ -9,7 +9,7 @@ export type FormState = 'idle' | 'sending' | 'sent' | 'failed';
 // while the form stands, success on the outcome, error on the failure. Region selection is the
 // NOTE_ROLE map below, not classes, so this axis never grows a layout job. Colours are semantic
 // tokens re-pointed by `.dark`, so no variant carries a `dark:` class.
-const form = cva('text-sm', {
+const form = cva('text-small', {
   variants: {
     state: {
       idle: 'text-muted',

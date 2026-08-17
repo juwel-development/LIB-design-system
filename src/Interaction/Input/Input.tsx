@@ -111,15 +111,15 @@ export const Input: FunctionComponent<IInputProps> = ({
         onInput={(event) => onInput$?.next(event.currentTarget.value)}
       />
       {!required && optionalLabel && (
-        <span className={'text-muted text-sm'}>{optionalLabel}</span>
+        <span className={'text-muted text-small'}>{optionalLabel}</span>
       )}
       {hint && (
-        <p id={hintId} className={'text-muted text-sm'}>
+        <p id={hintId} className={'text-muted text-small'}>
           {hint}
         </p>
       )}
       {invalid && (
-        <p id={errorId} className={'text-error text-sm'}>
+        <p id={errorId} className={'text-error text-small'}>
           {errorMessage}
         </p>
       )}
