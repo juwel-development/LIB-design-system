@@ -1,5 +1,6 @@
 import './styles.css';
 
+export { Stack } from 'Arrangement/Stack/Stack';
 export { Brandmark } from 'Display/Brandmark/Brandmark';
 export { Checklist } from 'Display/Checklist/Checklist';
 export { DefinitionList } from 'Display/DefinitionList/DefinitionList';
