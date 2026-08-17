@@ -105,8 +105,8 @@ const button = cva('inline-flex items-center justify-center rounded-md border fo
       secondary: 'bg-surface text-foreground border-border hover:border-muted',
     },
     size: {
-      small: 'px-3 py-1 text-sm',
-      medium: 'px-4 py-2 text-base',
+      small: 'px-3 py-1 text-small',
+      medium: 'px-4 py-2 text-body',
     },
   },
   defaultVariants: { variant: 'primary', size: 'medium' },
