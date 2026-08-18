@@ -29,7 +29,9 @@ end-to-end test belongs in the application that consumes it.
 ## Location and naming
 
 - **Colocated.** `Button.spec.tsx` sits beside `Button.tsx` in the component's own directory —
-  the component, its tests, and its stories are one unit.
+  the component, its tests, and its stories are one unit. A spec that covers a root-level config
+  rather than a component colocates the same way, at the root beside it: `release-notes.spec.ts`
+  sits next to `.releaserc.js`, and `vitest.config.ts` includes the root for it.
 - **Name tests as behaviour sentences** — `it('stays a plain button by default, so it cannot
   submit a form by accident')`, not `it('sets type')`. The sentence should say why the behaviour
   matters where that isn't obvious.

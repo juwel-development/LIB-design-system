@@ -103,3 +103,34 @@ checks it again on pull requests.
 Merging to `main` runs semantic-release, which works out the version from those
 messages, writes `CHANGELOG.md`, tags the commit, publishes to npm and opens a GitHub
 release with the generated notes. No version number is set by hand.
+
+### Publishing a note
+
+A commit body can carry a `NOTE:` footer, which puts a **consumer-facing note** into
+`CHANGELOG.md` under its own `NOTE` heading. The version is unaffected - a `fix:` with a
+note is still a patch - so a note never has to be dressed up as a breaking change to get
+published:
+
+```
+fix(section): give the section a positioning context
+
+NOTE: An absolutely-positioned descendant of a `Section` that used to anchor to an outer
+ancestor now anchors to the section instead - silently, with no error.
+```
+
+Write one when a change alters how a consumer's existing code behaves **without** being a
+breaking change: nothing they wrote stops compiling, but what it does is different. A note
+is not a second subject line and not a place for implementation detail - it says what a
+consumer has to know, in their terms. A commit carrying a note reaches the changelog
+whatever its type prefix, so even a `chore:` can publish one.
+
+One commit may carry several notes. Two rules keep them intact, both of them the commit
+parser's: put a **blank line between notes**, or one of them is silently dropped, and keep
+any `(#issue)` reference **off the last line of a wrapped note**, or the note is cut short
+there and the reference is filed against the commit instead. Each note is published
+prefixed with the commit's scope, so a commit whose notes span several components reads
+better with no scope at all.
+
+A real breaking change still uses `BREAKING CHANGE:`, and still forces a major. The two
+keywords are not interchangeable, and the reason a third one cannot simply be added is in
+the [architecture standard](./docs/agents/standards/architecture.md#release).
