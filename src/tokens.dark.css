@@ -12,12 +12,12 @@
   --color-control-border: #94a3b8;
   --color-rule: #5b6a80;
   --color-backing: #1e293b;
-  --color-primary: #7c3aed;
-  --color-primary-hover: #8b5cf6;
-  --color-primary-foreground: #f8fafc;
+  --color-primary: #8b5cf6;
+  --color-primary-hover: #a78bfa;
+  --color-primary-foreground: #020617;
   --color-secondary: #0284c7;
   --color-secondary-hover: #0ea5e9;
-  --color-secondary-foreground: #f8fafc;
+  --color-secondary-foreground: #020617;
   --color-disabled: #475569;
   --color-disabled-hover: #334155;
   --color-focus-ring: var(--color-ring, #cbd5e1);

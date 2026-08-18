@@ -109,6 +109,38 @@ describe('Palette', () => {
     },
   );
 
+  it.each(
+    (
+      [
+        ['light', light],
+        ['dark', dark],
+      ] as const
+    ).flatMap(([theme, tokens]) =>
+      (
+        [
+          ['primary', 'primaryForeground'],
+          ['primaryHover', 'primaryForeground'],
+          ['secondary', 'secondaryForeground'],
+          ['secondaryHover', 'secondaryForeground'],
+        ] as const
+      ).map(([fill, ink]) => [theme, fill, ink, tokens] as const),
+    ),
+  )(
+    "keeps the %s theme's `%s` fill at least 4.5:1 against `%s` (WCAG 2.2 SC 1.4.3)",
+    (_theme, fill, ink, tokens) => {
+      // The other half of the box a fill sits in: the surface test above says it must be seen, this
+      // says its label must be read. Why the ink carries the constraint rather than the fill, and why
+      // that forces the ink to follow the theme: see `primaryForeground` in PaletteTokens (issue #93).
+      // Button text is normal-weight at the `body` role, so it takes the text threshold rather than
+      // the 3:1 large-text allowance. Hover is covered for the same reason #78 covered it - a hovered
+      // control has to stay readable too. `disabled`/`disabledHover` are deliberately absent: SC 1.4.3
+      // exempts an inactive user interface component, and the library invents no substitute floor.
+      expect(contrastRatio(tokens[fill], tokens[ink])).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    },
+  );
+
   it('keeps each light fill distinct from the hover it steps into, with hover the darker of the two', () => {
     // Light hover steps *darker* than rest; dark inverts that (see the palette's dark comment).
     // Pinned so correcting a fill that fails its floor cannot be done by promoting the hover value
