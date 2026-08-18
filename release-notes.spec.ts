@@ -1,19 +1,13 @@
-// Pins the release-notes half of `.releaserc.js` — the `NOTE:` footer convention (#94) — by running
-// the real semantic-release plugins over commit messages, not by asserting on the config object. The
-// mechanism only works because the two plugins parse each commit independently, so a test that reads
-// the config would prove nothing about either. Both plugins are exercised here: the notes generator
-// for what a note publishes, the commit analyser for what it does *not* bump.
-//
-// This spec sits at the repo root beside the config it pins, the way a component spec sits beside its
-// component. `vitest.config.ts` includes it explicitly.
+// Pins the release-notes half of `.releaserc.js` — the `NOTE:` footer, see architecture.md § The
+// `NOTE:` footer — by running the real plugins over commit messages rather than asserting on the
+// config, which would prove nothing about how either plugin reads it. It sits at the repo root
+// beside the config it pins; `vitest.config.ts` includes it explicitly.
 
 // @ts-expect-error - @semantic-release/commit-analyzer ships no type declarations.
 import { analyzeCommits as untypedAnalyzeCommits } from '@semantic-release/commit-analyzer';
 // @ts-expect-error - @semantic-release/release-notes-generator ships no type declarations.
 import { generateNotes as untypedGenerateNotes } from '@semantic-release/release-notes-generator';
 import { describe, expect, it } from 'vitest';
-// @ts-expect-error - the release config is JavaScript because semantic-release loads it itself and
-// its notes-generator entry carries a function, which JSON cannot hold.
 import releaseConfig from './.releaserc.js';
 
 type PluginContext = {
@@ -40,11 +34,8 @@ const generateNotes = untypedGenerateNotes as (
   context: PluginContext,
 ) => Promise<string>;
 
-type PluginEntry = string | [string, Record<string, unknown>];
-const plugins = (releaseConfig as { plugins: PluginEntry[] }).plugins;
-
 const optionsOf = (name: string): Record<string, unknown> => {
-  const entry = plugins.find(
+  const entry = releaseConfig.plugins.find(
     (plugin) => (Array.isArray(plugin) ? plugin[0] : plugin) === name,
   );
   if (entry === undefined)
@@ -174,10 +165,8 @@ describe('the version a note produces', () => {
 });
 
 describe('the guard on the notes generator', () => {
-  // A keyword added to the notes generator is invisible to the analyser by construction, so any
-  // breaking-change spelling added here would publish a breaking note while shipping a patch. The
-  // hyphenated spelling is the one that would slip through unnoticed: the parser accepts it, and
-  // nothing else in this repo would fail.
+  // The guard is architecture.md § The `NOTE:` footer. The hyphenated spelling is the one that
+  // would slip through unnoticed: the parser accepts it, and nothing else in this repo would fail.
   it('carries no breaking-change spelling the analyser cannot see', () => {
     const { noteKeywords } = notesOptions.parserOpts as {
       noteKeywords: string[];
