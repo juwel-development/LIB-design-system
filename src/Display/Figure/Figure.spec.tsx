@@ -246,6 +246,55 @@ describe('Figure', () => {
     expect(container.firstElementChild?.tagName).toBe('IMG');
   });
 
+  it.each([
+    ['false', false as const],
+    ['null', null],
+  ])(
+    'wraps nothing when the overlay is switched off and hands over %s, so a conditional decoration leaves the flex item alone',
+    (_label, switchedOff) => {
+      const { container } = render(
+        <Figure
+          src={source}
+          alt={'A logo'}
+          width={200}
+          height={200}
+          overlay={switchedOff}
+        />,
+      );
+      expect(container.children.length).toBe(1);
+      expect(container.firstElementChild?.tagName).toBe('IMG');
+    },
+  );
+
+  it('still renders an overlay React wrote a zero into, since that is content and not an absent slot', () => {
+    const { container } = render(
+      <Figure
+        src={source}
+        alt={'A portrait'}
+        width={720}
+        height={900}
+        overlay={0}
+      />,
+    );
+    const frame = container.firstElementChild;
+    expect(frame?.tagName).toBe('DIV');
+    expect(frame?.textContent).toBe('0');
+  });
+
+  it('keeps testId on the image when the overlay is switched off, since the image is still the outermost element', () => {
+    render(
+      <Figure
+        src={source}
+        alt={'A logo'}
+        width={200}
+        height={200}
+        overlay={false}
+        testId={'logo'}
+      />,
+    );
+    expect(screen.getByTestId('logo').tagName).toBe('IMG');
+  });
+
   it('places an overlay as a sibling of the image inside a positioning context, so a consumer can hang decoration off the frame', () => {
     const { container } = render(
       <Figure

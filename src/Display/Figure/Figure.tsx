@@ -43,8 +43,8 @@ export interface IFigureProps extends VariantProps<typeof figure> {
   /** Names the image. Its presence is what makes this a `figure`. */
   caption?: string;
   /** A slot over the image frame - the consumer's own decoration, rendered unmodified as a sibling of
-   *  the image inside a positioning context. Its presence is what makes that context exist; where
-   *  inside it the overlay sits is expressed on the consumer's own element. */
+   *  the image inside a positioning context. Having something to render is what makes that context
+   *  exist; where inside it the overlay sits is expressed on the consumer's own element. */
   overlay?: ReactNode;
   /** Whether this image is visible when the page first paints. Set it on a hero. */
   priority?: boolean;
@@ -98,6 +98,14 @@ export const Figure: FunctionComponent<IFigureProps> = ({
   priority,
   testId,
 }) => {
+  // Absence, not falsiness, and not `undefined` alone: `overlay={showRing && <Ring />}` hands over
+  // `false` when the decoration is off, and that consumer asked for no overlay - wrapping anyway
+  // would put a `div` where their flex or grid item used to be, which is the one thing this slot
+  // promises never to do. Absence is React's own set of nothing-to-render nodes, so a bare
+  // truthiness test is wrong in the other direction: `0` renders as `"0"`.
+  const hasOverlay =
+    overlay !== undefined && overlay !== null && typeof overlay !== 'boolean';
+
   const image = (
     <img
       src={src}
@@ -110,27 +118,24 @@ export const Figure: FunctionComponent<IFigureProps> = ({
       loading={priority ? 'eager' : 'lazy'}
       fetchPriority={priority ? 'high' : undefined}
       decoding={'async'}
-      data-testid={
-        caption === undefined && overlay === undefined ? testId : undefined
-      }
+      data-testid={caption === undefined && !hasOverlay ? testId : undefined}
     />
   );
 
   // The positioning context exists only where there is something to position, so an overlay-less
   // `Figure` renders exactly what it rendered before this slot existed - which matters most in the
   // caption-less shape, where the image itself is the flex or grid item its container sees.
-  const frame =
-    overlay === undefined ? (
-      image
-    ) : (
-      <div
-        className={'relative'}
-        data-testid={caption === undefined ? testId : undefined}
-      >
-        {image}
-        {overlay}
-      </div>
-    );
+  const frame = !hasOverlay ? (
+    image
+  ) : (
+    <div
+      className={'relative'}
+      data-testid={caption === undefined ? testId : undefined}
+    >
+      {image}
+      {overlay}
+    </div>
+  );
 
   if (caption === undefined) {
     return frame;
