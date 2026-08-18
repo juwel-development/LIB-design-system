@@ -65,13 +65,10 @@ export type PaletteTokens = {
   secondaryHover: string;
   /** Text and icons drawn on top of `secondary`. Constraint (WCAG 2.2 SC 1.4.3): at least 4.5:1
    *  against both `secondary` and `secondaryHover` in the same theme, hover included, since a
-   *  hovered control has to stay readable too. Button text is normal-weight at the `body` role, so
-   *  it takes the text threshold rather than the 3:1 large-text allowance. This is what makes the
-   *  ink follow the theme where the fills' own roles do not: a fill light enough to clear 3:1
-   *  against a dark surface is too light to carry near-white text, so the ink sits at the
-   *  *surface's* end of the neutral range in each theme. Not required against `disabled` or
-   *  `disabledHover` - a disabled control is an inactive user interface component, which SC 1.4.3
-   *  exempts. */
+   *  hovered control has to stay readable too. Not required against `disabled` or `disabledHover` -
+   *  a disabled control is an inactive user interface component, which SC 1.4.3 exempts. Why the
+   *  threshold is 4.5 and not 3, and why this makes the ink follow the theme: see
+   *  `primaryForeground`, which carries the same rule for the other ramp. */
   secondaryForeground: string;
 
   /** The tone a control takes when it cannot be interacted with - its fill, or its border when
@@ -99,6 +96,25 @@ export type PaletteTokens = {
   info: string;
 };
 
+/**
+ * The ink follows the theme, and that is what set the eight fill and ink values across both sets
+ * (issue #93). Solve the window a fill has to sit in - at least 3:1 against its surface (#78) and
+ * at least 4.5:1 against the ink drawn on it - and it comes out lopsided: a near-white ink is
+ * unbounded above in light and leaves a window just 1.26x wide in dark, and a near-black ink is the
+ * exact inverse. The reason is structural - in a dark theme a fill has to be light enough to
+ * separate from a near-black surface, and a light fill wants dark text - so pinning the ink
+ * near-white in both themes asks a dark fill to be both at once. That 1.26x has to hold two values,
+ * rest and hover, where what shipped before it stepped 1.35x and 1.23x here and 1.35x and 1.48x in
+ * dark. Letting the ink invert instead puts every value on a stock ramp step, with hover steps of
+ * 1.25x and 1.27x here and 1.56x and 1.48x in dark.
+ *
+ * Two routes were rejected, and they are what a reader arriving here is most likely to re-propose:
+ * - Keep one near-white ink in both themes and move the fills. It clears 4.5:1, but caps the dark
+ *   hover at that same 1.26x - gutting the state #78 constrained hover in order to keep.
+ * - Give each ramp its own ink, the same in both themes. It clears 4.5:1 only against pure black:
+ *   against `#0f172a`, the dark set's own `surface`, sky-600 lands at 4.36 and fails. It also buys
+ *   a light theme with white text on one button and black on the one beside it.
+ */
 export const light: PaletteTokens = {
   surface: '#ffffff',
   foreground: '#0f172a',
@@ -108,24 +124,6 @@ export const light: PaletteTokens = {
   rule: '#808fa3',
   backing: '#f1f5f9',
 
-  // The ink follows the theme, and that is what set the eight fill and ink values across both sets
-  // (issue #93). Solve the window a fill has to sit in - at least 3:1 against its surface (#78) and
-  // at least 4.5:1 against the ink drawn on it - and it comes out lopsided. A near-white ink is
-  // unbounded above in light and leaves a window just 1.26x wide in dark; a near-black ink is the
-  // exact inverse. The reason is structural: in a dark theme the fill must be light enough to
-  // separate from a near-black surface, and a light fill wants dark text, so pinning the ink
-  // near-white in both themes asks a dark fill to be light enough for its surface and dark enough
-  // for near-white text at once. That 1.26x has to hold two values, rest and hover, where what
-  // shipped before it stepped 1.35x and 1.23x in light and 1.35x and 1.48x in dark. Letting the ink
-  // invert instead puts every value on a stock ramp step, with hover steps of 1.25x and 1.27x here
-  // and 1.56x and 1.48x in dark.
-  //
-  // Two routes were rejected, and they are what a reader arriving here is most likely to re-propose:
-  //   - Keep one near-white ink in both themes and move the fills. It clears 4.5:1, but caps the
-  //     dark hover at that same 1.26x - gutting the state #78 constrained hover in order to keep.
-  //   - Give each ramp its own ink, the same in both themes. It clears 4.5:1 only against pure
-  //     black: against `#0f172a`, the dark set's own `surface`, sky-600 lands at 4.36 and fails. It
-  //     also buys a light theme with white text on one button and black on the one beside it.
   primary: '#7c3aed',
   primaryHover: '#6d28d9',
   primaryForeground: '#f8fafc',
@@ -153,6 +151,14 @@ export const light: PaletteTokens = {
  * `dark:bg-primary-600 dark:hover:bg-primary-500` pair encoded, moved here so it is stated once
  * for the whole system instead of repeated per component. The two sets no longer share a step, since
  * each theme's pair has to clear its own ink as well as its own surface (issue #93).
+ *
+ * The ink inverts with the ramp: slate-950 under these lighter fills, where light takes slate-50
+ * under its darker ones. The pair is the two ends of the one neutral ramp the rest of the palette is
+ * already built from - `#f8fafc` is slate-50, `surface` slate-900, `muted` slate-500 - rather than a
+ * new colour arriving for a single job. `#020617` is also the lightest slate step that still admits
+ * violet-500 and sky-600, which is what leaves this set's `secondary` pair unmoved: slate-900 draws
+ * 4.22 and 4.36 against them and fails. Why the ink follows the theme at all, and the two routes
+ * rejected in getting here: see the light set.
  */
 export const dark: PaletteTokens = {
   surface: '#0f172a',
@@ -163,12 +169,6 @@ export const dark: PaletteTokens = {
   rule: '#5b6a80',
   backing: '#1e293b',
 
-  // The ink inverts with the ramp: slate-950 under these lighter fills, where light takes slate-50
-  // under its darker ones. The pair is the two ends of the one neutral ramp the rest of the palette
-  // is already built from - `#f8fafc` is slate-50, `surface` slate-900, `muted` slate-500 - rather
-  // than a new colour arriving for a single job. `#020617` is also the darkest ink that still admits
-  // violet-500 and sky-600, which is what leaves this set's `secondary` pair unmoved. Why the ink
-  // follows the theme at all, and the two routes rejected in getting here: see the light set.
   primary: '#8b5cf6',
   primaryHover: '#a78bfa',
   primaryForeground: '#020617',
