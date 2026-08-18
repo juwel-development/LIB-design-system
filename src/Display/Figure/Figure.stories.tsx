@@ -80,6 +80,46 @@ export const BrokenSource: Story = {
   },
 };
 
+// The overlay is the consumer's, so the stories draw it the way a consumer would - on its own element,
+// with its own positioning and its own `aria-hidden`. The library adds none of that.
+const ring = (
+  <span
+    aria-hidden={'true'}
+    style={{
+      position: 'absolute',
+      inset: '0.75rem',
+      border: '1px solid currentColor',
+      opacity: 0.65,
+      pointerEvents: 'none',
+    }}
+  />
+);
+
+/** An overlay over a captioned portrait: the decoration rides the frame's rim and the caption stays below it. */
+export const OverlayOnCaptionedPortrait: Story = {
+  args: {
+    src: portrait,
+    alt: '',
+    width: 720,
+    height: 900,
+    ratio: 'portrait',
+    caption: 'The maker at the bench',
+    overlay: ring,
+  },
+};
+
+/** An overlay with no caption: the positioning context is the whole output, and there is still no `figure`. */
+export const OverlayWithoutCaption: Story = {
+  args: {
+    src: square,
+    alt: 'A ceramic bowl, glazed matte white',
+    width: 600,
+    height: 600,
+    ratio: 'square',
+    overlay: ring,
+  },
+};
+
 /** No `ratio`: the image keeps its intrinsic shape, which is what a diagram or screenshot needs. */
 export const IntrinsicShape: Story = {
   args: {

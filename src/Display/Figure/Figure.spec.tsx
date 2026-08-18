@@ -4,6 +4,11 @@ import { Figure } from './Figure';
 
 const source = '/portrait.avif';
 
+const classesOf = (element: Element): string[] =>
+  element.className.split(/\s+/).filter(Boolean);
+
+const overlayNode = <span data-testid={'ring'}>ring</span>;
+
 describe('Figure', () => {
   it('renders a figure wrapping the image and a figcaption when a caption is given', () => {
     const { container } = render(
@@ -214,5 +219,210 @@ describe('Figure', () => {
       />,
     );
     expect(screen.getByTestId('logo').tagName).toBe('IMG');
+  });
+
+  it('wraps nothing around the image when no overlay is given, so a captioned figure keeps holding the image and the caption directly', () => {
+    const { container } = render(
+      <Figure
+        src={source}
+        alt={''}
+        width={360}
+        height={450}
+        caption={'A caption'}
+      />,
+    );
+    const children = container.querySelector('figure')?.children;
+    expect(Array.from(children ?? []).map((child) => child.tagName)).toEqual([
+      'IMG',
+      'FIGCAPTION',
+    ]);
+  });
+
+  it('wraps nothing around the image when no overlay is given and there is no caption, so the image is still the whole output', () => {
+    const { container } = render(
+      <Figure src={source} alt={'A logo'} width={200} height={200} />,
+    );
+    expect(container.children.length).toBe(1);
+    expect(container.firstElementChild?.tagName).toBe('IMG');
+  });
+
+  it('places an overlay as a sibling of the image inside a positioning context, so a consumer can hang decoration off the frame', () => {
+    const { container } = render(
+      <Figure
+        src={source}
+        alt={'A portrait'}
+        width={720}
+        height={900}
+        ratio={'portrait'}
+        overlay={overlayNode}
+      />,
+    );
+    const frame = container.firstElementChild;
+    expect(frame?.tagName).toBe('DIV');
+    expect(frame && classesOf(frame)).toContain('relative');
+    expect(
+      Array.from(frame?.children ?? []).map((child) => child.tagName),
+    ).toEqual(['IMG', 'SPAN']);
+  });
+
+  it('keeps the overlay between the image and the figcaption, in a context wrapping the image only', () => {
+    const { container } = render(
+      <Figure
+        src={source}
+        alt={''}
+        width={720}
+        height={900}
+        caption={'The maker at the bench'}
+        overlay={overlayNode}
+      />,
+    );
+    const figure = container.querySelector('figure');
+    expect(
+      Array.from(figure?.children ?? []).map((child) => child.tagName),
+    ).toEqual(['DIV', 'FIGCAPTION']);
+    const frame = figure?.firstElementChild;
+    expect(frame && classesOf(frame)).toContain('relative');
+    expect(frame?.querySelector('img')).not.toBeNull();
+    expect(frame?.querySelector('figcaption')).toBeNull();
+    expect(screen.getByTestId('ring').previousElementSibling?.tagName).toBe(
+      'IMG',
+    );
+  });
+
+  it('renders the overlay exactly as passed: no class, no ARIA attribute, nothing stripped', () => {
+    render(
+      <Figure
+        src={source}
+        alt={'A portrait'}
+        width={720}
+        height={900}
+        overlay={overlayNode}
+      />,
+    );
+    const overlay = screen.getByTestId('ring');
+    expect(overlay.className).toBe('');
+    expect(overlay.textContent).toBe('ring');
+    for (const attribute of overlay.getAttributeNames()) {
+      expect(attribute).not.toMatch(/^(aria-|role$)/);
+    }
+  });
+
+  it('leaves an overlay decorative marking to the consumer, passing through the aria-hidden it was given', () => {
+    render(
+      <Figure
+        src={source}
+        alt={'A portrait'}
+        width={720}
+        height={900}
+        overlay={
+          <span aria-hidden={'true'} data-testid={'ring'}>
+            ring
+          </span>
+        }
+      />,
+    );
+    expect(screen.getByTestId('ring')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('renders a figure element only where there is a caption, whether or not an overlay is given', () => {
+    const { container, rerender } = render(
+      <Figure
+        src={source}
+        alt={'A portrait'}
+        width={720}
+        height={900}
+        overlay={overlayNode}
+      />,
+    );
+    expect(container.querySelector('figure')).toBeNull();
+
+    rerender(
+      <Figure
+        src={source}
+        alt={''}
+        width={720}
+        height={900}
+        caption={'A caption'}
+        overlay={overlayNode}
+      />,
+    );
+    expect(container.querySelector('figure')).not.toBeNull();
+  });
+
+  it('exposes testId on the positioning context when there is an overlay and no caption, since that is the outermost element', () => {
+    render(
+      <Figure
+        src={source}
+        alt={'A portrait'}
+        width={720}
+        height={900}
+        overlay={overlayNode}
+        testId={'plate'}
+      />,
+    );
+    const outermost = screen.getByTestId('plate');
+    expect(outermost.tagName).toBe('DIV');
+    expect(outermost.querySelector('img')).not.toBeNull();
+  });
+
+  it('keeps testId on the figure when there is both an overlay and a caption, so there is one hook and not two', () => {
+    const { container } = render(
+      <Figure
+        src={source}
+        alt={''}
+        width={720}
+        height={900}
+        caption={'A caption'}
+        overlay={overlayNode}
+        testId={'plate'}
+      />,
+    );
+    expect(screen.getByTestId('plate').tagName).toBe('FIGURE');
+    expect(container.querySelectorAll('[data-testid="plate"]').length).toBe(1);
+  });
+
+  it('reserves the box and honours ratio, focus, responsive and priority with an overlay present', () => {
+    render(
+      <Figure
+        src={source}
+        alt={'A portrait'}
+        width={720}
+        height={900}
+        ratio={'portrait'}
+        focus={'top'}
+        priority
+        responsive={{
+          srcSet: '/small.avif 320w, /large.avif 1280w',
+          sizes: '(max-width: 40rem) 100vw, 40rem',
+        }}
+        overlay={overlayNode}
+      />,
+    );
+    const image = screen.getByRole('img');
+    expect(image).toHaveAttribute('width', '720');
+    expect(image).toHaveAttribute('height', '900');
+    expect(image.className).toContain('aspect-portrait');
+    expect(image.className).toContain('object-top');
+    expect(image).toHaveAttribute('loading', 'eager');
+    expect(image).toHaveAttribute('fetchpriority', 'high');
+    expect(image).toHaveAttribute(
+      'srcset',
+      '/small.avif 320w, /large.avif 1280w',
+    );
+    expect(image).toHaveAttribute('sizes', '(max-width: 40rem) 100vw, 40rem');
+  });
+
+  it('paints nothing on the frame: the positioning context carries the anchor and no other class', () => {
+    const { container } = render(
+      <Figure
+        src={source}
+        alt={'A portrait'}
+        width={720}
+        height={900}
+        overlay={overlayNode}
+      />,
+    );
+    const frame = container.firstElementChild;
+    expect(frame && classesOf(frame)).toEqual(['relative']);
   });
 });
