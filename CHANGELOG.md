@@ -1,3 +1,47 @@
+# [3.1.0](https://github.com/juwel-development/LIB-design-system/compare/v3.0.0...v3.1.0) (2026-08-18)
+
+
+### Bug Fixes
+
+* **figure:** treat a switched-off overlay as absent, not as a slot to wrap ([ef9ea2d](https://github.com/juwel-development/LIB-design-system/commit/ef9ea2de801d9ddc837a8916319e60d009198800))
+* **form:** publish the annotation resize, and cite ADR 0004 rather than restate it ([648e976](https://github.com/juwel-development/LIB-design-system/commit/648e976808864194023bd926cc95630e4c54592a)), closes [#79](https://github.com/juwel-development/LIB-design-system/issues/79)
+* **form:** size the annotations from the small type role ([b327a9f](https://github.com/juwel-development/LIB-design-system/commit/b327a9f88a79ae8f980681f6b95160fef6f4eef1)), closes [#79](https://github.com/juwel-development/LIB-design-system/issues/79)
+* **form:** treat a note that renders nothing as no note ([70deb14](https://github.com/juwel-development/LIB-design-system/commit/70deb1489bdc0adf01ad4417a52e2bafd7d232cf)), closes [#86](https://github.com/juwel-development/LIB-design-system/issues/86)
+* **header:** state the fill rule that actually holds, and drop the second recipe ([fb5acf6](https://github.com/juwel-development/LIB-design-system/commit/fb5acf6f1689df691be450b316e1ce3b2c6f121b))
+* **interaction:** size the field, its label and the button at the body role ([38ce222](https://github.com/juwel-development/LIB-design-system/commit/38ce222d1fc308d7840730472652cccfb905a3a8))
+* **review:** narrow Link's face assertion and sort note against note in ADR 0004 ([c03a801](https://github.com/juwel-development/LIB-design-system/commit/c03a80193026aa1e3605940d5ea51537b8fb0137))
+* **theme:** let the button ink follow the theme so every fill clears 4.5:1 ([#93](https://github.com/juwel-development/LIB-design-system/issues/93)) ([757c932](https://github.com/juwel-development/LIB-design-system/commit/757c932a8d54dbc7715d9fd45bf49ed55b2fe642))
+* **tokens:** constrain the primary and secondary fills to 3:1 against surface ([72c27fc](https://github.com/juwel-development/LIB-design-system/commit/72c27fcf5af19bc412a68eb7fab7798943ff7366)), closes [#0895d8](https://github.com/juwel-development/LIB-design-system/issues/0895d8) [#0284c7](https://github.com/juwel-development/LIB-design-system/issues/0284c7) [#78](https://github.com/juwel-development/LIB-design-system/issues/78)
+* **typography:** correct Note's recorded reasoning and tighten its weight pin ([#77](https://github.com/juwel-development/LIB-design-system/issues/77)) ([8f6a5a4](https://github.com/juwel-development/LIB-design-system/commit/8f6a5a42fe47f66f84e58a9c60c3e79a0a602120))
+* **typography:** declare a family face on every text-bearing element in Interaction and Form ([7aa1655](https://github.com/juwel-development/LIB-design-system/commit/7aa1655f16ce6d613279ebec90abce8c511dead7))
+
+
+### chore
+
+* publish the notes deferred from [#84](https://github.com/juwel-development/LIB-design-system/issues/84), [#87](https://github.com/juwel-development/LIB-design-system/issues/87) and [#81](https://github.com/juwel-development/LIB-design-system/issues/81) ([22f7bea](https://github.com/juwel-development/LIB-design-system/commit/22f7beae5af146e4a22165959137aef115d1ea56)), closes [#94](https://github.com/juwel-development/LIB-design-system/issues/94)
+
+
+### Features
+
+* **arrangement:** add Cluster, a wrapping baseline-aligned row ([#76](https://github.com/juwel-development/LIB-design-system/issues/76)) ([f519bbb](https://github.com/juwel-development/LIB-design-system/commit/f519bbb9c5e79ce569e53808cacc278f461f50d8))
+* **arrangement:** add Stack, a measure-bounded vertical stack ([#75](https://github.com/juwel-development/LIB-design-system/issues/75)) ([6450cd6](https://github.com/juwel-development/LIB-design-system/commit/6450cd6fc7a698b03ca7ba26f6fa583522cdc641))
+* **figure:** give the image frame an overlay slot ([#85](https://github.com/juwel-development/LIB-design-system/issues/85)) ([c2c8a3d](https://github.com/juwel-development/LIB-design-system/commit/c2c8a3d43a95c1bea787a357e5d91693b7860d0d))
+* **form:** widen the note to a ReactNode ([47ba18a](https://github.com/juwel-development/LIB-design-system/commit/47ba18aa17c260db01bf6440bc7156678f73eda1)), closes [#86](https://github.com/juwel-development/LIB-design-system/issues/86)
+* **header:** floor the standing slot at the nav's own line box ([46c4733](https://github.com/juwel-development/LIB-design-system/commit/46c4733ed1f168ec418b1e63295c99c387bcde57))
+* **section:** make the section a positioning context for consumer decoration ([5cb7a2e](https://github.com/juwel-development/LIB-design-system/commit/5cb7a2ec45369edf8089de19533c7f96488df435)), closes [#84](https://github.com/juwel-development/LIB-design-system/issues/84)
+* **typography:** add Note, the small annotation paragraph ([#77](https://github.com/juwel-development/LIB-design-system/issues/77)) ([1d3a5b2](https://github.com/juwel-development/LIB-design-system/commit/1d3a5b20417426cd688af281fc54ec48451c3168)), closes [#79](https://github.com/juwel-development/LIB-design-system/issues/79) [#86](https://github.com/juwel-development/LIB-design-system/issues/86) [#90](https://github.com/juwel-development/LIB-design-system/issues/90)
+* **typography:** bound H1 at the display measure ([c55eba1](https://github.com/juwel-development/LIB-design-system/commit/c55eba109341d865a5ceca22da6f4b845b054632)), closes [#94](https://github.com/juwel-development/LIB-design-system/issues/94)
+
+
+### NOTE
+
+* An absolutely-positioned descendant of a `Section` (#84) that was previously
+anchored to an outer ancestor now anchors to the section instead — silently, with no error.
+* `H1` (#87) now carries a display measure, so an unbounded display heading becomes
+bounded.
+* `Header`'s standing slot (#81) gains a floor, so a shorter standing element no
+longer shrinks the bar.
+
 # [3.0.0](https://github.com/juwel-development/LIB-design-system/compare/v2.1.1...v3.0.0) (2026-08-17)
 
 
