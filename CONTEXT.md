@@ -35,6 +35,20 @@ What a token is *for*, which is what a token name states. `primary` is a role; `
 shade, and naming a shade is what the token layer exists to prevent.
 _Avoid_: Semantic name, alias
 
+### Colour
+
+**Fill**:
+The colour that identifies a filled control, standing in for the boundary an unfilled one draws.
+A fill answers to the surface it sits on, because separating the control from the page is its job.
+_Avoid_: Background, background colour
+
+**Ink**:
+The text and icons drawn on a fill. An ink answers to the fill beneath it and never to the surface,
+which seats it at the surface's end of the neutral range and the fill at the far end — so an ink
+follows the theme where a fill does not, and `foreground` is a different thing entirely: the text
+colour on a surface, not on a fill.
+_Avoid_: Foreground, on-color, text colour
+
 ### Typography
 
 **Type role**:
