@@ -16,5 +16,11 @@
 		"verbatimModuleSyntax": true,
 		"forceConsistentCasingInFileNames": true
 	},
-	"include": ["src", ".storybook", "scripts", "vitest.setup.ts"]
+	"include": [
+		"src",
+		".storybook",
+		"scripts",
+		"vitest.setup.ts",
+		"release-notes.spec.ts"
+	]
 }
