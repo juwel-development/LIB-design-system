@@ -305,6 +305,14 @@ because nothing is left to say the page continues. Leaving the following unit's 
 viewport is what makes it a fold rather than a screen.
 _Avoid_: Above the fold, viewport height, hero height, full-screen, first screen
 
+**Cover**:
+A screen rather than a fold: the frame that takes at least the whole viewport and centers one column
+in it, with an optional foot on the bottom edge. Where the fold stops short of the viewport because
+something follows it, a cover fills the screen exactly because nothing does — a menu, a sign-in, a
+splash. It is the one component that owns its own gutter and vertical inset: a Section band around a
+viewport-height frame would overflow the viewport the frame is sized to fill.
+_Avoid_: Full-screen hero, splash screen, viewport wrapper, fullscreen container
+
 **Index**:
 The standing marker naming where you are in a long page — a filing numeral and the section's name, set
 *beside* the section rather than above it and staying with it while it scrolls. The staying is what
