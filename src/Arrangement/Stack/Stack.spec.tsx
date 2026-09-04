@@ -92,6 +92,28 @@ describe('Stack', () => {
     expect(stack.className).not.toContain('--measure-display');
   });
 
+  it('bounds the column to the action measure and fills its slot up to it when asked for action', () => {
+    render(
+      <Stack measure={'action'} testId={'stack'}>
+        Matter
+      </Stack>,
+    );
+    const stack = screen.getByTestId('stack');
+    expect(stack.className).toContain('max-w-[var(--measure-action)]');
+    // Load-bearing: an action column sits centered inside a flex frame, where a bare max-width
+    // would let it shrink to its widest label instead of filling to the bound (#97).
+    expect(stack.className).toContain('w-full');
+  });
+
+  it('keeps the reading bound free of the fill, so a reading column in a flex frame still shrinks to fit', () => {
+    render(
+      <Stack measure testId={'stack'}>
+        Matter
+      </Stack>,
+    );
+    expect(screen.getByTestId('stack').className).not.toContain('w-full');
+  });
+
   it('is a column at every width by default, never changing axis', () => {
     render(<Stack testId={'stack'}>Matter</Stack>);
     const stack = screen.getByTestId('stack');

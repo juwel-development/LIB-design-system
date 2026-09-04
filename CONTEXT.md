@@ -162,7 +162,7 @@ _Avoid_: Layout, wrapper, box, flex container
 
 **Stack**:
 A vertical arrangement: children in a column, separated by one named space role and optionally bounded
-by the reading measure. One axis and one gap. It takes no outer space, so whatever holds it owns the
+by the reading measure or the action column. One axis and one gap. It takes no outer space, so whatever holds it owns the
 rhythm around it.
 _Avoid_: Column, VStack, flex column, spacer
 

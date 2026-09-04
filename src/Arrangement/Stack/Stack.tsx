@@ -6,8 +6,10 @@ import type { FunctionComponent, ReactNode } from 'react';
 // components hand-write this same set of utilities and the spec pins each against it - they cannot
 // import this one (architecture standard, the import test) - but that pinning compares the utilities
 // as a set, so nothing here is ordered to satisfy a test. The roster is the evidence and not the
-// token family: `band` is vertical padding and never a gap, and only `--measure` has ever bounded a
-// container, so the bound is on-or-off rather than a set of named measures (docs/adr/0008).
+// token family: `band` is vertical padding and never a gap. The bound holds two attested roles
+// (docs/adr/0008, amended by #97): `--measure`, the reading column, and `--measure-action`, the
+// control column. `action` carries `w-full` because its column sits centered in a flex frame, where
+// a bare max-width would shrink it to its widest label; the reading bound stays free of the fill.
 // `split` turns at `lg`, the threshold Rail and DefinitionList already use.
 const stack = cva('flex', {
   variants: {
@@ -15,7 +17,11 @@ const stack = cva('flex', {
       stack: 'gap-[var(--space-stack)]',
       region: 'gap-[var(--space-region)]',
     },
-    measure: { true: 'max-w-[var(--measure)]', false: '' },
+    measure: {
+      true: 'max-w-[var(--measure)]',
+      false: '',
+      action: 'w-full max-w-[var(--measure-action)]',
+    },
     direction: {
       column: 'flex-col',
       split: 'flex-col lg:flex-row lg:items-start',
@@ -41,9 +47,11 @@ export interface IStackProps extends VariantProps<typeof stack> {
  * - `gap` selects which space role separates the children: `stack` (the default), the gap between
  *   siblings within one block, or `region`, the gap between groups of blocks. Nothing else — a
  *   spacing neither role expresses is a request for a measurement (docs/adr/0003, docs/adr/0004).
- * - `measure` bounds the element to `--measure`, the reading column; omitted, the column is
- *   unbounded, which is right wherever the children are not running text. It sets no font-size, so
- *   a `ch`-counted measure keeps resolving against inherited body type.
+ * - `measure` bounds the element to `--measure`, the reading column, or with `action` to
+ *   `--measure-action`, the control column an action stack fills (#97) — its children stretch to
+ *   the bound with no prop of their own, which is what makes them full-width. Omitted, the column
+ *   is unbounded, which is right wherever the children are not running text. It sets no font-size,
+ *   so a `ch`-counted measure keeps resolving against inherited body type.
  * - `direction="column"` (the default) never changes axis. `direction="split"` is the same column
  *   turning into a row at and above 64rem, its children aligned to their start edge rather than
  *   stretched. It is the only viewport-dependent behaviour here, and it is named for the job: the

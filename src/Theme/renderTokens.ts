@@ -140,6 +140,16 @@ const MEASURE = `:root {
   --measure-wide: 72ch;
 }`;
 
+/* The action column is the second attested bound on a container (ADR 0008, amended by #97): the
+   width a stack of full-width controls fills - a menu's actions, a sign-in form's buttons. A
+   distinct job from the reading measures, so a distinct unit: controls track the root size, not
+   the type, which is why it is in rem like --control-min-width and never in ch. 20rem is the
+   attested column (Center Stage menu, juwel-dev/g-label-manager#15), read as
+   max-w-[var(--measure-action)]. */
+const ACTION_MEASURE = `:root {
+  --measure-action: 20rem;
+}`;
+
 /* Three spacing roles, not a ladder: --space-stack is the sibling gap in a stack, --space-region the air
    around a region of a page - a form's region groups and the shell's bars, above and below the header and
    the footer and between the header's nav items (#14/#15) - and --space-band the vertical air inside a page
@@ -256,6 +266,10 @@ ${ASPECT}
 
 /* The reading measure has no Tailwind namespace, so it sits in :root beside radius. */
 ${MEASURE}
+
+/* The action column is a bound like the measures but in rem, since controls track the root and not
+   the type; it has no Tailwind namespace either, so it sits in :root beside them. */
+${ACTION_MEASURE}
 
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
    re-pointing - so the three roles sit in :root beside the measure. */

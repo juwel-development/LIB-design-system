@@ -184,6 +184,12 @@
   --measure-wide: 72ch;
 }
 
+/* The action column is a bound like the measures but in rem, since controls track the root and not
+   the type; it has no Tailwind namespace either, so it sits in :root beside them. */
+:root {
+  --measure-action: 20rem;
+}
+
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
    re-pointing - so the three roles sit in :root beside the measure. */
 :root {

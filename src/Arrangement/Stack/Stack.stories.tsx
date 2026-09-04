@@ -1,4 +1,5 @@
 import { P } from 'Display/Typography/P/P';
+import { Button } from 'Interaction/Button/Button';
 import { Section } from 'Layout/Section/Section';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Stack } from './Stack';
@@ -20,8 +21,10 @@ const meta: Meta<typeof Stack> = {
       description: 'Which space role separates the children',
     },
     measure: {
-      control: { type: 'boolean' },
-      description: 'Bounds the column to the reading measure',
+      control: { type: 'radio' },
+      options: [false, true, 'action'],
+      description:
+        'Bounds the column to the reading measure, or to the action column with `action`',
     },
     direction: {
       control: { type: 'radio' },
@@ -75,6 +78,21 @@ export const Measured: Story = {
         A second paragraph, capped at the same width. The stack sets no
         font-size, so the measure keeps resolving against inherited body type.
       </P>
+    </Stack>
+  ),
+};
+
+/** `measure="action"` is the control column (#97): the stack fills its slot up to `--measure-action`
+ *  and its children stretch to it with no prop of their own - which is what makes a menu's buttons
+ *  full-width and their labels align. */
+export const ActionColumn: Story = {
+  render: () => (
+    <Stack measure={'action'}>
+      <Button variant={'primary'}>New game</Button>
+      <Button variant={'secondary'}>Load game</Button>
+      <Button variant={'secondary'} disabled={true}>
+        Settings
+      </Button>
     </Stack>
   ),
 };

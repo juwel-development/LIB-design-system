@@ -250,3 +250,17 @@ alternative may be selecting nothing at all.** The structural test asks whether 
 right and takes for granted that there *is* one. Where a component paints no surface of its own, two
 values that sound different — *bleed the band, inset the band* — can describe the same rendered box, so
 the question to ask before either test is whether the two options differ in anything the viewer can see.
+
+**A second bound role is now attested, and `Stack`'s `measure` re-opened on the rule's own terms
+([#97](https://github.com/juwel-development/LIB-design-system/issues/97)).** The rule said *"a second
+role attested later is what re-opens it, and that is a change to this ADR's evidence rather than a
+judgement call at the call site"* — this is that change, recorded here so the evidence stays in one
+place. A consumer's filed call site (the Center Stage menu of `juwel-dev/g-label-manager#15`: a stack
+of full-width actions in a ~20rem column) attests a second role in the container-bound position,
+doing a distinct job: `--measure` answers how far a reading line may run and is counted in `ch`
+against the type, where the new `--measure-action` answers how wide a column of controls is and is
+counted in `rem` against the root, exactly as `--control-min-width` is. `Stack`'s `measure` therefore
+now holds `true` (the reading column), `false`, and `action` (the control column) — exactly the
+attested roles, no more. The sentence *"only `--measure` has ever bounded a container"* was true when
+written and is superseded by this attestation; everything else in the outcome for `Stack` and
+`Cluster` stands.
