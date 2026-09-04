@@ -206,6 +206,24 @@ Which of `idle`, `sending`, `sent` or `failed` a form is in. Owned by the page, 
 component — a component renders the state it is given and never decides which one it is in.
 _Avoid_: Submission status, loading state
 
+**Action column**:
+The width a stack of full-width controls fills — a menu of buttons, a form's actions — so they read
+as one unit and their labels align. A bound on a container like the reading measure, but answering a
+different question: what the column holds is controls rather than text, so it is counted against the
+root size rather than against the type (see
+[ADR 0008](docs/adr/0008-when-a-token-role-becomes-a-prop.md), Amendments). A caller choosing
+between the two describes the column's content, never picks a size.
+_Avoid_: Button width, menu width, narrow column, control width
+
+**Content rule**:
+A product's rule about what a field's value may contain — a cap, a shape, a range. Judging content
+is the consumer's job: it decides in its own code and tells the field the state it is in, and the
+guarantee that an invalid value cannot get through lives at the product's own boundary. The library
+states what a field *is* — its kind, and whether the submission contract requires it — and never
+carries a rule about the value: a prop whose value would be the rule itself is refused (see
+[ADR 0009](docs/adr/0009-content-rules-stay-with-the-consumer.md)).
+_Avoid_: Validation rule, constraint, restriction, character limit
+
 ### Links
 
 **Treatment**:

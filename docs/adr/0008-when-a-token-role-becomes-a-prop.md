@@ -250,3 +250,23 @@ alternative may be selecting nothing at all.** The structural test asks whether 
 right and takes for granted that there *is* one. Where a component paints no surface of its own, two
 values that sound different — *bleed the band, inset the band* — can describe the same rendered box, so
 the question to ask before either test is whether the two options differ in anything the viewer can see.
+
+**`--measure-action` was named, re-opening `Stack`'s measure bound
+([#97](https://github.com/juwel-development/LIB-design-system/issues/97)).** The evidence as filed —
+one consumer value, ~20rem, at a call site that could not yet render — attested a measurement, not a
+role, which is the ground the Figure width proposal was refused on and which this ADR does not count.
+What happened instead is the ADR's own escape route, taken deliberately: naming a new role is *"a
+separate decision, argued on the role's own merits,"* and at triage the maintainer made it. The
+merits: the **action column** — the width a stack of full-width controls fills — is a job distinct
+from the reading measure by this ADR's own test. It answers *what the column holds* (controls, not
+text), so it is counted in `rem` against the root, as `--control-min-width` already is, where the
+reading measures are counted in `ch` against the type. That referent split is not the `--gutter`
+rejection returning: there, both options were air and choosing one meant choosing only its referent;
+here the two roles answer different questions about the content, which is what *a distinct job* means.
+
+With the role named, the container-bound position carries two roles doing distinct work, and per the
+reopening clause above — *"a second role attested later … is a change to this ADR's evidence rather
+than a judgement call at the call site"* — the bound stops being on-or-off: `Stack`'s `measure`
+gains `action` beside `true`/`false`, holding exactly the two attested roles and nothing else.
+`--measure-wide` and `--measure-display` remain refused as container bounds on the unchanged grounds
+above. Nothing in the rule itself moves.
