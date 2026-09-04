@@ -93,6 +93,17 @@ describe('Input Component', () => {
     expect(control).toBeRequired();
   });
 
+  it('caps its length through the native maxLength attribute, so an over-length value cannot exist', () => {
+    render(<Input label={'Name'} name={'name'} maxLength={40} />);
+    // The attribute is the behaviour: the browser refuses input past it, before any script runs.
+    expect(screen.getByRole('textbox')).toHaveAttribute('maxlength', '40');
+  });
+
+  it('stays unbounded when no cap is given, exactly as before the prop existed', () => {
+    render(<Input label={'Name'} name={'name'} />);
+    expect(screen.getByRole('textbox')).not.toHaveAttribute('maxlength');
+  });
+
   it('emits the current value on input through its Subject', () => {
     const onInput$ = new Subject<string>();
     const handleInput = vi.fn();

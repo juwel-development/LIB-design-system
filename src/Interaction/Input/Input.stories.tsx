@@ -66,6 +66,15 @@ export const OptionalInAnotherLanguage: Story = {
   },
 };
 
+// Type past the cap: the browser refuses the 41st character, so no over-length state exists to style.
+export const Capped: Story = {
+  args: {
+    label: 'Label name',
+    name: 'labelName',
+    maxLength: 40,
+  },
+};
+
 export const Required: Story = {
   args: {
     label: 'Email',

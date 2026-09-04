@@ -37,6 +37,12 @@ interface IInputProps extends VariantProps<typeof input> {
   invalid?: boolean;
   disabled?: boolean;
   defaultValue?: string;
+  /**
+   * Caps what can be typed through the native `maxLength` attribute, so an over-length value cannot
+   * exist in the field rather than being flagged after the fact. A content constraint like
+   * `required`, not a visual value. Left out, the field is unbounded.
+   */
+  maxLength?: number;
   placeholder?: string;
   autocomplete?: 'name' | 'email' | 'url' | 'organization' | 'tel' | 'off';
   hint?: string;
@@ -61,6 +67,7 @@ export const Input: FunctionComponent<IInputProps> = ({
   invalid,
   disabled,
   defaultValue,
+  maxLength,
   placeholder,
   autocomplete,
   hint,
@@ -112,6 +119,7 @@ export const Input: FunctionComponent<IInputProps> = ({
         required={required}
         disabled={disabled}
         defaultValue={defaultValue}
+        maxLength={maxLength}
         placeholder={placeholder}
         autoComplete={autocomplete}
         aria-invalid={invalid || undefined}
