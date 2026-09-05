@@ -173,6 +173,17 @@ const FOLD = `:root {
   --fold-height: min(70vh, 40rem);
 }`;
 
+/* The cover is the least height a whole screen takes (CONTEXT.md) - a page that is the entire app for
+   a moment, so nothing follows it. Measured against the screen like the fold, in :root beside it with
+   no Tailwind namespace, read as min-h-[var(--cover-height)]. In svh so a mobile browser's collapsing
+   chrome never hides a foot pinned to the bottom edge. Constraint: the inverse of --fold-height's -
+   the fold must stop short of the viewport, the cover must reach it, because a screen that stops
+   short signals a continuation that does not exist. A floor and never a ceiling, so overflowing
+   content grows the frame; enforced against the library's own value (ADR 0004), never a consumer's. */
+const COVER = `:root {
+  --cover-height: 100svh;
+}`;
+
 /* Four aspect roles in a @theme block like typography: --aspect-* is a Tailwind 4 namespace, so it
    generates the aspect-portrait utilities Figure reaches rather than a :root value. Named shapes, not
    a ladder - ADR 0003/0004 rejected a radius and spacing scale (see SPACING) because a scale lets a
@@ -266,6 +277,9 @@ ${GUTTER}
 
 /* The fold height has no Tailwind namespace either, so it sits in :root beside the gutter. */
 ${FOLD}
+
+/* The cover height has no Tailwind namespace either, so it sits in :root beside the fold. */
+${COVER}
 
 /* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */
 ${TICK}
