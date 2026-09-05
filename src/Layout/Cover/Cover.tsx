@@ -1,13 +1,10 @@
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent, ReactNode } from 'react';
 
-// One recipe on a plain <div>, with no variants: both-axes centring is the component's whole job (#96),
-// so there is nothing to choose - a distribution axis waits for evidence under ADR 0008's test. The
-// frame holds at least the cover height, so leftover space is guaranteed; items-center centres every
-// item on the inline axis, and the slot's own auto margins (below) centre it on the block axis. It
-// reads --cover-height for the floor and, unlike every other composable, carries its own inset -
-// --gutter inline, --space-region block - the deliberate exception to "Section owns the gutter": a
-// frame that equals the viewport cannot sit inside a Section band without overflowing it.
+// One recipe, no variants: both-axes centring is the component's whole job (#96), so there is nothing
+// to choose - a distribution axis waits for evidence under ADR 0008's test. items-center centres the
+// inline axis, the slot's auto margins (below) the block axis; alone among the composables it carries
+// its own inset - the deliberate exception to "Section owns the gutter" (CONTEXT.md: Cover).
 const cover = cva(
   [
     'flex flex-col items-center',
@@ -16,11 +13,10 @@ const cover = cva(
   ].join(' '),
 );
 
-// Not a second recipe - the slot has nothing to vary, and the standard allows a component one cva()
-// (design-system-components.md §4), which is the frame's own above. Auto margins on the block axis
-// take the leftover space equally above and below, so the column sits in the middle of it and a foot
-// after the slot still lands on the frame's bottom edge - which is also why the frame cannot simply
-// justify-center: that would centre slot and foot as one group and lift the foot off the edge.
+// Not a second recipe - the slot has nothing to vary, and the standard allows one cva()
+// (design-system-components.md §4), the frame's own above. Block-axis auto margins split the leftover
+// space equally, so a foot after the slot still lands on the bottom edge - justify-center on the
+// frame would centre slot and foot as one group and lift the foot off that edge.
 const slot = 'my-auto';
 
 export interface ICoverProps {
@@ -28,7 +24,8 @@ export interface ICoverProps {
    *  a tagline and a stack of actions here; a sign-in composes a form. `Cover` imposes no anatomy. */
   children: ReactNode;
   /** The line on the screen's bottom edge - a version line, a legal line - centred on the inline axis.
-   *  Omitted, nothing renders: no empty container holds its place. */
+   *  Omitted - or given nothing: `null`, a flag's `false` - nothing renders: no empty container
+   *  holds its place. */
   foot?: ReactNode;
   testId?: string;
 }
@@ -47,7 +44,7 @@ export interface ICoverProps {
  * - `children` sit in the middle of the leftover space, centred on both axes; the centring is fixed,
  *   with no distribution to choose.
  * - `foot` renders on the frame's bottom edge, centred on the inline axis, and renders nothing - not
- *   even an empty container - when not given.
+ *   even an empty container - when not given or given nothing to render (`null`, a flag's `false`).
  * - `children` and `foot` render unmodified; the component adds nothing to and strips nothing from
  *   them, and sets no colour, no heading and no landmark of its own.
  * - It owns its own inset - `--gutter` on the inline axis, `--space-region` on the block axis - the
@@ -73,9 +70,16 @@ export const Cover: FunctionComponent<ICoverProps> = ({
   children,
   foot,
   testId,
-}) => (
-  <div className={cover()} data-testid={testId}>
-    <div className={slot}>{children}</div>
-    {foot !== undefined && <div>{foot}</div>}
-  </div>
-);
+}) => {
+  // Absence, not falsiness, after Form's note guard: `foot={showLegal && <p/>}` hands over `false`,
+  // and an empty <div> would still be a flex item sitting on the bottom edge.
+  const hasFoot =
+    foot !== undefined && foot !== null && typeof foot !== 'boolean';
+
+  return (
+    <div className={cover()} data-testid={testId}>
+      <div className={slot}>{children}</div>
+      {hasFoot && <div>{foot}</div>}
+    </div>
+  );
+};

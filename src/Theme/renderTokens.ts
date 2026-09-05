@@ -173,13 +173,10 @@ const FOLD = `:root {
   --fold-height: min(70vh, 40rem);
 }`;
 
-/* The cover is the least height a whole screen takes (CONTEXT.md) - a page that is the entire app for
-   a moment, so nothing follows it. Measured against the screen like the fold, in :root beside it with
-   no Tailwind namespace, read as min-h-[var(--cover-height)]. In svh so a mobile browser's collapsing
-   chrome never hides a foot pinned to the bottom edge. Constraint: the inverse of --fold-height's -
-   the fold must stop short of the viewport, the cover must reach it, because a screen that stops
-   short signals a continuation that does not exist. A floor and never a ceiling, so overflowing
-   content grows the frame; enforced against the library's own value (ADR 0004), never a consumer's. */
+/* The least height a whole screen takes (CONTEXT.md: Cover) - measured against the screen like the
+   fold, in :root beside it with no Tailwind namespace, read as min-h-[var(--cover-height)]. In svh so
+   a mobile browser's collapsing chrome never hides a foot pinned to the bottom edge. A floor and
+   never a ceiling, so overflowing content grows the frame; enforced per ADR 0004. */
 const COVER = `:root {
   --cover-height: 100svh;
 }`;

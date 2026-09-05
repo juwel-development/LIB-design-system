@@ -45,6 +45,24 @@ describe('Cover', () => {
     expect(screen.getByTestId('cover').children).toHaveLength(1);
   });
 
+  it('renders nothing for the foot when it is given nothing - a false flag or null', () => {
+    // `foot={showLegal && <p/>}` hands over `false` when the line is off; an empty <div> would
+    // still be a flex item on the bottom edge, so absence is React's set of nothing-to-render
+    // nodes, not `undefined` alone.
+    const { rerender } = render(
+      <Cover foot={false} testId={'cover'}>
+        Menu
+      </Cover>,
+    );
+    expect(screen.getByTestId('cover').children).toHaveLength(1);
+    rerender(
+      <Cover foot={null} testId={'cover'}>
+        Menu
+      </Cover>,
+    );
+    expect(screen.getByTestId('cover').children).toHaveLength(1);
+  });
+
   it('owns its own inset: the gutter on the inline axis and the region space on the block axis', () => {
     // The deliberate exception to "Section owns the gutter": the frame equals the viewport, so it
     // cannot sit inside a Section band without overflowing, and carries the inset itself.
