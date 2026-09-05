@@ -2,16 +2,10 @@ import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent, ReactNode } from 'react';
 
-// One recipe on a plain <div>, its variants declared in the order the prop table reads. Six existing
-// components hand-write this same set of utilities and the spec pins each against it - they cannot
-// import this one (architecture standard, the import test) - but that pinning compares the utilities
-// as a set, so nothing here is ordered to satisfy a test. The roster is the evidence and not the
-// token family: `band` is vertical padding and never a gap, and the bound holds exactly the two
-// roles attested in the container-bound position - the reading measure, and the action column named
-// in ADR 0008's Amendments (#97). `--measure-wide` and `--measure-display` remain refused there.
-// `action` pairs the bound with `w-full` deliberately: an action column sits centered inside a flex
-// frame, where a bare max-width would let it shrink to its widest label instead of filling to the
-// bound. `split` turns at `lg`, the threshold Rail and DefinitionList already use.
+// One recipe on a plain <div>. Six components hand-write this same utility set and their specs pin
+// it as a set, not an order (architecture standard, the import test). `band` is vertical padding,
+// never a gap; the bound holds exactly the two container roles docs/adr/0008's Amendments attest
+// (#97), which argue the `w-full` pairing. `split` turns at `lg`, the Rail/DefinitionList threshold.
 const stack = cva('flex', {
   variants: {
     gap: {
@@ -39,9 +33,9 @@ export interface IStackProps extends VariantProps<typeof stack> {
 
 /**
  * A vertical arrangement: children in a column, separated by one named space role and optionally
- * bounded by the reading measure or the action column. It owns one axis and one gap and nothing else - no landmark, no
- * heading, no band, no join, no gutter, no fill - and takes no outer space, so whatever holds it
- * owns the rhythm around it.
+ * bounded by the reading measure or the action column. It owns one axis and one gap and nothing
+ * else - no landmark, no heading, no band, no join, no gutter, no fill - and takes no outer space,
+ * so whatever holds it owns the rhythm around it.
  *
  * @Guarantees — enforced on every render
  * - It renders a `div` with no landmark role, no heading and no margin of its own.

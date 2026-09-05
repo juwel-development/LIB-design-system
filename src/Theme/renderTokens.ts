@@ -129,17 +129,10 @@ const TYPOGRAPHY = `@theme {
   --tracking-optical: -0.02em;
 }`;
 
-/* The reading measure is in ch, not rem, so the character count stays held when the body size moves
-   under it; --measure-display is narrower because bigger type wants fewer characters per line, and
-   --measure-wide slightly wider - the standfirst of a page head (PageHead #18) is an opening statement,
-   not a reading column, so it runs a little past the reading measure by design. All three in ch and,
-   having no Tailwind namespace, in :root beside radius, read as max-w-[var(--measure)].
-   --measure-action is the action column (docs/adr/0008, Amendments, #97): the width a stack of
-   full-width controls fills, so they read as one unit and their labels align. A bound in the same
-   position as the reading measure but answering a different question - what the column holds is
-   controls, not text - so it is in rem, tracking the root the way --control-min-width does, never
-   in ch. Constraint: wide enough for --control-min-width (10.5rem) plus room for labels to align;
-   20rem is the one attested value, filed from the Center Stage menu column. */
+/* The reading measures are in ch so the character count holds when the body size moves under them:
+   --measure-display narrower because bigger type wants fewer characters per line, --measure-wide a
+   little past the reading column for the page-head standfirst (PageHead #18). --measure-action is
+   the action column, in rem (docs/adr/0008, Amendments, #97); 20rem clears --control-min-width. */
 const MEASURE = `:root {
   --measure: 66ch;
   --measure-display: 36ch;
