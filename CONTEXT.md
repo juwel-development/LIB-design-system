@@ -323,6 +323,15 @@ because nothing is left to say the page continues. Leaving the following unit's 
 viewport is what makes it a fold rather than a screen.
 _Avoid_: Above the fold, viewport height, hero height, full-screen, first screen
 
+**Cover**:
+The frame of a page that is the whole app for a moment — a menu, a sign-in, a splash. It takes at
+least the viewport and centres one column in the leftover space, on both axes, with an optional foot
+on the bottom edge. The fold's counterpart: nothing follows a cover, so stopping short of the
+viewport would signal a continuation that does not exist. Because the frame equals the viewport it
+cannot sit inside a section band, and it owns its own inset — the one deliberate exception to
+"Section owns the gutter".
+_Avoid_: Full-screen hero, splash screen, viewport section, centred layout, page wrapper
+
 **Index**:
 The standing marker naming where you are in a long page — a filing numeral and the section's name, set
 *beside* the section rather than above it and staying with it while it scrolls. The staying is what

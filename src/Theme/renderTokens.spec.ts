@@ -331,6 +331,35 @@ describe('renderTokens fold contract', () => {
   });
 });
 
+describe('renderTokens cover contract', () => {
+  it('emits the cover height into :root, out of every @theme block', () => {
+    const css = renderTokens();
+    expect(css).toContain('--cover-height: 100svh;');
+    // No Tailwind namespace: a plain @theme block would generate a utility, @theme inline a bogus colour.
+    const themeBlock = css.match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).not.toContain('--cover-height');
+    expect(themeInline).not.toContain('--cover-height');
+  });
+
+  it('keeps the cover height at the full viewport, the inverse of the fold constraint', () => {
+    // The fold must stop short of the viewport; the cover must reach it - a screen that stops short
+    // signals a continuation that does not exist, since nothing follows a cover. Enforced against
+    // the library's own value in ADR 0004's shape, never a consumer's.
+    const viewportComponent = Number.parseFloat(
+      renderTokens().match(/--cover-height:\s*([0-9.]+)svh/)?.[1] ?? 'NaN',
+    );
+    expect(viewportComponent).toBeGreaterThanOrEqual(100);
+  });
+
+  it('emits the cover height beside the fold height, the other first-screen role', () => {
+    const css = renderTokens();
+    expect(css.indexOf('--cover-height')).toBeGreaterThan(
+      css.indexOf('--fold-height'),
+    );
+  });
+});
+
 describe('renderTokens tick contract', () => {
   it('emits the two tick dimensions into :root, out of every @theme block', () => {
     const css = renderTokens();
