@@ -81,6 +81,46 @@ describe('Stack', () => {
     );
   });
 
+  it('bounds the column to the action column and fills its slot when measure is action (ADR 0008 Amendments, #97)', () => {
+    render(
+      <Stack measure={'action'} testId={'stack'}>
+        Matter
+      </Stack>,
+    );
+    const stack = screen.getByTestId('stack');
+    expect(stack.className).toContain('max-w-[var(--measure-action)]');
+    // The full-width half is load-bearing: an action column sits centered inside a flex frame,
+    // where a bare max-width would let the column shrink to its widest label instead of filling
+    // to the bound.
+    expect(stack.className).toContain('w-full');
+    expect(stack.className).not.toContain('max-w-[var(--measure)]');
+  });
+
+  it('keeps the reading measure exactly as it was - the action column adds no full-width to it', () => {
+    render(
+      <Stack measure testId={'stack'}>
+        Matter
+      </Stack>,
+    );
+    const stack = screen.getByTestId('stack');
+    expect(stack.className).toContain('max-w-[var(--measure)]');
+    expect(stack.className).not.toContain('w-full');
+    expect(stack.className).not.toContain('--measure-action');
+  });
+
+  it('lets the children of an action column stretch full-width with no prop on them', () => {
+    render(
+      <Stack measure={'action'} testId={'stack'}>
+        <button type={'button'}>Act</button>
+      </Stack>,
+    );
+    const stack = screen.getByTestId('stack');
+    // A flex column stretches its children across the cross axis by default; the recipe must not
+    // opt out of that, or every control would shrink to its label.
+    expect(stack.className).toContain('flex-col');
+    expect(stack.className).not.toMatch(/\bitems-/);
+  });
+
   it('bounds to the reading measure only - no wider or display measure is on offer (ADR 0008)', () => {
     render(
       <Stack measure testId={'stack'}>
@@ -129,15 +169,22 @@ describe('Stack', () => {
 
   it('expresses every value through a role, never a length or a numbered spacing rung', () => {
     render(
-      <Stack gap={'region'} measure direction={'split'} testId={'stack'}>
-        Matter
-      </Stack>,
+      <>
+        <Stack gap={'region'} measure direction={'split'} testId={'stack'}>
+          Matter
+        </Stack>
+        <Stack measure={'action'} testId={'action'}>
+          Matter
+        </Stack>
+      </>,
     );
     // A spacing this component cannot express through a role is a request for a measurement, which
     // docs/adr/0003 and docs/adr/0004 answer.
-    for (const utility of screen.getByTestId('stack').className.split(' ')) {
-      expect(utility).not.toMatch(/-\d/);
-      expect(utility).not.toMatch(/\d(px|rem|em|ch|vh|vw)\b/);
+    for (const testId of ['stack', 'action']) {
+      for (const utility of screen.getByTestId(testId).className.split(' ')) {
+        expect(utility).not.toMatch(/-\d/);
+        expect(utility).not.toMatch(/\d(px|rem|em|ch|vh|vw)\b/);
+      }
     }
   });
 

@@ -185,6 +185,15 @@ describe('renderTokens typography contract', () => {
     expect(themeBlock()).not.toContain('--measure');
   });
 
+  it('carries the action column in rem in :root, beside the reading measures and out of every @theme block', () => {
+    // The action column bounds a stack of full-width controls, so it tracks the root size the way
+    // --control-min-width does - not the type, which is what the ch-counted reading measures track
+    // (docs/adr/0008, Amendments, #97).
+    const css = renderTokens();
+    expect(css).toContain('--measure-action: 20rem;');
+    expect(themeBlock()).not.toContain('--measure-action');
+  });
+
   it('keeps the page-head standfirst measure wider than the reading column and narrower than a display heading', () => {
     // --measure-wide is the lede of a page head (PageHead #18): a slightly wider opening statement, so
     // it clears the reading measure - but it is still running text, so it stays inside the display

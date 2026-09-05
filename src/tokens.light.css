@@ -148,11 +148,14 @@
   --aspect-wide:     16 / 9;
 }
 
-/* The reading measure has no Tailwind namespace, so it sits in :root beside radius. */
+/* The measures have no Tailwind namespace, so they sit in :root beside radius. The reading measures
+   are in ch against the type; the action column is in rem against the root, since it bounds a stack
+   of controls rather than a reading line (docs/adr/0008, Amendments). */
 :root {
   --measure: 66ch;
   --measure-display: 36ch;
   --measure-wide: 72ch;
+  --measure-action: 20rem;
 }
 
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids

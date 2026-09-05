@@ -133,11 +133,18 @@ const TYPOGRAPHY = `@theme {
    under it; --measure-display is narrower because bigger type wants fewer characters per line, and
    --measure-wide slightly wider - the standfirst of a page head (PageHead #18) is an opening statement,
    not a reading column, so it runs a little past the reading measure by design. All three in ch and,
-   having no Tailwind namespace, in :root beside radius, read as max-w-[var(--measure)]. */
+   having no Tailwind namespace, in :root beside radius, read as max-w-[var(--measure)].
+   --measure-action is the action column (docs/adr/0008, Amendments, #97): the width a stack of
+   full-width controls fills, so they read as one unit and their labels align. A bound in the same
+   position as the reading measure but answering a different question - what the column holds is
+   controls, not text - so it is in rem, tracking the root the way --control-min-width does, never
+   in ch. Constraint: wide enough for --control-min-width (10.5rem) plus room for labels to align;
+   20rem is the one attested value, filed from the Center Stage menu column. */
 const MEASURE = `:root {
   --measure: 66ch;
   --measure-display: 36ch;
   --measure-wide: 72ch;
+  --measure-action: 20rem;
 }`;
 
 /* Three spacing roles, not a ladder: --space-stack is the sibling gap in a stack, --space-region the air
@@ -254,7 +261,9 @@ ${TYPOGRAPHY}
    after it and are not carried in @theme inline with the palette. */
 ${ASPECT}
 
-/* The reading measure has no Tailwind namespace, so it sits in :root beside radius. */
+/* The measures have no Tailwind namespace, so they sit in :root beside radius. The reading measures
+   are in ch against the type; the action column is in rem against the root, since it bounds a stack
+   of controls rather than a reading line (docs/adr/0008, Amendments). */
 ${MEASURE}
 
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids

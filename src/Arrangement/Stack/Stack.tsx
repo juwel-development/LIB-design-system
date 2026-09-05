@@ -6,16 +6,23 @@ import type { FunctionComponent, ReactNode } from 'react';
 // components hand-write this same set of utilities and the spec pins each against it - they cannot
 // import this one (architecture standard, the import test) - but that pinning compares the utilities
 // as a set, so nothing here is ordered to satisfy a test. The roster is the evidence and not the
-// token family: `band` is vertical padding and never a gap, and only `--measure` has ever bounded a
-// container, so the bound is on-or-off rather than a set of named measures (docs/adr/0008).
-// `split` turns at `lg`, the threshold Rail and DefinitionList already use.
+// token family: `band` is vertical padding and never a gap, and the bound holds exactly the two
+// roles attested in the container-bound position - the reading measure, and the action column named
+// in ADR 0008's Amendments (#97). `--measure-wide` and `--measure-display` remain refused there.
+// `action` pairs the bound with `w-full` deliberately: an action column sits centered inside a flex
+// frame, where a bare max-width would let it shrink to its widest label instead of filling to the
+// bound. `split` turns at `lg`, the threshold Rail and DefinitionList already use.
 const stack = cva('flex', {
   variants: {
     gap: {
       stack: 'gap-[var(--space-stack)]',
       region: 'gap-[var(--space-region)]',
     },
-    measure: { true: 'max-w-[var(--measure)]', false: '' },
+    measure: {
+      true: 'max-w-[var(--measure)]',
+      false: '',
+      action: 'w-full max-w-[var(--measure-action)]',
+    },
     direction: {
       column: 'flex-col',
       split: 'flex-col lg:flex-row lg:items-start',
@@ -32,7 +39,7 @@ export interface IStackProps extends VariantProps<typeof stack> {
 
 /**
  * A vertical arrangement: children in a column, separated by one named space role and optionally
- * bounded by the reading measure. It owns one axis and one gap and nothing else - no landmark, no
+ * bounded by the reading measure or the action column. It owns one axis and one gap and nothing else - no landmark, no
  * heading, no band, no join, no gutter, no fill - and takes no outer space, so whatever holds it
  * owns the rhythm around it.
  *
@@ -44,6 +51,11 @@ export interface IStackProps extends VariantProps<typeof stack> {
  * - `measure` bounds the element to `--measure`, the reading column; omitted, the column is
  *   unbounded, which is right wherever the children are not running text. It sets no font-size, so
  *   a `ch`-counted measure keeps resolving against inherited body type.
+ * - `measure="action"` bounds the element to `--measure-action`, the action column - the width a
+ *   stack of full-width controls fills, so they read as one unit and their labels align - and fills
+ *   its slot up to that bound, so a centering frame cannot shrink it to its widest label. The two
+ *   options answer different questions about what the column holds - text or controls - never how
+ *   wide it should be (docs/adr/0008, Amendments).
  * - `direction="column"` (the default) never changes axis. `direction="split"` is the same column
  *   turning into a row at and above 64rem, its children aligned to their start edge rather than
  *   stretched. It is the only viewport-dependent behaviour here, and it is named for the job: the

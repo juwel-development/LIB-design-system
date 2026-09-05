@@ -1,4 +1,5 @@
 import { P } from 'Display/Typography/P/P';
+import { Button } from 'Interaction/Button/Button';
 import { Section } from 'Layout/Section/Section';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Stack } from './Stack';
@@ -20,8 +21,10 @@ const meta: Meta<typeof Stack> = {
       description: 'Which space role separates the children',
     },
     measure: {
-      control: { type: 'boolean' },
-      description: 'Bounds the column to the reading measure',
+      control: { type: 'radio' },
+      options: [false, true, 'action'],
+      description:
+        'Bounds the column: the reading measure for text, the action column for controls',
     },
     direction: {
       control: { type: 'radio' },
@@ -75,6 +78,21 @@ export const Measured: Story = {
         A second paragraph, capped at the same width. The stack sets no
         font-size, so the measure keeps resolving against inherited body type.
       </P>
+    </Stack>
+  ),
+};
+
+/** `measure="action"` bounds the column to the action column - the width a stack of full-width
+ *  controls fills, so they read as one unit and their labels align. The buttons carry no prop for
+ *  it: a flex column stretches its children, and the stack fills its slot up to the bound, so a
+ *  centering frame cannot shrink the column to its widest label. */
+export const ActionColumn: Story = {
+  render: () => (
+    <Stack measure={'action'}>
+      <Button>Start a new label</Button>
+      <Button variant={'secondary'}>Open an existing one</Button>
+      <Button variant={'secondary'}>Import from file</Button>
+      <Button variant={'ghost'}>Settings</Button>
     </Stack>
   ),
 };
