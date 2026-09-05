@@ -1,3 +1,16 @@
+# [3.2.0](https://github.com/juwel-development/LIB-design-system/compare/v3.1.0...v3.2.0) (2026-09-05)
+
+
+### Bug Fixes
+
+* **cover:** guard the foot against nothing-to-render nodes and trim over-budget comments ([#96](https://github.com/juwel-development/LIB-design-system/issues/96)) ([3363263](https://github.com/juwel-development/LIB-design-system/commit/3363263496ea7f807de15cb62b7a5012ee95f709))
+
+
+### Features
+
+* **cover:** add the screen frame the roster lacked ([#96](https://github.com/juwel-development/LIB-design-system/issues/96)) ([bb61468](https://github.com/juwel-development/LIB-design-system/commit/bb61468e06ca2864cef6fdc74bf194c5f2cb7108))
+* **stack:** name the action column and bound Stack to it ([#97](https://github.com/juwel-development/LIB-design-system/issues/97)) ([4479812](https://github.com/juwel-development/LIB-design-system/commit/4479812d00bd60dd3e5432951ffc79f98e475ec0))
+
 # [3.1.0](https://github.com/juwel-development/LIB-design-system/compare/v3.0.0...v3.1.0) (2026-08-18)
 
 
