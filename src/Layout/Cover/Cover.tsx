@@ -16,8 +16,12 @@ const cover = cva(
 // Not a second recipe - the slot has nothing to vary, and the standard allows one cva()
 // (design-system-components.md §4), the frame's own above. Block-axis auto margins split the leftover
 // space equally, so a foot after the slot still lands on the bottom edge - justify-center on the
-// frame would centre slot and foot as one group and lift the foot off that edge.
-const slot = 'my-auto';
+// frame would centre slot and foot as one group and lift the foot off that edge. The full-width cap
+// keeps the shrink-to-fit slot inside the frame's inset: a child asking for a definite width - an
+// action column asking for its bound (#99) - floors the slot's intrinsic minimum at that width, and
+// on a viewport too narrow to hold it the cap is what hands the column the available width back
+// instead of letting it poke through the gutter.
+const slot = 'my-auto max-w-full';
 
 export interface ICoverProps {
   /** The screen's one opaque slot, centred on both axes. Rendered unmodified: a menu composes a title,

@@ -63,6 +63,14 @@ describe('Cover', () => {
     expect(screen.getByTestId('cover').children).toHaveLength(1);
   });
 
+  it('caps the slot at the frame, so a child asking for a definite width - an action column asking for its bound (#99) - cannot push through the inset on a viewport too narrow to hold it', () => {
+    render(<Cover testId={'cover'}>Menu</Cover>);
+    const slot = screen.getByText('Menu');
+    // The shrink-to-fit slot floors at its content's intrinsic minimum, which a definite child
+    // width raises; the cap is what hands the column the available width back instead.
+    expect(slot.className.split(' ')).toContain('max-w-full');
+  });
+
   it('owns its own inset: the gutter on the inline axis and the region space on the block axis', () => {
     // The deliberate exception to "Section owns the gutter": the frame equals the viewport, so it
     // cannot sit inside a Section band without overflowing, and carries the inset itself.

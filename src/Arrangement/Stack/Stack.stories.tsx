@@ -84,8 +84,9 @@ export const Measured: Story = {
 
 /** `measure="action"` bounds the column to the action column - the width a stack of full-width
  *  controls fills, so they read as one unit and their labels align. The buttons carry no prop for
- *  it: a flex column stretches its children, and the stack fills its slot up to the bound, so a
- *  centering frame cannot shrink the column to its widest label. */
+ *  it: a flex column stretches its children, and the stack asks for the bound as its own width -
+ *  so even a shrink-to-fit frame like `Cover`'s slot opens to hold it, instead of shrinking the
+ *  column to its widest label (#99). */
 export const ActionColumn: Story = {
   render: () => (
     <Stack measure={'action'}>
