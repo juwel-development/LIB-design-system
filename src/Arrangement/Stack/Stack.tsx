@@ -4,12 +4,8 @@ import type { FunctionComponent, ReactNode } from 'react';
 
 // One recipe on a plain <div>. Six components hand-write this same utility set and their specs pin
 // it as a set, not an order (architecture standard, the import test). `band` is vertical padding,
-// never a gap; the bound holds exactly the two container roles docs/adr/0008's Amendments attest
-// (#97). `action` asks for its bound as a definite width, not `w-full`: a shrink-to-fit frame -
-// Cover's slot - sizes from its content's intrinsic width, which `width: 100%` cannot raise, so
-// only a column requesting the bound itself opens the frame to hold it (#99). `max-w-full` caps it
-// inside a narrower holder and the auto inline margins centre it in a wider one. `split` turns at
-// `lg`, the Rail/DefinitionList threshold.
+// never a gap; `split` turns at `lg`, the Rail/DefinitionList threshold. The bound holds the two
+// container roles docs/adr/0008's Amendments attest (#97), sized as the guarantees below argue (#99).
 const stack = cva('flex', {
   variants: {
     gap: {

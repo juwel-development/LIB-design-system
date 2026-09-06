@@ -89,10 +89,9 @@ describe('Stack', () => {
     );
     const utilities = screen.getByTestId('stack').className.split(' ');
     // The definite width is load-bearing: a shrink-to-fit frame - Cover's slot - sizes from its
-    // content's intrinsic width, which a `width: 100%` cannot raise, so the column must ask for
-    // the bound itself for the frame to open and hold it (#99, correcting #97's `w-full`
-    // reasoning). The full-width cap keeps it inside a holder narrower than the bound, and the
-    // auto inline margins centre it where the holder stays wider.
+    // content's intrinsic width, which `width: 100%` cannot raise (#99, correcting #97's `w-full`
+    // reasoning). The cap keeps the column inside a narrower holder; the auto inline margins
+    // centre it in a wider one.
     expect(utilities).toContain('w-[var(--measure-action)]');
     expect(utilities).toContain('max-w-full');
     expect(utilities).toContain('mx-auto');
