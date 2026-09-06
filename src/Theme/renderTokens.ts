@@ -204,6 +204,16 @@ const TICK = `:root {
   --tick-thickness: 1px;
 }`;
 
+/* The tab selection marker's thickness is not a colour: like the tick and underline dimensions it
+   lives in :root only, never @theme inline, so a brand can re-point the marker's weight. Not an
+   underline token: --underline-* names how an anchor's line is drawn (docs/adr/0006), where this
+   names the persistent mark under the active tab - one job, one name, the tick's precedent. Its
+   colour needs no new role - the marker is drawn in `foreground`, the ink the active label itself
+   carries. Constraint: > 0 - the line is the one persistent selection cue, so zero erases it. */
+const TAB_MARKER = `:root {
+  --tab-marker-thickness: 2px;
+}`;
+
 const toKebabCase = (name: string): string =>
   name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 
@@ -282,6 +292,9 @@ ${COVER}
 
 /* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */
 ${TICK}
+
+/* The tab marker's thickness is not a colour either, and sits in :root beside the tick block. */
+${TAB_MARKER}
 `;
 
 /**
