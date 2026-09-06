@@ -12,6 +12,8 @@
   --color-control-border: #94a3b8;
   --color-rule: #5b6a80;
   --color-backing: #1e293b;
+  --color-meter-fill: #f8fafc;
+  --color-meter-track: #334155;
   --color-primary: #8b5cf6;
   --color-primary-hover: #a78bfa;
   --color-primary-foreground: #020617;
@@ -36,6 +38,8 @@
   --color-control-border: var(--color-control-border);
   --color-rule: var(--color-rule);
   --color-backing: var(--color-backing);
+  --color-meter-fill: var(--color-meter-fill);
+  --color-meter-track: var(--color-meter-track);
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
   --color-primary-foreground: var(--color-primary-foreground);
@@ -205,4 +209,9 @@
 :root {
   --slider-track-thickness: 0.25rem;
   --slider-thumb-size: 1.5rem;
+}
+
+/* The meter track's thickness is not a colour either, and sits in :root beside the tab blocks. */
+:root {
+  --meter-track-thickness: 0.5rem;
 }

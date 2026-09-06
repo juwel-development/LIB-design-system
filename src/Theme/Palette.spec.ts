@@ -31,6 +31,60 @@ const contrastRatio = (a: string, b: string): number => {
   return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
 };
 
+/* Depletion's color-mix(in oklab, …) colours exist only in the browser; to prove the shipped
+   palettes keep every one at 3:1 (docs/adr/0010), the mix is replayed here: hex → linear sRGB →
+   OKLab (Björn Ottosson's reference matrices, the ones CSS Color 4 specifies), lerp, and back to
+   linear sRGB - the form WCAG relative luminance is defined on, so no hex round-trip is needed. */
+const toLinearRgb = (hex: string): [number, number, number] => {
+  const channel = (offset: number): number => {
+    const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  return [channel(1), channel(3), channel(5)];
+};
+
+const toOklab = (hex: string): [number, number, number] => {
+  const [r, g, b] = toLinearRgb(hex);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ];
+};
+
+const mixedLuminance = (from: string, to: string, share: number): number => {
+  const start = toOklab(from);
+  const end = toOklab(to);
+  const [L, a, b] = start.map(
+    (component, index) =>
+      component * share + (end[index] as number) * (1 - share),
+  ) as [number, number, number];
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  // Clamp like a browser does: a point on the line between two in-gamut colours can poke just
+  // outside sRGB, and luminance is defined on the displayed (gamut-mapped) colour.
+  const clamp = (value: number): number => Math.min(1, Math.max(0, value));
+  const red = clamp(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s);
+  const green = clamp(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s);
+  const blue = clamp(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s);
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+};
+
+const mixedContrastRatio = (
+  from: string,
+  to: string,
+  share: number,
+  against: string,
+): number => {
+  const first = mixedLuminance(from, to, share);
+  const second = relativeLuminance(against);
+  return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+};
+
 describe('Palette', () => {
   it('keeps tokens.css in sync with the palette', () => {
     // tokens.css is generated. If this fails, run `npm run build:tokens`.
@@ -206,6 +260,44 @@ describe('Palette', () => {
       );
     }
   });
+
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ] as const)(
+    'keeps the meter fill and the error endpoint at least 3:1 against the meter track in the %s theme (WCAG 2.2 SC 1.4.11)',
+    (_theme, tokens) => {
+      // The filled share is the only thing telling the level apart from the capacity, so both ends
+      // of the depletion path carry controlBorder's floor against the track. See docs/adr/0010.
+      expect(
+        contrastRatio(tokens.meterFill, tokens.meterTrack),
+      ).toBeGreaterThanOrEqual(3);
+      expect(
+        contrastRatio(tokens.error, tokens.meterTrack),
+      ).toBeGreaterThanOrEqual(3);
+    },
+  );
+
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ] as const)(
+    'keeps every intermediate depletion colour at least 3:1 against the meter track in the %s theme (docs/adr/0010)',
+    (_theme, tokens) => {
+      // Depletion has no threshold: every share in [0, 1] is a colour a viewer can be shown, so the
+      // floor holds along the whole OKLab line, not just at its ends. Sampled at 1% steps.
+      for (let step = 0; step <= 100; step++) {
+        expect(
+          mixedContrastRatio(
+            tokens.meterFill,
+            tokens.error,
+            step / 100,
+            tokens.meterTrack,
+          ),
+        ).toBeGreaterThanOrEqual(3);
+      }
+    },
+  );
 
   it('uses plain hex values the stylesheet can consume directly', () => {
     for (const tokens of [light, dark]) {
