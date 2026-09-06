@@ -173,6 +173,12 @@ sit from each other stops reading as one group. It declares no landmark, so a na
 caller's to name.
 _Avoid_: Row, HStack, inline list, nav, toolbar
 
+**Collection**:
+A vertical group of freely composed items, separated by hairlines between neighbours with its outer
+edges open. The library owns the spacing and separation; the consumer owns each item's content,
+arrangement and any interaction within it.
+_Avoid_: Roster, item group, divided list
+
 **Control**:
 A primitive the viewer operates through a box of its own — a button, an input, a textarea. Not every
 primitive is one, and the distinction is what decides whether a token applies: the corner radius is a
