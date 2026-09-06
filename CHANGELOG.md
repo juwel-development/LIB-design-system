@@ -1,3 +1,10 @@
+# [3.5.0](https://github.com/juwel-development/LIB-design-system/compare/v3.4.0...v3.5.0) (2026-09-06)
+
+
+### Features
+
+* **typography:** expose status tones ([#106](https://github.com/juwel-development/LIB-design-system/issues/106)) ([9aff895](https://github.com/juwel-development/LIB-design-system/commit/9aff89502eb9e02a56bb5eed7889179ef2637ed5))
+
 # [3.4.0](https://github.com/juwel-development/LIB-design-system/compare/v3.3.0...v3.4.0) (2026-09-06)
 
 
