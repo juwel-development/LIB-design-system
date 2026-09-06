@@ -1,13 +1,40 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import type { ComponentProps } from 'react';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { H1 } from './H1';
 
+const statusTones = ['success', 'warning', 'error', 'info'] as const;
+const selectableColours = ['foreground', 'muted', ...statusTones] as const;
+
 describe('H1', () => {
+  it('offers the complete selectable typography colour family', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof H1>['color']>
+    >().toEqualTypeOf<
+      'foreground' | 'muted' | 'success' | 'warning' | 'error' | 'info'
+    >();
+  });
+
   it('renders its content as a level-1 heading, binding the outline level to the display role', () => {
     render(<H1>Welcome</H1>);
     expect(
       screen.getByRole('heading', { level: 1, name: 'Welcome' }),
     ).toBeInTheDocument();
+  });
+
+  it('keeps foreground as its default and keeps the existing muted option', () => {
+    render(
+      <>
+        <H1>Default</H1>
+        <H1 color={'muted'}>Muted</H1>
+      </>,
+    );
+    expect(screen.getByRole('heading', { name: 'Default' })).toHaveClass(
+      'text-foreground',
+    );
+    expect(screen.getByRole('heading', { name: 'Muted' })).toHaveClass(
+      'text-muted',
+    );
   });
 
   it('carries the large-type optical correction and never the label tracking', () => {
@@ -30,6 +57,11 @@ describe('H1', () => {
         <H1>Welcome</H1>
         <H1 color={'foreground'}>Welcome</H1>
         <H1 color={'muted'}>Welcome</H1>
+        {statusTones.map((color) => (
+          <H1 color={color} key={color}>
+            Welcome
+          </H1>
+        ))}
       </>,
     );
     for (const heading of screen.getAllByRole('heading', { level: 1 })) {
@@ -39,6 +71,26 @@ describe('H1', () => {
       expect(bounds).toEqual(['max-w-[var(--measure-display)]']);
     }
   });
+
+  it.each(statusTones)(
+    'reinforces its content with the %s status tone without changing the heading or adding announcement semantics',
+    (color) => {
+      render(<H1 color={color}>Patience is low.</H1>);
+      const heading = screen.getByRole('heading', {
+        level: 1,
+        name: 'Patience is low.',
+      });
+      expect(heading).toHaveClass(`text-${color}`);
+      expect(
+        selectableColours.filter((role) =>
+          heading.classList.contains(`text-${role}`),
+        ),
+      ).toEqual([color]);
+      expect(heading).not.toHaveAttribute('role');
+      expect(heading).not.toHaveAttribute('aria-live');
+      expect(heading.childElementCount).toBe(0);
+    },
+  );
 
   it('exposes the one sanctioned host hook through testId', () => {
     render(<H1 testId={'page-title'}>Welcome</H1>);

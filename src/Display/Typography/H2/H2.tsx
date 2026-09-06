@@ -9,7 +9,14 @@ import type { FunctionComponent, ReactNode } from 'react';
 // Colour is a semantic token re-pointed by `.dark`, so no variant carries a `dark:` class.
 const h2 = cva('font-primary text-title leading-title tracking-optical', {
   variants: {
-    color: { foreground: 'text-foreground', muted: 'text-muted' },
+    color: {
+      foreground: 'text-foreground',
+      muted: 'text-muted',
+      success: 'text-success',
+      warning: 'text-warning',
+      error: 'text-error',
+      info: 'text-info',
+    },
   },
   defaultVariants: { color: 'foreground' },
 });
@@ -27,10 +34,13 @@ interface IH2Props extends VariantProps<typeof h2> {
  * - Reads `--font-primary`, sized by `--text-title`, led by `--leading-title` and optically corrected
  *   by `--tracking-optical` — the title role is the smallest role that carries it, so `H3` and below
  *   take none.
- * - `color` selects the `foreground` or `muted` role; nothing else paints text.
+ * - `color` selects `foreground`, `muted`, `success`, `warning`, `error` or `info`; nothing else
+ *   paints text. A status tone changes colour only and adds no announcement semantics.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - Heading levels descend without skipping — an `h2` sits under an `h1`, not under an `h3`.
+ * - Status-toned content communicates its status without relying on colour. The caller owns any
+ *   announcement behavior required when that status changes.
  */
 export const H2: FunctionComponent<IH2Props> = ({
   children,

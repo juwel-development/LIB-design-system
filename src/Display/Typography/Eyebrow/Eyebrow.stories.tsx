@@ -11,7 +11,7 @@ const meta: Meta<typeof Eyebrow> = {
   argTypes: {
     color: {
       control: { type: 'radio' },
-      options: ['foreground', 'muted'],
+      options: ['foreground', 'muted', 'success', 'warning', 'error', 'info'],
       description: 'Which text-colour role the eyebrow reads',
     },
     children: {

@@ -1,12 +1,30 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import type { ComponentProps } from 'react';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { P } from '../P/P';
 import { Prose } from './Prose';
+
+const statusTones = ['success', 'warning', 'error', 'info'] as const;
+const selectableColours = ['foreground', 'muted', ...statusTones] as const;
 
 describe('Prose', () => {
   it('is one namespace object carrying exactly its four members', () => {
     expect(Object.keys(Prose).sort()).toEqual(
       ['Body', 'Lede', 'Root', 'Tail'].sort(),
+    );
+  });
+
+  it('offers the complete selectable typography colour family on Body only', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof Prose.Body>['color']>
+    >().toEqualTypeOf<
+      'foreground' | 'muted' | 'success' | 'warning' | 'error' | 'info'
+    >();
+    expectTypeOf<ComponentProps<typeof Prose.Lede>>().not.toHaveProperty(
+      'color',
+    );
+    expectTypeOf<ComponentProps<typeof Prose.Tail>>().not.toHaveProperty(
+      'color',
     );
   });
 
@@ -77,6 +95,32 @@ describe('Prose', () => {
       screen.getByText('y').className,
     );
   });
+
+  it.each(statusTones)(
+    'matches P on the %s status tone without changing the paragraph or adding announcement semantics',
+    (color) => {
+      render(
+        <>
+          <Prose.Body color={color}>Status copy.</Prose.Body>
+          <P color={color}>Primitive copy.</P>
+        </>,
+      );
+      const body = screen.getByText('Status copy.');
+      expect(body.className).toBe(
+        screen.getByText('Primitive copy.').className,
+      );
+      expect(body.tagName).toBe('P');
+      expect(body).toHaveClass(`text-${color}`);
+      expect(
+        selectableColours.filter((role) =>
+          body.classList.contains(`text-${role}`),
+        ),
+      ).toEqual([color]);
+      expect(body).not.toHaveAttribute('role');
+      expect(body).not.toHaveAttribute('aria-live');
+      expect(body.childElementCount).toBe(0);
+    },
+  );
 
   it('renders the tail as a muted paragraph at the small role', () => {
     render(<Prose.Tail>A closing note.</Prose.Tail>);

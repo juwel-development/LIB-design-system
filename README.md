@@ -74,6 +74,26 @@ on an ancestor re-points every token underneath it.
 A product re-themes the whole system by supplying its own values for the same role
 names, which is what lets one design system serve several brands.
 
+### Typography status tones
+
+Typography whose colour is selectable accepts the general `success`, `warning`, `error`, and
+`info` status tones alongside `foreground` and `muted`. This includes `H1`–`H6`, `Eyebrow`, `P`,
+`Note`, and `Prose.Body`; fixed-colour members such as `Prose.Lede` and `Prose.Tail` remain fixed.
+
+```tsx
+<P color={'warning'}>Warning: patience is low and the offer gap is wide.</P>
+```
+
+A status tone reinforces status that the content already communicates: never use colour as the
+only cue. Selecting one changes only the semantic text colour and does not add an ARIA role, live
+region, icon, or wording. The caller remains responsible for announcement behavior when a changing
+status needs it.
+
+All four palette roles must remain at least 4.5:1 against `surface` in every theme because they can
+paint normal-size and small text. They remain general roles rather than typography-only tokens, so
+constraints from other carriers also apply; `error`, for example, remains Meter's depletion
+endpoint and must keep that complete path at least 3:1 against `meterTrack`.
+
 ### Single-theme builds
 
 `styles.css` and `tokens.css` carry both colour sets, so a product that ships only one

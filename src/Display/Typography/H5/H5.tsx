@@ -8,7 +8,14 @@ import type { FunctionComponent, ReactNode } from 'react';
 // token re-pointed by `.dark`, so no variant carries a `dark:` class.
 const h5 = cva('font-primary text-body leading-body font-semibold', {
   variants: {
-    color: { foreground: 'text-foreground', muted: 'text-muted' },
+    color: {
+      foreground: 'text-foreground',
+      muted: 'text-muted',
+      success: 'text-success',
+      warning: 'text-warning',
+      error: 'text-error',
+      info: 'text-info',
+    },
   },
   defaultVariants: { color: 'foreground' },
 });
@@ -25,10 +32,13 @@ interface IH5Props extends VariantProps<typeof h5> {
  * @Guarantees — enforced on every render
  * - Renders an `h5`; its outline level and the body role are one choice, not two (docs/adr/0005).
  * - Reads `--font-primary`, sized by `--text-body`, semibold so it stands apart from a paragraph.
- * - `color` selects the `foreground` or `muted` role; nothing else paints text.
+ * - `color` selects `foreground`, `muted`, `success`, `warning`, `error` or `info`; nothing else
+ *   paints text. A status tone changes colour only and adds no announcement semantics.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - Heading levels descend without skipping — an `h5` sits under an `h4`, not under an `h3`.
+ * - Status-toned content communicates its status without relying on colour. The caller owns any
+ *   announcement behavior required when that status changes.
  */
 export const H5: FunctionComponent<IH5Props> = ({
   children,

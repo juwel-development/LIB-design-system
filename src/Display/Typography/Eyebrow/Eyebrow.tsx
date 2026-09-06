@@ -10,7 +10,14 @@ import type { FunctionComponent, ReactNode } from 'react';
 // semantic token re-pointed by `.dark`, so no variant carries a `dark:` class.
 const eyebrow = cva('font-secondary text-label tracking-label font-medium', {
   variants: {
-    color: { foreground: 'text-foreground', muted: 'text-muted' },
+    color: {
+      foreground: 'text-foreground',
+      muted: 'text-muted',
+      success: 'text-success',
+      warning: 'text-warning',
+      error: 'text-error',
+      info: 'text-info',
+    },
   },
   defaultVariants: { color: 'muted' },
 });
@@ -28,12 +35,15 @@ interface IEyebrowProps extends VariantProps<typeof eyebrow> {
  * @Guarantees — enforced on every render
  * - Renders a `p`, reading `--font-secondary`, sized by `--text-label` and tracked by
  *   `--tracking-label`, at weight 500.
- * - `color` selects the `muted` (default) or `foreground` role; nothing else paints text.
+ * - `color` selects `muted` (default), `foreground`, `success`, `warning`, `error` or `info`;
+ *   nothing else paints text. A status tone changes colour only and adds no announcement semantics.
  * - Sets neither `font-variant-caps` nor `font-variant-numeric` under any prop.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - This is **not a form label**: it renders no `htmlFor` and labels no control. A labelled control
  *   uses `Input`/`TextArea`, which label themselves.
+ * - Status-toned content communicates its status without relying on colour. The caller owns any
+ *   announcement behavior required when that status changes.
  */
 export const Eyebrow: FunctionComponent<IEyebrowProps> = ({
   children,

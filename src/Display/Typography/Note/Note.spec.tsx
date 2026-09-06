@@ -1,13 +1,27 @@
 import { Link } from 'Interaction/Link/Link';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import type { ComponentProps } from 'react';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { Note } from './Note';
 
 // Every prop combination the recipe can be called with, so the "emits nothing else" pins below hold
 // across the whole surface rather than on the default alone.
-const everyColour = [undefined, 'foreground', 'muted'] as const;
+const statusTones = ['success', 'warning', 'error', 'info'] as const;
+const everyColour = [undefined, 'foreground', 'muted', ...statusTones] as const;
+const selectableColours = everyColour.filter(
+  (color): color is Exclude<(typeof everyColour)[number], undefined> =>
+    color !== undefined,
+);
 
 describe('Note', () => {
+  it('offers the complete selectable typography colour family', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof Note>['color']>
+    >().toEqualTypeOf<
+      'foreground' | 'muted' | 'success' | 'warning' | 'error' | 'info'
+    >();
+  });
+
   it('renders its content as a paragraph in the secondary family at the small role', () => {
     render(<Note>We reply within two working days.</Note>);
     const note = screen.getByText('We reply within two working days.');
@@ -35,6 +49,22 @@ describe('Note', () => {
     expect(note).toHaveClass('text-muted');
     expect(note).not.toHaveClass('text-foreground');
   });
+
+  it.each(statusTones)(
+    'reinforces its content with the %s status tone without changing the paragraph or adding content',
+    (color) => {
+      render(<Note color={color}>Patience is low.</Note>);
+      const note = screen.getByText('Patience is low.');
+      expect(note.tagName).toBe('P');
+      expect(note).toHaveClass(`text-${color}`);
+      expect(
+        selectableColours.filter((role) =>
+          note.classList.contains(`text-${role}`),
+        ),
+      ).toEqual([color]);
+      expect(note.childElementCount).toBe(0);
+    },
+  );
 
   it.each(everyColour)(
     'emits no tracking, no weight, no measure and no margin at color=%s - the first two are what make an Eyebrow and the last two what make a reading column, and a Note is neither',

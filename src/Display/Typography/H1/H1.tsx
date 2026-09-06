@@ -12,7 +12,14 @@ const h1 = cva(
   'font-primary text-display leading-display tracking-optical max-w-[var(--measure-display)]',
   {
     variants: {
-      color: { foreground: 'text-foreground', muted: 'text-muted' },
+      color: {
+        foreground: 'text-foreground',
+        muted: 'text-muted',
+        success: 'text-success',
+        warning: 'text-warning',
+        error: 'text-error',
+        info: 'text-info',
+      },
     },
     defaultVariants: { color: 'foreground' },
   },
@@ -34,7 +41,8 @@ interface IH1Props extends VariantProps<typeof h1> {
  *   because bigger type wants fewer characters per line (docs/adr/0004). The bound is the recipe's,
  *   not a caller's: the level fixes the role and the role fixes the measure, so there is no `measure`
  *   prop to select between roles (docs/adr/0008). It holds under every `color`.
- * - `color` selects the `foreground` or `muted` role; nothing else paints text.
+ * - `color` selects `foreground`, `muted`, `success`, `warning`, `error` or `info`; nothing else
+ *   paints text. A status tone changes colour only and adds no announcement semantics.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - This is an ordinary page title, and it is also a hero's lead - `display` is the hero role, so a
@@ -44,6 +52,8 @@ interface IH1Props extends VariantProps<typeof h1> {
  * - A subpage head is the exception: `PageHead` renders its own `h1` at the `title` role, the one
  *   sanctioned escape valve from level-fixes-role (docs/adr/0005). Reach for it where it fits.
  * - Heading levels descend without skipping — an `h1` is followed by an `h2`, never an `h3`.
+ * - Status-toned content communicates its status without relying on colour. The caller owns any
+ *   announcement behavior required when that status changes.
  */
 export const H1: FunctionComponent<IH1Props> = ({
   children,

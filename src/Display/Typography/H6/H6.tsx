@@ -8,7 +8,14 @@ import type { FunctionComponent, ReactNode } from 'react';
 // token re-pointed by `.dark`, so no variant carries a `dark:` class.
 const h6 = cva('font-primary text-body leading-body font-medium', {
   variants: {
-    color: { foreground: 'text-foreground', muted: 'text-muted' },
+    color: {
+      foreground: 'text-foreground',
+      muted: 'text-muted',
+      success: 'text-success',
+      warning: 'text-warning',
+      error: 'text-error',
+      info: 'text-info',
+    },
   },
   defaultVariants: { color: 'foreground' },
 });
@@ -25,10 +32,13 @@ interface IH6Props extends VariantProps<typeof h6> {
  * @Guarantees — enforced on every render
  * - Renders an `h6`; its outline level and the body role are one choice, not two (docs/adr/0005).
  * - Reads `--font-primary`, sized by `--text-body`, medium so it stands apart from a paragraph.
- * - `color` selects the `foreground` or `muted` role; nothing else paints text.
+ * - `color` selects `foreground`, `muted`, `success`, `warning`, `error` or `info`; nothing else
+ *   paints text. A status tone changes colour only and adds no announcement semantics.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - Heading levels descend without skipping — an `h6` sits under an `h5`, not under an `h4`.
+ * - Status-toned content communicates its status without relying on colour. The caller owns any
+ *   announcement behavior required when that status changes.
  */
 export const H6: FunctionComponent<IH6Props> = ({
   children,

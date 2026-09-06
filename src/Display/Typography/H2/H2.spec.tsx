@@ -1,14 +1,61 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import type { ComponentProps } from 'react';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { H2 } from './H2';
 
+const statusTones = ['success', 'warning', 'error', 'info'] as const;
+const selectableColours = ['foreground', 'muted', ...statusTones] as const;
+
 describe('H2', () => {
+  it('offers the complete selectable typography colour family', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof H2>['color']>
+    >().toEqualTypeOf<
+      'foreground' | 'muted' | 'success' | 'warning' | 'error' | 'info'
+    >();
+  });
+
   it('renders its content as a level-2 heading, binding the outline level to the title role', () => {
     render(<H2>Section</H2>);
     expect(
       screen.getByRole('heading', { level: 2, name: 'Section' }),
     ).toBeInTheDocument();
   });
+
+  it('keeps foreground as its default and keeps the existing muted option', () => {
+    render(
+      <>
+        <H2>Default</H2>
+        <H2 color={'muted'}>Muted</H2>
+      </>,
+    );
+    expect(screen.getByRole('heading', { name: 'Default' })).toHaveClass(
+      'text-foreground',
+    );
+    expect(screen.getByRole('heading', { name: 'Muted' })).toHaveClass(
+      'text-muted',
+    );
+  });
+
+  it.each(statusTones)(
+    'reinforces its content with the %s status tone without changing the heading or adding announcement semantics',
+    (color) => {
+      render(<H2 color={color}>Patience is low.</H2>);
+      const heading = screen.getByRole('heading', {
+        level: 2,
+        name: 'Patience is low.',
+      });
+      expect(heading).toHaveClass(`text-${color}`);
+      expect(
+        selectableColours.filter((role) =>
+          heading.classList.contains(`text-${role}`),
+        ),
+      ).toEqual([color]);
+      expect(heading).not.toHaveAttribute('role');
+      expect(heading).not.toHaveAttribute('aria-live');
+      expect(heading.childElementCount).toBe(0);
+    },
+  );
 
   it('carries the same optical correction as the page head, the title role rendered one way', () => {
     // The title role is rendered by two components - this and PageHead's h1 - and they must agree, or

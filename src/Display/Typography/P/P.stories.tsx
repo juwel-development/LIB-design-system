@@ -11,7 +11,7 @@ const meta: Meta<typeof P> = {
   argTypes: {
     color: {
       control: { type: 'radio' },
-      options: ['foreground', 'muted'],
+      options: ['foreground', 'muted', 'success', 'warning', 'error', 'info'],
       description: 'Which text-colour role the paragraph reads',
     },
     children: {
@@ -41,4 +41,17 @@ export const Muted: Story = {
       'The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.',
     color: 'muted',
   },
+};
+
+/** Status tones reinforce meaning already present in the wording. They add no live announcement;
+ *  the interaction that owns a changing status is responsible for announcing it when needed. */
+export const StatusTones: Story = {
+  render: () => (
+    <>
+      <P color={'success'}>Success: the changes were saved.</P>
+      <P color={'warning'}>Warning: patience is low.</P>
+      <P color={'error'}>Error: the changes could not be saved.</P>
+      <P color={'info'}>Information: a new version is available.</P>
+    </>
+  ),
 };

@@ -41,6 +41,27 @@ export const Default: Story = {
   ),
 };
 
+/** `Body` can reinforce status that its wording already communicates. Selecting a tone adds no live
+ *  announcement; `Lede` stays foreground and `Tail` stays muted because their colours are fixed. */
+export const StatusTones: Story = {
+  render: () => (
+    <Prose.Root>
+      <Prose.Lede>Status tones inside a reading column</Prose.Lede>
+      <Prose.Body color={'success'}>
+        Success: the changes were saved.
+      </Prose.Body>
+      <Prose.Body color={'warning'}>Warning: patience is low.</Prose.Body>
+      <Prose.Body color={'error'}>
+        Error: the changes could not be saved.
+      </Prose.Body>
+      <Prose.Body color={'info'}>
+        Information: a new version is available.
+      </Prose.Body>
+      <Prose.Tail>The wording carries the status without colour.</Prose.Tail>
+    </Prose.Root>
+  ),
+};
+
 /** Inside a wider grid cell the column still caps at the measure - the cell does not widen it. */
 export const InAWiderGridCell: Story = {
   parameters: {

@@ -7,7 +7,14 @@ import type { FunctionComponent, ReactNode } from 'react';
 // P owns no reading measure - that belongs to whatever owns the reading column (Prose #21).
 const p = cva('font-primary text-body leading-body', {
   variants: {
-    color: { foreground: 'text-foreground', muted: 'text-muted' },
+    color: {
+      foreground: 'text-foreground',
+      muted: 'text-muted',
+      success: 'text-success',
+      warning: 'text-warning',
+      error: 'text-error',
+      info: 'text-info',
+    },
   },
   defaultVariants: { color: 'foreground' },
 });
@@ -23,13 +30,16 @@ interface IPProps extends VariantProps<typeof p> {
  *
  * @Guarantees — enforced on every render
  * - Renders a `p`, reading `--font-primary`, sized by `--text-body` and led by `--leading-body`.
- * - `color` selects the `foreground` or `muted` role; nothing else paints text.
+ * - `color` selects `foreground`, `muted`, `success`, `warning`, `error` or `info`; nothing else
+ *   paints text. A status tone changes colour only and adds no announcement semantics.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - Where line length matters, place the paragraph inside whatever bounds the reading measure; `P`
  *   does not constrain its own width.
  * - For a paragraph inside a reading column, reach for `Prose.Body`, which is measure-bounded by its
  *   `Prose.Root`; `P` is for a paragraph with no reading column around it.
+ * - Status-toned content communicates its status without relying on colour. If a change needs to be
+ *   announced, the caller owns that behavior; selecting a tone does not create a status event.
  */
 export const P: FunctionComponent<IPProps> = ({ children, color, testId }) => (
   <p className={p({ color })} data-testid={testId}>

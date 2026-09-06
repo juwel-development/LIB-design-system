@@ -127,6 +127,51 @@ describe('Palette', () => {
     },
   );
 
+  it.each(
+    (
+      [
+        ['light', light],
+        ['dark', dark],
+      ] as const
+    ).flatMap(([theme, tokens]) =>
+      (['success', 'warning', 'error', 'info'] as const).map(
+        (role) => [theme, role, tokens] as const,
+      ),
+    ),
+  )(
+    "keeps the %s theme's `%s` status tone at least 4.5:1 against surface (WCAG 2.2 SC 1.4.3)",
+    (_theme, role, tokens) => {
+      expect(
+        contrastRatio(tokens[role], tokens.surface),
+      ).toBeGreaterThanOrEqual(4.5);
+    },
+  );
+
+  it('ships the agreed status-tone palette while keeping the dark values unchanged', () => {
+    expect({
+      success: light.success,
+      warning: light.warning,
+      error: light.error,
+      info: light.info,
+    }).toEqual({
+      success: '#047857',
+      warning: '#b45309',
+      error: '#d63384',
+      info: '#0e7490',
+    });
+    expect({
+      success: dark.success,
+      warning: dark.warning,
+      error: dark.error,
+      info: dark.info,
+    }).toEqual({
+      success: '#34d399',
+      warning: '#fbbf24',
+      error: '#f48fb1',
+      info: '#22d3ee',
+    });
+  });
+
   it.each([
     ['light', light],
     ['dark', dark],
