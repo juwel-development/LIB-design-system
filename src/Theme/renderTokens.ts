@@ -324,7 +324,6 @@ ${TAB_MARKER}
 
 ${TAB_INSETS}
 
-/* The slider's dimensions are not colours either, and sit in :root beside the tab blocks. */
 ${SLIDER}
 `;
 

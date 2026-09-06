@@ -29,9 +29,10 @@ const meta: Meta<typeof Slider> = {
       description:
         'The current value; the consumer holds it and passes it back in',
     },
-    onChange$: {
+    onInput$: {
       control: false,
-      description: 'Subject that emits the new value on every change',
+      description:
+        'Subject that emits the new value on every input; required, since the control is controlled and has no form-submission fallback',
     },
     label: {
       control: { type: 'text' },
@@ -40,6 +41,10 @@ const meta: Meta<typeof Slider> = {
     valueText: {
       control: { type: 'text' },
       description: "How the value is announced, in the consumer's wording",
+    },
+    disabled: {
+      control: { type: 'boolean' },
+      description: 'The explicit non-operable state',
     },
     testId: {
       control: { type: 'text' },
@@ -55,11 +60,11 @@ type Story = StoryObj<typeof meta>;
 // render any figures beside the control yourself - the Slider displays nothing.
 const ControlledExample: FunctionComponent = () => {
   const [wage, setWage] = useState(60);
-  const [onChange$] = useState(() => new Subject<number>());
+  const [onInput$] = useState(() => new Subject<number>());
   useEffect(() => {
-    const subscription = onChange$.subscribe(setWage);
+    const subscription = onInput$.subscribe(setWage);
     return () => subscription.unsubscribe();
-  }, [onChange$]);
+  }, [onInput$]);
   return (
     <>
       <P>${wage} a week</P>
@@ -68,7 +73,7 @@ const ControlledExample: FunctionComponent = () => {
         max={300}
         step={5}
         value={wage}
-        onChange$={onChange$}
+        onInput$={onInput$}
         label={'Weekly Wage in $'}
         valueText={`$${wage} a week`}
       />
@@ -83,17 +88,17 @@ export const Controlled: Story = {
 // Whole-step movement with no step named: the increment defaults to 1.
 const DefaultStepExample: FunctionComponent = () => {
   const [level, setLevel] = useState(3);
-  const [onChange$] = useState(() => new Subject<number>());
+  const [onInput$] = useState(() => new Subject<number>());
   useEffect(() => {
-    const subscription = onChange$.subscribe(setLevel);
+    const subscription = onInput$.subscribe(setLevel);
     return () => subscription.unsubscribe();
-  }, [onChange$]);
+  }, [onInput$]);
   return (
     <Slider
       min={0}
       max={10}
       value={level}
-      onChange$={onChange$}
+      onInput$={onInput$}
       label={'Level'}
     />
   );
@@ -101,4 +106,18 @@ const DefaultStepExample: FunctionComponent = () => {
 
 export const DefaultStep: Story = {
   render: () => <DefaultStepExample />,
+};
+
+// The explicit non-operable state: native disabled conduct, no emissions, and track and thumb
+// painted in the disabled role. No wiring is needed - a disabled control emits nothing.
+export const Disabled: Story = {
+  args: {
+    min: 20,
+    max: 300,
+    step: 5,
+    value: 60,
+    onInput$: new Subject<number>(),
+    label: 'Weekly Wage in $',
+    disabled: true,
+  },
 };
