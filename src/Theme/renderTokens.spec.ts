@@ -510,3 +510,35 @@ describe('renderTokens tab inset contract', () => {
     }
   });
 });
+
+describe('renderTokens meter track contract', () => {
+  it('emits the meter track thickness in every stylesheet, defaulting to the height the first consumer hand-rolled', () => {
+    // The published constraint is > 0 - a zero-thickness track erases the display (#105).
+    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+      expect(render()).toContain('--meter-track-thickness: 0.5rem;');
+    }
+  });
+
+  it('keeps the thickness in :root, out of every @theme block and the colour map, since it is not a colour', () => {
+    const css = renderTokens();
+    const themeBlock = css.match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).not.toContain('--meter-track-thickness');
+    expect(themeInline).not.toContain('--meter-track-thickness');
+  });
+
+  it('carries the meter colour roles in every stylesheet, distinct names even while the values match existing roles', () => {
+    // meterFill ships foreground's value and meterTrack border's (docs/adr/0010) - the names are
+    // the contract: a consumer re-points one without moving the other.
+    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+      const themeInline =
+        render().match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+      expect(themeInline).toContain(
+        '--color-meter-fill: var(--color-meter-fill);',
+      );
+      expect(themeInline).toContain(
+        '--color-meter-track: var(--color-meter-track);',
+      );
+    }
+  });
+});

@@ -227,6 +227,15 @@ const TAB_MARKER = `:root {
   --tab-marker-thickness: 2px;
 }`;
 
+/* The meter track's thickness is not a colour: like the tick it lives in :root only, never
+   @theme inline, so a brand can re-point the bar's weight. Meter reads it as
+   h-[var(--meter-track-thickness)]. Constraint: > 0 - a zero-thickness track erases the display.
+   0.5rem is the height the accepted Negotiation prototype hand-rolled (#105), carried over so the
+   first consumer changes nothing visually. */
+const METER_TRACK = `:root {
+  --meter-track-thickness: 0.5rem;
+}`;
+
 const toKebabCase = (name: string): string =>
   name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 
@@ -313,6 +322,9 @@ ${TICK}
 ${TAB_MARKER}
 
 ${TAB_INSETS}
+
+/* The meter track's thickness is not a colour either, and sits in :root beside the tab blocks. */
+${METER_TRACK}
 `;
 
 /**

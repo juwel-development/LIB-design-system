@@ -39,6 +39,20 @@ export type PaletteTokens = {
    *  keeps it near `surface` rather than a mid grey. */
   backing: string;
 
+  /** The colour of a Meter's filled share when it states an amount without judgment - neither an
+   *  action fill nor text ink. The depletion treatment mixes it toward `error` in OKLab, so the
+   *  constraint covers the whole path (WCAG 2.2 SC 1.4.11): this value, `error`, and every colour
+   *  the mix produces between them stay at least 3:1 against `meterTrack` in the same theme. A
+   *  distinct role even while its shipped value matches `foreground` - a consumer re-points either
+   *  without moving the other. See docs/adr/0010-meter-depletion-is-a-treatment.md. */
+  meterFill: string;
+  /** The colour of a Meter's whole capacity behind its filled share. It makes the scale visible
+   *  without turning it into a boundary - the persistent one-pixel `rule` outline is what
+   *  identifies the capacity against `surface`, so this role carries no floor of its own; the
+   *  3:1 floor is stated from the fill side, on `meterFill`. A distinct role even while its
+   *  shipped value matches `border`. See docs/adr/0010-meter-depletion-is-a-treatment.md. */
+  meterTrack: string;
+
   /** The main call-to-action fill. A filled control draws no border, so the fill is the only thing
    *  separating the control from the surface - what `controlBorder` is for an unfilled one.
    *  Constraint (WCAG 2.2 SC 1.4.11): at least 3:1 against `surface` in the same theme,
@@ -124,6 +138,9 @@ export const light: PaletteTokens = {
   rule: '#808fa3',
   backing: '#f1f5f9',
 
+  meterFill: '#0f172a',
+  meterTrack: '#e2e8f0',
+
   primary: '#7c3aed',
   primaryHover: '#6d28d9',
   primaryForeground: '#f8fafc',
@@ -168,6 +185,9 @@ export const dark: PaletteTokens = {
   controlBorder: '#94a3b8',
   rule: '#5b6a80',
   backing: '#1e293b',
+
+  meterFill: '#f8fafc',
+  meterTrack: '#334155',
 
   primary: '#8b5cf6',
   primaryHover: '#a78bfa',
