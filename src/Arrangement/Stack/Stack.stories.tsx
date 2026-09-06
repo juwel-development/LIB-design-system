@@ -1,7 +1,12 @@
+import { Table } from 'Display/Table/Table';
+import { H1 } from 'Display/Typography/H1/H1';
+import { Note } from 'Display/Typography/Note/Note';
 import { P } from 'Display/Typography/P/P';
 import { Button } from 'Interaction/Button/Button';
+import { Cover } from 'Layout/Cover/Cover';
 import { Section } from 'Layout/Section/Section';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, within } from 'storybook/test';
 import { Stack } from './Stack';
 
 const meta: Meta<typeof Stack> = {
@@ -25,6 +30,12 @@ const meta: Meta<typeof Stack> = {
       options: [false, true, 'action'],
       description:
         'Bounds the column: the reading measure for text, the action column for controls',
+    },
+    align: {
+      control: { type: 'radio' },
+      options: [undefined, 'start', 'center'],
+      description:
+        'Inherited text alignment within each text block; omission inherits, start resets in LTR and RTL. Does not place or resize children.',
     },
     direction: {
       control: { type: 'radio' },
@@ -121,5 +132,100 @@ export const InsideASection: Story = {
         </P>
       </Stack>
     </Section>
+  ),
+};
+
+/** Text centres within its own block, independently of box placement. Resize below the action
+ *  bound to see both roles wrap; words wider than their block are outside this guarantee. */
+export const CenteredText: Story = {
+  args: { align: 'center' },
+  render: (args) => (
+    <Cover>
+      <Stack measure={'action'} align={args.align}>
+        <H1>A place for every jar</H1>
+        <Note>Every jar named, every shelf ready for the next season.</Note>
+        <Button>Start a label</Button>
+      </Stack>
+    </Cover>
+  ),
+  play: async ({ canvasElement, args }) => {
+    if (args.align !== 'center') return;
+    await document.fonts.ready;
+    for (const block of canvasElement.querySelectorAll('h1, p')) {
+      const rectangle = block.getBoundingClientRect();
+      const axis = (rectangle.left + rectangle.right) / 2;
+      const range = document.createRange();
+      range.selectNodeContents(block);
+      for (const line of range.getClientRects()) {
+        await expect(
+          Math.abs((line.left + line.right) / 2 - axis),
+        ).toBeLessThanOrEqual(0.1);
+      }
+    }
+  },
+};
+
+/** Omitted alignment inherits through nested Stacks. A start reset follows the document's
+ *  direction; Table cells keep their own explicit alignment inside the centred group. */
+export const InheritedAndReset: Story = {
+  render: () => (
+    <Stack align={'center'}>
+      <Stack>
+        <Note>Inherited centre</Note>
+      </Stack>
+      <div dir={'ltr'}>
+        <Stack align={'start'}>
+          <Note>Logical start in LTR</Note>
+        </Stack>
+      </div>
+      <div dir={'rtl'}>
+        <Stack align={'start'}>
+          <Note>بداية السطر</Note>
+        </Stack>
+      </div>
+      <Table.Root caption={'Alignment owned by cells'}>
+        <Table.Body>
+          <Table.Row>
+            <Table.Cell align={'right'}>Explicit right</Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table.Root>
+    </Stack>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      getComputedStyle(canvas.getByText('Inherited centre')).textAlign,
+    ).toBe('center');
+    const leftToRight = getComputedStyle(
+      canvas.getByText('Logical start in LTR'),
+    );
+    await expect(leftToRight.textAlign).toBe('start');
+    await expect(leftToRight.direction).toBe('ltr');
+    const rightToLeft = getComputedStyle(canvas.getByText('بداية السطر'));
+    await expect(rightToLeft.textAlign).toBe('start');
+    await expect(rightToLeft.direction).toBe('rtl');
+    await expect(getComputedStyle(canvas.getByRole('cell')).textAlign).toBe(
+      'right',
+    );
+  },
+};
+
+/** Alignment applies within each track even after split becomes a row. The action columns
+ *  keep their own bounds and placement; their text need not share the outer Stack's axis. */
+export const AlignedTracks: Story = {
+  args: { align: 'center', direction: 'split', gap: 'region' },
+  render: (args) => (
+    <Stack {...args}>
+      <Stack measure={'action'}>
+        <Note>One track with a short annotation.</Note>
+      </Stack>
+      <Stack measure={'action'}>
+        <Note>
+          Another track with a longer annotation that can wrap over several
+          lines.
+        </Note>
+      </Stack>
+    </Stack>
   ),
 };

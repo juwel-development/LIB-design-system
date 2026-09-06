@@ -17,6 +17,10 @@ const stack = cva('flex', {
       false: '',
       action: 'w-[var(--measure-action)] max-w-full mx-auto',
     },
+    align: {
+      start: 'text-start',
+      center: 'text-center',
+    },
     direction: {
       column: 'flex-col',
       split: 'flex-col lg:flex-row lg:items-start',
@@ -33,9 +37,9 @@ export interface IStackProps extends VariantProps<typeof stack> {
 
 /**
  * A vertical arrangement: children in a column, separated by one named space role and optionally
- * bounded by the reading measure or the action column. It owns one axis and one gap and nothing
- * else - no landmark, no heading, no band, no join, no gutter, no fill - and takes no outer space,
- * so whatever holds it owns the rhythm around it.
+ * bounded by the reading measure or the action column, with optional inherited text alignment.
+ * It owns no landmark, heading, band, join, gutter or fill and takes no outer space, so whatever
+ * holds it owns the rhythm around it.
  *
  * @Guarantees — enforced on every render
  * - It renders a `div` with no landmark role, no heading and no margin of its own - the one
@@ -60,6 +64,12 @@ export interface IStackProps extends VariantProps<typeof stack> {
  *   turning into a row at and above 64rem, its children aligned to their start edge rather than
  *   stretched. It is the only viewport-dependent behaviour here, and it is named for the job: the
  *   breakpoint is an implementation detail and is not part of the vocabulary.
+ * - `align="center"` centres inline text within each receiving text block; `align="start"`
+ *   resets it to the logical start edge in LTR or RTL. Omission sets no alignment, so nested
+ *   Stacks inherit. Descendants that declare their own alignment retain it.
+ * - Alignment never moves or resizes child boxes or changes gap, measure, direction, wrapping or
+ *   overflow. A narrower text block centres within itself, not on its holder's axis; an unbroken
+ *   word wider than its block is outside the centring guarantee, including in split arrangements.
  * - No literal length and no numbered spacing rung appears in the recipe: every value it emits is a
  *   role the token layer already names, so a second brand re-points all of them.
  * - `children` render unmodified, and it needs no JavaScript.
@@ -78,10 +88,14 @@ export const Stack: FunctionComponent<IStackProps> = ({
   gap,
   measure,
   direction,
+  align,
   children,
   testId,
 }) => (
-  <div className={stack({ gap, measure, direction })} data-testid={testId}>
+  <div
+    className={stack({ gap, measure, direction, align })}
+    data-testid={testId}
+  >
     {children}
   </div>
 );

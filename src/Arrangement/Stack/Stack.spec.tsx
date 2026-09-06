@@ -4,10 +4,17 @@ import { Input } from 'Interaction/Input/Input';
 import { TextArea } from 'Interaction/TextArea/TextArea';
 import { Form } from 'Layout/Form/Form';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import type { ComponentProps } from 'react';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { Stack } from './Stack';
 
 describe('Stack', () => {
+  it('offers only optional logical start or centred text alignment', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof Stack>['align']>
+    >().toEqualTypeOf<'start' | 'center'>();
+  });
+
   it('renders a plain container that claims no landmark and no heading', () => {
     const { container } = render(<Stack testId={'stack'}>Matter</Stack>);
     const stack = screen.getByTestId('stack');
