@@ -155,6 +155,13 @@ const SPACING = `:root {
   --space-band: 4em;
 }`;
 
+/* Collection item padding is air inside each freely composed item (#103), distinct from a sibling
+   gap or a page band. One em above and below keeps it tied to inherited type without imposing a
+   type role on the content. A separate role lets a brand tune this air without moving other groups. */
+const COLLECTION_SPACING = `:root {
+  --space-collection-item: 1em;
+}`;
+
 /* The gutter is the horizontal inset holding content off the viewport edge (#9), and the one spacing role
    measured against the screen rather than the type: it answers to how much room there is, not how large
    the words are, so it is in rem/vw and never em. A clamp() lets it grow with the viewport with no
@@ -270,6 +277,9 @@ ${MEASURE}
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
    re-pointing - so the three roles sit in :root beside the measure. */
 ${SPACING}
+
+/* Collection's vertical item padding, measured against inherited type. */
+${COLLECTION_SPACING}
 
 /* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
 ${GUTTER}
