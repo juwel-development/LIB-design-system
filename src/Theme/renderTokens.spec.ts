@@ -487,3 +487,13 @@ describe('single-theme token variants (issue #62)', () => {
     }
   });
 });
+
+describe('renderTokens tab inset contract', () => {
+  it('emits named inline and block label insets in every stylesheet', () => {
+    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+      const stylesheet = render();
+      expect(stylesheet).toContain('--tab-inset-inline: 1em;');
+      expect(stylesheet).toContain('--tab-inset-block: 0.5em;');
+    }
+  });
+});

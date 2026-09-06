@@ -186,3 +186,13 @@
   --tick-length: 0.9rem;
   --tick-thickness: 1px;
 }
+
+/* The tab marker's thickness is not a colour either, and sits in :root beside the tick block. */
+:root {
+  --tab-marker-thickness: 2px;
+}
+
+:root {
+  --tab-inset-inline: 1em;
+  --tab-inset-block: 0.5em;
+}

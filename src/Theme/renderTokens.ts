@@ -204,6 +204,22 @@ const TICK = `:root {
   --tick-thickness: 1px;
 }`;
 
+/* Tab label insets separate adjacent controls and give the label vertical breathing room.
+   These are two axis-specific jobs, not a selectable scale; stack/region/band describe other jobs.
+   Like those spacing roles, em tracks the label type. Non-negative values preserve the hit area. */
+const TAB_INSETS = `:root {
+  --tab-inset-inline: 1em;
+  --tab-inset-block: 0.5em;
+}`;
+
+/* Not a colour: like the tick, the thickness lives in :root only, never @theme inline, so a brand
+   can re-point the marker's weight. Not an --underline-* token - those name an anchor's line
+   (docs/adr/0006); this names the persistent mark under the active tab, drawn in `foreground`,
+   no new role. Constraint: > 0 - the line is the one persistent selection cue, zero erases it. */
+const TAB_MARKER = `:root {
+  --tab-marker-thickness: 2px;
+}`;
+
 const toKebabCase = (name: string): string =>
   name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 
@@ -282,6 +298,11 @@ ${COVER}
 
 /* The checklist tick's dimensions are not colours either, and sit in :root beside the underline block. */
 ${TICK}
+
+/* The tab marker's thickness is not a colour either, and sits in :root beside the tick block. */
+${TAB_MARKER}
+
+${TAB_INSETS}
 `;
 
 /**
