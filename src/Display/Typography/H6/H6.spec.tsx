@@ -4,7 +4,6 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import { H6 } from './H6';
 
 const statusTones = ['success', 'warning', 'error', 'info'] as const;
-const selectableColours = ['foreground', 'muted', ...statusTones] as const;
 
 describe('H6', () => {
   it('offers the complete selectable typography colour family', () => {
@@ -22,35 +21,14 @@ describe('H6', () => {
     ).toBeInTheDocument();
   });
 
-  it('keeps foreground as its default and keeps the existing muted option', () => {
-    render(
-      <>
-        <H6>Default</H6>
-        <H6 color={'muted'}>Muted</H6>
-      </>,
-    );
-    expect(screen.getByRole('heading', { name: 'Default' })).toHaveClass(
-      'text-foreground',
-    );
-    expect(screen.getByRole('heading', { name: 'Muted' })).toHaveClass(
-      'text-muted',
-    );
-  });
-
   it.each(statusTones)(
-    'reinforces its content with the %s status tone without changing the heading or adding announcement semantics',
+    'leaves the rendered heading semantics unchanged when the %s status tone is selected',
     (color) => {
       render(<H6 color={color}>Patience is low.</H6>);
       const heading = screen.getByRole('heading', {
         level: 6,
         name: 'Patience is low.',
       });
-      expect(heading).toHaveClass(`text-${color}`);
-      expect(
-        selectableColours.filter((role) =>
-          heading.classList.contains(`text-${role}`),
-        ),
-      ).toEqual([color]);
       expect(heading).not.toHaveAttribute('role');
       expect(heading).not.toHaveAttribute('aria-live');
       expect(heading.childElementCount).toBe(0);

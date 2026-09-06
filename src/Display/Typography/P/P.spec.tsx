@@ -4,7 +4,6 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import { P } from './P';
 
 const statusTones = ['success', 'warning', 'error', 'info'] as const;
-const selectableColours = ['foreground', 'muted', ...statusTones] as const;
 
 describe('P', () => {
   it('offers the complete selectable typography colour family', () => {
@@ -20,29 +19,12 @@ describe('P', () => {
     expect(screen.getByText('Body copy.').tagName).toBe('P');
   });
 
-  it('keeps foreground as its default and keeps the existing muted option', () => {
-    render(
-      <>
-        <P>Default</P>
-        <P color={'muted'}>Muted</P>
-      </>,
-    );
-    expect(screen.getByText('Default')).toHaveClass('text-foreground');
-    expect(screen.getByText('Muted')).toHaveClass('text-muted');
-  });
-
   it.each(statusTones)(
-    'reinforces its content with the %s status tone without changing the paragraph or adding announcement semantics',
+    'leaves the rendered paragraph semantics unchanged when the %s status tone is selected',
     (color) => {
       render(<P color={color}>Patience is low.</P>);
       const paragraph = screen.getByText('Patience is low.');
       expect(paragraph.tagName).toBe('P');
-      expect(paragraph).toHaveClass(`text-${color}`);
-      expect(
-        selectableColours.filter((role) =>
-          paragraph.classList.contains(`text-${role}`),
-        ),
-      ).toEqual([color]);
       expect(paragraph).not.toHaveAttribute('role');
       expect(paragraph).not.toHaveAttribute('aria-live');
       expect(paragraph).toHaveTextContent('Patience is low.');

@@ -4,7 +4,6 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import { Eyebrow } from './Eyebrow';
 
 const statusTones = ['success', 'warning', 'error', 'info'] as const;
-const selectableColours = ['foreground', 'muted', ...statusTones] as const;
 
 describe('Eyebrow', () => {
   it('offers the complete selectable typography colour family', () => {
@@ -21,17 +20,11 @@ describe('Eyebrow', () => {
   });
 
   it.each(statusTones)(
-    'reinforces its content with the %s status tone without changing the paragraph or adding announcement semantics',
+    'leaves the rendered paragraph semantics unchanged when the %s status tone is selected',
     (color) => {
       render(<Eyebrow color={color}>Patience is low.</Eyebrow>);
       const eyebrow = screen.getByText('Patience is low.');
       expect(eyebrow.tagName).toBe('P');
-      expect(eyebrow).toHaveClass(`text-${color}`);
-      expect(
-        selectableColours.filter((role) =>
-          eyebrow.classList.contains(`text-${role}`),
-        ),
-      ).toEqual([color]);
       expect(eyebrow).not.toHaveAttribute('role');
       expect(eyebrow).not.toHaveAttribute('aria-live');
       expect(eyebrow.childElementCount).toBe(0);

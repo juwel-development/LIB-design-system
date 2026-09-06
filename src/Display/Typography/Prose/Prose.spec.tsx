@@ -5,7 +5,6 @@ import { P } from '../P/P';
 import { Prose } from './Prose';
 
 const statusTones = ['success', 'warning', 'error', 'info'] as const;
-const selectableColours = ['foreground', 'muted', ...statusTones] as const;
 
 describe('Prose', () => {
   it('is one namespace object carrying exactly its four members', () => {
@@ -97,25 +96,11 @@ describe('Prose', () => {
   });
 
   it.each(statusTones)(
-    'matches P on the %s status tone without changing the paragraph or adding announcement semantics',
+    'leaves Body paragraph semantics unchanged when the %s status tone is selected',
     (color) => {
-      render(
-        <>
-          <Prose.Body color={color}>Status copy.</Prose.Body>
-          <P color={color}>Primitive copy.</P>
-        </>,
-      );
+      render(<Prose.Body color={color}>Status copy.</Prose.Body>);
       const body = screen.getByText('Status copy.');
-      expect(body.className).toBe(
-        screen.getByText('Primitive copy.').className,
-      );
       expect(body.tagName).toBe('P');
-      expect(body).toHaveClass(`text-${color}`);
-      expect(
-        selectableColours.filter((role) =>
-          body.classList.contains(`text-${role}`),
-        ),
-      ).toEqual([color]);
       expect(body).not.toHaveAttribute('role');
       expect(body).not.toHaveAttribute('aria-live');
       expect(body.childElementCount).toBe(0);

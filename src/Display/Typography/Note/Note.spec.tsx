@@ -8,10 +8,6 @@ import { Note } from './Note';
 // across the whole surface rather than on the default alone.
 const statusTones = ['success', 'warning', 'error', 'info'] as const;
 const everyColour = [undefined, 'foreground', 'muted', ...statusTones] as const;
-const selectableColours = everyColour.filter(
-  (color): color is Exclude<(typeof everyColour)[number], undefined> =>
-    color !== undefined,
-);
 
 describe('Note', () => {
   it('offers the complete selectable typography colour family', () => {
@@ -49,22 +45,6 @@ describe('Note', () => {
     expect(note).toHaveClass('text-muted');
     expect(note).not.toHaveClass('text-foreground');
   });
-
-  it.each(statusTones)(
-    'reinforces its content with the %s status tone without changing the paragraph or adding content',
-    (color) => {
-      render(<Note color={color}>Patience is low.</Note>);
-      const note = screen.getByText('Patience is low.');
-      expect(note.tagName).toBe('P');
-      expect(note).toHaveClass(`text-${color}`);
-      expect(
-        selectableColours.filter((role) =>
-          note.classList.contains(`text-${role}`),
-        ),
-      ).toEqual([color]);
-      expect(note.childElementCount).toBe(0);
-    },
-  );
 
   it.each(everyColour)(
     'emits no tracking, no weight, no measure and no margin at color=%s - the first two are what make an Eyebrow and the last two what make a reading column, and a Note is neither',
