@@ -20,7 +20,11 @@ type Story = StoryObj<typeof meta>;
 
 const section$ = new Subject<string>();
 
-const count = (length: number) =>
+// The static stories emit into their own unobserved Subject: autodocs mounts every story on one
+// page, and sharing the Controlled story's Subject would let their entries drive its state.
+const staticSection$ = new Subject<string>();
+
+const range = (length: number) =>
   Array.from({ length }, (_, index) => index + 1);
 
 const sections = [
@@ -38,7 +42,7 @@ const ControlledSidebar: FunctionComponent = () => {
     const subscription = section$.subscribe(setActive);
     return () => subscription.unsubscribe();
   }, []);
-  const standing = sections.find((section) => section.entryKey === active);
+  const activeSection = sections.find((section) => section.entryKey === active);
   return (
     <Sidebar.Root active={active} label="Sections" onSelect$={section$}>
       {sections.map((section) => (
@@ -52,7 +56,7 @@ const ControlledSidebar: FunctionComponent = () => {
       ))}
       <Sidebar.Content>
         <Stack gap="stack">
-          <H2>{standing?.name}</H2>
+          <H2>{activeSection?.name}</H2>
           <P>
             The active section&apos;s matter, supplied by the application.
             Select another entry to request it - Contracts is inert: listed,
@@ -73,10 +77,10 @@ export const Controlled: Story = {
   render: () => <ControlledSidebar />,
 };
 
-/** Active, usable and inert treatments side by side, statically - one entry standing, one muted. */
+/** Active, usable and inert treatments side by side, statically - one entry active, one muted. */
 export const ActiveAndInert: Story = {
   render: () => (
-    <Sidebar.Root active="staff" label="Sections" onSelect$={section$}>
+    <Sidebar.Root active="staff" label="Sections" onSelect$={staticSection$}>
       <Sidebar.Item entryKey="hub">Hub</Sidebar.Item>
       <Sidebar.Item entryKey="contracts" inert>
         Contracts
@@ -84,7 +88,7 @@ export const ActiveAndInert: Story = {
       <Sidebar.Item entryKey="staff">Staff</Sidebar.Item>
       <Sidebar.Content>
         <P>
-          The standing entry keeps a persistent underline; a usable entry raises
+          The active entry keeps a persistent underline; a usable entry raises
           one on hover; the inert entry is muted and disabled.
         </P>
       </Sidebar.Content>
@@ -95,7 +99,7 @@ export const ActiveAndInert: Story = {
 /** Long labels wrap inside the fixed 12rem track rather than widening or truncating it. */
 export const LongLabels: Story = {
   render: () => (
-    <Sidebar.Root active="artists" label="Sections" onSelect$={section$}>
+    <Sidebar.Root active="artists" label="Sections" onSelect$={staticSection$}>
       <Sidebar.Item entryKey="artists">
         Artists and repertoire coordination
       </Sidebar.Item>
@@ -119,13 +123,13 @@ export const LongLabels: Story = {
  */
 export const LongContent: Story = {
   render: () => (
-    <Sidebar.Root active="staff" label="Sections" onSelect$={section$}>
+    <Sidebar.Root active="staff" label="Sections" onSelect$={staticSection$}>
       <Sidebar.Item entryKey="hub">Hub</Sidebar.Item>
       <Sidebar.Item entryKey="staff">Staff</Sidebar.Item>
       <Sidebar.Content>
         <Stack gap="region">
           <H2>Staff</H2>
-          {count(30).map((number) => (
+          {range(30).map((number) => (
             <P key={number}>
               Paragraph {number} of a long section, so the page scrolls far past
               the nav and the sticky behaviour has room to show.
@@ -143,8 +147,12 @@ export const LongContent: Story = {
  */
 export const OversizedNavigation: Story = {
   render: () => (
-    <Sidebar.Root active="section-40" label="Sections" onSelect$={section$}>
-      {count(40).map((number) => (
+    <Sidebar.Root
+      active="section-40"
+      label="Sections"
+      onSelect$={staticSection$}
+    >
+      {range(40).map((number) => (
         <Sidebar.Item key={number} entryKey={`section-${number}`}>
           {`Section ${number}`}
         </Sidebar.Item>
@@ -152,7 +160,7 @@ export const OversizedNavigation: Story = {
       <Sidebar.Content>
         <Stack gap="region">
           <H2>Section 40</H2>
-          {count(30).map((number) => (
+          {range(30).map((number) => (
             <P key={number}>
               Content long enough to scroll, paragraph {number} - the nav
               scroller and the page scroller stay independent.
@@ -172,13 +180,13 @@ export const OversizedNavigation: Story = {
 export const HeightConstrainedFrame: Story = {
   render: () => (
     <div style={{ height: '24rem', overflowY: 'auto' }}>
-      <Sidebar.Root active="staff" label="Sections" onSelect$={section$}>
+      <Sidebar.Root active="staff" label="Sections" onSelect$={staticSection$}>
         <Sidebar.Item entryKey="hub">Hub</Sidebar.Item>
         <Sidebar.Item entryKey="staff">Staff</Sidebar.Item>
         <Sidebar.Content>
           <Stack gap="region">
             <H2>Staff</H2>
-            {count(20).map((number) => (
+            {range(20).map((number) => (
               <P key={number}>
                 Paragraph {number}, scrolling inside the fixed frame while the
                 nav holds to the frame&apos;s top edge.
@@ -197,7 +205,7 @@ export const HeightConstrainedFrame: Story = {
  */
 export const WideContent: Story = {
   render: () => (
-    <Sidebar.Root active="staff" label="Sections" onSelect$={section$}>
+    <Sidebar.Root active="staff" label="Sections" onSelect$={staticSection$}>
       <Sidebar.Item entryKey="hub">Hub</Sidebar.Item>
       <Sidebar.Item entryKey="staff">Staff</Sidebar.Item>
       <Sidebar.Content>
@@ -225,7 +233,7 @@ export const Stacked: Story = {
     viewport: { defaultViewport: 'mobile1' },
   },
   render: () => (
-    <Sidebar.Root active="staff" label="Sections" onSelect$={section$}>
+    <Sidebar.Root active="staff" label="Sections" onSelect$={staticSection$}>
       <Sidebar.Item entryKey="hub">Hub</Sidebar.Item>
       <Sidebar.Item entryKey="contracts" inert>
         Contracts

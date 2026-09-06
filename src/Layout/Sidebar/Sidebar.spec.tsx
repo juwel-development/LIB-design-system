@@ -24,7 +24,7 @@ const renderSidebar = (options?: {
         Staff
       </Sidebar.Item>
       <Sidebar.Content testId={options?.contentId}>
-        <p>The standing section&apos;s matter.</p>
+        <p>The active section&apos;s matter.</p>
       </Sidebar.Content>
     </Sidebar.Root>,
   );
@@ -162,7 +162,7 @@ describe('Sidebar', () => {
     renderSidebar({ contentId: 'content' });
     const content = screen.getByTestId('content');
     expect(content).toContainElement(
-      screen.getByText("The standing section's matter."),
+      screen.getByText("The active section's matter."),
     );
     expect(content.className).toBe('');
     expect(screen.queryByRole('main')).not.toBeInTheDocument();

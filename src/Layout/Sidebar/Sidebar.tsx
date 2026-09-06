@@ -66,7 +66,7 @@ const SidebarSelectionContext = createContext<SidebarSelection | undefined>(
 );
 
 interface ISidebarRootProps {
-  /** The key of the standing entry. The caller supplies a key identifying one non-inert entry;
+  /** The key of the active entry. The caller supplies a key identifying one non-inert entry;
    *  Sidebar renders what it is given and never selects a fallback for an invalid key. */
   active: string;
   /** The nav landmark's accessible name. */
@@ -182,6 +182,9 @@ const SidebarRoot: FunctionComponent<ISidebarRootProps> = ({
  *   and an Item rendered outside a Root has no selection to derive its treatment from.
  * - Focus after the content changes belongs to the application; Sidebar leaves it on the activated
  *   entry.
+ * - The height cap's yardstick is the viewport. In a consumer scroll frame shorter than the
+ *   viewport, a nav taller than the frame stays keyboard-reachable - focus scrolls it into view -
+ *   but its tail cannot be reached by wheel alone, so keep the nav shorter than such a frame.
  *
  * @UXGuidelines
  * - Entries are section labels: short, parallel, text-only. A destination that is a URL belongs to
