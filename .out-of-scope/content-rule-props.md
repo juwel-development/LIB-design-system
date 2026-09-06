@@ -1,9 +1,11 @@
-# Content-rule props — `maxLength`, `pattern`, and their family on library controls
+# Content-rule props — `maxLength`, `pattern`, and their family on library fields
 
-The library's controls carry no rule about what their value may contain. There is no `maxLength`,
-no `minLength`, no `pattern`, and no `min`/`max`/`step` on any control, and none will be added.
-[ADR 0009](../docs/adr/0009-content-rules-stay-with-the-consumer.md) is the governing rule; this
-entry exists so the next request in the family meets the decision instead of a fresh triage.
+The library's fields carry no validation rule about what freely entered content may contain. There
+is no `maxLength`, `minLength`, `pattern`, or validation-shaped `min`/`max`/`step` on a field, and
+none will be added. [ADR 0009](../docs/adr/0009-content-rules-stay-with-the-consumer.md) is the
+governing rule; this entry exists so the next request in the family meets the decision instead of a
+fresh triage. Bounds and increments that constitute a ranged control's operating geometry are not
+covered by this rejection.
 
 ## Why this is out of scope
 
@@ -53,9 +55,16 @@ Little, deliberately — the refusal is by design, not by evidence, so more call
 patterns change nothing. What it does **not** cover: `variant: 'email' | 'url'` naming a field's
 kind (the kind's native format check comes bundled with what the field *is* — see the ADR), and any
 future *visual device* such as a live character counter, which would be its own proposal argued on
-its own consumer evidence. Reversing the rule itself means amending ADR 0009.
+its own consumer evidence. It also does not cover `min`/`max`/`step` when they map a bounded control's
+position and movement to values rather than judge freely entered content. Reversing the validation
+rule itself means amending ADR 0009.
 
 ## Prior requests
 
 - [#95](https://github.com/juwel-development/LIB-design-system/issues/95) — "Input cannot cap its
   length, so an over-length value can exist in the field" (`maxLength?: number` on `Input`)
+
+## Reconsiderations
+
+- [#104](https://github.com/juwel-development/LIB-design-system/issues/104) — a Slider's
+  `min`/`max`/`step` define its operating range rather than validate freely entered field content

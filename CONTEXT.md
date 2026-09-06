@@ -49,6 +49,16 @@ follows the theme where a fill does not, and `foreground` is a different thing e
 colour on a surface, not on a fill.
 _Avoid_: Foreground, on-color, text colour
 
+**Meter fill**:
+The colour of a Meter's filled share when it states an amount without judgment. It is neither an
+action fill nor text ink; a depletion treatment moves it toward the error role.
+_Avoid_: Primary, foreground, neutral fill, safe colour
+
+**Meter track**:
+The colour of a Meter's whole capacity behind its filled share. It makes the scale visible without
+turning it into a boundary or a structural rule.
+_Avoid_: Background, backing, border, rule
+
 ### Typography
 
 **Type role**:
@@ -187,6 +197,23 @@ operated, but it has no box, so a radius on it would paint nothing; what it take
 focus ring, which keys on being focusable rather than on being a control.
 _Avoid_: Interactive element, form element
 
+**Operating range**:
+The bounded numeric domain a ranged control maps onto its track. Its bounds and increment constitute
+the control's interaction geometry; they do not validate freely entered content.
+_Avoid_: Validation range, content rule, permitted range
+
+**Meter**:
+A read-only display of one numeric level within a bounded scale, shown as a filled share of a whole.
+It states an amount rather than an operation's completion, and unlike a Slider it cannot be operated.
+_Avoid_: Progress bar, gauge, status bar
+
+**Depletion treatment**:
+An opt-in reading of a Meter in which approaching the scale's minimum moves evenly from the meter
+fill toward the error role, reaching error at the minimum. It reinforces a consequence stated by the
+Meter's surrounding context rather than communicating urgency by colour alone; the neutral treatment
+states the amount without that judgment.
+_Avoid_: Warning tone, danger threshold, low state, red mode
+
 **Roster**:
 The closed set of components the library offers — primitives, composables and arrangements alike. A
 genuinely new need is added to the roster, never hand-rolled as a styled element in a consuming
@@ -199,6 +226,11 @@ A few named views sharing one surface, with exactly one view active and each tab
 panel. The consumer owns which view is active and all of its content, including any sharing or
 preservation across views; Tabs owns the controls and the panels that present it.
 _Avoid_: Router, panel manager, tab strip
+
+**Slider**:
+A control that sets one numeric value by moving one thumb along a fixed, visible operating range.
+It is neither a bounded pair nor a field for freely entered content.
+_Avoid_: Range, range input, range picker
 
 ### Forms
 
@@ -228,12 +260,10 @@ between the two describes the column's content, never picks a size.
 _Avoid_: Button width, menu width, narrow column, control width
 
 **Content rule**:
-A product's rule about what a field's value may contain — a cap, a shape, a range. Judging content
-is the consumer's job: it decides in its own code and tells the field the state it is in, and the
-guarantee that an invalid value cannot get through lives at the product's own boundary. The library
-states what a field *is* — its kind, and whether the submission contract requires it — and never
-carries a rule about the value: a prop whose value would be the rule itself is refused (see
-[ADR 0009](docs/adr/0009-content-rules-stay-with-the-consumer.md)).
+A product's validation rule about what freely entered field content may contain — a cap, a shape or
+an allowed set. Judging that content is the consumer's job and the guarantee that an invalid value
+cannot get through lives at the product's boundary; an **operating range** that constitutes a ranged
+control is a different concept (see [ADR 0009](docs/adr/0009-content-rules-stay-with-the-consumer.md)).
 _Avoid_: Validation rule, constraint, restriction, character limit
 
 ### Links

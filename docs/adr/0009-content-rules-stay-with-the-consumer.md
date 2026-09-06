@@ -4,11 +4,12 @@ status: accepted
 
 # Content rules stay with the consumer
 
-A rule about what a field's value may contain — a cap, a shape, a range — never becomes a prop on a
-library control. The library states what a field **is**: its kind (`variant`) and its presence in
-the submission contract (`name`, `required`). It never carries a rule about what the value may say.
-The tell is syntactic, so triage can apply it mechanically: **a prop whose value is the rule
-itself — a number to compare against, a pattern to match — is a content rule, and it is refused.**
+A rule that validates what a field's freely entered value may contain — a cap, a shape, an allowed
+set — never becomes a prop on that field. The library states what a field **is**: its kind
+(`variant`) and its presence in the submission contract (`name`, `required`). It never carries a
+predicate about what the value may say. The tell is semantic: **a prop whose value tells a field how
+to judge consumer content is a content rule, and it is refused.** A bound or increment that
+constitutes another control's interaction geometry is not such a predicate.
 
 ## The case that produced it
 
@@ -82,9 +83,9 @@ presence/content line keeps `required` for a stated reason, not by seniority.
 - **#95 closes `wontfix`**, recorded in
   [`.out-of-scope/content-rule-props.md`](../../.out-of-scope/content-rule-props.md). Its consumer
   implements the flag path above and enforces the cap at its own boundary.
-- **Future proposals for `minLength`, `pattern`, `min`/`max`/`step` — on these controls or any
-  future one — are refused on this ground** without re-argument. The test is the prop's value: a
-  predicate is a content rule.
+- **Future proposals for `minLength`, `pattern`, or `min`/`max`/`step` as field-validation
+  attributes are refused on this ground** without re-argument. The test is the prop's job: a
+  predicate that judges freely entered content is a content rule.
 - **`variant: 'email' | 'url'` is coherent, not an anomaly.** Naming a kind bundles the kind's
   native conduct; nothing here re-opens the variant axis.
 - **`required` stays**, as presence in the submission contract, beside `name`.
@@ -98,3 +99,13 @@ presence/content line keeps `required` for a stated reason, not by seniority.
   (issue #74). This ADR adds no new instance of it.
 - **What the package exports is unchanged.** Like ADR 0007 and ADR 0008, this is a decision and
   documentation change; `CONTEXT.md` gains **Content rule** with it.
+
+## Amendments
+
+**A ranged control's operating domain is outside this decision.** During triage of
+[#104](https://github.com/juwel-development/LIB-design-system/issues/104), the original wording was
+found to overreach: it refused `min`/`max`/`step` on *any future control*, although the case and the
+decision concern validation of freely entered field content. On a Slider, bounds map position to
+value and the increment defines what movement produces; without them the control has no operating
+geometry. They may therefore constitute a ranged control while remaining refused as validation
+attributes on `Input`, `TextArea`, or another field.
