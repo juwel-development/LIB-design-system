@@ -188,6 +188,12 @@ product. Widening it to hold composables, and again to hold arrangements, widene
 allowed, not the door: the set stays closed and each entry is still reviewed on its own.
 _Avoid_: Catalogue, component list
 
+**Tabs**:
+A few named views sharing one surface, with exactly one view active and each tab naming its own
+panel. The consumer owns which view is active and all of its content, including any sharing or
+preservation across views; Tabs owns the controls and the panels that present it.
+_Avoid_: Router, panel manager, tab strip
+
 ### Forms
 
 **Field**:
@@ -331,6 +337,17 @@ viewport would signal a continuation that does not exist. Because the frame equa
 cannot sit inside a section band, and it owns its own inset — the one deliberate exception to
 "Section owns the gutter".
 _Avoid_: Full-screen hero, splash screen, viewport section, centred layout, page wrapper
+
+**Sidebar**:
+The standing application navigation requesting section changes from the application: beside the
+active section's content and staying visible within its frame when space permits, above the content
+otherwise. The application owns which section is active and any location or history associated with it.
+_Avoid_: Router, index, drawer
+
+**Inert entry**:
+A Sidebar entry that retains its place in the navigation but is unavailable for selection. It remains
+visible as unavailable and is skipped when moving keyboard focus between entries.
+_Avoid_: Hidden entry, absent section
 
 **Index**:
 The standing marker naming where you are in a long page — a filing numeral and the section's name, set
