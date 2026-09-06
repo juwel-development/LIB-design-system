@@ -1,13 +1,23 @@
 import { Link } from 'Interaction/Link/Link';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import type { ComponentProps } from 'react';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { Note } from './Note';
 
 // Every prop combination the recipe can be called with, so the "emits nothing else" pins below hold
 // across the whole surface rather than on the default alone.
-const everyColour = [undefined, 'foreground', 'muted'] as const;
+const statusTones = ['success', 'warning', 'error', 'info'] as const;
+const everyColour = [undefined, 'foreground', 'muted', ...statusTones] as const;
 
 describe('Note', () => {
+  it('offers the complete selectable typography colour family', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof Note>['color']>
+    >().toEqualTypeOf<
+      'foreground' | 'muted' | 'success' | 'warning' | 'error' | 'info'
+    >();
+  });
+
   it('renders its content as a paragraph in the secondary family at the small role', () => {
     render(<Note>We reply within two working days.</Note>);
     const note = screen.getByText('We reply within two working days.');

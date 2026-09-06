@@ -12,7 +12,7 @@ const meta: Meta<typeof Note> = {
   argTypes: {
     color: {
       control: { type: 'radio' },
-      options: ['foreground', 'muted'],
+      options: ['foreground', 'muted', 'success', 'warning', 'error', 'info'],
       description: 'Which text-colour role the annotation reads',
     },
     children: {

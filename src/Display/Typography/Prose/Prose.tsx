@@ -20,7 +20,14 @@ const proseLede = cva('font-primary text-lede leading-lede text-foreground');
 // semantic token re-pointed by `.dark`, so no variant carries a `dark:` class.
 const proseBody = cva('font-primary text-body leading-body', {
   variants: {
-    color: { foreground: 'text-foreground', muted: 'text-muted' },
+    color: {
+      foreground: 'text-foreground',
+      muted: 'text-muted',
+      success: 'text-success',
+      warning: 'text-warning',
+      error: 'text-error',
+      info: 'text-info',
+    },
   },
   defaultVariants: { color: 'foreground' },
 });
@@ -76,12 +83,15 @@ const ProseTail: FunctionComponent<IProseTailProps> = ({ children }) => (
  *   `--measure`, setting no font-size so the `ch` measure resolves against inherited body type.
  * - `Root` stacks its children on `--space-stack` and takes no outer margin: the page owns the
  *   rhythm around the block, and the air the block wants is at its edges and inside the type.
- * - `Lede` renders a `p` at the lede role; `Body` at the body role with a `foreground`/`muted`
- *   `color`; `Tail` at the small role, muted. No drop cap or other invented device.
+ * - `Lede` renders a fixed-foreground `p` at the lede role; `Body` at the body role with a
+ *   `foreground`, `muted`, `success`, `warning`, `error` or `info` `color`; `Tail` at the small
+ *   role, always muted. A status tone changes colour only and adds no announcement semantics.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - Use `Prose.Body` for a paragraph inside this reading column; for a paragraph with no reading
  *   column around it - in a form, a card, a table cell - use `P` instead.
+ * - Status-toned content communicates its status without relying on colour. The caller owns any
+ *   announcement behavior required when that status changes.
  */
 export const Prose = {
   Root: ProseRoot,

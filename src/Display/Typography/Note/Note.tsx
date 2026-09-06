@@ -11,7 +11,14 @@ import type { FunctionComponent, ReactNode } from 'react';
 // the page owns the rhythm around it. Colour is re-pointed by `.dark`, so no variant carries `dark:`.
 const note = cva('font-secondary text-small', {
   variants: {
-    color: { foreground: 'text-foreground', muted: 'text-muted' },
+    color: {
+      foreground: 'text-foreground',
+      muted: 'text-muted',
+      success: 'text-success',
+      warning: 'text-warning',
+      error: 'text-error',
+      info: 'text-info',
+    },
   },
   defaultVariants: { color: 'foreground' },
 });
@@ -30,7 +37,8 @@ export interface INoteProps extends VariantProps<typeof note> {
  *
  * @Guarantees — enforced on every render
  * - Renders a `p`, reading `--font-secondary` and sized by `--text-small`.
- * - `color` selects the `foreground` (default) or `muted` role; nothing else paints text.
+ * - `color` selects `foreground` (default), `muted`, `success`, `warning`, `error` or `info`;
+ *   nothing else paints text. A status tone changes colour only.
  * - Emits no tracking, no font-weight, no measure and no margin under any prop.
  * - Carries no ARIA role and no live region under any prop.
  *
@@ -44,6 +52,8 @@ export interface INoteProps extends VariantProps<typeof note> {
  *   architecture standard's one-way dependency rule is why `Prose` restates `P`'s utilities.
  * - Where the annotation is a form's status message, `Form` owns `role="status"`/`role="alert"` by
  *   state; a `Note` announces nothing.
+ * - Status-toned content communicates its status without relying on colour. The caller owns any
+ *   announcement behavior required when that status changes.
  */
 export const Note: FunctionComponent<INoteProps> = ({
   children,

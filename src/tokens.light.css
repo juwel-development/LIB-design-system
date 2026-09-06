@@ -24,10 +24,10 @@
   --color-disabled-hover: #64748b;
   --color-focus-ring: var(--color-ring, #475569);
   --color-link: #2563eb;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
+  --color-success: #047857;
+  --color-warning: #b45309;
   --color-error: #d63384;
-  --color-info: #06b6d4;
+  --color-info: #0e7490;
 }
 
 @theme inline {

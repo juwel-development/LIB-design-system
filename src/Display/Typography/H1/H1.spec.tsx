@@ -1,8 +1,19 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import type { ComponentProps } from 'react';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { H1 } from './H1';
 
+const statusTones = ['success', 'warning', 'error', 'info'] as const;
+
 describe('H1', () => {
+  it('offers the complete selectable typography colour family', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof H1>['color']>
+    >().toEqualTypeOf<
+      'foreground' | 'muted' | 'success' | 'warning' | 'error' | 'info'
+    >();
+  });
+
   it('renders its content as a level-1 heading, binding the outline level to the display role', () => {
     render(<H1>Welcome</H1>);
     expect(
@@ -39,6 +50,20 @@ describe('H1', () => {
       expect(bounds).toEqual(['max-w-[var(--measure-display)]']);
     }
   });
+
+  it.each(statusTones)(
+    'leaves the rendered heading semantics unchanged when the %s status tone is selected',
+    (color) => {
+      render(<H1 color={color}>Patience is low.</H1>);
+      const heading = screen.getByRole('heading', {
+        level: 1,
+        name: 'Patience is low.',
+      });
+      expect(heading).not.toHaveAttribute('role');
+      expect(heading).not.toHaveAttribute('aria-live');
+      expect(heading.childElementCount).toBe(0);
+    },
+  );
 
   it('exposes the one sanctioned host hook through testId', () => {
     render(<H1 testId={'page-title'}>Welcome</H1>);

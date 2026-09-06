@@ -102,11 +102,18 @@ export type PaletteTokens = {
    *  least 4.5:1 against `surface` in the same theme. */
   link: string;
 
-  /** Status colours. Not yet consumed by a component - they complete the role set so the
-   *  first Alert or Toast has names to reach for instead of inventing them. */
+  /** The success status tone. Status tones reinforce content independently of their carrier and
+   *  carry no announcement behavior. Constraint (WCAG 2.2 SC 1.4.3): at least 4.5:1 against
+   *  `surface` in the same theme. */
   success: string;
+  /** The warning status tone. Carries the general status-tone contract and 4.5:1-against-`surface`
+   *  constraint stated on `success`. */
   warning: string;
+  /** The error status tone. Carries the general status-tone contract and 4.5:1-against-`surface`
+   *  constraint stated on `success`, plus the depletion-path constraint stated on `meterFill`. */
   error: string;
+  /** The informational status tone. Carries the general status-tone contract and
+   *  4.5:1-against-`surface` constraint stated on `success`. */
   info: string;
 };
 
@@ -156,10 +163,10 @@ export const light: PaletteTokens = {
 
   link: '#2563eb',
 
-  success: '#10b981',
-  warning: '#f59e0b',
+  success: '#047857',
+  warning: '#b45309',
   error: '#d63384',
-  info: '#06b6d4',
+  info: '#0e7490',
 };
 
 /**
