@@ -1,3 +1,20 @@
+# [3.3.0](https://github.com/juwel-development/LIB-design-system/compare/v3.2.0...v3.3.0) (2026-09-06)
+
+
+### Bug Fixes
+
+* **sidebar:** cap navigation to its scrolling area ([#101](https://github.com/juwel-development/LIB-design-system/issues/101)) ([f545323](https://github.com/juwel-development/LIB-design-system/commit/f54532370bae2f6e26a8906a3b59c5fddd5a7cf2))
+* **stack:** reach the action bound inside Cover's shrink-to-fit slot ([#99](https://github.com/juwel-development/LIB-design-system/issues/99)) ([a57f082](https://github.com/juwel-development/LIB-design-system/commit/a57f082c5108f3b0efd98a669a2e976d38a55b86))
+* **tabs:** preserve arbitrary values and reveal focused tabs ([#102](https://github.com/juwel-development/LIB-design-system/issues/102)) ([3ad22a2](https://github.com/juwel-development/LIB-design-system/commit/3ad22a20521fcf838cb6371852580afaea36e0c2))
+
+
+### Features
+
+* **collection:** add freely composed vertical items ([#103](https://github.com/juwel-development/LIB-design-system/issues/103)) ([56d39be](https://github.com/juwel-development/LIB-design-system/commit/56d39beaeccffa37cae284fc9a9c86c4af712774))
+* **sidebar:** add the standing application navigation beside the content ([#101](https://github.com/juwel-development/LIB-design-system/issues/101)) ([804d4b6](https://github.com/juwel-development/LIB-design-system/commit/804d4b62d5727158106db4f537f521fe1236b385))
+* **stack:** add inherited text alignment ([#100](https://github.com/juwel-development/LIB-design-system/issues/100)) ([9358fdb](https://github.com/juwel-development/LIB-design-system/commit/9358fdbf2d908145f713d7d6abe30f586defe3f8))
+* **tabs:** add the controlled tabs the roster lacked ([#102](https://github.com/juwel-development/LIB-design-system/issues/102)) ([283a743](https://github.com/juwel-development/LIB-design-system/commit/283a74390fd7b2f419433db221c8b109d56d9c4f))
+
 # [3.2.0](https://github.com/juwel-development/LIB-design-system/compare/v3.1.0...v3.2.0) (2026-09-05)
 
 
