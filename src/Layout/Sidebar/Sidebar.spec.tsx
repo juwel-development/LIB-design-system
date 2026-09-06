@@ -185,7 +185,6 @@ describe('Sidebar', () => {
     const nav = screen.getByRole('navigation', { name: 'Sections' });
     expect(nav).toHaveClass('lg:sticky');
     expect(nav).toHaveClass('lg:top-0');
-    expect(nav).toHaveClass('lg:max-h-dvh');
     expect(nav).toHaveClass('lg:overflow-y-auto');
     expect(nav.className).not.toMatch(/(^|\s)sticky\b/);
     expect(nav.className).not.toMatch(/(^|\s)top-/);

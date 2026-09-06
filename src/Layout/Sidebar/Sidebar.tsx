@@ -1,5 +1,5 @@
 import { cva } from 'class-variance-authority';
-import type { FunctionComponent, ReactNode } from 'react';
+import type { FunctionComponent, ReactNode, RefCallback } from 'react';
 import { Children, createContext, isValidElement, useContext } from 'react';
 import type { Subject } from 'rxjs';
 
@@ -19,14 +19,56 @@ const navTrack = [
   'lg:border-b-0 lg:border-r lg:pb-0 lg:pr-[var(--space-stack)]',
 ].join(' ');
 
-// The nav itself: sticky at the top of the scrolling area only at `lg`, capped to the viewport and
-// scrolling its entries independently when they exceed it, so the last entry stays reachable. `top-0`
-// on purpose - the library assumes no application top-bar height. The padding keeps the focus ring
-// inside the scroller's clip: a ring is drawn outside the button by exactly width + offset.
+// Sticky at the scrollport's top only at `lg`; no application top-bar height is assumed.
+// Padding fits the focus ring inside the clip (width + offset); scroll-padding reserves that
+// same space when native keyboard focus scrolls an entry into view (#101 browser verification).
 const navScroller = [
-  'lg:sticky lg:top-0 lg:max-h-dvh lg:overflow-y-auto',
-  'p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
+  'lg:sticky lg:top-0 lg:max-h-[min(100dvh,var(--sidebar-scrollport-height,100dvh))] lg:overflow-y-auto',
+  'p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] lg:scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
 ].join(' ');
+
+// A percentage max-height resolves against the content-driven grid cell, not its scrollport;
+// dvh alone left an 800px nav clipped by a 384px frame (#101). Measure that external boundary.
+// The ref runs only after client attachment; CSS owns the breakpoint and the viewport fallback.
+const observeScrollport: RefCallback<HTMLElement> = (navigation) => {
+  if (!navigation) return;
+  const ancestors: HTMLElement[] = [];
+  for (
+    let ancestor = navigation.parentElement;
+    ancestor && ancestor !== navigation.ownerDocument.documentElement;
+    ancestor = ancestor.parentElement
+  ) {
+    ancestors.push(ancestor);
+  }
+  const measure = () => {
+    const scrollport = ancestors.find((ancestor) =>
+      /^(auto|scroll|hidden|overlay)$/.test(
+        getComputedStyle(ancestor).overflowY,
+      ),
+    );
+    if (scrollport) {
+      navigation.style.setProperty(
+        '--sidebar-scrollport-height',
+        `${scrollport.clientHeight}px`,
+      );
+    } else {
+      navigation.style.removeProperty('--sidebar-scrollport-height');
+    }
+  };
+  measure();
+  // Observe ancestors so a resized wrapper or responsive change of scrollport is remeasured.
+  const observer =
+    typeof ResizeObserver === 'undefined'
+      ? undefined
+      : new ResizeObserver(measure);
+  for (const ancestor of ancestors) observer?.observe(ancestor);
+  window.addEventListener('resize', measure);
+  return () => {
+    observer?.disconnect();
+    window.removeEventListener('resize', measure);
+    navigation.style.removeProperty('--sidebar-scrollport-height');
+  };
+};
 
 const entryList = 'flex flex-col gap-[var(--space-stack)]';
 
@@ -141,7 +183,7 @@ const SidebarRoot: FunctionComponent<ISidebarRootProps> = ({
   return (
     <div className={sidebarRoot()} data-testid={testId}>
       <div className={navTrack}>
-        <nav aria-label={label} className={navScroller}>
+        <nav ref={observeScrollport} aria-label={label} className={navScroller}>
           <SidebarSelectionContext value={{ active, onSelect$ }}>
             <ul className={entryList}>
               {parts.filter((part) => part.type === SidebarItem)}
@@ -169,8 +211,8 @@ const SidebarRoot: FunctionComponent<ISidebarRootProps> = ({
  *   non-submitting `type="button"` buttons with native Tab/Enter/Space behaviour - no tabs/menu model.
  * - An inert entry stays visible but muted and disabled, so Tab skips it and activation is inert too.
  * - At and above 64rem the nav is a fixed 12rem track, sticky at the top of the scrolling area with no
- *   assumed top-bar offset, capped to the viewport and scrolling independently when its entries exceed
- *   it. Content sits beside it in `minmax(0,1fr)`, so wide content cannot displace the track.
+ *   assumed top-bar offset, capped to the screen/scrolling-area height with independent entry scrolling.
+ *   Content sits beside it in `minmax(0,1fr)`, so wide content cannot displace the track.
  * - Below 64rem the whole list lies above the content in normal flow - no stickiness, no cap, no
  *   drawer. Sidebar sets no viewport-height minimum and grows with its content.
  * - It separates the tracks itself (the region space role and a `border` hairline) but gives the
@@ -182,9 +224,6 @@ const SidebarRoot: FunctionComponent<ISidebarRootProps> = ({
  *   and an Item rendered outside a Root has no selection to derive its treatment from.
  * - Focus after the content changes belongs to the application; Sidebar leaves it on the activated
  *   entry.
- * - The height cap's yardstick is the viewport. In a consumer scroll frame shorter than the
- *   viewport, a nav taller than the frame stays keyboard-reachable - focus scrolls it into view -
- *   but its tail cannot be reached by wheel alone, so keep the nav shorter than such a frame.
  *
  * @UXGuidelines
  * - Entries are section labels: short, parallel, text-only. A destination that is a URL belongs to

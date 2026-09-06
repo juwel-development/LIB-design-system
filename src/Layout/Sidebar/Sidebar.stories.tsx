@@ -200,6 +200,38 @@ export const HeightConstrainedFrame: Story = {
 };
 
 /**
+ * An oversized list inside a resizable consumer scrollport. At lg, wheel over the nav or Tab
+ * through its entries to reach Section 40; resizing the frame keeps the list capped to it.
+ */
+export const OversizedNavigationInFrame: Story = {
+  render: () => (
+    <div style={{ height: '24rem', overflowY: 'auto', resize: 'vertical' }}>
+      <Sidebar.Root
+        active="section-40"
+        label="Sections"
+        onSelect$={staticSection$}
+      >
+        {range(40).map((number) => (
+          <Sidebar.Item key={number} entryKey={`section-${number}`}>
+            {`Section ${number}`}
+          </Sidebar.Item>
+        ))}
+        <Sidebar.Content>
+          <Stack gap="region">
+            <H2>Section 40</H2>
+            {range(30).map((number) => (
+              <P key={number}>
+                Paragraph {number} of the section inside the resizable frame.
+              </P>
+            ))}
+          </Stack>
+        </Sidebar.Content>
+      </Sidebar.Root>
+    </div>
+  ),
+};
+
+/**
  * Content wider than its track. The content column is `minmax(0,1fr)`, so a wide child overflows its
  * own track (scrolling where the consumer arranges it) and never pushes the 12rem nav away.
  */
