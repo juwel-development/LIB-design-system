@@ -227,6 +227,16 @@ const TAB_MARKER = `:root {
   --tab-marker-thickness: 2px;
 }`;
 
+/* The slider's two dimensions are not colours: like the tick they live in :root only, never @theme
+   inline. Named because both are drawn on vendor pseudo-elements (::-webkit-slider-thumb and kin)
+   no consumer selector can reach - ADR 0004's test. The control takes its height from the thumb, so
+   1.5rem keeps the pointer target at WCAG 2.5.8's 24px minimum; a brand re-pointing it lower gives
+   that up knowingly. Constraint: thumb > track, or the thumb vanishes into the line it rides. */
+const SLIDER = `:root {
+  --slider-track-thickness: 0.25rem;
+  --slider-thumb-size: 1.5rem;
+}`;
+
 const toKebabCase = (name: string): string =>
   name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 
@@ -313,6 +323,9 @@ ${TICK}
 ${TAB_MARKER}
 
 ${TAB_INSETS}
+
+/* The slider's dimensions are not colours either, and sit in :root beside the tab blocks. */
+${SLIDER}
 `;
 
 /**

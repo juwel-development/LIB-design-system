@@ -22,6 +22,7 @@ export { Prose } from 'Display/Typography/Prose/Prose';
 export { Button } from 'Interaction/Button/Button';
 export { Input } from 'Interaction/Input/Input';
 export { Link } from 'Interaction/Link/Link';
+export { Slider } from 'Interaction/Slider/Slider';
 export { Tabs } from 'Interaction/Tabs/Tabs';
 export { TextArea } from 'Interaction/TextArea/TextArea';
 export { Cover } from 'Layout/Cover/Cover';

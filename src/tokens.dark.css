@@ -201,3 +201,9 @@
   --tab-inset-inline: 1em;
   --tab-inset-block: 0.5em;
 }
+
+/* The slider's dimensions are not colours either, and sit in :root beside the tab blocks. */
+:root {
+  --slider-track-thickness: 0.25rem;
+  --slider-thumb-size: 1.5rem;
+}
