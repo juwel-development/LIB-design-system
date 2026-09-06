@@ -49,6 +49,12 @@ follows the theme where a fill does not, and `foreground` is a different thing e
 colour on a surface, not on a fill.
 _Avoid_: Foreground, on-color, text colour
 
+**Status tone**:
+One of `success`, `warning`, `error` or `info`: a colour that reinforces status independently of its
+carrier. It is a tone, not a status event: every position supplies its own contrast constraint, the
+tone carries no announcement by itself, and the content still communicates the status without colour.
+_Avoid_: Status ink, alert background, emphasis colour
+
 **Meter fill**:
 The colour of a Meter's filled share when it states an amount without judgment. It is neither an
 action fill nor text ink; a depletion treatment moves it toward the error role.
