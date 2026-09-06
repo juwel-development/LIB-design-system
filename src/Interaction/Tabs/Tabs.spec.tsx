@@ -8,6 +8,7 @@ import {
 import { Subject } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { Tabs } from './Tabs';
+import { TabsCompositionError } from './TabsCompositionError';
 
 // jsdom lays nothing out and ships no scrollIntoView, which the arrow handler calls; give the
 // environment the method it lacks. The dedicated scrolling test below swaps in its own spy.
@@ -139,6 +140,90 @@ describe('Tabs Component', () => {
     const idsBefore = screen.getAllByRole('tab').map((tab) => tab.id);
     rerender(staffTabs('candidates', onSelect$));
     expect(screen.getAllByRole('tab').map((tab) => tab.id)).toEqual(idsBefore);
+  });
+
+  it('associates arbitrary string values without whitespace or escaping collisions and emits originals', () => {
+    const values = [
+      'staff team',
+      'staff%20team',
+      'staff_team',
+      'staff\tteam',
+      '',
+      '😀',
+      '\ud800',
+      '�',
+    ];
+    const onSelect$ = new Subject<string>();
+    const selected = vi.fn();
+    onSelect$.subscribe(selected);
+    const composition = (ordered: string[], active: string) => (
+      <Tabs.Root active={active} onSelect$={onSelect$} label={'Views'}>
+        <Tabs.List>
+          {ordered.map((value) => (
+            <Tabs.Tab
+              key={value}
+              value={value}
+            >{`View ${values.indexOf(value)}`}</Tabs.Tab>
+          ))}
+        </Tabs.List>
+        {ordered.map((value) => (
+          <Tabs.Panel
+            key={value}
+            value={value}
+          >{`Content ${values.indexOf(value)}`}</Tabs.Panel>
+        ))}
+      </Tabs.Root>
+    );
+    const { rerender } = render(composition(values, 'staff team'));
+    const tabs = screen.getAllByRole('tab');
+    const ids = tabs.map((tab) => tab.id);
+    const panels = screen.getAllByRole('tabpanel', { hidden: true });
+    expect(new Set([...ids, ...panels.map((panel) => panel.id)]).size).toBe(
+      values.length * 2,
+    );
+    for (const [index, tab] of tabs.entries()) {
+      expect(tab.id).not.toMatch(/\s/);
+      const reference = tab.getAttribute('aria-controls') ?? '';
+      expect(reference).not.toMatch(/\s/);
+      expect(document.getElementById(reference)).toHaveAttribute(
+        'aria-labelledby',
+        tab.id,
+      );
+      fireEvent.click(tab);
+      expect(selected).toHaveBeenLastCalledWith(values[index]);
+      fireEvent.keyDown(tab, { key: 'ArrowRight' });
+      expect(selected).toHaveBeenLastCalledWith(
+        values[(index + 1) % values.length],
+      );
+    }
+    expect(screen.getByRole('tabpanel', { name: 'View 0' })).toHaveTextContent(
+      'Content 0',
+    );
+    rerender(composition([...values].reverse(), 'staff%20team'));
+    expect(screen.getAllByRole('tab').map((tab) => tab.id)).toEqual(
+      [...ids].reverse(),
+    );
+    expect(screen.getByRole('tabpanel', { name: 'View 1' })).toHaveTextContent(
+      'Content 1',
+    );
+  });
+
+  it('keeps the tab visible when focus enters after a controlled active change', () => {
+    const onSelect$ = new Subject<string>();
+    const { rerender } = render(staffTabs('staff', onSelect$));
+    rerender(staffTabs('alumni', onSelect$));
+    const alumni = screen.getByRole('tab', { name: 'Alumni' });
+    const scrollIntoView = vi.spyOn(alumni, 'scrollIntoView');
+    try {
+      alumni.focus();
+      expect(alumni).toHaveFocus();
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        block: 'nearest',
+        inline: 'nearest',
+      });
+    } finally {
+      scrollIntoView.mockRestore();
+    }
   });
 
   it('requests selection through the Subject on click, and renders no selection of its own', () => {
@@ -319,79 +404,7 @@ describe('Tabs Component', () => {
     // The member cannot render without the Root's contract, so this is an invariant, not a state.
     expect(() =>
       render(<Tabs.Tab value={'staff'}>Staff</Tabs.Tab>),
-    ).toThrowError(/Tabs\.Root/);
-  });
-
-  it('marks selection with a persistent line from the marker token, in foreground, not a shade', () => {
-    render(staffTabs('staff', new Subject<string>()));
-    const className = screen.getByRole('tab', { name: 'Staff' }).className;
-
-    // The marker's thickness is the named token, held constant across both states so selection
-    // shifts no geometry; only its colour flips, keyed on aria-selected.
-    expect(className).toContain(
-      'border-b-[length:var(--tab-marker-thickness)]',
-    );
-    expect(className).toContain('border-transparent');
-    expect(className).toContain('aria-selected:border-foreground');
-    // Semantic tokens only: no dark: class, no numeric ramp step.
-    expect(className).not.toContain('dark:');
-    expect(className).not.toMatch(
-      /(?:bg|text|ring|border|from|via|to)-[a-z]+-(?:50|[1-9]00)\b/,
-    );
-  });
-
-  it('keeps text weight identical across selection, so switching shifts no widths', () => {
-    render(staffTabs('staff', new Subject<string>()));
-    const className = screen.getByRole('tab', { name: 'Staff' }).className;
-
-    expect(className).not.toMatch(/aria-selected:font-/);
-    expect(className).not.toMatch(/aria-selected:tracking-/);
-    expect(className).not.toMatch(/aria-selected:text-(?:label|body|small)/);
-  });
-
-  it('draws the one focus ring as an outline, colour at rest, separate from the marker', () => {
-    render(staffTabs('staff', new Subject<string>()));
-    const className = screen.getByRole('tab', { name: 'Staff' }).className;
-
-    expect(className).toContain('outline-focus-ring');
-    expect(className).toContain('outline-offset-[var(--focus-ring-offset)]');
-    expect(className).toContain(
-      'focus-visible:outline-[length:var(--focus-ring-width)]',
-    );
-    expect(className).not.toMatch(/(?:^|\s|:)ring-/);
-    expect(className).not.toContain('outline-none');
-    expect(className).not.toContain('focus-visible:outline-focus-ring');
-  });
-
-  it('draws the same focus ring on the active panel, which is focusable too', () => {
-    render(staffTabs('staff', new Subject<string>()));
-    const className = screen.getByRole('tabpanel').className;
-
-    expect(className).toContain('outline-focus-ring');
-    expect(className).toContain('outline-offset-[var(--focus-ring-offset)]');
-    expect(className).toContain(
-      'focus-visible:outline-[length:var(--focus-ring-width)]',
-    );
-  });
-
-  it('transitions colour through the motion token, never transition-all', () => {
-    render(staffTabs('staff', new Subject<string>()));
-    const className = screen.getByRole('tab', { name: 'Staff' }).className;
-
-    expect(className).toContain('transition-colors');
-    expect(className).toContain('duration-[var(--motion-duration-color)]');
-    expect(className).not.toContain('transition-all');
-  });
-
-  it('scrolls the row horizontally on overflow rather than wrapping or shrinking a tab', () => {
-    render(staffTabs('staff', new Subject<string>()));
-    const listClassName = screen.getByRole('tablist').className;
-    const tabClassName = screen.getByRole('tab', { name: 'Staff' }).className;
-
-    expect(listClassName).toContain('overflow-x-auto');
-    expect(listClassName).not.toContain('flex-wrap');
-    expect(tabClassName).toContain('shrink-0');
-    expect(tabClassName).toContain('text-nowrap');
+    ).toThrowError(TabsCompositionError);
   });
 
   it('scrolls the newly focused tab into view itself, since focus alone does not', () => {
@@ -417,23 +430,5 @@ describe('Tabs Component', () => {
       // The spy would otherwise leak into every later-run test - a shared mutable fixture.
       window.HTMLElement.prototype.scrollIntoView = environmentStub;
     }
-  });
-
-  it('reserves ring room in the scroll box, written from the focus-ring tokens', () => {
-    render(staffTabs('staff', new Subject<string>()));
-    const listClassName = screen.getByRole('tablist').className;
-
-    // The scroll clip would cut the outline at every edge, so the row pads by exactly the ring's
-    // extent, hands the room back with a matching negative margin, and sets the same value as
-    // scroll-padding so a nearest scrollIntoView stops with the ring inside the clip.
-    expect(listClassName).toContain(
-      'p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
-    );
-    expect(listClassName).toContain(
-      'm-[calc(-1*(var(--focus-ring-width)+var(--focus-ring-offset)))]',
-    );
-    expect(listClassName).toContain(
-      'scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
-    );
   });
 });

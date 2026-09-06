@@ -1,6 +1,7 @@
 import { cva } from 'class-variance-authority';
 import {
   createContext,
+  type FocusEvent,
   type FunctionComponent,
   type KeyboardEvent,
   type ReactNode,
@@ -8,6 +9,7 @@ import {
   useId,
 } from 'react';
 import type { Subject } from 'rxjs';
+import { TabsCompositionError } from './TabsCompositionError';
 
 // The row is a single scrolling line, never a wrap: overflow is an accommodation, not a strip. The
 // ring room is written from the two focus-ring tokens so it cannot drift from the ring it exists
@@ -31,7 +33,7 @@ const tabsTab = cva(
     'font-secondary text-label tracking-label',
     'text-muted hover:text-foreground aria-selected:text-foreground',
     'border-b-[length:var(--tab-marker-thickness)] border-solid border-transparent aria-selected:border-foreground',
-    'shrink-0 cursor-pointer select-none text-nowrap px-4 py-2',
+    'shrink-0 cursor-pointer select-none text-nowrap px-[var(--tab-inset-inline)] py-[var(--tab-inset-block)]',
     'transition-colors duration-[var(--motion-duration-color)]',
     'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   ].join(' '),
@@ -55,15 +57,27 @@ const TabsContext = createContext<TabsContract | undefined>(undefined);
 const useTabsContract = (member: string): TabsContract => {
   const contract = useContext(TabsContext);
   if (contract === undefined) {
-    throw new Error(`Tabs.${member} must be composed inside Tabs.Root`);
+    throw new TabsCompositionError(member);
   }
   return contract;
 };
 
+// Fixed-width UTF-16 units preserve every string, including lone surrogates, without whitespace
+// or collisions between escaped and literal values. Encoding changes IDs only, never selection.
+const encodeValue = (value: string): string =>
+  value
+    .split('')
+    .map((unit) => unit.charCodeAt(0).toString(16).padStart(4, '0'))
+    .join('');
+
+const keepFocusedTabVisible = (event: FocusEvent<HTMLButtonElement>): void => {
+  event.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+};
+
 const tabId = (baseId: string, value: string): string =>
-  `${baseId}tab-${value}`;
+  `${baseId}tab-${encodeValue(value)}`;
 const panelId = (baseId: string, value: string): string =>
-  `${baseId}panel-${value}`;
+  `${baseId}panel-${encodeValue(value)}`;
 
 // The wrap-around rule on its own: the neighbouring tab in the arrow's direction, from the
 // rendered row (`:scope >` keeps a nested instance's tabs out of it), wrapping at either end -
@@ -83,7 +97,7 @@ const neighbourTab = (
   return tabs[(index + step + tabs.length) % tabs.length];
 };
 
-interface ITabsRootProps {
+export interface ITabsRootProps {
   /** The key of the active tab. Must name a declared tab/panel pair; the consumer owns it. */
   active: string;
   /** Emits the selected key on click and on arrow navigation. Tabs never selects on its own. */
@@ -94,12 +108,12 @@ interface ITabsRootProps {
   testId?: string;
 }
 
-interface ITabsListProps {
+export interface ITabsListProps {
   children: ReactNode;
   testId?: string;
 }
 
-interface ITabsTabProps {
+export interface ITabsTabProps {
   /** The stable identity connecting this tab to its panel and emitted by selection requests.
    *  Not React's `key`, and never inferred from the label or the position. */
   value: string;
@@ -108,7 +122,7 @@ interface ITabsTabProps {
   testId?: string;
 }
 
-interface ITabsPanelProps {
+export interface ITabsPanelProps {
   /** The tab this panel belongs to - exactly one panel per tab value within a Root. */
   value: string;
   /** Mounted only while active; departure unmounts it, return mounts it fresh. */
@@ -172,11 +186,6 @@ const TabsTab: FunctionComponent<ITabsTabProps> = ({
       return;
     }
     neighbour.focus();
-    // Measured in Chrome 152 (headless, #102): focus() centres a fully-hidden tab but leaves a
-    // partially clipped one where it was, so the handler scrolls itself. `nearest` stops at the
-    // row's scroll-padding, which is the ring's extent, and moves nothing already in view. The
-    // whole-pixel scroll max can shave the ring's outer edge <1px at the ends (0.42px measured).
-    neighbour.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     const neighbourValue = neighbour.dataset.value;
     if (neighbourValue !== undefined) {
       onSelect$.next(neighbourValue);
@@ -196,6 +205,7 @@ const TabsTab: FunctionComponent<ITabsTabProps> = ({
       className={tabsTab()}
       onClick={() => onSelect$.next(value)}
       onKeyDown={requestNeighbour}
+      onFocus={keepFocusedTabVisible}
     >
       {children}
     </button>
@@ -249,6 +259,8 @@ const TabsPanel: FunctionComponent<ITabsPanelProps> = ({
  *   Keyboard focus is the separate shared focus ring. Colour moves on the one motion token.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - One List with Tab elements as direct DOM children (arrays and fragments are supported),
+ *   and sibling Panels under Root. Do not wrap tabs in host elements.
  * - At least two tabs, each `value` unique and stable, each with exactly one matching `Panel`
  *   under the same `Root`, and `active` naming a declared pair. Invalid input is a contract
  *   violation, not a request for a fallback.
