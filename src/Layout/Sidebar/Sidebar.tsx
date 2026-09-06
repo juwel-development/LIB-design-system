@@ -5,27 +5,18 @@ import type { Subject } from 'rxjs';
 
 // One column below 64rem, the whole list above the content in normal flow; at `lg` a fixed 12rem nav
 // track beside `minmax(0,1fr)`, whose zero minimum keeps wide content from displacing the track (it
-// does not fix that content's own overflow). The two numbers are literals stated in prose, Rail's
-// convention. The region role separates the tracks; default stretch gives the nav cell the full row.
+// does not fix that content's own overflow). Root styles only its owned first child, leaving consumer
+// navigation untouched. Padding and scroll padding reserve the focus ring's width + offset.
 const sidebarRoot = cva(
-  'grid gap-[var(--space-region)] lg:grid-cols-[12rem_minmax(0,1fr)]',
+  [
+    'grid gap-[var(--space-region)] lg:grid-cols-[12rem_minmax(0,1fr)]',
+    '[&>div:first-child]:border-solid [&>div:first-child]:border-border [&>div:first-child]:border-b [&>div:first-child]:pb-[var(--space-stack)]',
+    'lg:[&>div:first-child]:border-b-0 lg:[&>div:first-child]:border-r lg:[&>div:first-child]:pb-0 lg:[&>div:first-child]:pr-[var(--space-stack)]',
+    'lg:[&>div:first-child>nav]:sticky lg:[&>div:first-child>nav]:top-0 lg:[&>div:first-child>nav]:max-h-[min(100dvh,var(--sidebar-scrollport-height,100dvh))] lg:[&>div:first-child>nav]:overflow-y-auto',
+    '[&>div:first-child>nav]:p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] lg:[&>div:first-child>nav]:scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
+    '[&>div:first-child>nav>ul]:flex [&>div:first-child>nav>ul]:flex-col [&>div:first-child>nav>ul]:gap-[var(--space-stack)]',
+  ].join(' '),
 );
-
-// The nav track's cell, stretched to the full row so the sticky nav inside it has the whole column to
-// travel. It draws the separation hairline in `border` - under the list below `lg`, beside it at `lg` -
-// with a stack-role inset so the line does not sit flush against the entries.
-const navTrack = [
-  'border-solid border-border border-b pb-[var(--space-stack)]',
-  'lg:border-b-0 lg:border-r lg:pb-0 lg:pr-[var(--space-stack)]',
-].join(' ');
-
-// Sticky at the scrollport's top only at `lg`; no application top-bar height is assumed.
-// Padding fits the focus ring inside the clip (width + offset); scroll-padding reserves that
-// same space when native keyboard focus scrolls an entry into view (#101 browser verification).
-const navScroller = [
-  'lg:sticky lg:top-0 lg:max-h-[min(100dvh,var(--sidebar-scrollport-height,100dvh))] lg:overflow-y-auto',
-  'p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] lg:scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
-].join(' ');
 
 // A percentage max-height resolves against the content-driven grid cell, not its scrollport;
 // dvh alone left an 800px nav clipped by a 384px frame (#101). Measure that external boundary.
@@ -70,8 +61,6 @@ const observeScrollport: RefCallback<HTMLElement> = (navigation) => {
   };
 };
 
-const entryList = 'flex flex-col gap-[var(--space-stack)]';
-
 // An entry at the label role, told apart by colour and underline alone - the agreed treatment carries
 // no active-background role. Active keeps a persistent underline at the at-rest thickness; usable
 // raises one on hover, instantly (underlines are off the motion allowlist, docs/adr/0001); inert is
@@ -107,7 +96,7 @@ const SidebarSelectionContext = createContext<SidebarSelection | undefined>(
   undefined,
 );
 
-interface ISidebarRootProps {
+export interface ISidebarRootProps {
   /** The key of the active entry. The caller supplies a key identifying one non-inert entry;
    *  Sidebar renders what it is given and never selects a fallback for an invalid key. */
   active: string;
@@ -121,7 +110,7 @@ interface ISidebarRootProps {
   testId?: string;
 }
 
-interface ISidebarItemProps {
+export interface ISidebarItemProps {
   /** Identifies the entry to the application - what `onSelect$` emits and `active` names. React's
    *  reserved `key` is not the entry identifier. */
   entryKey: string;
@@ -132,7 +121,7 @@ interface ISidebarItemProps {
   testId?: string;
 }
 
-interface ISidebarContentProps {
+export interface ISidebarContentProps {
   children?: ReactNode;
   testId?: string;
 }
@@ -145,6 +134,9 @@ const SidebarItem: FunctionComponent<ISidebarItemProps> = ({
 }) => {
   const selection = useContext(SidebarSelectionContext);
   const isActive = selection !== undefined && selection.active === entryKey;
+  const selectEntry = () => {
+    if (!isActive) selection?.onSelect$.next(entryKey);
+  };
   return (
     <li>
       <button
@@ -155,11 +147,7 @@ const SidebarItem: FunctionComponent<ISidebarItemProps> = ({
         disabled={inert}
         aria-current={isActive ? 'true' : undefined}
         data-testid={testId}
-        onClick={() => {
-          if (!isActive) {
-            selection?.onSelect$.next(entryKey);
-          }
-        }}
+        onClick={selectEntry}
       >
         {children}
       </button>
@@ -182,12 +170,10 @@ const SidebarRoot: FunctionComponent<ISidebarRootProps> = ({
   const parts = Children.toArray(children).filter(isValidElement);
   return (
     <div className={sidebarRoot()} data-testid={testId}>
-      <div className={navTrack}>
-        <nav ref={observeScrollport} aria-label={label} className={navScroller}>
+      <div>
+        <nav ref={observeScrollport} aria-label={label}>
           <SidebarSelectionContext value={{ active, onSelect$ }}>
-            <ul className={entryList}>
-              {parts.filter((part) => part.type === SidebarItem)}
-            </ul>
+            <ul>{parts.filter((part) => part.type === SidebarItem)}</ul>
           </SidebarSelectionContext>
         </nav>
       </div>
@@ -205,8 +191,8 @@ const SidebarRoot: FunctionComponent<ISidebarRootProps> = ({
  * beside them at 64rem or below them under it.
  *
  * @Guarantees — enforced on every render
- * - The active entry alone carries `aria-current="true"`. Sidebar owns no selection, URL, history or
- *   fallback: it renders the key it is given, and an invalid key simply marks nothing.
+ * - For valid caller input, the active entry alone carries `aria-current="true"`. Sidebar owns no
+ *   selection, URL, history or fallback: it renders the key it is given; a missing key marks nothing.
  * - Activating the active entry or an inert one emits nothing; no render emits anything. Entries are
  *   non-submitting `type="button"` buttons with native Tab/Enter/Space behaviour - no tabs/menu model.
  * - An inert entry stays visible but muted and disabled, so Tab skips it and activation is inert too.

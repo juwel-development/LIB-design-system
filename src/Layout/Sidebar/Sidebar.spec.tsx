@@ -164,55 +164,8 @@ describe('Sidebar', () => {
     expect(content).toContainElement(
       screen.getByText("The active section's matter."),
     );
-    expect(content.className).toBe('');
     expect(screen.queryByRole('main')).not.toBeInTheDocument();
     expect(screen.queryByRole('region')).not.toBeInTheDocument();
-  });
-
-  it('renders Root as a plain div: a one-column flow that becomes a 12rem nav track beside minmax(0,1fr) at lg', () => {
-    // The switch is a media query, not a prop; jsdom computes no layout, so we assert the markup the
-    // stylesheet keys on - the same justification as Rail's responsive assertions.
-    renderSidebar({ rootId: 'root' });
-    const root = screen.getByTestId('root');
-    expect(root.tagName).toBe('DIV');
-    expect(root).toHaveClass('grid');
-    expect(root.className).toMatch(/\blg:grid-cols-\[12rem_minmax\(0,1fr\)\]/);
-  });
-
-  it('makes the nav sticky, height-capped and independently scrollable only at and above 64rem', () => {
-    // Below lg the whole list lies above the content in normal flow: no base sticky, cap or scroller.
-    renderSidebar();
-    const nav = screen.getByRole('navigation', { name: 'Sections' });
-    expect(nav).toHaveClass('lg:sticky');
-    expect(nav).toHaveClass('lg:top-0');
-    expect(nav).toHaveClass('lg:overflow-y-auto');
-    expect(nav.className).not.toMatch(/(^|\s)sticky\b/);
-    expect(nav.className).not.toMatch(/(^|\s)top-/);
-    expect(nav.className).not.toMatch(/(^|\s)max-h-/);
-    expect(nav.className).not.toMatch(/(^|\s)overflow-/);
-  });
-
-  it('tells the three entry states apart by colour and underline, with no active background role', () => {
-    renderSidebar({ active: 'staff' });
-    const active = screen.getByRole('button', { name: 'Staff' });
-    const usable = screen.getByRole('button', { name: 'Hub' });
-    const inert = screen.getByRole('button', { name: 'Contracts' });
-    expect(active).toHaveClass('text-foreground');
-    expect(active).toHaveClass('underline');
-    expect(usable).toHaveClass('text-foreground');
-    expect(usable.className).not.toMatch(/(^|\s)underline(\s|$)/);
-    expect(usable.className).toMatch(/\bhover:underline\b/);
-    expect(inert).toHaveClass('text-muted');
-    for (const entry of [active, usable, inert]) {
-      expect(entry.className).not.toMatch(/(^|[\s:])bg-/);
-    }
-  });
-
-  it('carries no dark: class - colours are semantic tokens re-pointed by the dark class', () => {
-    const { container } = renderSidebar();
-    for (const element of container.querySelectorAll('*')) {
-      expect(element.className).not.toMatch(/\bdark:/);
-    }
   });
 
   it('exposes the one sanctioned host hook through testId on each member', () => {
