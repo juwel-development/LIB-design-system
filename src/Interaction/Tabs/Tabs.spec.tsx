@@ -399,18 +399,24 @@ describe('Tabs Component', () => {
     // partially clipped one exactly where it was, so arrowing to a half-visible tab kept it half
     // visible. jsdom lays nothing out, so what is checkable is that the handler asks.
     const scrollIntoView = vi.fn();
+    const environmentStub = window.HTMLElement.prototype.scrollIntoView;
     window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
-    const onSelect$ = new Subject<string>();
-    render(staffTabs('staff', onSelect$));
-    const staff = screen.getByRole('tab', { name: 'Staff' });
-    staff.focus();
+    try {
+      const onSelect$ = new Subject<string>();
+      render(staffTabs('staff', onSelect$));
+      const staff = screen.getByRole('tab', { name: 'Staff' });
+      staff.focus();
 
-    fireEvent.keyDown(staff, { key: 'ArrowRight' });
+      fireEvent.keyDown(staff, { key: 'ArrowRight' });
 
-    expect(scrollIntoView).toHaveBeenCalledWith({
-      block: 'nearest',
-      inline: 'nearest',
-    });
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        block: 'nearest',
+        inline: 'nearest',
+      });
+    } finally {
+      // The spy would otherwise leak into every later-run test - a shared mutable fixture.
+      window.HTMLElement.prototype.scrollIntoView = environmentStub;
+    }
   });
 
   it('reserves ring room in the scroll box, written from the focus-ring tokens', () => {

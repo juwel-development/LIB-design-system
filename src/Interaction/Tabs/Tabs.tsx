@@ -22,11 +22,10 @@ const tabsList = cva(
   ].join(' '),
 );
 
-// Navigation typography, the role Header set for nav items: the tracked grotesk label, muted at
-// rest and foreground when current - here keyed on aria-selected, so the attribute the device
-// reads is the one the paint follows. The marker keeps one thickness in both states and flips only
-// colour, so selection shifts no geometry; colour is the one motion, on the shared token. The one
-// focus ring sits in the base with its colour at rest, exactly as on Button.
+// Navigation typography - the tracked grotesk label, muted at rest, foreground when current -
+// keyed on aria-selected, so the attribute the device reads is the one the paint follows. The
+// marker keeps one thickness and flips only colour on the shared motion token, so selection
+// shifts no geometry. The focus ring sits in the base with its colour at rest, as on Button.
 const tabsTab = cva(
   [
     'font-secondary text-label tracking-label',
@@ -65,6 +64,24 @@ const tabId = (baseId: string, value: string): string =>
   `${baseId}tab-${value}`;
 const panelId = (baseId: string, value: string): string =>
   `${baseId}panel-${value}`;
+
+// The wrap-around rule on its own: the neighbouring tab in the arrow's direction, from the
+// rendered row (`:scope >` keeps a nested instance's tabs out of it), wrapping at either end -
+// so tab order is rendered order.
+const neighbourTab = (
+  current: HTMLButtonElement,
+  step: 1 | -1,
+): HTMLButtonElement | undefined => {
+  const row = current.closest('[role="tablist"]');
+  if (row === null) {
+    return undefined;
+  }
+  const tabs = Array.from(
+    row.querySelectorAll<HTMLButtonElement>(':scope > [role="tab"]'),
+  );
+  const index = tabs.indexOf(current);
+  return tabs[(index + step + tabs.length) % tabs.length];
+};
 
 interface ITabsRootProps {
   /** The key of the active tab. Must name a declared tab/panel pair; the consumer owns it. */
@@ -139,25 +156,18 @@ const TabsTab: FunctionComponent<ITabsTabProps> = ({
   const { active, onSelect$, baseId } = useTabsContract('Tab');
   const isActive = active === value;
 
-  // Left/Right move focus to the neighbouring tab, wrapping at either end, and request its
-  // selection immediately - activation follows focus. The neighbour comes from the rendered row
-  // (`:scope >` so a nested instance's tabs stay out of it), so tab order is rendered order. Other
-  // keys fall through: Up/Down keep scrolling the page, Tab leaves the list for the active panel.
+  // Left/Right move focus to the neighbouring tab and request its selection immediately -
+  // activation follows focus. Other keys fall through: Up/Down keep scrolling the page, Tab
+  // leaves the list for the active panel.
   const requestNeighbour = (event: KeyboardEvent<HTMLButtonElement>): void => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
       return;
     }
     event.preventDefault();
-    const row = event.currentTarget.closest('[role="tablist"]');
-    if (row === null) {
-      return;
-    }
-    const tabs = Array.from(
-      row.querySelectorAll<HTMLButtonElement>(':scope > [role="tab"]'),
+    const neighbour = neighbourTab(
+      event.currentTarget,
+      event.key === 'ArrowRight' ? 1 : -1,
     );
-    const step = event.key === 'ArrowRight' ? 1 : -1;
-    const index = tabs.indexOf(event.currentTarget);
-    const neighbour = tabs[(index + step + tabs.length) % tabs.length];
     if (neighbour === undefined) {
       return;
     }
