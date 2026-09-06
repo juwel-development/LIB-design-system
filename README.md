@@ -32,6 +32,38 @@ If the host already imports Tailwind and only wants the palette, take the tokens
 @import "@juwel-development/design-system/tokens.css";
 ```
 
+## Collection
+
+`Collection` is a vertical group of freely composed items with internal hairlines and
+open outer edges. The library owns spacing and separation; the consumer owns content,
+arrangement and interaction.
+
+```tsx
+import { Collection, Link, Note, Stack } from '@juwel-development/design-system';
+
+<Collection.Root>
+  <Collection.Item>
+    <Stack>
+      <Link href={'/guide'}>Read the guide</Link>
+      <Note color={'muted'}>Supporting information</Note>
+    </Stack>
+  </Collection.Item>
+  <Collection.Item><Note>Freely composed content</Note></Collection.Item>
+</Collection.Root>;
+```
+
+Both members accept only `children?: ReactNode` and `testId?: string`. Supply
+`Collection.Item` children directly, through maps, or with conditional omissions.
+The semantic list has no markers, horizontal indent, added focus stops or behavior.
+An empty root renders no placeholder; a single item has no rule.
+
+`--space-collection-item` names the vertical padding inside each item, defaulting to
+`1em` above and below so it follows inherited type. This is a separate role from a
+Stack's sibling gap or a Section's band: re-pointing it changes only Collection item
+padding. It is declared in all three token stylesheets and accepts a nonnegative CSS
+length. Hairlines use the existing `--color-border` role. There are no density,
+padding or arrangement props; child components own their typography and wrapping.
+
 ## Theming
 
 Colour is addressed by **role**, never by shade - `bg-primary`, `text-muted`,

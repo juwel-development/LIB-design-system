@@ -166,6 +166,11 @@
   --space-band: 4em;
 }
 
+/* Collection's vertical item padding, measured against inherited type. */
+:root {
+  --space-collection-item: 1em;
+}
+
 /* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
 :root {
   --gutter: clamp(1.5rem, 5vw, 4rem);

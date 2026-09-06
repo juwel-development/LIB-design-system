@@ -269,6 +269,19 @@ describe('renderTokens aspect contract', () => {
 });
 
 describe('renderTokens spacing contract', () => {
+  it('declares collection item padding in every stylesheet as an em role a consumer can re-point', () => {
+    for (const css of [
+      renderTokens(),
+      renderLightTokens(),
+      renderDarkTokens(),
+    ]) {
+      expect(css).toMatch(/:root\s*\{[^}]*--space-collection-item:\s*1em;/);
+      for (const block of css.matchAll(/@theme(?: inline)?\s*\{([^}]*)\}/g)) {
+        expect(block[1]).not.toContain('--space-collection-item');
+      }
+    }
+  });
+
   it('emits the three spacing roles into :root, expressed in em so they track the type ramp', () => {
     const css = renderTokens();
     expect(css).toMatch(/--space-stack:\s*[0-9.]+em;/);
