@@ -4,8 +4,8 @@ import type { FunctionComponent, ReactNode } from 'react';
 
 // One recipe on a plain <div>. Six components hand-write this same utility set and their specs pin
 // it as a set, not an order (architecture standard, the import test). `band` is vertical padding,
-// never a gap; the bound holds exactly the two container roles docs/adr/0008's Amendments attest
-// (#97), which argue the `w-full` pairing. `split` turns at `lg`, the Rail/DefinitionList threshold.
+// never a gap; `split` turns at `lg`, the Rail/DefinitionList threshold. The bound holds the two
+// container roles docs/adr/0008's Amendments attest (#97), sized as the guarantees below argue (#99).
 const stack = cva('flex', {
   variants: {
     gap: {
@@ -15,7 +15,7 @@ const stack = cva('flex', {
     measure: {
       true: 'max-w-[var(--measure)]',
       false: '',
-      action: 'w-full max-w-[var(--measure-action)]',
+      action: 'w-[var(--measure-action)] max-w-full mx-auto',
     },
     direction: {
       column: 'flex-col',
@@ -38,7 +38,9 @@ export interface IStackProps extends VariantProps<typeof stack> {
  * so whatever holds it owns the rhythm around it.
  *
  * @Guarantees — enforced on every render
- * - It renders a `div` with no landmark role, no heading and no margin of its own.
+ * - It renders a `div` with no landmark role, no heading and no margin of its own - the one
+ *   exception the action column's auto inline margins, which name no space role and take no space:
+ *   they only centre the bound column inside a holder wider than the bound.
  * - `gap` selects which space role separates the children: `stack` (the default), the gap between
  *   siblings within one block, or `region`, the gap between groups of blocks. Nothing else — a
  *   spacing neither role expresses is a request for a measurement (docs/adr/0003, docs/adr/0004).
@@ -46,8 +48,12 @@ export interface IStackProps extends VariantProps<typeof stack> {
  *   unbounded, which is right wherever the children are not running text. It sets no font-size, so
  *   a `ch`-counted measure keeps resolving against inherited body type.
  * - `measure="action"` bounds the element to `--measure-action`, the action column - the width a
- *   stack of full-width controls fills, so they read as one unit and their labels align - and fills
- *   its slot up to that bound, so a centering frame cannot shrink it to its widest label. The two
+ *   stack of full-width controls fills, so they read as one unit and their labels align. The column
+ *   asks for that bound as its own definite width, capped at its holder's, so it reaches the bound
+ *   even inside a shrink-to-fit frame that sizes from its content - `Cover`'s slot - independently
+ *   of what its siblings measure, and its auto inline margins keep it centred in a holder that
+ *   stays wider. (#99, correcting #97's reasoning: `w-full` fills a containing slot but cannot
+ *   raise a shrink-to-fit ancestor's intrinsic width, so it never guaranteed the bound.) The two
  *   options answer different questions about what the column holds - text or controls - never how
  *   wide it should be (docs/adr/0008, Amendments).
  * - `direction="column"` (the default) never changes axis. `direction="split"` is the same column
