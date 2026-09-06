@@ -1,3 +1,16 @@
+# [3.4.0](https://github.com/juwel-development/LIB-design-system/compare/v3.3.0...v3.4.0) (2026-09-06)
+
+
+### Bug Fixes
+
+* **slider:** align the control with the [#104](https://github.com/juwel-development/LIB-design-system/issues/104) agent brief ([7f4d465](https://github.com/juwel-development/LIB-design-system/commit/7f4d46566f6425d5e6b519e6c1d4703901a2ae52))
+
+
+### Features
+
+* **meter:** add read-only Meter display with depletion treatment ([#105](https://github.com/juwel-development/LIB-design-system/issues/105)) ([fd797f8](https://github.com/juwel-development/LIB-design-system/commit/fd797f84ef7516b86f22cdb548c66a176735404a))
+* **slider:** set one value on a fixed operating range ([#104](https://github.com/juwel-development/LIB-design-system/issues/104)) ([8590217](https://github.com/juwel-development/LIB-design-system/commit/8590217ca842aa9f98895a6c679c956876ff94e8))
+
 # [3.3.0](https://github.com/juwel-development/LIB-design-system/compare/v3.2.0...v3.3.0) (2026-09-06)
 
 
