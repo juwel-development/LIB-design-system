@@ -1,6 +1,6 @@
+import { Stack } from 'Arrangement/Stack/Stack';
+import { Note } from 'Display/Typography/Note/Note';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Stack } from '../../Arrangement/Stack/Stack';
-import { Note } from '../Typography/Note/Note';
 import { Meter } from './Meter';
 
 const meta: Meta<typeof Meter> = {

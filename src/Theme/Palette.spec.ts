@@ -31,11 +31,10 @@ const contrastRatio = (a: string, b: string): number => {
   return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
 };
 
-/* Meter's depletion treatment mixes `meterFill` toward `error` with color-mix(in oklab, …), so the
-   colours it produces exist only in the browser. To prove the shipped palettes keep every one of
-   them at 3:1 (docs/adr/0010), the mix is replayed here: hex → linear sRGB → OKLab (Björn
-   Ottosson's reference matrices, the ones CSS Color 4 specifies), lerp, and back to linear sRGB -
-   which is the form WCAG relative luminance is defined on, so no hex round-trip is needed. */
+/* Depletion's color-mix(in oklab, …) colours exist only in the browser; to prove the shipped
+   palettes keep every one at 3:1 (docs/adr/0010), the mix is replayed here: hex → linear sRGB →
+   OKLab (Björn Ottosson's reference matrices, the ones CSS Color 4 specifies), lerp, and back to
+   linear sRGB - the form WCAG relative luminance is defined on, so no hex round-trip is needed. */
 const toLinearRgb = (hex: string): [number, number, number] => {
   const channel = (offset: number): number => {
     const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;

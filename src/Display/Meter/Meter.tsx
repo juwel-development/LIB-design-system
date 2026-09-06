@@ -2,21 +2,18 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import type { CSSProperties, FunctionComponent } from 'react';
 import { MeterConfigurationError } from './MeterConfigurationError';
 
-// The track is the whole capacity: full container width, the one thickness token, square corners -
-// Meter is not a control, so it reads no radius token (docs/adr/0003). The persistent one-pixel
-// line is drawn in `rule`, the page-structure weight, and is what identifies the capacity against
-// the surface; `meterTrack` behind it makes the scale visible without boxing (docs/adr/0010).
-// Deliberately no transition class: a value change lands instantly, and the library's one motion -
-// the colour transition - belongs to state changes on controls, not to a level display.
+// The track is the whole capacity: square corners, no radius token - Meter is not a control
+// (docs/adr/0003). The one-pixel `rule` line identifies the capacity against the surface;
+// `meterTrack` behind it makes the scale visible without boxing (docs/adr/0010). Deliberately no
+// transition class: the library's one motion belongs to state changes on controls, not a display.
 const meterTrack = cva(
   'w-full h-[var(--meter-track-thickness)] bg-meter-track border border-solid border-rule',
 );
 
-// The fill is a block-level box sized by --meter-level, the normalized share the component computes.
-// Block layout places it at inline-start in both LTR and RTL, so direction needs no physical offset.
-// Depleting reads the same share into color-mix: `meterFill` at the maximum, `error` at the minimum,
-// linearly through OKLab - a perceptual space, so the walk toward the minimum is even and the
-// consumer never picks a threshold (docs/adr/0010). Both endpoints stay tokens a brand re-points.
+// The fill is a block box sized by --meter-level, the normalized share the component computes;
+// block layout places it at inline-start in both LTR and RTL, no physical offset. Depleting reads
+// the same share into color-mix: `meterFill` at max, `error` at min, linearly through OKLab - a
+// perceptual space, so no threshold (docs/adr/0010). Both endpoints stay tokens a brand re-points.
 const meterFill = cva('h-full w-[calc(var(--meter-level)*100%)]', {
   variants: {
     treatment: {

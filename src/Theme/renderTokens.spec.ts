@@ -513,9 +513,17 @@ describe('renderTokens tab inset contract', () => {
 
 describe('renderTokens meter track contract', () => {
   it('emits the meter track thickness in every stylesheet, defaulting to the height the first consumer hand-rolled', () => {
-    // The published constraint is > 0 - a zero-thickness track erases the display (#105).
     for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
       expect(render()).toContain('--meter-track-thickness: 0.5rem;');
+    }
+  });
+
+  it('keeps the emitted thickness strictly positive - a zero-thickness track erases the display (#105)', () => {
+    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+      const thickness = render().match(
+        /--meter-track-thickness: ([\d.]+)rem;/,
+      )?.[1];
+      expect(Number.parseFloat(thickness ?? '0')).toBeGreaterThan(0);
     }
   });
 
