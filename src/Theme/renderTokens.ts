@@ -244,6 +244,16 @@ const SLIDER = `:root {
   --slider-thumb-size: 1.5rem;
 }`;
 
+/* The choice marker's two dimensions are not colours: like the tick they live in :root only, never
+   @theme inline, so a brand re-points the marker without any member of Choices gaining a prop. The
+   dot's presence is the selection cue that survives without colour perception, so its size answers
+   to the box that frames it, not to the type beside it - rem, like the tick and the slider thumb.
+   Constraints: both > 0 (a zero dot erases the one shape cue), and dot < size or it escapes its box. */
+const CHOICE_MARKER = `:root {
+  --choice-marker-size: 1.125rem;
+  --choice-marker-dot-size: 0.5rem;
+}`;
+
 /* Not a colour: like the tick it lives in :root only, never @theme inline, so a brand can
    re-point the bar's weight. Meter reads it as h-[var(--meter-track-thickness)]. Constraint:
    > 0 - a zero-thickness track erases the display. 0.5rem is the height the accepted Negotiation
@@ -355,6 +365,9 @@ ${TAB_MARKER}
 ${TAB_INSETS}
 
 ${SLIDER}
+
+/* The choice marker's dimensions are not colours either, and sit in :root beside the slider block. */
+${CHOICE_MARKER}
 
 /* The meter track's thickness is not a colour either, and sits in :root beside the tab blocks. */
 ${METER_TRACK}

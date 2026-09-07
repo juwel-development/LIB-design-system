@@ -275,6 +275,21 @@ A control that sets one numeric value by moving one thumb along a fixed, visible
 It is neither a bounded pair nor a field for freely entered content.
 _Avoid_: Range, range input, range picker
 
+**Choices**:
+A single selection from a small set of described options, presented as vertically arranged choice
+rows with exactly one selected. The consumer owns the selected value and every word - each option
+arrives with a stable key, a name and a description, and a selection request is answered by
+rerendering with a new value. The whole group can be inert: visible with its selection and every
+description retained, but unavailable. Named for its job, not the widget style that renders it.
+_Avoid_: Radio group, radio buttons, option list, picker
+
+**Choice row**:
+One option within Choices - a stable key, a visible name and a description, selectable by
+activating any part of the row, its text included. The selected row is told apart by the marker
+and highlight rather than by colour alone. Availability belongs to the group: there is no per-row
+inert, and an option that cannot be offered is left out by the caller.
+_Avoid_: Radio button, option, item, entry
+
 ### Forms
 
 **Field**:

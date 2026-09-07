@@ -21,6 +21,7 @@ export { Note } from 'Display/Typography/Note/Note';
 export { P } from 'Display/Typography/P/P';
 export { Prose } from 'Display/Typography/Prose/Prose';
 export { Button } from 'Interaction/Button/Button';
+export { Choices } from 'Interaction/Choices/Choices';
 export { Input } from 'Interaction/Input/Input';
 export { Link } from 'Interaction/Link/Link';
 export { Slider } from 'Interaction/Slider/Slider';

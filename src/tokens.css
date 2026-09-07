@@ -252,6 +252,12 @@
   --slider-thumb-size: 1.5rem;
 }
 
+/* The choice marker's dimensions are not colours either, and sit in :root beside the slider block. */
+:root {
+  --choice-marker-size: 1.125rem;
+  --choice-marker-dot-size: 0.5rem;
+}
+
 /* The meter track's thickness is not a colour either, and sits in :root beside the tab blocks. */
 :root {
   --meter-track-thickness: 0.5rem;
