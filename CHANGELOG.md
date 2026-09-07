@@ -1,3 +1,10 @@
+# [3.7.0](https://github.com/juwel-development/LIB-design-system/compare/v3.6.0...v3.7.0) (2026-09-07)
+
+
+### Features
+
+* **choices:** add the controlled radio-choice rows control ([#108](https://github.com/juwel-development/LIB-design-system/issues/108)) ([a70cc3c](https://github.com/juwel-development/LIB-design-system/commit/a70cc3cd7877cb4d66fbbbd17416a2665f63b1ec))
+
 # [3.6.0](https://github.com/juwel-development/LIB-design-system/compare/v3.5.0...v3.6.0) (2026-09-07)
 
 
