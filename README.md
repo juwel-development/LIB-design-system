@@ -122,6 +122,14 @@ npm run build:tokens
 The generated files are committed, and a test pins each to the palette - editing the
 palette without regenerating fails the suite rather than shipping stale colours.
 
+#### Migrating a custom palette to the `scrim` role
+
+Dialog added the required `scrim` role to `PaletteTokens`. A consumer that constructs its own
+palette object of this type must add a `scrim` colour - an `rgb(r g b / a)` value whose alpha is
+part of the role, `rgb(15 23 42 / 0.5)` being the shipped default. Spreading `light`/`dark` and
+overriding stays valid unchanged, and a theme that only overrides the generated
+`--color-*` custom properties in CSS inherits the new default without any change.
+
 ## Development
 
 ```bash

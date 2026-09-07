@@ -95,3 +95,53 @@ Findings:
   (documented in code); revisit only if a real consumer case surfaces.
 - jsdom cannot represent modal containment; that gap is closed by the browser verification above,
   which is manual, not CI-repeatable.
+
+## Follow-up: coordinator review dispositions
+
+A second review pass (coordinator-owned Orca findings) was resolved on top of the above.
+
+**Spec axis.**
+
+- *Stale native close race* — confirmed critical and fixed. The platform queues the close event
+  as a task, so `showDialog$.next(false)` immediately followed by `next(true)` (or replacing an
+  open Subject and emitting `true` at once) let the stale event emit `false` into the new
+  presentation, corrupt `presentedRef` and steal focus. The close fake now queues its event like
+  the platform; two regression tests reproduce both shapes and failed against the unguarded code.
+  The fix ignores a close event whose element is open again. A StrictMode mount-open test and the
+  existing unmount-teardown and native-close-synchronization tests stay green, and the race was
+  exercised in a real Chrome (same-task dismiss-and-reopen: the dialog stays open, modal, focused).
+- *Restore only a connected, focusable opener* — fixed: the restore now also requires
+  `matches(FOCUSABLE_SELECTOR)` or an explicit `tabindex`, with a covering test.
+- *Optional description idref* — already fixed in `85b27cc` (presence registration).
+- *Root native overflow* — confirmed and fixed: the UA sheet gives `dialog` `overflow: auto`, so
+  the root itself could scroll. `overflow-hidden` now pins "only Content scrolls" at the root;
+  verified in-browser (root `overflow-y: hidden`, not scrollable, Content still scrolls).
+- *Missing name* stays caller responsibility per the documented contract; manual browser
+  verification stands as documented — no validation or test infrastructure added.
+
+**Standards axis** (validated against the repo's own rules).
+
+- *CVA for Title/Description descendant paint* — rejected: design-system-components.md §4 says
+  "exactly one `cva()` recipe per component", and static inner-element class strings are the
+  repo-wide idiom (`Input.tsx:102`, `TextArea.tsx:93`); each Dialog member already owns its one
+  recipe.
+- *Named JSX ref callback* — already fixed in `85b27cc` (`attachDialog`).
+- *Null boundary normalization* — confirmed and fixed: `openDialog`/`closeDialog` and the ref
+  cell now speak `undefined` per coding.md § Absence; the React callback boundary normalizes the
+  `null` React hands it.
+- *Abbreviated names* — split: the `PresentationRefs` type is renamed `Presentation`; the
+  `…Ref` variable suffix is kept as the established repo idiom (`controlRef`, `Input.tsx:84`)
+  and React's own vocabulary (`useRef`/`RefObject`), not an abbreviation the standard targets.
+- *Excessive prose comments* — largely fixed in `85b27cc`; this pass trimmed the one remaining
+  over-budget block (renderTokens.ts radius comment, 5 lines → 4). Template-string comments that
+  render into the generated stylesheets are shipped content pinned by `renderTokens.spec.ts`,
+  and all sit within budget.
+- *Role queries over `getByTestId`* — fixed where role can express the query: open dialogs are
+  now reached with `getByRole('dialog')`; the testId helper remains only for closed dialogs,
+  which are display-none and outside the accessibility tree, with the justification in the spec.
+
+**Release decision.** The user requires a non-major release and accepts the required
+`PaletteTokens.scrim` in the 3.x minor. Migration guidance was added to the `scrim` TSDoc (which
+Storybook and editors surface) and README's palette section, and the docs commit carries a
+consumer-facing `NOTE:` footer — no `BREAKING CHANGE` footer — so the changelog publishes the
+migration without a major bump.

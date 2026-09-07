@@ -42,7 +42,12 @@ export type PaletteTokens = {
   /** The themed veil behind a Dialog, marking the page beneath as present but unavailable. The one
    *  role whose alpha is part of the colour - the page must show through, which a solid hex cannot
    *  say - so it is an `rgb(r g b / a)` value, not a hex. Both shipped themes carry the same value;
-   *  the Dialog's modality never depends on the treatment, so no contrast constraint applies. */
+   *  the Dialog's modality never depends on the treatment, so no contrast constraint applies.
+   *
+   *  Migration (added with Dialog): a consumer constructing its own `PaletteTokens` object must
+   *  add this role - `rgb(15 23 42 / 0.5)` is the shipped value. Spreading `light`/`dark` and
+   *  overriding is unaffected, and a theme that only overrides the generated custom properties
+   *  in CSS inherits the default. */
   scrim: string;
 
   /** The colour of a Meter's filled share when it states an amount without judgment - neither an
