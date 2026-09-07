@@ -324,6 +324,20 @@ this amendment deliberately leaves alone — the height defect is fixed by pinni
 by touching the padding — and the opt-in rule the label role's leading established above holds here
 too: a leading is a decision somebody makes per call site, not a default that spreads.
 
+## Amended: the Dialog title is its own type role
+
+`Dialog.Title` adds `--text-dialog-title: clamp(1.5rem, 3vw, 2.25rem)` and
+`--leading-dialog-title: 1.2`. Its shipped values match `subtitle`, preserving the H3 appearance of
+the Depot Tracker source, but the roles remain independent: a Dialog title is the top heading of an
+independent transitory task, not a level-three subsection of a page. A consumer may therefore
+re-point Dialog titles without moving every `H3`, and vice versa.
+
+This is not a second name for a size rung. `dialog-title` names the one job that
+[ADR 0005](./0005-heading-level-fixes-type-role.md) deliberately keeps outside the page heading
+ladder, and no component or prop chooses between it and `subtitle`. The title sets both size and
+leading, so the pair follows the existing heading-role contract rather than inheriting a line box
+from its placement.
+
 ## Constraints published on the tokens
 
 In the shape [ADR 0002](./0002-focus-ring-token-contract.md) established: stated numerically on the

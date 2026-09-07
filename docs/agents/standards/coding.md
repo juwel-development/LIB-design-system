@@ -93,12 +93,21 @@ Names replace comments.
 **RxJS Observables are the default** for anything async, streaming, or event-shaped — including
 component interaction props. `rxjs` is a peer dependency for exactly this reason.
 
-- **An interaction prop is a `Subject`, suffixed `$`** — `onClick$?: Subject<void>`, which the
-  component calls `.next()` on. A consumer composes it with the rest of its streams instead of
-  bridging a callback into them. This is a deliberate divergence from the React norm of a
-  `MouseEventHandler` callback, and it is the convention here.
-- The component **never subscribes to a prop it was handed** and never completes it — the
-  subscriber owns teardown, and the owner of a `Subject` owns its lifetime.
+- **A state input may be an `Observable`, suffixed `$`**. The component may subscribe to the values
+  it needs and owns that subscription: it unsubscribes when the source is replaced or the component
+  unmounts. The consumer owns the stream itself, including its production, completion, error and
+  lifetime. The component does not validate the stream, assign behavior to its completion or error,
+  publish into it, or complete it.
+- **An interaction output is a `Subject`, suffixed `$`** — `onClick$?: Subject<void>`, which the
+  component calls `.next()` on. The component neither subscribes to nor completes the Subject; the
+  consumer owns its subscription, completion, error and lifetime. A consumer composes it with the
+  rest of its streams instead of bridging a callback into them. This is a deliberate divergence
+  from the React norm of a `MouseEventHandler` callback, and it is the convention here.
+- **A bidirectional state channel is explicitly a `Subject`, suffixed `$`**. Use one only when the
+  component contract owns a documented state transition as well as observing the current state.
+  The component subscribes to values, emits only those documented transitions, owns its subscription
+  teardown, and never completes the Subject; the consumer still owns the channel's lifetime, error
+  and completion.
 - Observables and operators, not `.then()` chains.
 - One-shot I/O may `await` internally but is exposed as an Observable across boundaries.
 

@@ -55,6 +55,11 @@ carrier. It is a tone, not a status event: every position supplies its own contr
 tone carries no announcement by itself, and the content still communicates the status without colour.
 _Avoid_: Status ink, alert background, emphasis colour
 
+**Scrim**:
+The themed veil behind a Dialog that marks the page beneath as present but unavailable. Its visual
+treatment may soften that page, but the Dialog's modality never depends on the treatment.
+_Avoid_: Backdrop, overlay, dimmer
+
 **Meter fill**:
 The colour of a Meter's filled share when it states an amount without judgment. It is neither an
 action fill nor text ink; a depletion treatment moves it toward the error role.
@@ -134,9 +139,13 @@ _Avoid_: Motion off, a11y motion mode
 The appearance of something being raised off the surface — a shadow, or a press that shifts
 geometry. On a *control* it is decoration and the library performs none, because a
 raised-and-depressing material is one brand's opinion rather than a role any brand can re-point. On
-a *floating layer* it is a depth cue rather than decoration, and would be expressed as a token
-rather than hard-coded into a component.
+a *Floating Layer* it is a shared depth cue rather than decoration.
 _Avoid_: Depth, shadow, lift
+
+**Floating Layer**:
+A temporary surface presented above existing content without taking a place in its layout. Dialogs,
+popup menus and drawers float; a standing surface does not become one merely by remaining sticky.
+_Avoid_: Overlay, raised component, top layer
 
 ### Focus
 
@@ -226,6 +235,34 @@ genuinely new need is added to the roster, never hand-rolled as a styled element
 product. Widening it to hold composables, and again to hold arrangements, widened the *kind* of entry
 allowed, not the door: the set stays closed and each entry is still reviewed on its own.
 _Avoid_: Catalogue, component list
+
+**Dialog**:
+A temporary, always-named modal surface that interrupts the page with one focused task; its name may
+be visible or supplied only to assistive technology. Only one stands at a time: it owns separation
+from and return to the page, while the consumer owns its content, actions, outcomes and replacement.
+_Avoid_: Modal, popup, overlay
+
+**Dialog title**:
+The optional visible name at the head of a Dialog's independent task. It is the top heading of that
+task rather than a continuation of the page's heading ladder; without one, the name is non-visible.
+_Avoid_: Modal title, dialog H2, window caption
+
+**Dialog extent**:
+What bounds a Dialog surface: `content` gives one compact task a defined width and lets its content
+set the height, while `screen` claims most of the available viewport for a larger workflow. The
+distinction names what the surface answers to, not a rung on a size scale.
+_Avoid_: Dialog size, small dialog, large dialog
+
+**Dialog radius**:
+The corner treatment of a Dialog's floating surface, independent of a control's corner. Both Dialog
+extents share it, while other structure remains square.
+_Avoid_: Structure radius, modal radius, radius size
+
+**Dismissal**:
+The user's departure from a Dialog without completing its task, whether through an explicit control,
+Escape or the Scrim. It ends the presentation but remains distinct from programmatic hiding and is
+not itself a task outcome.
+_Avoid_: Close, cancel, abort
 
 **Tabs**:
 A few named views sharing one surface, with exactly one view active and each tab naming its own

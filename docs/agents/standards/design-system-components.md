@@ -41,10 +41,18 @@ hatch onto the underlying element.
 
 - **`children` is explicit** where content is rendered, omitted where it is not. No
   `PropsWithChildren` helper.
-- **Interaction props are RxJS `Subject`s, suffixed `$`** — the component calls `.next()` on one
-  and never subscribes to it. This is the house convention (see the coding standard's
-  [Asynchrony](./coding.md#asynchrony)); `rxjs` is a peer dependency for it. Each is named per
-  role: a Button has `onClick$`, a purely presentational primitive has none.
+- **Streams have an explicit direction and consumer-owned lifetime.** A state input is an RxJS
+  `Observable`, suffixed `$`; the component may subscribe to its values and must unsubscribe when
+  the source is replaced or the component unmounts. It does not validate the stream, define error
+  or completion behavior, publish into it, or complete it. An interaction output is a `Subject`,
+  also suffixed `$`; the component only calls `.next()` and never subscribes to or completes it.
+  A contract that deliberately combines state input with a component-owned transition uses a
+  bidirectional `Subject`; the component may both subscribe and emit only the transitions that
+  contract names. The consumer owns every stream's lifetime, completion and error, while the
+  component owns teardown of every subscription it creates. This is the house convention (see the
+  coding standard's [Asynchrony](./coding.md#asynchrony)); `rxjs` is a peer dependency for it. Each
+  interaction is named per role: a Button has `onClick$`, a purely presentational primitive has
+  none. React callback props are not introduced.
 
   ```ts
   onClick$?: Subject<void>   // not onClick?: React.MouseEventHandler

@@ -74,10 +74,10 @@ why two composite primitives were promised. [ADR 0004](./0004-typography-token-c
 then moved `display` up to `clamp(3rem, 7vw, 6rem)` and **named it the hero**, which is the value this
 ADR asked for when it said *"the hero role needs a value clearing it."*
 
-So **a poster hero's lead is a plain `<H1>`.** The two `h1` treatments are now `H1` itself and
-`PageHead` ([#18](https://github.com/juwel-development/LIB-design-system/issues/18)), which renders an
-`h1` at the `title` role — the role this ADR binds to level *two*. **`PageHead` is the only escape
-valve, and there is no second one.**
+So **a poster hero's lead is a plain `<H1>`.** The two `h1` treatments at that point were `H1` itself
+and `PageHead` ([#18](https://github.com/juwel-development/LIB-design-system/issues/18)), which
+renders an `h1` at the `title` role — the role this ADR binds to level *two*. `PageHead` was then the
+only escape valve; Dialog adds the independent case recorded below.
 
 The poster hero shipped instead as `Hero`
 ([#17](https://github.com/juwel-development/LIB-design-system/issues/17)) — a frame holding a minimum
@@ -90,16 +90,30 @@ Nothing about the decision itself moves: a heading's level still fixes its type 
 expose no size prop, and the ladder still holds by construction. What changed is the count of
 components needed to keep it that way.
 
+## Amended: a Dialog resets the heading context
+
+A Dialog is a transitory application window, not a subsection whose rank can be inferred from the
+control that opened it. `Dialog.Root` therefore carries HTML's `headingreset`, and its optional
+`Dialog.Title` renders an `h1` that names the Dialog through `aria-labelledby`. This follows the
+[HTML Standard's reset example](https://html.spec.whatwg.org/dev/sections.html#heading-levels-and-offsets):
+the title is the top heading of the Dialog's independent task rather than an `h2` or `h3` guessed from
+the surrounding page.
+
+`Dialog.Title` does not reuse the generic `H1`. The display role belongs to a page's largest heading
+and is inappropriate for a bounded floating surface, so Dialog owns a distinct title treatment. This
+is a second deliberate composable exception alongside `PageHead`, not a `level` or `role` selector:
+the caller still cannot invert a heading ladder.
+
 ## Consequences
 
-**One `h1` treatment lives outside `H1`, and it lives in a composable.** A subpage head is an `h1` at
-the `title` role — a separate entry on the roster rendering its own heading markup at its own role,
-and that is the sanctioned escape valve. `H1` the generic primitive is for ordinary page titles and
-for a hero, which share the `display` role. The cost is that there is more than one way to render an
-`h1`, so the by-construction guarantee covers the ladder rather than every heading in the codebase.
-*(As first written this said **two** treatments in **composite primitives** — see the amendment above
-for why it is one, and note that "composite primitive" predates the **Composable** term
-[ADR 0007](./0007-the-library-ships-page-composables.md) introduced.)*
+**Two `h1` treatments live outside `H1`, and both live in composables.** `PageHead` renders the
+subpage head at the `title` role; `Dialog.Title` renders the independent Dialog title at its own role.
+`H1` the generic primitive remains for ordinary page titles and heroes, which share the `display`
+role. Neither composable exposes level or role selection, so the exceptions stay closed. The cost is
+that there is more than one way to render an `h1`, so the by-construction guarantee covers the ladder
+rather than every heading in the codebase. *(As first written this described **two** treatments in
+**composite primitives**, then one treatment after the first amendment; "composite primitive"
+predates the **Composable** term [ADR 0007](./0007-the-library-ships-page-composables.md) introduced.)*
 
 **A `font-*` weight literal is permitted where a `text-*` size literal is not.** This is a deliberate
 asymmetry, not an oversight, and it is written down so a later reviewer does not "fix" it. Size is
