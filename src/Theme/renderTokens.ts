@@ -46,9 +46,8 @@ const FOCUS_RING = `:root {
 
 /* Radius is not a colour: like motion and the focus-ring dimensions it lives in :root only, never
    in @theme inline. Two roles, not a scale: --radius-control is the corner every control reads
-   (0.5rem is exactly what rounded-lg resolved to), --radius-dialog the corner both Dialog extents
-   share (0.375rem, rounded-md - the control's corner makes the much larger surface overly round).
-   No structure radius, no value constraint - both deliberate; see docs/adr/0003-radius-token-contract.md. */
+   (0.5rem, exactly what rounded-lg resolved to), --radius-dialog the corner both Dialog extents
+   share (0.375rem - the control's corner makes the larger surface overly round); docs/adr/0003. */
 const RADIUS = `:root {
   --radius-control: 0.5rem;
   --radius-dialog: 0.375rem;

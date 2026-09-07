@@ -18,11 +18,11 @@ import { DialogNamingError } from './DialogNamingError';
 
 // The layout classes ride the open: variant - a bare `flex` would defeat the UA's
 // dialog:not([open]) hiding. Tailwind's preflight zeroes the UA's centering margins (m-auto
-// restores them) and strips ::backdrop, so the Scrim colour and the theme's optional blur are
-// declared here. content's max-height exists only for the emergency in which fitting is impossible.
+// restores them) and strips ::backdrop, so the Scrim colour and blur are declared here.
+// overflow-hidden overrides the UA's `dialog { overflow: auto }` - only Content may scroll.
 const dialogRoot = cva(
   [
-    'open:flex open:flex-col m-auto p-0',
+    'open:flex open:flex-col m-auto p-0 overflow-hidden',
     'bg-surface text-foreground',
     'rounded-[var(--radius-dialog)] shadow-[var(--elevation-floating)]',
     'backdrop:bg-scrim backdrop:[backdrop-filter:blur(var(--scrim-blur))]',
@@ -108,7 +108,7 @@ const useDialogContract = (member: string): DialogContract => {
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-type PresentationRefs = {
+type Presentation = {
   presented: RefObject<boolean>;
   opener: RefObject<HTMLElement | undefined>;
 };
@@ -117,10 +117,10 @@ type PresentationRefs = {
 // refs handed to them, never a render's closure. Opening captures the focused opener and moves
 // focus to the first focusable descendant - Cancel-first compositions therefore focus Cancel.
 const openDialog = (
-  dialog: HTMLDialogElement | null,
-  { presented, opener }: PresentationRefs,
+  dialog: HTMLDialogElement | undefined,
+  { presented, opener }: Presentation,
 ): void => {
-  if (dialog === null || dialog.open) {
+  if (dialog === undefined || dialog.open) {
     return;
   }
   // With nothing focused the browser reports `body` as active; capturing it would make closing
@@ -136,8 +136,8 @@ const openDialog = (
 };
 
 const closeDialog = (
-  dialog: HTMLDialogElement | null,
-  { presented }: PresentationRefs,
+  dialog: HTMLDialogElement | undefined,
+  { presented }: Presentation,
 ): void => {
   presented.current = false;
   if (dialog?.open) {
@@ -194,14 +194,14 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
   testId,
 }) => {
   const baseId = useId();
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const dialogRef = useRef<HTMLDialogElement | undefined>(undefined);
   // What the component believes about its own presentation. The close handler reads it to tell a
   // platform-initiated close (form method="dialog") - which must synchronize the Subject - from a
   // close the component performed itself, which must not re-emit.
   const presentedRef = useRef(false);
   const openerRef = useRef<HTMLElement | undefined>(undefined);
   // One stable bundle: the module-scope open/close reach only these refs, never a render closure.
-  const [presentation] = useState<PresentationRefs>(() => ({
+  const [presentation] = useState<Presentation>(() => ({
     presented: presentedRef,
     opener: openerRef,
   }));
@@ -237,7 +237,7 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
   // the operated control, so they never reach the target check.
   const dismissFromScrim = (event: MouseEvent<HTMLDialogElement>): void => {
     const dialog = dialogRef.current;
-    if (dialog === null || event.target !== dialog || !dialog.open) {
+    if (dialog === undefined || event.target !== dialog || !dialog.open) {
       return;
     }
     const box = dialog.getBoundingClientRect();
@@ -252,14 +252,23 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
   };
 
   const synchronizeClose = (): void => {
+    // The platform queues the close event as a task, so it can arrive after a new presentation
+    // has already begun - a rapid false-then-true, or a replaced Subject emitting true at once.
+    // An element that is open again marks the event stale: acting on it would emit `false` into
+    // the new presentation, corrupt the state and steal its focus.
+    if (dialogRef.current?.open) {
+      return;
+    }
     const wasPresented = presentedRef.current;
     presentedRef.current = false;
     const opener = openerRef.current;
     openerRef.current = undefined;
-    // Restore only a still-connected opener; no body fallback and no invented destination - a
-    // consumer whose confirmation removed the opener focuses its own stable target. An opener
-    // that stopped being focusable ignores focus(), which is the same no-fallback outcome.
-    if (opener?.isConnected) {
+    // Restore only a still-connected, still-focusable opener; no body fallback and no invented
+    // destination - a consumer whose confirmation removed the opener focuses its own target.
+    if (
+      opener?.isConnected &&
+      (opener.matches(FOCUSABLE_SELECTOR) || opener.hasAttribute('tabindex'))
+    ) {
       opener.focus();
     }
     if (wasPresented) {
@@ -289,9 +298,10 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
   }, [showDialog$, presentation]);
 
   // headingreset is set through the ref because React's DOM typings do not know the attribute
-  // yet; it marks the h1 as the top heading of an independent task (docs/adr/0005).
+  // yet; it marks the h1 as the top heading of an independent task (docs/adr/0005). React hands
+  // the callback `null` on detach; the boundary normalizes that to the standard's `undefined`.
   const attachDialog = (node: HTMLDialogElement | null): void => {
-    dialogRef.current = node;
+    dialogRef.current = node ?? undefined;
     node?.setAttribute('headingreset', '');
   };
 
@@ -427,8 +437,8 @@ const DialogActions: FunctionComponent<IDialogActionsProps> = ({
  *   `showDialog$.next(false)` where that Subject exists. A consumer-emitted `false` hides without
  *   a dismissal; any other native close synchronizes the Subject to `false` and invents no outcome.
  * - On opening it captures the opener and moves focus to the first focusable descendant; when the
- *   presentation ends it restores focus to the opener only while that opener is still connected -
- *   no body fallback, no invented destination.
+ *   presentation ends it restores focus to the opener only while that opener is still connected
+ *   and focusable - no body fallback, no invented destination.
  * - `extent="screen"` (the default) fills the viewport minus the `--gutter` inline and
  *   `--space-region` block insets, header and Actions fixed, only `Content` scrolling.
  *   `extent="content"` holds a fixed 32rem capped to the viewport with content-driven height;
