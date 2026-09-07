@@ -1,3 +1,44 @@
+# [3.6.0](https://github.com/juwel-development/LIB-design-system/compare/v3.5.0...v3.6.0) (2026-09-07)
+
+
+### Bug Fixes
+
+* **dialog:** guard the queued native close against a superseded presentation ([0cb1b6c](https://github.com/juwel-development/LIB-design-system/commit/0cb1b6ce2ca741b289026231c1bac0b6bcca0b09))
+* **dialog:** tighten focus capture and ARIA wiring from [#107](https://github.com/juwel-development/LIB-design-system/issues/107) review ([85b27cc](https://github.com/juwel-development/LIB-design-system/commit/85b27cc11bc37622acad92264725ca33708d5b3f))
+
+
+### Documentation
+
+* record the scrim palette migration and the second-pass review dispositions ([a913185](https://github.com/juwel-development/LIB-design-system/commit/a913185bd2cdb39c6cf9e867027a74d7ab6b1080))
+
+
+### Features
+
+* **dialog:** add compound Dialog on the native modal contract ([#107](https://github.com/juwel-development/LIB-design-system/issues/107)) ([7869330](https://github.com/juwel-development/LIB-design-system/commit/7869330ae45fd7d1d581de3664c56ae452da7c0b))
+
+
+### NOTE
+
+* `PaletteTokens` gains a required `scrim` role with the Dialog
+minor. A consumer constructing its own palette object of this type must
+add a `scrim` colour - an `rgb(r g b / a)` value whose alpha is part of
+the role; the shipped themes use `rgb(15 23 42 / 0.5)`. Spreading
+`light`/`dark` and overriding is unaffected, and a CSS theme that only
+overrides the generated custom properties inherits the default.
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_0168o57GtpS93t2DiFvE3jdd
+* **dialog:** The theme contract gains re-pointable names with working
+defaults: --color-scrim (its alpha is part of the colour, default
+rgb(15 23 42 / 0.5) in both themes), --scrim-blur (default 0),
+--radius-dialog (0.375rem, independent of --radius-control),
+--text-dialog-title/--leading-dialog-title (subtitle's values as an
+independent role) and --elevation-floating (shadow-lg's value).
+Existing themes render the new Dialog without any change.
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01C6SWyQh4py62MzAhho87Hb
+
 # [3.5.0](https://github.com/juwel-development/LIB-design-system/compare/v3.4.0...v3.5.0) (2026-09-06)
 
 
