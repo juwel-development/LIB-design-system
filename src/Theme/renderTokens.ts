@@ -244,11 +244,10 @@ const SLIDER = `:root {
   --slider-thumb-size: 1.5rem;
 }`;
 
-/* The choice marker's two dimensions are not colours: like the tick they live in :root only, never
-   @theme inline, so a brand re-points the marker without any member of Choices gaining a prop. The
-   dot's presence is the selection cue that survives without colour perception, so its size answers
-   to the box that frames it, not to the type beside it - rem, like the tick and the slider thumb.
-   Constraints: both > 0 (a zero dot erases the one shape cue), and dot < size or it escapes its box. */
+/* The choice marker's two dimensions are not colours: like the tick they live in :root only,
+   never @theme inline, so a brand re-points the marker without Choices gaining a prop. Sized in
+   rem like the tick and the slider thumb. Constraints: both > 0 (a zero dot erases the one cue
+   that survives without colour perception), and dot < size or the dot escapes its box. */
 const CHOICE_MARKER = `:root {
   --choice-marker-size: 1.125rem;
   --choice-marker-dot-size: 0.5rem;

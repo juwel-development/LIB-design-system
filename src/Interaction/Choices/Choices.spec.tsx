@@ -258,7 +258,7 @@ describe('Choices Component', () => {
     expect(selected).toHaveBeenCalledTimes(1);
   });
 
-  it('leaves other keys to the browser, so Tab and page scrolling keep working', () => {
+  it('leaves other keys to the browser, so Tab, scrolling and native activation keep working', () => {
     const onSelect$ = new Subject<string>();
     const selected = vi.fn();
     onSelect$.subscribe(selected);
@@ -266,8 +266,12 @@ describe('Choices Component', () => {
     const daily = screen.getByRole('radio', { name: 'Daily digest' });
     daily.focus();
 
-    fireEvent.keyDown(daily, { key: 'Tab' });
-    fireEvent.keyDown(daily, { key: 'Home' });
+    // fireEvent returns false when the event was cancelled; Space and Enter must stay
+    // uncancelled, because a button's native keydown-to-click synthesis is what makes them
+    // activate the focused row.
+    for (const key of ['Tab', 'Home', ' ', 'Enter']) {
+      expect(fireEvent.keyDown(daily, { key })).toBe(true);
+    }
 
     expect(selected).not.toHaveBeenCalled();
     expect(daily).toHaveFocus();

@@ -12,11 +12,10 @@ import { ChoicesCompositionError } from './ChoicesCompositionError';
 
 const choicesGroup = cva('flex flex-col gap-[var(--space-stack)]');
 
-// The selected row is told apart by the marker dot and a boundary that flips from `controlBorder`
-// to `foreground` - the same treatment Tabs' marker speaks, keyed on aria-checked so the attribute
-// the device reads is the one the paint follows. One boundary thickness in both states, so
-// selection shifts no geometry; colour moves on the one motion token. Inert mutes only the name's
-// ink (the Sidebar inert treatment), so the retained selection stays fully visible.
+// The selected row is told apart by the marker dot and a boundary flip from `controlBorder` to
+// `foreground` - Tabs' marker treatment, keyed on aria-checked so the attribute the device reads
+// is the one the paint follows. One boundary thickness in both states, so selection shifts no
+// geometry. Inert mutes only the name's ink (the Sidebar treatment); the selection stays visible.
 const choicesChoice = cva(
   [
     'group/choice flex w-full flex-row items-start gap-3 text-left',
@@ -60,6 +59,13 @@ const neighbourChoice = (
   );
   const index = rows.indexOf(current);
   return rows[(index + step + rows.length) % rows.length];
+};
+
+const ARROW_STEP: Record<string, 1 | -1> = {
+  ArrowDown: 1,
+  ArrowRight: 1,
+  ArrowUp: -1,
+  ArrowLeft: -1,
 };
 
 export interface IChoicesRootProps {
@@ -128,12 +134,7 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
   // row `selected` still names moves focus but requests nothing, like clicking it. Disabled rows
   // receive no key events in a browser; the inert guard covers synthetic dispatch too.
   const requestNeighbour = (event: KeyboardEvent<HTMLButtonElement>): void => {
-    const step =
-      event.key === 'ArrowDown' || event.key === 'ArrowRight'
-        ? 1
-        : event.key === 'ArrowUp' || event.key === 'ArrowLeft'
-          ? -1
-          : undefined;
+    const step = ARROW_STEP[event.key];
     if (step === undefined || inert) {
       return;
     }
