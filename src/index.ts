@@ -27,6 +27,7 @@ export { Slider } from 'Interaction/Slider/Slider';
 export { Tabs } from 'Interaction/Tabs/Tabs';
 export { TextArea } from 'Interaction/TextArea/TextArea';
 export { Cover } from 'Layout/Cover/Cover';
+export { Dialog } from 'Layout/Dialog/Dialog';
 export { Footer } from 'Layout/Footer/Footer';
 export type { FormState } from 'Layout/Form/Form';
 export { Form } from 'Layout/Form/Form';

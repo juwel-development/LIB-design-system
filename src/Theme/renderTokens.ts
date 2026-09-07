@@ -45,11 +45,13 @@ const FOCUS_RING = `:root {
 }`;
 
 /* Radius is not a colour: like motion and the focus-ring dimensions it lives in :root only, never
-   in @theme inline. One token names the corner every control reads; 0.5rem is exactly what
-   rounded-lg resolved to, so nothing changes visually while it keeps tracking the root font size.
+   in @theme inline. Two roles, not a scale: --radius-control is the corner every control reads
+   (0.5rem is exactly what rounded-lg resolved to), --radius-dialog the corner both Dialog extents
+   share (0.375rem, rounded-md - the control's corner makes the much larger surface overly round).
    No structure radius, no value constraint - both deliberate; see docs/adr/0003-radius-token-contract.md. */
 const RADIUS = `:root {
   --radius-control: 0.5rem;
+  --radius-dialog: 0.375rem;
 }`;
 
 /* The control's minimum width is not a colour: like radius it lives in :root only, never in
@@ -120,6 +122,12 @@ const TYPOGRAPHY = `@theme {
      whose own height is measured against its labels reads leading-label explicitly (Header #81). 1.5
      is the line height SC 1.4.12 expects text to survive, so a user stylesheet applying it moves nothing. */
   --leading-label: 1.5;
+
+  /* The Dialog title role: the top heading of an independent transitory task, deliberately outside
+     the page heading ladder (docs/adr/0005). Ships subtitle's values while staying an independent
+     role, so a consumer re-points Dialog titles without moving every H3 (docs/adr/0004, Amendments). */
+  --text-dialog-title: clamp(1.5rem, 3vw, 2.25rem);
+  --leading-dialog-title: 1.2;
 
   /* Two quantities on one property that must not collapse: --tracking-label is a fixed letter-spaced
      style, --tracking-optical a correction that varies with size. The names say which is which, so the
@@ -245,6 +253,21 @@ const METER_TRACK = `:root {
   --meter-track-thickness: 0.5rem;
 }`;
 
+/* The scrim's blur is not a colour: it lives in :root only, so a theme can soften the page behind a
+   Dialog without any component prop - Dialog exposes no blur and its modality never depends on the
+   treatment. 0 is a genuine no-op default; blur(0) filters nothing. */
+const SCRIM_BLUR = `:root {
+  --scrim-blur: 0;
+}`;
+
+/* One elevation for every Floating Layer the library paints - Dialog first, popup menus and drawers
+   may share it; standing structure such as Sidebar does not read it even when sticky. Not a scale:
+   a scale would leave components choosing unexplained rungs (docs/adr/0012). The default is exactly
+   what Tailwind's shadow-lg resolves to, read as shadow-[var(--elevation-floating)]. */
+const ELEVATION = `:root {
+  --elevation-floating: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}`;
+
 const toKebabCase = (name: string): string =>
   name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 
@@ -336,6 +359,12 @@ ${SLIDER}
 
 /* The meter track's thickness is not a colour either, and sits in :root beside the tab blocks. */
 ${METER_TRACK}
+
+/* The scrim's blur is not a colour either, and sits in :root beside the meter track. */
+${SCRIM_BLUR}
+
+/* The floating elevation is not a colour either, and sits in :root at the end of the non-colour blocks. */
+${ELEVATION}
 `;
 
 /**

@@ -39,6 +39,12 @@ export type PaletteTokens = {
    *  keeps it near `surface` rather than a mid grey. */
   backing: string;
 
+  /** The themed veil behind a Dialog, marking the page beneath as present but unavailable. The one
+   *  role whose alpha is part of the colour - the page must show through, which a solid hex cannot
+   *  say - so it is an `rgb(r g b / a)` value, not a hex. Both shipped themes carry the same value;
+   *  the Dialog's modality never depends on the treatment, so no contrast constraint applies. */
+  scrim: string;
+
   /** The colour of a Meter's filled share when it states an amount without judgment - neither an
    *  action fill nor text ink. The depletion treatment mixes it toward `error` in OKLab, so the
    *  constraint covers the whole path (WCAG 2.2 SC 1.4.11): this value, `error`, and every colour
@@ -145,6 +151,8 @@ export const light: PaletteTokens = {
   rule: '#808fa3',
   backing: '#f1f5f9',
 
+  scrim: 'rgb(15 23 42 / 0.5)',
+
   meterFill: '#0f172a',
   meterTrack: '#e2e8f0',
 
@@ -192,6 +200,8 @@ export const dark: PaletteTokens = {
   controlBorder: '#94a3b8',
   rule: '#5b6a80',
   backing: '#1e293b',
+
+  scrim: 'rgb(15 23 42 / 0.5)',
 
   meterFill: '#f8fafc',
   meterTrack: '#334155',

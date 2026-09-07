@@ -344,11 +344,22 @@ describe('Palette', () => {
     },
   );
 
-  it('uses plain hex values the stylesheet can consume directly', () => {
+  it('uses plain hex values the stylesheet can consume directly, except where alpha is part of the colour', () => {
+    // The scrim is the one role whose alpha belongs to the colour itself: the page beneath must
+    // show through the veil, and a solid hex cannot say so. Every other role stays opaque hex.
     for (const tokens of [light, dark]) {
-      for (const value of Object.values(tokens)) {
-        expect(value).toMatch(/^#[0-9a-f]{6}$/);
+      for (const [name, value] of Object.entries(tokens)) {
+        if (name === 'scrim') {
+          expect(value).toMatch(/^rgb\(\d+ \d+ \d+ \/ 0?\.\d+\)$/);
+        } else {
+          expect(value).toMatch(/^#[0-9a-f]{6}$/);
+        }
       }
     }
+  });
+
+  it('ships the same translucent scrim in both themes, its alpha part of the colour', () => {
+    expect(light.scrim).toBe('rgb(15 23 42 / 0.5)');
+    expect(dark.scrim).toBe('rgb(15 23 42 / 0.5)');
   });
 });

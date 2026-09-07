@@ -501,6 +501,64 @@ describe('single-theme token variants (issue #62)', () => {
   });
 });
 
+describe('renderTokens dialog contract', () => {
+  it('carries the scrim colour role in every stylesheet, its alpha part of the colour', () => {
+    // The scrim is the themed veil behind a Dialog (CONTEXT.md); both shipped themes carry the same
+    // translucent value, and a consumer re-points --color-scrim like any other role.
+    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+      const css = render();
+      expect(css).toContain('--color-scrim: rgb(15 23 42 / 0.5);');
+      const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+      expect(themeInline).toContain('--color-scrim: var(--color-scrim);');
+    }
+  });
+
+  it('names the scrim blur as a non-colour token defaulting to zero, so a theme may soften the page without a Dialog prop', () => {
+    // Dialog exposes no blur prop; the treatment is the theme's alone and modality never depends
+    // on it (docs/adr/0012 territory - the veil is presentation, the platform owns the blocking).
+    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+      expect(render()).toContain('--scrim-blur: 0;');
+    }
+    const css = renderTokens();
+    const themeBlock = css.match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).not.toContain('--scrim-blur');
+    expect(themeInline).not.toContain('--scrim-blur');
+  });
+
+  it('names the dialog corner beside the control corner, independent roles a theme re-points apart (docs/adr/0003)', () => {
+    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+      const css = render();
+      expect(css).toContain('--radius-dialog: 0.375rem;');
+      expect(css).toContain('--radius-control: 0.5rem;');
+    }
+  });
+
+  it('declares the dialog title type role in the typography theme block, so the text-dialog-title utility exists', () => {
+    // Matches subtitle's shipped values while staying an independent role: a Dialog title is the
+    // top heading of an independent task, not a level-three subsection (docs/adr/0004, Amendments).
+    const themeBlock = renderTokens().match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).toContain(
+      '--text-dialog-title: clamp(1.5rem, 3vw, 2.25rem);',
+    );
+    expect(themeBlock).toContain('--leading-dialog-title: 1.2;');
+    const themeInline =
+      renderTokens().match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeInline).not.toContain('dialog-title');
+  });
+
+  it('names one floating elevation shared by every floating layer, defaulting to what shadow-lg resolves to (docs/adr/0012)', () => {
+    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+      expect(render()).toContain(
+        '--elevation-floating: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);',
+      );
+    }
+    const css = renderTokens();
+    const themeBlock = css.match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).not.toContain('--elevation-floating');
+  });
+});
+
 describe('renderTokens tab inset contract', () => {
   it('emits named inline and block label insets in every stylesheet', () => {
     for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
