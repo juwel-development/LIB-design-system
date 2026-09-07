@@ -5,22 +5,21 @@ import {
   type MouseEvent,
   type ReactNode,
   type RefObject,
+  useCallback,
   useContext,
   useEffect,
   useId,
   useRef,
+  useState,
 } from 'react';
 import type { Subject } from 'rxjs';
 import { DialogCompositionError } from './DialogCompositionError';
 import { DialogNamingError } from './DialogNamingError';
 
-// The surface paints only while [open]: a bare `flex` would defeat the UA's dialog:not([open])
-// hiding, so the layout classes ride the open: variant. Tailwind's preflight zeroes every margin,
-// including the UA's dialog centering, so m-auto restores it; the preflight also strips
-// ::backdrop, so the Scrim colour and the theme's optional blur are declared here. screen fills
-// the viewport minus the --gutter/--space-region insets with no further maximum; content holds a
-// fixed 32rem capped to the viewport, its height content-driven - the max-height only exists for
-// the emergency in which fitting is physically impossible and Content falls back to scrolling.
+// The layout classes ride the open: variant - a bare `flex` would defeat the UA's
+// dialog:not([open]) hiding. Tailwind's preflight zeroes the UA's centering margins (m-auto
+// restores them) and strips ::backdrop, so the Scrim colour and the theme's optional blur are
+// declared here. content's max-height exists only for the emergency in which fitting is impossible.
 const dialogRoot = cva(
   [
     'open:flex open:flex-col m-auto p-0',
@@ -46,10 +45,9 @@ const dialogRoot = cva(
 );
 
 // Title and Description form one header region: --space-region padding around it, --space-stack
-// between the two. Each member carries the region's share of that padding on a wrapper at the
-// dialog's inherited type size - never on the sized h1, whose em would inflate the inset - and
-// the em-valued spacing roles therefore resolve identically in every region. A Title followed by
-// a Description hands the region's bottom padding to it.
+// between the two. Each member carries its share of the padding on a wrapper at the dialog's
+// inherited type size - never on the sized h1, whose em would inflate the inset. A Title
+// followed by a Description hands the region's bottom padding to it.
 const dialogTitle = cva(
   [
     'px-[var(--space-region)] pt-[var(--space-region)] pb-[var(--space-region)]',
@@ -85,10 +83,16 @@ const dialogActions = cva(
   ].join(' '),
 );
 
+type NamePart = 'title' | 'description';
+
 type DialogContract = {
   titleId: string;
   descriptionId: string;
   isLabelled: boolean;
+  /** Title and Description announce themselves so Root writes `aria-labelledby` and
+   *  `aria-describedby` only when the referenced element exists - an unresolved idref is an ARIA
+   *  authoring error - because Root cannot inspect arbitrary children or fragments. */
+  registerNamePart: (part: NamePart) => () => void;
 };
 
 const DialogContext = createContext<DialogContract | undefined>(undefined);
@@ -101,7 +105,7 @@ const useDialogContract = (member: string): DialogContract => {
   return contract;
 };
 
-const FOCUSABLE =
+const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 type PresentationRefs = {
@@ -119,13 +123,16 @@ const openDialog = (
   if (dialog === null || dialog.open) {
     return;
   }
+  // With nothing focused the browser reports `body` as active; capturing it would make closing
+  // focus `body`, which the contract forbids - so only a real opener is worth restoring.
+  const active = document.activeElement;
   opener.current =
-    document.activeElement instanceof HTMLElement
-      ? document.activeElement
+    active instanceof HTMLElement && active !== document.body
+      ? active
       : undefined;
   dialog.showModal();
   presented.current = true;
-  dialog.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+  dialog.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
 };
 
 const closeDialog = (
@@ -193,15 +200,24 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
   // close the component performed itself, which must not re-emit.
   const presentedRef = useRef(false);
   const openerRef = useRef<HTMLElement | undefined>(undefined);
+  // One stable bundle: the module-scope open/close reach only these refs, never a render closure.
+  const [presentation] = useState<PresentationRefs>(() => ({
+    presented: presentedRef,
+    opener: openerRef,
+  }));
+  const [nameParts, setNameParts] = useState({
+    title: false,
+    description: false,
+  });
+  const registerNamePart = useCallback((part: NamePart) => {
+    setNameParts((current) => ({ ...current, [part]: true }));
+    return () => setNameParts((current) => ({ ...current, [part]: false }));
+  }, []);
   const contract: DialogContract = {
     titleId: `${baseId}title`,
     descriptionId: `${baseId}description`,
     isLabelled: ariaLabel !== undefined,
-  };
-
-  const refs: PresentationRefs = {
-    presented: presentedRef,
-    opener: openerRef,
+    registerNamePart,
   };
 
   // Escape and the Scrim: the dismissal notification first, then the visibility transition the
@@ -210,7 +226,7 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
   const dismiss = (): void => {
     onDismiss$.next();
     if (showDialog$ === undefined) {
-      closeDialog(dialogRef.current, refs);
+      closeDialog(dialogRef.current, presentation);
     } else {
       showDialog$.next(false);
     }
@@ -241,7 +257,8 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
     const opener = openerRef.current;
     openerRef.current = undefined;
     // Restore only a still-connected opener; no body fallback and no invented destination - a
-    // consumer whose confirmation removed the opener focuses its own stable target.
+    // consumer whose confirmation removed the opener focuses its own stable target. An opener
+    // that stopped being focusable ignores focus(), which is the same no-fallback outcome.
     if (opener?.isConnected) {
       opener.focus();
     }
@@ -254,10 +271,6 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
   // instance. Replacing the instance tears the old subscription down and resets to closed
   // (docs/adr/0013 - the component owns teardown, the consumer owns the stream).
   useEffect(() => {
-    const presentation: PresentationRefs = {
-      presented: presentedRef,
-      opener: openerRef,
-    };
     if (showDialog$ === undefined) {
       openDialog(dialogRef.current, presentation);
       return () => closeDialog(dialogRef.current, presentation);
@@ -273,22 +286,30 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
       subscription.unsubscribe();
       closeDialog(dialogRef.current, presentation);
     };
-  }, [showDialog$]);
+  }, [showDialog$, presentation]);
+
+  // headingreset is set through the ref because React's DOM typings do not know the attribute
+  // yet; it marks the h1 as the top heading of an independent task (docs/adr/0005).
+  const attachDialog = (node: HTMLDialogElement | null): void => {
+    dialogRef.current = node;
+    node?.setAttribute('headingreset', '');
+  };
 
   return (
     <DialogContext.Provider value={contract}>
-      {/* headingreset is set through the ref because React's DOM typings do not know the
-          attribute yet; it marks the h1 as the top heading of an independent task (docs/adr/0005). */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: the Scrim is pointer-only by nature; the keyboard dismissal is Escape, which the platform reports as the cancel event handled by onCancel */}
       <dialog
-        ref={(node) => {
-          dialogRef.current = node;
-          node?.setAttribute('headingreset', '');
-        }}
+        ref={attachDialog}
         className={dialogRoot({ extent })}
         aria-label={ariaLabel}
-        aria-labelledby={ariaLabel === undefined ? contract.titleId : undefined}
-        aria-describedby={contract.descriptionId}
+        aria-labelledby={
+          ariaLabel === undefined && nameParts.title
+            ? contract.titleId
+            : undefined
+        }
+        aria-describedby={
+          nameParts.description ? contract.descriptionId : undefined
+        }
         onCancel={dismiss}
         onClick={dismissFromScrim}
         onClose={synchronizeClose}
@@ -304,7 +325,8 @@ const DialogTitle: FunctionComponent<IDialogTitleProps> = ({
   children,
   testId,
 }) => {
-  const { titleId, isLabelled } = useDialogContract('Title');
+  const { titleId, isLabelled, registerNamePart } = useDialogContract('Title');
+  useEffect(() => registerNamePart('title'), [registerNamePart]);
   if (isLabelled) {
     throw new DialogNamingError();
   }
@@ -332,7 +354,8 @@ const DialogDescription: FunctionComponent<IDialogDescriptionProps> = ({
   children,
   testId,
 }) => {
-  const { descriptionId } = useDialogContract('Description');
+  const { descriptionId, registerNamePart } = useDialogContract('Description');
+  useEffect(() => registerNamePart('description'), [registerNamePart]);
   return (
     <div
       data-dialog-member={'description'}

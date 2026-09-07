@@ -1,7 +1,12 @@
 import { P } from 'Display/Typography/P/P';
 import { Button } from 'Interaction/Button/Button';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { type FunctionComponent, useEffect, useState } from 'react';
+import {
+  type FunctionComponent,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import { Subject, type Subscription } from 'rxjs';
 import { Dialog } from './Dialog';
 
@@ -273,16 +278,23 @@ const TriggerRemovedExample: FunctionComponent = () => {
   const [endRequests] = useState(() => new Map<string, Subject<void>>());
   const [staff, setStaff] = useState(['Riley Chen', 'Kim Weber', 'Alex Roy']);
   const [candidate, setCandidate] = useState<string | undefined>(undefined);
-  for (const person of staff) {
-    if (!endRequests.has(person)) {
-      endRequests.set(person, new Subject<void>());
-    }
-  }
+  const endRequestFor = useCallback(
+    (person: string): Subject<void> => {
+      const existing = endRequests.get(person);
+      if (existing !== undefined) {
+        return existing;
+      }
+      const created = new Subject<void>();
+      endRequests.set(person, created);
+      return created;
+    },
+    [endRequests],
+  );
   useEffect(
     () =>
       unsubscribeAll([
         ...staff.map((person) =>
-          (endRequests.get(person) as Subject<void>).subscribe(() => {
+          endRequestFor(person).subscribe(() => {
             setCandidate(person);
             showDialog$.next(true);
           }),
@@ -299,7 +311,15 @@ const TriggerRemovedExample: FunctionComponent = () => {
           document.getElementById('staff-heading')?.focus();
         }),
       ]),
-    [showDialog$, onDismiss$, cancel$, confirm$, endRequests, staff, candidate],
+    [
+      showDialog$,
+      onDismiss$,
+      cancel$,
+      confirm$,
+      endRequestFor,
+      staff,
+      candidate,
+    ],
   );
   return (
     <>
@@ -309,10 +329,7 @@ const TriggerRemovedExample: FunctionComponent = () => {
       {staff.map((person) => (
         <P key={person}>
           {person}{' '}
-          <Button
-            variant={'secondary'}
-            onClick$={endRequests.get(person) as Subject<void>}
-          >
+          <Button variant={'secondary'} onClick$={endRequestFor(person)}>
             End employment…
           </Button>
         </P>

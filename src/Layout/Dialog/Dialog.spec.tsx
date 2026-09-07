@@ -115,6 +115,25 @@ describe('Dialog Component', () => {
     expect(screen.getByRole('dialog', { name: 'Sign in' })).toBeInTheDocument();
   });
 
+  it('writes no naming or description reference to an absent member, keeping every idref resolvable', () => {
+    // An aria-labelledby or aria-describedby pointing at nothing is an ARIA authoring error that
+    // audit tooling flags: absent members must mean absent references, not dangling ones.
+    const onDismiss$ = new Subject<void>();
+    render(
+      <Dialog.Root
+        onDismiss$={onDismiss$}
+        ariaLabel={'Sign in'}
+        testId={'dialog'}
+      >
+        <Dialog.Actions>
+          <button type={'button'}>Close</button>
+        </Dialog.Actions>
+      </Dialog.Root>,
+    );
+    expect(dialogElement()).not.toHaveAttribute('aria-labelledby');
+    expect(dialogElement()).not.toHaveAttribute('aria-describedby');
+  });
+
   it('rejects a second naming source, loud and early', () => {
     // Exactly one of visible Title or ariaLabel - both is an invariant violation, not a state.
     const onDismiss$ = new Subject<void>();
@@ -357,6 +376,15 @@ describe('Dialog Component', () => {
     showDialog$.next(false);
 
     expect(opener).toHaveFocus();
+  });
+
+  it('captures no opener when nothing was focused on opening, so closing never focuses body', () => {
+    render(confirmation(new Subject<void>()));
+    screen.getByRole('button', { name: 'Cancel' }).focus();
+
+    fireEvent(dialogElement(), new Event('cancel', { cancelable: true }));
+
+    expect(document.body).not.toHaveFocus();
   });
 
   it('leaves the consumer-owned completion focus alone when confirmation removed the opener', () => {
