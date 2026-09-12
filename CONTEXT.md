@@ -285,7 +285,8 @@ _Avoid_: Radio group, radio buttons, option list, picker
 
 **Select**:
 A field for choosing one value from a native dropdown, including an initially empty selection.
-The consumer supplies stable option values and localized labels; the browser owns selection and
+The consumer composes `Select.Root` with `Select.Option` children carrying stable values and
+localized text; the browser owns selection and
 keyboard navigation. Like Input, its value is uncontrolled and read by name or observed through
 user-change events. Required presence rejects the empty option without choosing a value for the user.
 _Avoid_: Choices, combobox widget, custom picker

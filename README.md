@@ -34,8 +34,9 @@ If the host already imports Tailwind and only wants the palette, take the tokens
 
 ## Select
 
-`Select` is a labelled, uncontrolled native single-select field. It starts on an empty,
-selectable placeholder; `required` makes that empty value invalid without choosing an
+`Select` is a compound namespace: `Select.Root` renders a labelled, uncontrolled native
+single-select field and `Select.Option` renders one text-only native option. Root starts on
+an empty, selectable placeholder; `required` makes that empty value invalid without choosing an
 option for the user.
 
 ```tsx
@@ -44,20 +45,22 @@ import { Subject } from 'rxjs';
 
 const marketChange$ = new Subject<string>();
 
-<Select
+<Select.Root
   label={'Home market'}
   name={'homeMarket'}
   required={true}
   placeholder={'Choose a market'}
-  options={[
-    { value: 'de', label: 'Germany' },
-    { value: 'gb', label: 'United Kingdom' },
-  ]}
   onChange$={marketChange$}
-/>;
+>
+  <Select.Option value={'de'}>{'Germany'}</Select.Option>
+  <Select.Option value={'gb'}>{'United Kingdom'}</Select.Option>
+</Select.Root>;
 ```
 
-`label`, `name`, `placeholder`, and `options` are required props. Option values must be
+`Root` requires `label`, `name`, and `placeholder`; its `children` compose `Select.Option`
+members, including arrays, fragments, conditional children and consumer components that
+render options. An empty field can omit children. Each `Option` requires a `value` and a
+text-only `children` label, and accepts an optional `testId`. Option values must be
 unique, stable, nonempty strings; every label and message is worded by the consumer.
 The empty string is reserved for the placeholder, which remains selectable so an optional
 field can be cleared. The browser owns keyboard navigation and the native popup.
@@ -76,9 +79,20 @@ control to empty. Options arriving later do not apply an earlier unmatched defau
 `onChange$` emits the selected string once per user change, including `''` on clearing.
 Rendering, option replacement, and native form reset do not emit. The consumer owns the
 Subject and must reconcile its own domain state when replacing options or resetting a form.
-Native form reset restores the original default while its option remains present; no `reset$`
-prop is needed. A new record can initialize through a remount. Forms can also read the
-current value directly by `name`, without any event subscription.
+Native form reset restores the original default while that option remains mounted; if it
+is removed, reset returns to empty. A newly mounted option does not inherit an earlier
+option's reset default, even when it reuses its value. Keep React keys stable (use the
+option value) across translation and reordering to preserve native selection and reset
+state. No `reset$` prop is needed. A new record can initialize through a remount. Forms can
+also read the current value directly by `name`, without any event subscription.
+
+The previous unpublished `<Select options={...} />` API has been removed. For Home Market
+in `g-label-manager` #125, put the existing field props on `Select.Root` and map market
+records to `<Select.Option key={market.id} value={market.id}>{translatedName}</Select.Option>`
+children. Keep `required` and the localized `placeholder` on Root; the empty option is
+provided by Root, so callers do not compose another empty Option. Derive types with
+`ComponentProps<typeof Select.Root>` or `ComponentProps<typeof Select.Option>` from React.
+The consumer still awaits a published library release before changing its dependency.
 
 ## Collection
 

@@ -1,17 +1,148 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Select } from 'index';
+import { type ComponentProps, Fragment } from 'react';
 import { Subject } from 'rxjs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 describe('Select', () => {
-  it('starts with a named, empty native single selection instead of choosing a market for the user', () => {
+  it('publishes one closed namespace with curated member props', () => {
+    expect(typeof Select).toBe('object');
+    expect(Object.keys(Select)).toEqual(['Root', 'Option']);
+    expectTypeOf<keyof typeof Select>().toEqualTypeOf<'Root' | 'Option'>();
+    expectTypeOf<keyof ComponentProps<typeof Select.Root>>().toEqualTypeOf<
+      | 'label'
+      | 'name'
+      | 'required'
+      | 'optionalLabel'
+      | 'disabled'
+      | 'invalid'
+      | 'hint'
+      | 'errorMessage'
+      | 'testId'
+      | 'defaultValue'
+      | 'onChange$'
+      | 'placeholder'
+      | 'children'
+    >();
+    expectTypeOf<keyof ComponentProps<typeof Select.Option>>().toEqualTypeOf<
+      'value' | 'children' | 'testId'
+    >();
+    expectTypeOf<
+      ComponentProps<typeof Select.Option>['children']
+    >().toEqualTypeOf<string>();
+    expectTypeOf<
+      ComponentProps<typeof Select.Root>['onChange$']
+    >().toEqualTypeOf<Subject<string> | undefined>();
+  });
+
+  it('renders consumer components, fragments, arrays and conditional options as native choices', () => {
+    const EuropeanMarkets = () => (
+      <>
+        <Select.Option value={'de'} testId={'german-market'}>
+          {'Deutschland'}
+        </Select.Option>
+        {['fr', 'gb'].map((value) => (
+          <Select.Option key={value} value={value}>
+            {value}
+          </Select.Option>
+        ))}
+        {false && <Select.Option value={'es'}>{'España'}</Select.Option>}
+      </>
+    );
     render(
-      <Select
+      <Select.Root
         label={'Home market'}
         name={'homeMarket'}
         placeholder={'Choose a market'}
-        options={[{ value: 'de', label: 'Deutschland' }]}
-      />,
+        defaultValue={'fr'}
+      >
+        <EuropeanMarkets />
+      </Select.Root>,
+    );
+    expect(screen.getAllByRole('option')).toHaveLength(4);
+    expect(screen.getByRole('combobox')).toHaveValue('fr');
+    expect(screen.getByRole('option', { name: 'Deutschland' })).toHaveAttribute(
+      'data-testid',
+      'german-market',
+    );
+  });
+
+  it('resets a surviving composed default after translation and reordering, then resets empty after its removal', () => {
+    const onChange$ = new Subject<string>();
+    const received: string[] = [];
+    onChange$.subscribe((value) => received.push(value));
+    const field = (values: string[], germanName: string) => (
+      <form aria-label={'Setup'}>
+        <Select.Root
+          label={'Home market'}
+          name={'homeMarket'}
+          placeholder={'Choose a market'}
+          required={true}
+          defaultValue={'de'}
+          onChange$={onChange$}
+        >
+          <Fragment key={'markets'}>
+            {values.map((value) => (
+              <Select.Option key={value} value={value}>
+                {value === 'de' ? germanName : 'France'}
+              </Select.Option>
+            ))}
+          </Fragment>
+        </Select.Root>
+      </form>
+    );
+    const { rerender } = render(field(['de', 'fr'], 'Germany'));
+    const control = screen.getByRole('combobox');
+    const form = screen.getByRole<HTMLFormElement>('form', { name: 'Setup' });
+    fireEvent.change(control, { target: { value: 'fr' } });
+    rerender(field(['fr', 'de'], 'Deutschland'));
+    form.reset();
+    expect(control).toHaveValue('de');
+    rerender(field(['fr'], 'Deutschland'));
+    fireEvent.change(control, { target: { value: 'fr' } });
+    form.reset();
+    expect(control).toHaveValue('');
+    expect(control).toBeInvalid();
+    expect(new FormData(form).get('homeMarket')).toBe('');
+    rerender(field(['de', 'fr'], 'Deutschland'));
+    fireEvent.change(control, { target: { value: 'de' } });
+    form.reset();
+    expect(control).toHaveValue('');
+    expect(received).toEqual(['fr', 'fr', 'de']);
+  });
+
+  it('composes a native field from the public Root and Option members', () => {
+    render(
+      <Select.Root
+        label={'Home market'}
+        name={'homeMarket'}
+        placeholder={'Choose a market'}
+        required={true}
+      >
+        <Select.Option value={'de'}>{'Deutschland'}</Select.Option>
+      </Select.Root>,
+    );
+    const control = screen.getByRole('combobox', { name: 'Home market' });
+    expect(control).toHaveValue('');
+    expect(control).toBeInvalid();
+    fireEvent.change(control, { target: { value: 'de' } });
+    expect(control).toHaveValue('de');
+    expect(control).toBeValid();
+    expect(screen.getByRole('option', { selected: true })).toHaveTextContent(
+      'Deutschland',
+    );
+  });
+  it('starts with a named, empty native single selection instead of choosing a market for the user', () => {
+    render(
+      <Select.Root
+        label={'Home market'}
+        name={'homeMarket'}
+        placeholder={'Choose a market'}
+      >
+        <Select.Option key={'de'} value={'de'}>
+          {'Deutschland'}
+        </Select.Option>
+      </Select.Root>,
     );
 
     const control = screen.getByRole('combobox', { name: 'Home market' });
@@ -30,11 +161,10 @@ describe('Select', () => {
 
   it('exposes the consumer test hook on the named control', () => {
     render(
-      <Select
+      <Select.Root
         label={'Home market'}
         name={'homeMarket'}
         placeholder={'Choose a market'}
-        options={[]}
         testId={'home-market'}
       />,
     );
@@ -46,13 +176,16 @@ describe('Select', () => {
   it('requires a real choice and submits the stable value instead of its localized label', () => {
     render(
       <form aria-label={'Setup'}>
-        <Select
+        <Select.Root
           label={'Home market'}
           name={'homeMarket'}
           placeholder={'Choose a market'}
           required={true}
-          options={[{ value: 'de', label: 'Deutschland' }]}
-        />
+        >
+          <Select.Option key={'de'} value={'de'}>
+            {'Deutschland'}
+          </Select.Option>
+        </Select.Root>
       </form>,
     );
     const control = screen.getByRole('combobox');
@@ -75,13 +208,16 @@ describe('Select', () => {
     const received: string[] = [];
     onChange$.subscribe((value) => received.push(value));
     const { rerender, unmount } = render(
-      <Select
+      <Select.Root
         label={'Home market'}
         name={'homeMarket'}
         placeholder={'Choose a market'}
-        options={[{ value: 'de', label: 'Deutschland' }]}
         onChange$={onChange$}
-      />,
+      >
+        <Select.Option key={'de'} value={'de'}>
+          {'Deutschland'}
+        </Select.Option>
+      </Select.Root>,
     );
     const control = screen.getByRole('combobox');
     control.focus();
@@ -93,13 +229,16 @@ describe('Select', () => {
     expect(received).toEqual(['de']);
 
     rerender(
-      <Select
+      <Select.Root
         label={'Heimatmarkt'}
         name={'homeMarket'}
         placeholder={'Markt auswählen'}
-        options={[{ value: 'de', label: 'Germany' }]}
         onChange$={onChange$}
-      />,
+      >
+        <Select.Option key={'de'} value={'de'}>
+          {'Germany'}
+        </Select.Option>
+      </Select.Root>,
     );
     expect(received).toEqual(['de']);
     expect(control).toHaveValue('de');
@@ -117,16 +256,19 @@ describe('Select', () => {
     onChange$.subscribe((value) => received.push(value));
     render(
       <form aria-label={'Setup'}>
-        <Select
+        <Select.Root
           label={'Home market'}
           name={'homeMarket'}
           placeholder={'Choose a market'}
           defaultValue={'de'}
           disabled={true}
           required={true}
-          options={[{ value: 'de', label: 'Deutschland' }]}
           onChange$={onChange$}
-        />
+        >
+          <Select.Option key={'de'} value={'de'}>
+            {'Deutschland'}
+          </Select.Option>
+        </Select.Root>
       </form>,
     );
     const control = screen.getByRole('combobox');
@@ -143,11 +285,10 @@ describe('Select', () => {
 
   it('associates hint and error wording with its control and removes stale error associations', () => {
     const { rerender } = render(
-      <Select
+      <Select.Root
         label={'Home market'}
         name={'homeMarket'}
         placeholder={'Choose a market'}
-        options={[]}
         hint={'Choose where your label is based'}
         invalid={true}
         errorMessage={'Choose an available market'}
@@ -160,11 +301,10 @@ describe('Select', () => {
     );
 
     rerender(
-      <Select
+      <Select.Root
         label={'Home market'}
         name={'homeMarket'}
         placeholder={'Choose a market'}
-        options={[]}
         hint={'Choose where your label is based'}
         errorMessage={'Choose an available market'}
       />,
@@ -180,22 +320,20 @@ describe('Select', () => {
 
   it('marks optional fields only in the callers wording and hides the marker when required', () => {
     const { rerender, container } = render(
-      <Select
+      <Select.Root
         label={'Vergleichsmarkt'}
         name={'comparisonMarket'}
         placeholder={'Kein Vergleich'}
-        options={[]}
         optionalLabel={'freiwillig'}
       />,
     );
     expect(screen.getByRole('combobox')).not.toBeRequired();
     expect(screen.getByText('freiwillig')).toBeInTheDocument();
     rerender(
-      <Select
+      <Select.Root
         label={'Vergleichsmarkt'}
         name={'comparisonMarket'}
         placeholder={'Kein Vergleich'}
-        options={[]}
         optionalLabel={'freiwillig'}
         required={true}
       />,
@@ -210,17 +348,20 @@ describe('Select', () => {
     onChange$.subscribe((value) => received.push(value));
     const { rerender } = render(
       <form aria-label={'Setup'}>
-        <Select
+        <Select.Root
           label={'Home market'}
           name={'homeMarket'}
           placeholder={'Choose a market'}
           defaultValue={'de'}
-          options={[
-            { value: 'de', label: 'Deutschland' },
-            { value: 'gb', label: 'United Kingdom' },
-          ]}
           onChange$={onChange$}
-        />
+        >
+          <Select.Option key={'de'} value={'de'}>
+            {'Deutschland'}
+          </Select.Option>
+          <Select.Option key={'gb'} value={'gb'}>
+            {'United Kingdom'}
+          </Select.Option>
+        </Select.Root>
       </form>,
     );
     const control = screen.getByRole('combobox');
@@ -229,17 +370,20 @@ describe('Select', () => {
     fireEvent.change(control, { target: { value: 'gb' } });
     rerender(
       <form aria-label={'Setup'}>
-        <Select
+        <Select.Root
           label={'Home market'}
           name={'homeMarket'}
           placeholder={'Choose a market'}
           defaultValue={''}
-          options={[
-            { value: 'de', label: 'Deutschland' },
-            { value: 'gb', label: 'United Kingdom' },
-          ]}
           onChange$={onChange$}
-        />
+        >
+          <Select.Option key={'de'} value={'de'}>
+            {'Deutschland'}
+          </Select.Option>
+          <Select.Option key={'gb'} value={'gb'}>
+            {'United Kingdom'}
+          </Select.Option>
+        </Select.Root>
       </form>,
     );
     expect(control).toHaveValue('gb');
@@ -250,30 +394,38 @@ describe('Select', () => {
 
   it('preserves a selected stable value when options reorder and labels change', () => {
     const { rerender } = render(
-      <Select
+      <Select.Root
         label={'Home market'}
         name={'homeMarket'}
         placeholder={'Choose a market'}
-        options={[
-          { value: 'de', label: 'Deutschland' },
-          { value: 'gb', label: 'United Kingdom' },
-        ]}
-      />,
+      >
+        <Select.Option key={'de'} value={'de'}>
+          {'Deutschland'}
+        </Select.Option>
+        <Select.Option key={'gb'} value={'gb'}>
+          {'United Kingdom'}
+        </Select.Option>
+      </Select.Root>,
     );
     const control = screen.getByRole('combobox');
     fireEvent.change(control, { target: { value: 'gb' } });
 
     rerender(
-      <Select
+      <Select.Root
         label={'Heimatmarkt'}
         name={'homeMarket'}
         placeholder={'Markt auswählen'}
-        options={[
-          { value: 'gb', label: 'Vereinigtes Königreich' },
-          { value: 'de', label: 'Deutschland' },
-          { value: 'fr', label: 'Frankreich' },
-        ]}
-      />,
+      >
+        <Select.Option key={'gb'} value={'gb'}>
+          {'Vereinigtes Königreich'}
+        </Select.Option>
+        <Select.Option key={'de'} value={'de'}>
+          {'Deutschland'}
+        </Select.Option>
+        <Select.Option key={'fr'} value={'fr'}>
+          {'Frankreich'}
+        </Select.Option>
+      </Select.Root>,
     );
     expect(control).toHaveValue('gb');
     expect(screen.getByRole('option', { selected: true })).toHaveTextContent(
@@ -286,30 +438,36 @@ describe('Select', () => {
     const received: string[] = [];
     onChange$.subscribe((value) => received.push(value));
     const { rerender } = render(
-      <Select
+      <Select.Root
         label={'Home market'}
         name={'homeMarket'}
         placeholder={'Choose a market'}
         required={true}
-        options={[
-          { value: 'de', label: 'Deutschland' },
-          { value: 'gb', label: 'United Kingdom' },
-        ]}
         onChange$={onChange$}
-      />,
+      >
+        <Select.Option key={'de'} value={'de'}>
+          {'Deutschland'}
+        </Select.Option>
+        <Select.Option key={'gb'} value={'gb'}>
+          {'United Kingdom'}
+        </Select.Option>
+      </Select.Root>,
     );
     const control = screen.getByRole('combobox');
     fireEvent.change(control, { target: { value: 'de' } });
 
     rerender(
-      <Select
+      <Select.Root
         label={'Home market'}
         name={'homeMarket'}
         placeholder={'Choose a market'}
         required={true}
-        options={[{ value: 'gb', label: 'United Kingdom' }]}
         onChange$={onChange$}
-      />,
+      >
+        <Select.Option key={'gb'} value={'gb'}>
+          {'United Kingdom'}
+        </Select.Option>
+      </Select.Root>,
     );
     expect(control).toHaveValue('');
     expect(control).toBeInvalid();
@@ -318,44 +476,85 @@ describe('Select', () => {
 
   it('stays empty when options arrive after an unmatched initial value', () => {
     const { rerender } = render(
-      <Select
+      <Select.Root
         label={'Home market'}
         name={'homeMarket'}
         placeholder={'Choose a market'}
         defaultValue={'de'}
-        options={[]}
       />,
     );
     const control = screen.getByRole('combobox');
     expect(control).toHaveValue('');
     expect(control).toBeValid();
     rerender(
-      <Select
+      <Select.Root
         label={'Home market'}
         name={'homeMarket'}
         placeholder={'Choose a market'}
         defaultValue={'de'}
-        options={[{ value: 'de', label: 'Deutschland' }]}
-      />,
+      >
+        <Select.Option key={'de'} value={'de'}>
+          {'Deutschland'}
+        </Select.Option>
+      </Select.Root>,
     );
     expect(control).toHaveValue('');
+  });
+
+  it('keeps selections and output streams independent between fields', () => {
+    const homeChanges$ = new Subject<string>();
+    const comparisonChanges$ = new Subject<string>();
+    const homeValues: string[] = [];
+    const comparisonValues: string[] = [];
+    homeChanges$.subscribe((value) => homeValues.push(value));
+    comparisonChanges$.subscribe((value) => comparisonValues.push(value));
+    render(
+      <>
+        <Select.Root
+          label={'Home market'}
+          name={'homeMarket'}
+          placeholder={'Choose a market'}
+          onChange$={homeChanges$}
+        >
+          <Select.Option value={'de'}>{'Germany'}</Select.Option>
+        </Select.Root>
+        <Select.Root
+          label={'Comparison market'}
+          name={'comparisonMarket'}
+          placeholder={'No comparison'}
+          onChange$={comparisonChanges$}
+        >
+          <Select.Option value={'de'}>{'Germany'}</Select.Option>
+        </Select.Root>
+      </>,
+    );
+    const home = screen.getByRole('combobox', { name: 'Home market' });
+    const comparison = screen.getByRole('combobox', {
+      name: 'Comparison market',
+    });
+    fireEvent.change(home, { target: { value: 'de' } });
+    expect(comparison).toHaveValue('');
+    expect(comparisonValues).toEqual([]);
+    fireEvent.change(comparison, { target: { value: 'de' } });
+    fireEvent.change(comparison, { target: { value: '' } });
+    expect(home).toHaveValue('de');
+    expect(homeValues).toEqual(['de']);
+    expect(comparisonValues).toEqual(['de', '']);
   });
 
   it('keeps each fields label and messages distinct and invents no missing wording', () => {
     render(
       <>
-        <Select
+        <Select.Root
           label={'Home market'}
           name={'homeMarket'}
           placeholder={'Choose a market'}
-          options={[]}
           hint={'Where your label is based'}
         />
-        <Select
+        <Select.Root
           label={'Comparison market'}
           name={'comparisonMarket'}
           placeholder={'No comparison'}
-          options={[]}
           invalid={true}
         />
       </>,

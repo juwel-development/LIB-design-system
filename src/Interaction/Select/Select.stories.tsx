@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Select } from './Select';
 
-const meta: Meta<typeof Select> = {
+const meta: Meta<typeof Select.Root> = {
   title: 'Interaction/Select',
-  component: Select,
+  component: Select.Root,
   parameters: {
     layout: 'centered',
     docs: {
       description: {
         component:
-          'An uncontrolled native single-select field. The empty placeholder remains selectable; required rejects it. Options use unique, stable, nonempty string values and caller-localized labels. defaultValue applies on mount only. onChange$ emits user changes, including clearing, but never rendering, option replacement, or native form reset. Removing the selected option returns the control to empty; consumers must reconcile their domain state when replacing options. The browser owns keyboard navigation and the popup appearance.',
+          "Compose Select.Root with Select.Option children for an uncontrolled native single-select field. The empty placeholder remains selectable; required rejects it. Options use unique, stable, nonempty string values and caller-localized labels. Use stable React keys when mapping options. defaultValue applies on mount only; native reset restores that default while its option stays mounted, otherwise empty. Newly mounted options do not inherit a removed option's reset default. onChange$ emits user changes, including clearing, but never rendering, option replacement, or native form reset. Removing the selected option returns the control to empty; consumers must reconcile their domain state when replacing options. The browser owns keyboard navigation and the popup appearance.",
       },
     },
   },
@@ -18,13 +18,16 @@ const meta: Meta<typeof Select> = {
     label: 'Home market',
     name: 'homeMarket',
     placeholder: 'Choose a market',
-    options: [
-      { value: 'de', label: 'Germany' },
-      { value: 'gb', label: 'United Kingdom' },
-      { value: 'fr', label: 'France' },
-    ],
   },
+  render: (args) => (
+    <Select.Root {...args}>
+      <Select.Option value={'de'}>{'Germany'}</Select.Option>
+      <Select.Option value={'gb'}>{'United Kingdom'}</Select.Option>
+      <Select.Option value={'fr'}>{'France'}</Select.Option>
+    </Select.Root>
+  ),
   argTypes: {
+    children: { control: false },
     onChange$: { control: false },
     defaultValue: {
       description:
@@ -56,16 +59,18 @@ export const Optional: Story = {
 };
 
 export const Localized: Story = {
+  render: (args) => (
+    <Select.Root {...args}>
+      <Select.Option value={'de'}>{'Deutschland'}</Select.Option>
+      <Select.Option value={'gb'}>{'Vereinigtes Königreich'}</Select.Option>
+      <Select.Option value={'fr'}>{'Frankreich'}</Select.Option>
+    </Select.Root>
+  ),
   args: {
     label: 'Vergleichsmarkt',
     name: 'comparisonMarket',
     placeholder: 'Kein Vergleich',
     optionalLabel: 'freiwillig',
-    options: [
-      { value: 'de', label: 'Deutschland' },
-      { value: 'gb', label: 'Vereinigtes Königreich' },
-      { value: 'fr', label: 'Frankreich' },
-    ],
   },
 };
 
@@ -83,5 +88,6 @@ export const Disabled: Story = {
 };
 
 export const EmptyOptions: Story = {
-  args: { options: [], required: true, hint: 'Markets are loading' },
+  args: { required: true, hint: 'Markets are loading' },
+  render: (args) => <Select.Root {...args} />,
 };

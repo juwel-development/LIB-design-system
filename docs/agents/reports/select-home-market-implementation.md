@@ -1,4 +1,11 @@
-# Select implementation evidence
+# Select implementation evidence (superseded)
+
+> **Superseded by #109.** The user rejected this unpublished options-array API. This report
+> records historical implementation and validation only; it is not proof of the current
+> compound API. See the current [Select documentation](../../../README.md#select) and
+> `src/Interaction/Select/Select.spec.tsx` for the replacement contract and regressions.
+> The local verification archive below contains the rejected implementation and must not
+> be used for the #125 migration.
 
 Date: 2026-09-12. Implemented by Codex for the native-field dependency of
 `juwel-dev/g-label-manager` #125 under spec #124.
