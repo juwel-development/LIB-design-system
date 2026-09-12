@@ -1,3 +1,15 @@
+# [3.8.0](https://github.com/juwel-development/LIB-design-system/compare/v3.7.0...v3.8.0) (2026-09-12)
+
+
+### Bug Fixes
+
+* **select:** replace unpublished API with compound members ([#109](https://github.com/juwel-development/LIB-design-system/issues/109)) ([4aaef55](https://github.com/juwel-development/LIB-design-system/commit/4aaef557157010d60762060a4a3814304afb72c3))
+
+
+### Features
+
+* **select:** add an accessible native single-select field ([2b139fb](https://github.com/juwel-development/LIB-design-system/commit/2b139fb68287f678a8a3d067a19933c564b92b97))
+
 # [3.7.0](https://github.com/juwel-development/LIB-design-system/compare/v3.6.0...v3.7.0) (2026-09-07)
 
 
