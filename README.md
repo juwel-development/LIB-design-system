@@ -32,6 +32,54 @@ If the host already imports Tailwind and only wants the palette, take the tokens
 @import "@juwel-development/design-system/tokens.css";
 ```
 
+## Select
+
+`Select` is a labelled, uncontrolled native single-select field. It starts on an empty,
+selectable placeholder; `required` makes that empty value invalid without choosing an
+option for the user.
+
+```tsx
+import { Select } from '@juwel-development/design-system';
+import { Subject } from 'rxjs';
+
+const marketChange$ = new Subject<string>();
+
+<Select
+  label={'Home market'}
+  name={'homeMarket'}
+  required={true}
+  placeholder={'Choose a market'}
+  options={[
+    { value: 'de', label: 'Germany' },
+    { value: 'gb', label: 'United Kingdom' },
+  ]}
+  onChange$={marketChange$}
+/>;
+```
+
+`label`, `name`, `placeholder`, and `options` are required props. Option values must be
+unique, stable, nonempty strings; every label and message is worded by the consumer.
+The empty string is reserved for the placeholder, which remains selectable so an optional
+field can be cleared. The browser owns keyboard navigation and the native popup.
+
+Optional props are `required`, `disabled`, `defaultValue`, `onChange$`, `optionalLabel`,
+`hint`, `invalid`, `errorMessage`, and `testId`. Labels always name the control; hints and
+visible errors describe it. `invalid` exposes the consumer's validation state through
+`aria-invalid`, and `errorMessage` renders only while invalid. Styling follows Input's
+control, typography, focus-ring, motion, and state tokens.
+
+`defaultValue` initializes a matching option on mount; omitted or unmatched values start
+empty. Later `defaultValue` changes do not overwrite the user's selection. Reordered or
+relabeled options preserve a surviving selected value; removing that option returns the
+control to empty. Options arriving later do not apply an earlier unmatched default.
+
+`onChange$` emits the selected string once per user change, including `''` on clearing.
+Rendering, option replacement, and native form reset do not emit. The consumer owns the
+Subject and must reconcile its own domain state when replacing options or resetting a form.
+Native form reset restores the original default while its option remains present; no `reset$`
+prop is needed. A new record can initialize through a remount. Forms can also read the
+current value directly by `name`, without any event subscription.
+
 ## Collection
 
 `Collection` is a vertical group of freely composed items with internal hairlines and

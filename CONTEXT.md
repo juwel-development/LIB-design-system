@@ -283,6 +283,13 @@ rerendering with a new value. The whole group can be inert: visible with its sel
 description retained, but unavailable. Named for its job, not the widget style that renders it.
 _Avoid_: Radio group, radio buttons, option list, picker
 
+**Select**:
+A field for choosing one value from a native dropdown, including an initially empty selection.
+The consumer supplies stable option values and localized labels; the browser owns selection and
+keyboard navigation. Like Input, its value is uncontrolled and read by name or observed through
+user-change events. Required presence rejects the empty option without choosing a value for the user.
+_Avoid_: Choices, combobox widget, custom picker
+
 **Choice row**:
 One option within Choices - a stable key, a visible name and a description, selectable by
 activating any part of the row, its text included. The selected row is told apart by the marker
@@ -293,8 +300,8 @@ _Avoid_: Radio button, option, item, entry
 ### Forms
 
 **Field**:
-The label, control and messages a text control renders as one unit. Not a primitive — `Input` and
-`TextArea` each *are* a field, and the library offers no wrapper for composing one.
+The label, control and messages a form control renders as one unit. Not a primitive — `Input`,
+`TextArea` and `Select` each *are* a field, and the library offers no wrapper for composing one.
 _Avoid_: Field wrapper, form group, form row
 
 **Driver**:
