@@ -75,7 +75,7 @@ describe('NumberInput', () => {
 
   it('retains pasted text that is not a number, untruncated and unconverted, so the consumer can explain it', () => {
     const onInput$ = new Subject<string>();
-    const received: unknown[] = [];
+    const received: string[] = [];
     onInput$.subscribe((text) => received.push(text));
     render(
       <NumberInput
@@ -106,37 +106,48 @@ describe('NumberInput', () => {
       ' 7 ',
       '1 000,50',
     ]);
-    for (const emitted of received) {
-      expect(typeof emitted).toBe('string');
-    }
   });
 
-  it('initialises from defaultValue, keeps the current edit across rerenders and restores saved text on remount', () => {
+  it('initialises from defaultValue and keeps the current edit when a rerender brings a new default', () => {
     const onInput$ = new Subject<string>();
     const received: string[] = [];
     onInput$.subscribe((text) => received.push(text));
-    const field = (savedText: string, mountKey: string) => (
+    const field = (savedText: string) => (
       <NumberInput
-        key={mountKey}
         label={'Maximum price'}
         name={'maxPrice'}
         defaultValue={savedText}
         onInput$={onInput$}
       />
     );
-    const { rerender } = render(field('250', 'songs-tab'));
+    const { rerender } = render(field('250'));
     const control = screen.getByRole('textbox');
     expect(control).toHaveValue('250');
 
     fireEvent.input(control, { target: { value: '30' } });
-    rerender(field('999', 'songs-tab'));
+    rerender(field('999'));
+
     expect(screen.getByRole('textbox')).toBe(control);
     expect(control).toHaveValue('30');
+    expect(received).toEqual(['30']);
+  });
+
+  it('restores saved text when the consumer remounts the field with it as defaultValue', () => {
+    const field = (savedText: string, mountKey: string) => (
+      <NumberInput
+        key={mountKey}
+        label={'Maximum price'}
+        name={'maxPrice'}
+        defaultValue={savedText}
+      />
+    );
+    const { rerender } = render(field('250', 'songs-tab'));
+    const control = screen.getByRole('textbox');
 
     rerender(field('30', 'songs-tab-revisited'));
+
     expect(screen.getByRole('textbox')).not.toBe(control);
     expect(screen.getByRole('textbox')).toHaveValue('30');
-    expect(received).toEqual(['30']);
   });
 
   it('empties the live node when reset$ emits, keeping focus and telling the output stream nothing', () => {
@@ -189,7 +200,25 @@ describe('NumberInput', () => {
     expect(secondReset$.observed).toBe(false);
   });
 
-  it('submits the text by name as typed - a decimal comma or invalid content included - while required checks presence only', () => {
+  it('submits the text by name exactly as typed - a decimal comma or invalid content included', () => {
+    render(
+      <form aria-label={'Songs'}>
+        <NumberInput label={'Song count'} name={'songCount'} />
+      </form>,
+    );
+    const control = screen.getByRole('textbox');
+    const form = screen.getByRole<HTMLFormElement>('form', { name: 'Songs' });
+
+    fireEvent.input(control, { target: { value: '1,5' } });
+    expect(new FormData(form).get('songCount')).toBe('1,5');
+
+    // Numeric validity is the consumer's: the form happily submits text no number parser accepts.
+    fireEvent.input(control, { target: { value: 'twelve' } });
+    expect(new FormData(form).get('songCount')).toBe('twelve');
+    expect(control).toBeValid();
+  });
+
+  it('lets required check presence only, so an empty field is rejected and a non-numeric one is not', () => {
     render(
       <form aria-label={'Songs'}>
         <NumberInput label={'Song count'} name={'songCount'} required={true} />
@@ -201,21 +230,15 @@ describe('NumberInput', () => {
     expect(control).toBeInvalid();
     expect(form.checkValidity()).toBe(false);
 
-    fireEvent.input(control, { target: { value: '1,5' } });
-    expect(new FormData(form).get('songCount')).toBe('1,5');
-    expect(form.checkValidity()).toBe(true);
-
-    // Numeric validity is the consumer's: the form happily submits text no number parser accepts.
     fireEvent.input(control, { target: { value: 'twelve' } });
-    expect(new FormData(form).get('songCount')).toBe('twelve');
-    expect(control).toBeValid();
+
+    expect(form.checkValidity()).toBe(true);
   });
 
-  it('restores the form default on native reset without a user event, where reset$ empties instead', () => {
+  it('restores the form default on native reset without a user event, unlike reset$ which empties', () => {
     const onInput$ = new Subject<string>();
     const received: string[] = [];
     onInput$.subscribe((text) => received.push(text));
-    const reset$ = new Subject<void>();
     render(
       <form aria-label={'Songs'}>
         <NumberInput
@@ -223,7 +246,6 @@ describe('NumberInput', () => {
           name={'maxPrice'}
           defaultValue={'250'}
           onInput$={onInput$}
-          reset$={reset$}
         />
       </form>,
     );
@@ -231,18 +253,15 @@ describe('NumberInput', () => {
     fireEvent.input(control, { target: { value: '30' } });
 
     screen.getByRole<HTMLFormElement>('form', { name: 'Songs' }).reset();
-    expect(control).toHaveValue('250');
 
-    act(() => reset$.next());
-    expect(control).toHaveValue('');
+    expect(control).toHaveValue('250');
     expect(received).toEqual(['30']);
   });
 
-  it('keeps a disabled field out of editing, emission and submission, while a programmatic reset may still clear it', () => {
+  it('keeps a disabled field out of editing, emission and submission', () => {
     const onInput$ = new Subject<string>();
     const received: string[] = [];
     onInput$.subscribe((text) => received.push(text));
-    const reset$ = new Subject<void>();
     render(
       <form aria-label={'Songs'}>
         <NumberInput
@@ -251,7 +270,6 @@ describe('NumberInput', () => {
           defaultValue={'250'}
           disabled={true}
           onInput$={onInput$}
-          reset$={reset$}
         />
       </form>,
     );
@@ -263,9 +281,25 @@ describe('NumberInput', () => {
     expect(new FormData(form).has('maxPrice')).toBe(false);
 
     fireEvent.input(control, { target: { value: '30' } });
+
     expect(received).toEqual([]);
+  });
+
+  it('still empties a disabled field when reset$ emits, since a programmatic clear is not a user edit', () => {
+    const reset$ = new Subject<void>();
+    render(
+      <NumberInput
+        label={'Maximum price'}
+        name={'maxPrice'}
+        defaultValue={'250'}
+        disabled={true}
+        reset$={reset$}
+      />,
+    );
+    const control = screen.getByRole('textbox');
 
     act(() => reset$.next());
+
     expect(control).toHaveValue('');
   });
 

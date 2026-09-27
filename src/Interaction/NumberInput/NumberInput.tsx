@@ -4,9 +4,8 @@ import type { Subject } from 'rxjs';
 
 // One recipe of its own, not Input's (design-system-components.md §4, issue #111): a text control
 // so `-`, `1.` and `1,5` survive - the Number state sanitises them to `''` (WHATWG input.html
-// #number-state) - with `inputmode=decimal` as a keyboard hint only. Colours are semantic tokens
-// re-pointed by `.dark`; the border turns `error` on both `:user-invalid` and `aria-invalid`, and
-// focus adds only the shared ring (docs/adr/0002). Faces and sizes follow docs/adr/0004.
+// #number-state) - with `inputmode=decimal` as a keyboard hint only. The classes are Input's, for
+// Input's reasons: tokens re-pointed by `.dark`, the ring of docs/adr/0002, the faces of 0004.
 const numberInput = cva(
   'block w-full rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent px-3 py-2 font-primary text-body text-foreground transition-colors duration-[var(--motion-duration-color)] outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)] [&:user-invalid]:border-error aria-[invalid=true]:border-error disabled:cursor-not-allowed disabled:border-disabled disabled:text-muted',
 );
