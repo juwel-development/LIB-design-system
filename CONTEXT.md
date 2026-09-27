@@ -291,6 +291,19 @@ keyboard navigation. Like Input, its value is uncontrolled and read by name or o
 user-change events. Required presence rejects the empty option without choosing a value for the user.
 _Avoid_: Choices, combobox widget, custom picker
 
+**NumberInput**:
+A field for typing numeric amounts and thresholds that retains the entered text, including
+blank and unfinished edits. The consumer owns interpretation of that text, numeric validity
+and all wording.
+_Avoid_: Slider, stepper, currency field
+
+**MultiSelect**:
+A dropdown for selecting zero, one or several options independently from a finite set, showing
+individually removable chips on one line with a remaining-selection count for overflow, and opening
+a single column of checkable options whose toggles take effect immediately without closing it.
+The consumer owns the options, selection, wording and meaning of the selected set.
+_Avoid_: Topic filter, multi-choice, checkbox list
+
 **Choice row**:
 One option within Choices - a stable key, a visible name and a description, selectable by
 activating any part of the row, its text included. The selected row is told apart by the marker
