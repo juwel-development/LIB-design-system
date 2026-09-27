@@ -315,7 +315,8 @@ _Avoid_: Radio button, option, item, entry
 
 **Field**:
 The label, control and messages a form control renders as one unit. Not a primitive — `Input`,
-`TextArea` and `Select` each *are* a field, and the library offers no wrapper for composing one.
+`TextArea`, `Select` and `NumberInput` each *are* a field, and the library offers no wrapper for
+composing one.
 _Avoid_: Field wrapper, form group, form row
 
 **Driver**:

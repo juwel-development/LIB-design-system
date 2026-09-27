@@ -94,6 +94,75 @@ provided by Root, so callers do not compose another empty Option. Derive types w
 `ComponentProps<typeof Select.Root>` or `ComponentProps<typeof Select.Option>` from React.
 The consumer still awaits a published library release before changing its dependency.
 
+## NumberInput
+
+`NumberInput` is a labelled field for typed amounts and thresholds. It renders a text control
+with a decimal keyboard hint (`inputmode="decimal"`) and keeps the entered text exactly as typed:
+blank, `0`, `-`, `1.`, `1,5`, `1.5` and pasted content such as `12abc` stay distinct, untrimmed,
+untruncated and unconverted. It is a separate roster entry with Input's field anatomy, not an
+Input variant, and it does not extend Input's contract.
+
+```tsx
+import { NumberInput } from '@juwel-development/design-system';
+import { Subject } from 'rxjs';
+
+const maxPriceInput$ = new Subject<string>();
+const maxPriceReset$ = new Subject<void>();
+
+<NumberInput
+  label={'Maximum price'}
+  name={'maxPrice'}
+  placeholder={'No limit'}
+  hint={'Leave blank for no limit'}
+  defaultValue={savedMaxPrice}
+  invalid={maxPriceReading.kind === 'rejected'}
+  errorMessage={'Enter an amount such as 12.50'}
+  onInput$={maxPriceInput$}
+  reset$={maxPriceReset$}
+/>;
+```
+
+`label` and `name` are required. Optional props are `required`, `optionalLabel`, `hint`,
+`invalid`, `errorMessage`, `disabled`, `placeholder`, `defaultValue`, `onInput$`, `reset$` and
+`testId`, with Input's meaning. Derive the props type with `ComponentProps<typeof NumberInput>`.
+There are no `min`, `max`, `step`, `pattern` or length props and no steppers, formatting or key
+filtering ([ADR 0009](docs/adr/0009-content-rules-stay-with-the-consumer.md)); the control has
+textbox semantics, not spinbutton semantics.
+
+**The consumer owns interpretation.** `onInput$` emits the current text as a string on every user
+edit - typing, pasting and clearing by editing - and never a parsed number, `NaN` or `Infinity`.
+The consumer decides whether the text is blank, unfinished, invalid or an accepted finite number,
+which decimal and grouping conventions it accepts, and when to show an error; it drives `invalid`
+and `errorMessage` in its own language. Validate the whole string before converting (a full-match
+pattern, then `Number`), check the result with `Number.isFinite`, and never accept a numeric prefix
+of invalid text. Blank is not zero: the field never converts one into the other. Integer-only and
+whole-currency rules are consumer rules. The `EnglishParsing` and `GermanParsing` stories show one
+such loop each; the library publishes no parser or locale service.
+
+**Saved state and clearing.** `defaultValue` initialises the field on mount only; a later change
+does not replace the current edit, so a mounted field keeps what the user typed across ordinary
+rerenders. To restore saved text - returning to a tab, loading another record - remount the field
+with the saved text as `defaultValue`. `reset$` empties the live node in place, so focus survives,
+and emits nothing on `onInput$`; clear your own saved state alongside it if the field must stay
+empty after a remount. Native form reset restores the form default (`defaultValue`), also silently.
+Neither operation updates consumer-owned state. A disabled field accepts no edits and emits nothing,
+but a `reset$` emission still clears it. Rendering, message changes and remount initialisation emit
+no input events.
+
+**Streams.** The component subscribes only to `reset$` and unsubscribes when the Subject is replaced
+or the field unmounts. It only calls `.next()` on `onInput$` and never subscribes to, completes or
+errors either stream; the consumer owns both lifetimes. There is no controlled `value` prop, no
+live value stream and no React callback prop.
+
+**Forms and accessibility.** The control works without JavaScript: the form submits the text by
+`name`, and `required` checks presence only, so `1,5` and `twelve` both submit. Numeric validity is
+not guaranteed by the form - a server must parse and validate on a no-JavaScript round-trip and
+re-render the field `invalid` with its own error text, and a JavaScript consumer must itself prevent
+an invalid submission. The label names the control, hint and error describe it, ids are unique per
+instance, and the shared focus ring and field presentation apply in both themes. The device chooses
+the actual keyboard: a decimal separator and digits are requested, but a particular layout, a minus
+key or the exclusion of other characters is not promised.
+
 ## Collection
 
 `Collection` is a vertical group of freely composed items with internal hairlines and
