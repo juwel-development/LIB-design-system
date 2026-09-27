@@ -24,6 +24,7 @@ export { Button } from 'Interaction/Button/Button';
 export { Choices } from 'Interaction/Choices/Choices';
 export { Input } from 'Interaction/Input/Input';
 export { Link } from 'Interaction/Link/Link';
+export { MultiSelect } from 'Interaction/MultiSelect/MultiSelect';
 export { Select } from 'Interaction/Select/Select';
 export { Slider } from 'Interaction/Slider/Slider';
 export { Tabs } from 'Interaction/Tabs/Tabs';
