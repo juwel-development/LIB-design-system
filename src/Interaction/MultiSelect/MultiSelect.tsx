@@ -23,15 +23,51 @@ import type { Observable, Subject } from 'rxjs';
 import { fitChips } from './fitChips';
 import { MultiSelectCompositionError } from './MultiSelectCompositionError';
 
-// Field styling follows Select and ADRs 0001-0004: Root paints the label and hint from here and
-// the closed control's box from the literal class strings below, which it owns outright.
-const multiSelectRoot = cva(
-  [
-    'relative flex flex-col gap-[var(--space-stack)]',
-    '[&>label]:font-secondary [&>label]:font-medium [&>label]:text-body [&>label]:text-foreground',
-    '[&>p]:font-secondary [&>p]:text-small [&>p]:text-muted',
-  ].join(' '),
-);
+const FOCUS_RING =
+  'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]';
+
+const COUNT = `relative inline-flex shrink-0 cursor-pointer items-center rounded-[var(--radius-control)] bg-backing px-2 py-0.5 font-secondary text-small text-foreground disabled:cursor-not-allowed disabled:text-muted pointer-events-auto ${FOCUS_RING}`;
+
+// Root's one recipe paints every part of the closed control and the floating surface, keyed by
+// `part`. Field styling follows Select and ADRs 0001-0004. The clip window's padding and negative
+// margin reserve the focus ring's width and offset, so a chip removal's ring is not cut by the
+// overflow that hides the chips.
+const multiSelectRoot = cva('', {
+  variants: {
+    part: {
+      root: [
+        'relative flex flex-col gap-[var(--space-stack)]',
+        '[&>label]:font-secondary [&>label]:font-medium [&>label]:text-body [&>label]:text-foreground',
+        '[&>p]:font-secondary [&>p]:text-small [&>p]:text-muted',
+      ].join(' '),
+      field: [
+        'group/field relative flex items-center gap-1',
+        'rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent px-3 py-2',
+        'font-primary text-body text-foreground transition-colors duration-[var(--motion-duration-color)]',
+        'data-[disabled]:border-disabled data-[disabled]:text-muted',
+      ].join(' '),
+      trigger: `absolute inset-0 flex cursor-pointer items-center justify-end rounded-[var(--radius-control)] bg-transparent px-3 text-muted disabled:cursor-not-allowed ${FOCUS_RING}`,
+      clip: 'relative min-w-0 flex-1 overflow-hidden p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] -m-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] pointer-events-none',
+      track:
+        'relative flex min-h-[calc(var(--text-body)*var(--leading-body))] items-center gap-1',
+      chip: [
+        'relative inline-flex max-w-[12rem] shrink-0 items-center gap-1 pointer-events-auto',
+        'rounded-[var(--radius-control)] bg-backing py-0.5 pr-0.5 pl-2 font-secondary text-small text-foreground',
+        'group-data-[disabled]/field:text-muted data-[overflow]:invisible data-[overflow]:absolute',
+      ].join(' '),
+      count: COUNT,
+      countMeasure: `${COUNT} invisible absolute`,
+      iconButton: `relative inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius-control)] text-muted transition-colors duration-[var(--motion-duration-color)] hover:text-foreground disabled:cursor-not-allowed disabled:hover:text-muted ${FOCUS_RING}`,
+      surface: [
+        'absolute left-0 right-0 z-10 flex flex-col gap-1 overflow-y-auto p-1',
+        'rounded-[var(--radius-control)] border border-solid border-border bg-surface shadow-[var(--elevation-floating)]',
+        'max-h-[var(--multiselect-surface-max-height,50vh)]',
+        'data-[placement=below]:top-full data-[placement=below]:mt-1 data-[placement=above]:bottom-full data-[placement=above]:mb-1',
+      ].join(' '),
+    },
+  },
+  defaultVariants: { part: 'root' },
+});
 
 // The checked row is told apart by the tick and a boundary flip from `controlBorder` to
 // `foreground` (the Choices treatment), keyed on aria-checked so the attribute the device reads
@@ -46,43 +82,6 @@ const multiSelectOption = cva(
     'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   ].join(' '),
 );
-
-const FOCUS_RING =
-  'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]';
-
-const FIELD = [
-  'group/field relative flex items-center gap-1',
-  'rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent px-3 py-2',
-  'font-primary text-body text-foreground transition-colors duration-[var(--motion-duration-color)]',
-  'data-[disabled]:border-disabled data-[disabled]:text-muted',
-].join(' ');
-
-const TRIGGER = `absolute inset-0 flex cursor-pointer items-center justify-end rounded-[var(--radius-control)] bg-transparent px-3 text-muted disabled:cursor-not-allowed ${FOCUS_RING}`;
-
-// The clip window around the chips: its padding and negative margin reserve the focus ring's
-// width and offset, so a chip removal's ring is not cut by the overflow that hides the chips.
-const CLIP =
-  'relative min-w-0 flex-1 overflow-hidden p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] -m-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] pointer-events-none';
-
-const TRACK =
-  'relative flex min-h-[calc(var(--text-body)*var(--leading-body))] items-center gap-1';
-
-const CHIP = [
-  'relative inline-flex max-w-[12rem] shrink-0 items-center gap-1 pointer-events-auto',
-  'rounded-[var(--radius-control)] bg-backing py-0.5 pr-0.5 pl-2 font-secondary text-small text-foreground',
-  'group-data-[disabled]/field:text-muted data-[overflow]:invisible data-[overflow]:absolute',
-].join(' ');
-
-const COUNT = `relative inline-flex shrink-0 cursor-pointer items-center rounded-[var(--radius-control)] bg-backing px-2 py-0.5 font-secondary text-small text-foreground disabled:cursor-not-allowed disabled:text-muted pointer-events-auto ${FOCUS_RING}`;
-
-const ICON_BUTTON = `relative inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius-control)] text-muted transition-colors duration-[var(--motion-duration-color)] hover:text-foreground disabled:cursor-not-allowed disabled:hover:text-muted ${FOCUS_RING}`;
-
-const SURFACE = [
-  'absolute left-0 right-0 z-10 flex flex-col gap-1 overflow-y-auto p-1',
-  'rounded-[var(--radius-control)] border border-solid border-border bg-surface shadow-[var(--elevation-floating)]',
-  'max-h-[var(--multiselect-surface-max-height,50vh)]',
-  'data-[placement=below]:top-full data-[placement=below]:mt-1 data-[placement=above]:bottom-full data-[placement=above]:mb-1',
-].join(' ');
 
 // Keeps the floating shadow, and a focused option's ring, clear of the viewport edge.
 const SURFACE_MARGIN = 8;
@@ -197,6 +196,41 @@ const firstOption = (surface: HTMLElement): HTMLElement | undefined =>
   ) ??
   surface.querySelector<HTMLElement>('[role="checkbox"]') ??
   undefined;
+
+// The proposal an edit emits: supplied option order, each identity once, nothing unsupplied.
+const proposeSelection = (
+  options: readonly Option[],
+  next: ReadonlySet<string>,
+): readonly string[] => [
+  ...new Set(
+    options.map(({ value }) => value).filter((value) => next.has(value)),
+  ),
+];
+
+// A keyboard open is answered on the next render; a removal or clear-all waits until the
+// consumer's answer has taken the activated control off the page.
+const isSettled = (request: FocusRequest): boolean =>
+  request.kind === 'firstOption' || !request.control.isConnected;
+
+// Where a settled request lands: the first selected option, the next visible chip removal,
+// then the preceding one, then the trigger; clear-all always the trigger.
+const focusFor = (
+  request: FocusRequest,
+  root: HTMLElement,
+  trigger: HTMLElement,
+  surface: HTMLElement | undefined,
+): HTMLElement | undefined => {
+  switch (request.kind) {
+    case 'firstOption':
+      return surface === undefined ? undefined : firstOption(surface);
+    case 'afterRemoval': {
+      const removals = visibleRemovals(root);
+      return removals[request.index] ?? removals[request.index - 1] ?? trigger;
+    }
+    case 'afterClear':
+      return trigger;
+  }
+};
 
 const CloseGlyph: FunctionComponent = () => (
   <svg
@@ -326,6 +360,8 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
     setPlacement(opensAbove ? 'above' : 'below');
   });
 
+  // An outside press is a departure: the focused option it unmounts is not restored to the
+  // trigger, so the pointer's own destination keeps focus.
   useEffect(() => {
     if (!open) {
       return;
@@ -337,6 +373,8 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
         event.target instanceof Node &&
         !root.contains(event.target)
       ) {
+        focusWithinRef.current = false;
+        focusRequestRef.current = undefined;
         setIsOpen(false);
       }
     };
@@ -344,9 +382,8 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
     return () => document.removeEventListener('pointerdown', closeFromOutside);
   }, [open]);
 
-  // Focus never falls to the body through this component's own DOM changes: a keyboard open
-  // lands on the first selected option, a removal hands over to the next chip, and anything
-  // else the render took away returns to the trigger.
+  // Focus never falls to the body through this component's own DOM changes: a settled request
+  // is answered once, and anything else the render took away returns to the trigger.
   useLayoutEffect(() => {
     const root = rootRef.current;
     const trigger = triggerRef.current;
@@ -354,40 +391,26 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
       return;
     }
     const request = focusRequestRef.current;
-    if (request?.kind === 'firstOption') {
+    if (request !== undefined && isSettled(request)) {
       focusRequestRef.current = undefined;
-      const surface = surfaceRef.current;
-      if (open && surface !== undefined) {
-        firstOption(surface)?.focus();
-      }
-    } else if (request !== undefined) {
-      if (!request.control.isConnected) {
-        focusRequestRef.current = undefined;
-        if (request.kind === 'afterRemoval') {
-          const removals = visibleRemovals(root);
-          (
-            removals[request.index] ??
-            removals[request.index - 1] ??
-            trigger
-          ).focus();
-        } else {
-          trigger.focus();
-        }
-      }
-    } else if (focusWithinRef.current && focusIsLost(root)) {
+      focusFor(
+        request,
+        root,
+        trigger,
+        open ? surfaceRef.current : undefined,
+      )?.focus();
+    } else if (
+      request === undefined &&
+      focusWithinRef.current &&
+      focusIsLost(root)
+    ) {
       trigger.focus();
     }
     focusWithinRef.current = root.contains(document.activeElement);
   });
 
   const propose = (next: ReadonlySet<string>): void => {
-    const proposal: string[] = [];
-    for (const { value } of options) {
-      if (next.has(value) && !proposal.includes(value)) {
-        proposal.push(value);
-      }
-    }
-    onChange$.next(proposal);
+    onChange$.next(proposeSelection(options, next));
   };
 
   const toggle = (value: string): void => {
@@ -476,8 +499,17 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
     triggerRef.current?.focus();
   };
 
-  const noteFocus = (): void => {
+  // Focus moving on from an activated removal or clear-all withdraws its unanswered request.
+  const noteFocus = (event: FocusEvent<HTMLDivElement>): void => {
     focusWithinRef.current = true;
+    const request = focusRequestRef.current;
+    if (
+      request !== undefined &&
+      request.kind !== 'firstOption' &&
+      event.target !== request.control
+    ) {
+      focusRequestRef.current = undefined;
+    }
   };
 
   // Focus leaving the whole control closes it. A control removed while focused fires no
@@ -535,7 +567,7 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
         ref={attach(fieldRef)}
         data-multiselect-field
         data-disabled={isDisabled || undefined}
-        className={FIELD}
+        className={multiSelectRoot({ part: 'field' })}
       >
         <button
           ref={attach(triggerRef)}
@@ -547,7 +579,7 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
           aria-describedby={describedBy}
           disabled={isDisabled}
           data-testid={testId}
-          className={TRIGGER}
+          className={multiSelectRoot({ part: 'trigger' })}
           onClick={toggleOpen}
           onKeyDown={openFromArrow}
         >
@@ -567,8 +599,12 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
             />
           </svg>
         </button>
-        <div className={CLIP}>
-          <div ref={attach(trackRef)} data-multiselect-track className={TRACK}>
+        <div className={multiSelectRoot({ part: 'clip' })}>
+          <div
+            ref={attach(trackRef)}
+            data-multiselect-track
+            className={multiSelectRoot({ part: 'track' })}
+          >
             {selectedOptions.length === 0 && (
               <span id={emptyId} className={'truncate text-muted'}>
                 {emptyLabel}
@@ -583,7 +619,7 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
                   data-overflow={overflows || undefined}
                   aria-hidden={overflows || undefined}
                   inert={overflows || undefined}
-                  className={CHIP}
+                  className={multiSelectRoot({ part: 'chip' })}
                 >
                   <span className={'truncate'}>{optionLabel}</span>
                   <button
@@ -591,7 +627,7 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
                     aria-label={removeLabel.replaceAll('{label}', optionLabel)}
                     disabled={isDisabled}
                     tabIndex={overflows ? -1 : undefined}
-                    className={ICON_BUTTON}
+                    className={multiSelectRoot({ part: 'iconButton' })}
                     onClick={removeChip(value, index)}
                   >
                     <CloseGlyph />
@@ -603,7 +639,7 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
               <button
                 type={'button'}
                 disabled={isDisabled}
-                className={COUNT}
+                className={multiSelectRoot({ part: 'count' })}
                 onClick={openFromControl}
               >
                 {overflowLabel.replaceAll('{count}', String(hiddenCount))}
@@ -613,7 +649,7 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
               <span
                 aria-hidden={true}
                 data-multiselect-count
-                className={`${COUNT} invisible absolute`}
+                className={multiSelectRoot({ part: 'countMeasure' })}
               >
                 {overflowLabel.replaceAll(
                   '{count}',
@@ -628,7 +664,7 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
             type={'button'}
             aria-label={clearLabel}
             disabled={isDisabled}
-            className={ICON_BUTTON}
+            className={multiSelectRoot({ part: 'iconButton' })}
             onClick={clearAll}
           >
             <CloseGlyph />
@@ -645,7 +681,7 @@ const MultiSelectRoot: FunctionComponent<IMultiSelectRootProps> = ({
             role={'group'}
             aria-labelledby={labelId}
             data-placement={placement}
-            className={SURFACE}
+            className={multiSelectRoot({ part: 'surface' })}
             onMouseDown={keepFocusOnSurface}
           >
             <MultiSelectContext

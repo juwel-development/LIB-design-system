@@ -306,8 +306,8 @@ describe('MultiSelect', () => {
   it('lets a consumer select none, one, several or all options independently through feedback', () => {
     const { selected$ } = setup({ feedback: true });
     open();
-    for (const [, label] of TOPICS) {
-      fireEvent.click(option(label));
+    for (const box of screen.getAllByRole('checkbox')) {
+      fireEvent.click(box);
     }
     expect(selected$.getValue()).toEqual(TOPICS.map(([value]) => value));
     expect(
@@ -419,6 +419,34 @@ describe('MultiSelect', () => {
     expect(screen.queryByRole('group')).toBeNull();
     expect(trigger()).not.toHaveFocus();
     expect(received).toEqual([]);
+  });
+
+  it('closes on an outside pointer interaction while an option is focused, without a detour through the trigger', () => {
+    setup({
+      initial: ['love'],
+      wrap: (field) => (
+        <>
+          {field}
+          <p>{'Elsewhere on the page'}</p>
+        </>
+      ),
+    });
+    open();
+    option('Love').focus();
+    fireEvent.pointerDown(screen.getByText('Elsewhere on the page'));
+    expect(screen.queryByRole('group')).toBeNull();
+    expect(trigger()).not.toHaveFocus();
+  });
+
+  it('drops an unanswered removal request once focus moves on, so a later change does not move focus', () => {
+    const { selected$ } = setup({
+      initial: ['family', 'love', 'loss', 'hope'],
+    });
+    removal('Loss').focus();
+    fireEvent.click(removal('Loss'));
+    removal('Family').focus();
+    act(() => selected$.next(['family', 'love', 'hope']));
+    expect(removal('Family')).toHaveFocus();
   });
 
   it('moves focus after a removal to the next chip removal, then the preceding one, then the trigger', () => {
