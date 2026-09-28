@@ -94,6 +94,108 @@ provided by Root, so callers do not compose another empty Option. Derive types w
 `ComponentProps<typeof Select.Root>` or `ComponentProps<typeof Select.Option>` from React.
 The consumer still awaits a published library release before changing its dependency.
 
+## MultiSelect
+
+`MultiSelect` is a compound namespace for selecting zero, one or several options
+independently from a finite set: `MultiSelect.Root` renders a labelled one-line dropdown
+trigger with the selected options as individually removable chips, a count for the chips
+that do not fit, and a clear-all control; `MultiSelect.Option` renders one checkable row in
+the dropdown. The consumer owns the options, the selection, every word and what the selected
+set means; the library owns the control, the selection semantics, focus and the presentation.
+
+```tsx
+import { MultiSelect } from '@juwel-development/design-system';
+import { BehaviorSubject, Subject } from 'rxjs';
+
+const topics$ = new BehaviorSubject<readonly string[]>([]);
+const topicChange$ = new Subject<readonly string[]>();
+topicChange$.subscribe((next) => topics$.next(next));
+
+<MultiSelect.Root
+  label={'Main topics'}
+  selected$={topics$}
+  onChange$={topicChange$}
+  emptyLabel={'No topics selected'}
+  removeLabel={'Remove {label}'}
+  clearLabel={'Clear topics'}
+  overflowLabel={'+{count}'}
+  hint={'Songs match any selected topic.'}
+>
+  <MultiSelect.Option value={'family'}>{'Family'}</MultiSelect.Option>
+  <MultiSelect.Option value={'love'}>{'Love'}</MultiSelect.Option>
+</MultiSelect.Root>;
+```
+
+The same control in German changes only the caller's wording:
+
+```tsx
+<MultiSelect.Root
+  label={'Hauptthemen'}
+  selected$={topics$}
+  onChange$={topicChange$}
+  emptyLabel={'Keine Themen ausgewählt'}
+  removeLabel={'{label} entfernen'}
+  clearLabel={'Themen zurücksetzen'}
+  overflowLabel={'{count} weitere'}
+>
+  <MultiSelect.Option value={'family'}>{'Familie'}</MultiSelect.Option>
+  <MultiSelect.Option value={'love'}>{'Liebe'}</MultiSelect.Option>
+</MultiSelect.Root>;
+```
+
+`Root` requires `label`, `selected$`, `onChange$`, `emptyLabel`, `removeLabel`, `clearLabel`
+and `overflowLabel`; `hint`, `disabled`, `testId` and `children` are optional. Each `Option`
+requires a unique, stable string `value` and a text-only `children` label, and accepts a
+`testId`. Options are direct children of `Root`; arrays and fragments are supported. The
+wording contract is closed: `removeLabel` replaces `{label}` with the option's label to name a
+chip's removal control, and `overflowLabel` replaces `{count}` with the number of selected
+options hidden behind the count. There are no callback props and no built-in English; a
+missing `hint` renders nothing.
+
+**Streams.** `selected$` is a read-only `Observable<readonly string[]>` of the current
+selection. Root renders the latest emission and nothing else: empty before the first
+emission, empty again while a replaced source has not yet emitted, and updated silently on
+every emission whether the dropdown is open, closed or disabled. Use a replaying source such
+as a `BehaviorSubject` or `ReplaySubject(1)` so a remounted control shows the current state
+at once. `onChange$` is a `Subject<readonly string[]>` that receives one fresh full proposed
+selection per user edit - a toggle, a chip removal or clear-all - ordered by option order,
+without duplicates and holding only supplied identities. Handed-in arrays are never mutated.
+Rendering, opening, closing, option updates, source replacement and `selected$` emissions
+never emit. Feed accepted proposals back into `selected$` immediately for ordinary
+interaction; an unanswered proposal leaves the selection unchanged, and repeating the edit
+repeats the proposal. Root subscribes only to `selected$`, unsubscribes on replacement and
+unmount, and never completes either stream or assigns behaviour to their errors or completion.
+
+**Caller obligations.** Keep option identities stable across reordering and translation, so
+selection is preserved by identity; map options with the value as the React key. `selected$`
+names supplied identities only: when an update removes options, remove their identities from
+the selection in the same logical update. MultiSelect prunes nothing, invents nothing and
+emits no synthetic change to reconcile invalid input.
+
+**Behaviour.** The closed control stays on one line at every width: the leading chips that
+fit are shown in option order, the rest are counted by `overflowLabel`, and at narrow widths
+only the count remains. Overflow is recalculated on width, label and selection changes
+without touching the selection; activating the count opens the dropdown, so every selection
+stays reachable. Long chip labels truncate visually while the removal control keeps the full
+name. The dropdown floats over the page on the shared `--elevation-floating` role, opens above
+the control when the viewport below cannot hold it, is capped to the room it has and scrolls
+its options. `disabled` keeps the selection visible, closes an open dropdown, disables every
+control and emits nothing. With no options the dropdown opens empty.
+
+**Keyboard and accessibility.** The visible label names the trigger and the option group; the
+trigger exposes `aria-expanded` and, while open, `aria-controls`. Each option is a
+`role="checkbox"` button with `aria-checked` and a tick that does not depend on colour. Enter,
+Space or ArrowDown on the closed trigger opens the dropdown and focuses the first selected
+option, or the first option; with no options focus stays on the trigger. Tab and Shift+Tab
+traverse chips, clear-all and options normally with no focus trap; Space toggles a focused
+option. Escape closes and returns focus to the trigger. Focus leaving the whole control, an
+outside pointer interaction and the trigger itself close the dropdown without moving focus or
+emitting. Chip removals and clear-all are named, non-submitting buttons outside the trigger:
+a removal that takes its own focused control away moves focus to the next visible removal,
+then the preceding one, then the trigger; clear-all returns focus to the trigger; a chip hidden
+by overflow while focused hands focus to the trigger. This is a consumer-controlled selection
+control, not a form field: it has no `name`, native submission, reset or validation.
+
 ## NumberInput
 
 `NumberInput` is a labelled field for typed amounts and thresholds. It renders a text control
