@@ -1,3 +1,10 @@
+## [3.9.1](https://github.com/juwel-development/LIB-design-system/compare/v3.9.0...v3.9.1) (2026-09-28)
+
+
+### Bug Fixes
+
+* **slider:** render the label visibly and associate it, the way Input does ([#112](https://github.com/juwel-development/LIB-design-system/issues/112)) ([57791cb](https://github.com/juwel-development/LIB-design-system/commit/57791cb16da350fe49b90df3e7d77518d7a75356))
+
 # [3.9.0](https://github.com/juwel-development/LIB-design-system/compare/v3.8.0...v3.9.0) (2026-09-28)
 
 
