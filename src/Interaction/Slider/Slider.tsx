@@ -1,5 +1,5 @@
 import { cva } from 'class-variance-authority';
-import type { FunctionComponent } from 'react';
+import { type FunctionComponent, useId } from 'react';
 import type { Subject } from 'rxjs';
 import { SliderConfigurationError } from './SliderConfigurationError';
 
@@ -45,7 +45,10 @@ export interface ISliderProps {
    * could never read a value at all.
    */
   onInput$: Subject<number>;
-  /** The control's accessible name. */
+  /**
+   * Always rendered as a visible label associated with the control, the way `Input`'s is (#112);
+   * it doubles as the accessible name.
+   */
   label: string;
   /**
    * How the value is announced, in the consumer's wording ("$60 a week"). Left out, assistive
@@ -91,8 +94,10 @@ const assertOperatingRange = (
  * A control that sets one numeric value by moving one thumb along a fixed, visible operating
  * range. Controlled: the consumer holds the value and passes it back in, and a value it does not
  * pass back is never adopted. It renders the value nowhere - the consumer sets any figures beside
- * it with typography - and it fills its container's width the way `Input` does. `disabled` is the
- * explicit non-operable state.
+ * it with typography - and it fills its container's width the way `Input` does. Its label follows
+ * `Input` too: visible, associated, and the only text the component renders (#112). It is still
+ * a live control and not a form field, so none of Input's annotations - hint, error, optional
+ * marker - come with it. `disabled` is the explicit non-operable state.
  */
 export const Slider: FunctionComponent<ISliderProps> = ({
   min,
@@ -105,21 +110,32 @@ export const Slider: FunctionComponent<ISliderProps> = ({
   disabled,
   testId,
 }) => {
+  const controlId = `${useId()}-control`;
   assertOperatingRange({ min, max, step, value });
   return (
-    <input
-      type={'range'}
-      className={slider()}
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      disabled={disabled}
-      aria-label={label}
-      aria-valuetext={valueText}
-      data-testid={testId}
-      // React's onChange rides the native input event, so every movement emits through here.
-      onChange={(event) => onInput$.next(event.currentTarget.valueAsNumber)}
-    />
+    <div className={'flex flex-col gap-[var(--space-stack)]'}>
+      {/* The label declares its face and size on itself, never on the wrapper, which would hand
+          them to the control too; `body` is the control's own role (docs/adr/0004, #90, #92). */}
+      <label
+        htmlFor={controlId}
+        className={'font-secondary font-medium text-body text-foreground'}
+      >
+        {label}
+      </label>
+      <input
+        id={controlId}
+        type={'range'}
+        className={slider()}
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        disabled={disabled}
+        aria-valuetext={valueText}
+        data-testid={testId}
+        // React's onChange rides the native input event, so every movement emits through here.
+        onChange={(event) => onInput$.next(event.currentTarget.valueAsNumber)}
+      />
+    </div>
   );
 };

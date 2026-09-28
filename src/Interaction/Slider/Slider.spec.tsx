@@ -30,6 +30,13 @@ describe('Slider Component', () => {
     ).toBeInTheDocument();
   });
 
+  it('associates the visible label with the control through matching htmlFor and id, the way Input does', () => {
+    renderSlider();
+    const label = screen.getByText('Weekly Wage in $');
+    expect(label.tagName).toBe('LABEL');
+    expect(label).toHaveAttribute('for', screen.getByRole('slider').id);
+  });
+
   it('maps the operating range onto the native control, so position and movement follow the bounds', () => {
     renderSlider();
     const slider = screen.getByRole('slider');
@@ -79,9 +86,26 @@ describe('Slider Component', () => {
     expect(screen.getByRole('slider')).toHaveValue('60');
   });
 
-  it('renders no text of its own: no value display, no min/max captions', () => {
+  it('renders the label as its only text: no value display, no min/max captions', () => {
     const { container } = renderSlider({ valueText: '$60 a week' });
-    expect(container.textContent).toBe('');
+    expect(container.textContent).toBe('Weekly Wage in $');
+  });
+
+  it('sets the labelling face on the label, so a two-face theme reaches it the way it reaches Input (#90)', () => {
+    renderSlider();
+    // docs/adr/0004, the amendment: asserted on the element, so a face moved up to the wrapper
+    // fails here.
+    expect(screen.getByText('Weekly Wage in $').className).toContain(
+      'font-secondary',
+    );
+  });
+
+  it('sizes the label at the body role with the weight and colour Input gives its own (#92)', () => {
+    renderSlider();
+    const className = screen.getByText('Weekly Wage in $').className;
+    expect(className).toContain('text-body');
+    expect(className).toContain('font-medium');
+    expect(className).toContain('text-foreground');
   });
 
   it('is natively disabled when the consumer says so', () => {

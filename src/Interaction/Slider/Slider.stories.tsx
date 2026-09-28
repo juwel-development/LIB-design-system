@@ -36,7 +36,8 @@ const meta: Meta<typeof Slider> = {
     },
     label: {
       control: { type: 'text' },
-      description: "The control's accessible name",
+      description:
+        'Always rendered as a visible label associated with the control; doubles as its accessible name',
     },
     valueText: {
       control: { type: 'text' },
@@ -57,7 +58,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // The controlled wiring every consumer repeats: hold the value, subscribe it to the Subject, and
-// render any figures beside the control yourself - the Slider displays nothing.
+// render any figures beside the control yourself - the Slider displays nothing but its label.
 const ControlledExample: FunctionComponent = () => {
   const [wage, setWage] = useState(60);
   const [onInput$] = useState(() => new Subject<number>());
