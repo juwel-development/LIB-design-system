@@ -1,3 +1,16 @@
+# [3.9.0](https://github.com/juwel-development/LIB-design-system/compare/v3.8.0...v3.9.0) (2026-09-28)
+
+
+### Bug Fixes
+
+* **multiselect:** keep outside presses off the trigger and paint Root from one recipe ([#110](https://github.com/juwel-development/LIB-design-system/issues/110)) ([7ccb403](https://github.com/juwel-development/LIB-design-system/commit/7ccb403f69a93686f88e6a8c068a352c77217be4))
+
+
+### Features
+
+* **multiselect:** add the compact multi-selection dropdown ([#110](https://github.com/juwel-development/LIB-design-system/issues/110)) ([23c396c](https://github.com/juwel-development/LIB-design-system/commit/23c396c7c1653edb3dec13b4b6e5ff263f63e672))
+* **number-input:** add a text-preserving numeric entry field ([#111](https://github.com/juwel-development/LIB-design-system/issues/111)) ([ff6115a](https://github.com/juwel-development/LIB-design-system/commit/ff6115ad2aad9e2a9b0a64c383a7c098d79e52cf))
+
 # [3.8.0](https://github.com/juwel-development/LIB-design-system/compare/v3.7.0...v3.8.0) (2026-09-12)
 
 
