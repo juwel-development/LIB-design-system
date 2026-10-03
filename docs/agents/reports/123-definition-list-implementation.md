@@ -1,121 +1,149 @@
-# DefinitionList compact density implementation evidence (#123)
+# DefinitionList density and allocation implementation evidence (#123)
 
-Date: 2026-10-03. Implemented by an Orca worker (Claude) on branch `feature/ticket-123`,
-cut from local `main` at `3739997` (package 3.9.1); the feature landed as `606aca3`. The issue carries no comments and no
-agent brief; the contract below was derived from the issue body, the consumer evidence in
-[g-label-manager #195](https://github.com/juwel-dev/g-label-manager/issues/195) (its
-component-gap and layout-parity reports and the original reference prototype), and the
-standards and ADRs in this repository. Nothing was pushed, merged, published or versioned;
-review and release stay with the coordinator. This report records what shipped and how it was
+Date: 2026-10-03. Implemented by Orca workers (Claude) on branch `feature/ticket-123`. A first
+implementation (`606aca3`, cut from `main` at `3739997`) was built from the issue body alone and
+diverged from the maintainer-approved Agent Brief, which was posted to the issue and committed to
+`main` as `docs/agents/reports/123-agent-brief.md` (`de7fd2a`) while that work was in progress. The
+review worker merged `main` (`c47535a`), reworked the branch to the brief in `f312f0a` and applied
+the review's findings in `4726e82`; the review itself is `docs/agents/reports/123-review.md`. Nothing was pushed, merged, published or
+versioned; release stays with the coordinator. This report records what shipped and how it was
 verified, including what was **not** verified.
 
 ## What shipped
 
-- `DefinitionList.Root` gains `density?: 'comfortable' | 'compact'`, derived from the Root
-  recipe. The resolved density is stated on the `dl` as `data-density` and shared with the
-  members through a module-private context. No other member gains a prop; the namespace still
-  carries exactly `Root`, `Item`, `Term`, `Description`.
-- `comfortable` (the default) renders as before: subtitle terms, body muted descriptions capped
-  at `--measure`, hairlines, single column below a 64rem viewport and a fixed 16rem term track
-  above it. The only markup change is the `data-density` attribute; the item's `py-6` now reads
-  `--space-definition-item`, which ships at the same `1.5rem`.
-- `compact` is the fact-list treatment: terms at the label role in the secondary family,
-  muted (Table's header-cell device); descriptions at the small role, foreground, tabular
-  figures, still capped at `--measure`; both wrap an unbroken token (`overflow-wrap:
-  break-word`); item air from `--space-definition-item-compact` (`0.5rem`, Table's `py-2`);
-  the `dl` becomes an inline-size container and each item switches from one column to
-  proportional `1fr 2fr` baseline-aligned columns at a 24rem container, with `--space-stack`
-  between a stacked term and value and `--space-region` between the columns.
-- Tokens: `--space-definition-item: 1.5rem` and `--space-definition-item-compact: 0.5rem`
-  declared in `renderTokens.ts` and regenerated into `tokens.css`, `tokens.light.css` and
-  `tokens.dark.css`. Additive; no token removed or renamed, `PaletteTokens` untouched.
-- Docs: `README.md` gains a `## DefinitionList` section; `CONTEXT.md` gains the
-  **DefinitionList density** entry beside Table density; ADR 0008's Amendments record the
-  #123 decision as a second narrow density exception argued on its own evidence.
-- Stories: `LongValue`, `ComfortableInNarrowContainer`, `Compact`, `CompactLongValue`,
-  `CompactNarrowContainers` (14/22/30rem holders on one canvas) and `CompactInContentDialog`
-  (a content-extent Dialog opened by a button), plus a `density` control on the meta.
+- `DefinitionList.Root` gains `density?: 'comfortable' | 'compact'`, derived from the Root recipe.
+  Density is the item air alone: `comfortable` (the default) pads each item from
+  `--space-definition-item` (`1.5rem`, the value `py-6` resolved to), `compact` from
+  `--space-definition-item-compact` (`0.5rem`). Typography, family roles (#120's `font-body` on
+  term and description), hairlines, markup and the dimensions of composed controls are identical
+  at both densities. The Root applies the padding to its items through its own recipe's
+  `[&>div]` selector; no context, no hook, no data attribute.
+- `Root` gains `termColumn?` and `descriptionColumn?`, each `{ weight: number; minWidth:
+  `--${string}` }` in ColumnLayout's vocabulary. Defaults: term weight `1` with
+  `--definition-term-min-width` (`9rem`), description weight `2` with
+  `--definition-description-min-width` (`10rem`); either may be given alone. A non-positive or
+  non-finite weight, or a `minWidth` that is not a custom-property name, throws
+  `DefinitionListConfigurationError` (own file, extends `Error`).
+- Both densities measure the list's own width. The Root writes `--definition-threshold`
+  (`calc(var(--space-region) + max(var(m_term) * S/w_term, var(m_desc) * S/w_desc))`) and
+  `--definition-term-share` (`calc(w_term / S)`) as inline custom properties; the `dl` is an
+  inline-size container. Each item's recipe resolves the "Holy Albatross" twice: the term track is
+  `max(share of the width after the gap, 100%-or-0)` and the column gap `max(0, region - 100%-or-0)`,
+  so below the threshold the term track is the full width and the second track and gap vanish. The
+  description's pin to column two, row one is a container style query on `--definition-shortfall`,
+  a length the item computes from `100cqi` and `styles.css` registers with `@property` so the query
+  compares a resolved value. Every `dt` is pinned to column one so several terms share one
+  description; the `dd` spans both tracks unless the query pins it, so without style queries it
+  sits below its terms at the full width. Terms and descriptions carry `overflow-wrap: break-word`
+  at both densities. The four props interfaces are exported from the module.
+- Tokens, additive: `--space-definition-item`, `--space-definition-item-compact`,
+  `--definition-term-min-width`, `--definition-description-min-width`, declared in
+  `renderTokens.ts` and regenerated into all three stylesheets; `PaletteTokens` untouched.
+- Docs: consumer guidance lives in the stories' `parameters.docs.description.component` (the
+  README section the first implementation added is removed, matching `2343e28`); ADR 0008's
+  `#123` amendment is the maintainer's accepted contract followed by what shipped; `CONTEXT.md`
+  keeps the maintainer's **Definition list density** entry and gains **Definition list allocation**.
+- Stories, each with a geometry play function in `storybook/test`: `Default`, `SingleItem`,
+  `MultipleTerms`, `Empty`, `Compact`, `Densities`, `LongValue`, `CompactLongValue`,
+  `Threshold`, `ThemeMinimums`, `ConsumerAllocation`, `Keyboard`, `InSummaryPanel`,
+  `CompactInContentDialog`.
 
 ## Decisions and why
 
-- **A density, not a size prop.** The consumer's defect was the term's subtitle role reading
-  as a heading beside a one-word value, so a compact that only trimmed padding would not have
-  met #123. Density here therefore re-seats type roles, which Table's does not; both roles it
-  moves to (label, small) already exist and are the ones Table pairs for a labelled value.
-  Recorded in ADR 0008 and the glossary so the two densities are not read as one scale.
-- **Container query only in compact.** Making the comfortable default container-aware would
-  change existing consumers' rendering and would expose every existing list to the
-  inline-size-container collapse inside shrink-to-fit frames (flex rows such as
-  `Stack direction="split"`). Compact accepts that constraint and documents it as a
-  CallerMustEnsure; both consumer sites (a bordered panel, `Dialog.Content`) are block
-  contexts.
-- **Thresholds and proportions are literals in the recipe**, as `Rail`, `Stack` and the
-  comfortable track already are: 24rem container (Tailwind's `@sm`), 1:2 tracks from the
-  reference prototype's `minmax(130px,1fr) minmax(0,2fr)`.
-- **Tokens in rem**, matching Table's cell padding rather than Collection's em, because the
-  members set their own type roles so there is no inherited size for the item's air to follow.
+- **Density changes air only.** The brief and the ADR amendment say so explicitly; the first
+  implementation's label/small re-seating of the type roles was its own decision, and #120's
+  contract ("DefinitionList terms remain body-family content regardless of their size") is kept.
+- **Container adaptation at both densities, replacing the viewport switch.** The brief calls the
+  replacement intentional; the coordinator confirmed it. The `NOTE:` footer on `f312f0a` publishes
+  the change to the comfortable default: columns from a `g + 27rem` container instead of a 64rem
+  viewport, a 1:2 split instead of a fixed 16rem track, the gap on `--space-region` instead of a
+  literal 3rem.
+- **Stylesheet-only switch, as ColumnLayout.** A ResizeObserver would have broken the "works with
+  JavaScript off" guarantee, shifted layout on hydration, and missed theme changes without a
+  resize. A grid cannot drop a pinned `dd` into column one on its own, which is why the pin is a
+  container style query; where style queries are absent every description sits below its terms at
+  the full width.
+  Container style queries for custom properties are Baseline Newly available since Firefox 151
+  (May 2026); Chrome 111 and Safari 18 preceded it.
+- **Default minimums measured, not guessed.** With `--text-subtitle` at its 36px maximum,
+  "Material" is 123px and "Contract" 134px wide in Chrome; a 9rem (144px) term minimum keeps such
+  labels whole, and the content Dialog's 464px list still fits two columns (threshold 456px). A
+  7rem default was tried and broke "Material" mid-word just above the threshold. Longer single-word
+  terms ("Provenance", 181px) still break at the largest size; the docs say to re-point the token.
+- **Inline-size container.** Required for `cqi`; the component documents the shrink-to-fit holder
+  caveat, as ColumnLayout does.
 
 ## Test evidence
 
-`DefinitionList.spec.tsx`: 24 tests (12 new), written red before the implementation, each
-failing on the unmodified component. New coverage: the Root prop type is closed to the two
-treatments (`expectTypeOf` over `ComponentProps`); default density stated on the `dl`;
-`dl`/`div`/`dt`/`dd` structure and term-before-description order at compact; compact term and
-description roles; compact columns keyed on `@container`/`@sm` with no `lg:` left; comfortable
-keyed on `lg:` with no container context; per-density padding roles; stack/region gaps;
-hairlines kept; unbroken values wrap; the no-card/no-fill and no-`dark:` scans run at both
-densities. `renderTokens.spec.ts` gains one test pinning both tokens in all three stylesheets
-and out of every `@theme` block. Class-string assertions follow the file's existing
-convention for stylesheet-keyed behaviour jsdom cannot lay out; geometry is proven below.
+`DefinitionList.spec.tsx`: 22 `it` blocks, 25 cases after the review (27 before it dropped two
+utility-class pins), written red before the rework (14 failed against the merged `main` component). They cover the closed prop surface (type-level), the semantic structure, an
+empty list, typography and family roles, identical term/description classes at both densities,
+per-density padding roles, the container class, the threshold and share text for the defaults, a
+consumer allocation and a one-column override, the four configuration errors, the gap roles,
+`testId` and the namespace. Wrapping is proven in the browser only. `renderTokens.spec.ts` pins all four
+tokens in all three stylesheets and out of every `@theme` block. Geometry is proven in the browser.
 
 | Check | Result |
 | --- | --- |
-| `npm run lint` | Passed; 153 files checked |
+| `npm run lint` | Passed; 178 files |
 | `npm run typecheck` | Passed |
-| `npm run test` | Passed; 47 files, 867 tests, run by hand on the committed tree (the worktree's pre-commit hook file is not executable, so git skipped it) |
-| `npm run build` | Passed; `data-density`, both tokens and `@container (width>=24rem)` present in `dist` |
+| `npm run test` | Passed; 54 files, 1192 tests (the pre-commit hook ran all three on `4726e82`) |
+| `npm run build` | Passed; `dist/index.css` carries the style query, the `max()` tracks and `@property --definition-shortfall`; `dist/types` carries `termColumn`/`descriptionColumn` |
 | `npm run build-storybook` | Passed |
 
 ## Browser evidence
 
-The static Storybook build was served locally and driven with Playwright 1.58 in Chrome
-154 on macOS. Measured with `getBoundingClientRect` and `getComputedStyle`:
+The static Storybook build was served locally and driven with Playwright 1.58 in Chrome on macOS,
+1400x900 viewport, 16px root. Every DefinitionList story's play function passed (no assertion in
+the console, no error template); the geometry was also read back with `getBoundingClientRect` and
+`getComputedStyle`:
 
-- `CompactNarrowContainers` at a 1400px viewport: in the 14rem and 22rem holders every item
-  is one column (`grid-template-columns` equals the holder width, the value's top at or
-  below the term's bottom); in the 30rem holder every item is `152px 304px` with term and
-  value bottoms equal (baseline rows). In all three the `dl` equals its holder's width,
-  `container-type` is `inline-size`, and neither holder nor page overflows horizontally.
-- `CompactLongValue` (24rem holder): `120px 240px` columns; the sentence-long value wraps to
-  three lines; the unbroken `WERKSTATT-…-0042` token wraps inside its 240px track with no
-  overflow.
-- `Compact` at full width: `448px 896px` columns, the value capped at `--measure`
-  (623.6px, 66ch at 15px); at a 360px viewport one column, no overflow. Term 13px, weight
-  500, tracked; value 15px with `tabular-nums`; item padding 8px, column gap 24px, 1px rules.
-- `Default` (comfortable): `256px 1064px` columns, 48px gap, 24px padding, 36px term and
-  17px value at 1400px; one column at 800px. Unchanged from `main`.
-- `ComfortableInNarrowContainer` (22rem holder, 1400px): the fixed 256px track opens and the
-  value column is 48px wide with overflow, which is the preserved pre-#123 behaviour the
-  story documents and the compact treatment exists for.
-- `CompactInContentDialog`: the Dialog is 512px wide, its content region 512px, the `dl`
-  464px, every item `146.7px 293.3px` with equal term and value bottoms; focus is inside the
-  Dialog on open and returns to the opening button after Escape; no horizontal overflow.
-- Under `.dark` the compact term, value and rule colours re-point (muted, foreground and
-  border roles) with no `dark:` class in the markup.
+- `Threshold`: 28rem holders (448px) stack at both densities - tracks `448px 0px`, each `dt` and
+  `dd` 448px wide, description below the term; 29rem holders (464px) open two columns -
+  `146.7px 293.3px`, description left at 170.7px (term track plus 24px region gap), term and
+  description bottoms equal (baseline rows). Words whole.
+- `ThemeMinimums`: at 30rem (480px) the default lists are `152px 304px` at both densities; the
+  lists under `--definition-term-min-width: 10rem` stack at both (threshold 504px).
+- `ConsumerAllocation` 1:3 with 9rem/9rem tokens: 40rem fits at `154px 462px`; 36rem stacks.
+- `Densities`: both lists `152px 304px` at 30rem; item padding 24px comfortable, 8px compact;
+  term 36px and description 17px at both, same family.
+- `Compact`: padding equals the resolved `--space-definition-item-compact` (8px) top and bottom.
+- `LongValue` (36rem, comfortable): `184px 368px`; the sentence wraps to several lines, the
+  German compound and the unbroken `WERKSTATT-…` token wrap inside their tracks; `dl` scroll
+  overflow 0, page overflow 0.
+- `CompactLongValue` (20rem): stacked, wrapping, no overflow.
+- `MultipleTerms` (40rem): second `dt` under the first in column one, `dd` beside the first.
+- `SingleItem`: one item, two columns at the canvas width, a rule above and below.
+- `Empty`: an empty `dl`, 0px tall, no error.
+- Undeclared minimum token (threshold rewritten to name `--nope`): the list stays stacked, one
+  464px track. Pin forced off (simulating a browser without style queries): tracks
+  `146.7px 293.3px`, the description 464px wide below its terms.
+- `Keyboard`: tab order link → button → link → button across the two lists; shrinking the wide
+  holder to 20rem while its button is focused stacks the list, keeps focus and the button's
+  height; widening restores the columns with focus intact.
+- `InSummaryPanel` (85rem page, 2:1 ColumnLayout, Box, consumer 8rem/8rem tokens): two columns
+  inside the one-third panel; at 72rem the layout still holds and the facts stack inside the
+  panel alone; no page overflow.
+- `CompactInContentDialog`: list 464px inside the 512px content region, `146.7px 293.3px`; focus
+  inside the Dialog on open; the play closes through the Close control and focus returns to the
+  trigger. A real Escape keypress (Playwright) closes the Dialog and returns focus to the trigger.
+- `Default` at a 360px viewport: stacked, no overflow, term 24px (the subtitle clamp's floor).
+- Under `.dark` the term, rule and description colours re-point with no `dark:` class.
 
 ## Not verified
 
-- No consumer composition was built: the one-third A&R summary panel depends on the
-  proportional split and bounded panel of other tickets (#116, #124). The compact list was
-  verified in holders of the widths that split produces, not inside it.
-- Theme re-pointing of the two new tokens was not exercised in the browser beyond the shipped
-  defaults; the stylesheet test pins their declaration.
-- Screen-reader output was not checked; the markup is the unchanged `dl`/`dt`/`dd` structure.
+- Firefox and Safari were not driven; the style-query pin's behaviour there rests on the
+  documented support (Firefox 151, Safari 18) and the stacked fallback.
+- The consumer composition was approximated (a paragraph stands in for the comparison table); the
+  product's real page widths and fonts were not exercised.
+- Screen-reader output was not checked; the markup is the unchanged `dl`/`div`/`dt`/`dd`.
 
 ## Compatibility
 
-Additive. No public API, default rendering, token, required prop or theme type changes;
-`PaletteTokens` is untouched. The commit is a `feat`, so the next release is a minor.
+Additive public API: `density`, `termColumn`, `descriptionColumn` on `Root`, all optional; no
+member removed or renamed, no required prop, no token removed, `PaletteTokens` untouched. One
+default-rendering change, published by the `NOTE:` footer: the comfortable list's column switch,
+split and gap. The commit is a `feat`, so the next release is a minor.
 
 ## Publication
 
