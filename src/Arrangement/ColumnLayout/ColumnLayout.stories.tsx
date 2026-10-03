@@ -359,13 +359,13 @@ export const ShareBelowMinimum: Story = {
               weight={3}
               minWidth={'--main-column-min-width'}
             >
-              <P>Three quarters would be 30.75rem here.</P>
+              <P>Three quarters would be 28.875rem here.</P>
             </ColumnLayout.Column>
             <ColumnLayout.Column
               weight={1}
               minWidth={'--support-column-min-width'}
             >
-              <P>One quarter would be 9.25rem, under its 16rem minimum.</P>
+              <P>One quarter would be 9.625rem, under its 16rem minimum.</P>
             </ColumnLayout.Column>
           </ColumnLayout.Root>
         </Holder>

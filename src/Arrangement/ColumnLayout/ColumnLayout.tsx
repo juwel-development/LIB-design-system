@@ -29,13 +29,10 @@ const columnLayout = cva('flex flex-wrap items-start', {
   defaultVariants: { gap: 'region' },
 });
 
-// The all-or-one switch, after Heydon Pickering's "Holy Albatross". `100%` is the Root's content
-// width W; the threshold T is on the Root. At W >= T the basis clamps to 0 and the columns share
-// one line, growing by weight over the width left after the gaps - the proportional allocation
-// exactly. Below T the difference is amplified past 100% and clamps there, so every column takes
-// a line of its own and fills it. The factor is chosen so a 1/64px shortfall, Chrome's layout
-// grain, already clamps; `0px` and `100%` are the switch's two states, not measurements.
-// `min-w-0` keeps a column's content from widening its track: the content owns its own wrapping.
+// The all-or-one switch, after Heydon Pickering's "Holy Albatross": `100%` is the Root's width W
+// and the threshold T sits on the Root, so W >= T clamps the basis to 0 (one line, grown by weight)
+// and W < T amplifies the shortfall past 100% (a line each). The factor turns a 1/64px shortfall,
+// Chrome's layout grain, into a full switch; `0px` and `100%` are the two states, not measurements.
 const columnLayoutColumn = cva(
   'min-w-0 grow-[var(--column-layout-weight)] basis-[clamp(0px,(var(--column-layout-threshold)-100%)*1000000,100%)]',
 );
@@ -54,9 +51,9 @@ type MinWidthToken = `--${string}`;
 
 type Track = { weight: number; minWidth: MinWidthToken };
 
-// Present only on a Column the Root counted: the Root wraps each direct Column child in it, and a
-// Column clears it for its own descendants. Anything else is outside the composition.
-const ColumnLayoutContext = createContext<boolean>(false);
+// Granted only to a Column the Root counted: the Root wraps each direct Column child in it, and a
+// Column revokes it for its own descendants. Anything else is outside the composition.
+const ColumnLayoutMembership = createContext<boolean>(false);
 
 // The ident grammar CSS gives a custom property name, restricted to ASCII so a `var()`, a length,
 // a space or a brace can never ride in on the name.
@@ -140,9 +137,9 @@ const markColumns = (children: ReactNode): ReactNode =>
     }
     if (isColumn(child)) {
       return (
-        <ColumnLayoutContext.Provider value={true}>
+        <ColumnLayoutMembership.Provider value={true}>
           {child}
-        </ColumnLayoutContext.Provider>
+        </ColumnLayoutMembership.Provider>
       );
     }
     return child;
@@ -170,15 +167,16 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
   children,
   testId,
 }) => {
-  if (!useContext(ColumnLayoutContext)) {
+  const isCounted = useContext(ColumnLayoutMembership);
+  if (!isCounted) {
     throw new ColumnLayoutCompositionError();
   }
   const style: ColumnLayoutColumnStyle = { '--column-layout-weight': weight };
   return (
     <div className={columnLayoutColumn()} style={style} data-testid={testId}>
-      <ColumnLayoutContext.Provider value={false}>
+      <ColumnLayoutMembership.Provider value={false}>
         {children}
-      </ColumnLayoutContext.Provider>
+      </ColumnLayoutMembership.Provider>
     </div>
   );
 };
@@ -234,6 +232,9 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
  *   there is no width to measure the shares against.
  * - Content that cannot wrap - an unbroken string, a fixed-width control - needs its own overflow
  *   contract, as `Table.Root` has; the column will not widen to hold it.
+ * - `Root`'s children are `Column`s. Anything else placed beside them is rendered as given but is
+ *   not a column: it takes no weight, counts for no gap or threshold, and sits in the row as
+ *   content of its own width, which breaks the proportions. Content belongs inside a `Column`.
  *
  * @UXGuidelines
  * - A minimum is the width below which the column's content stops being readable or operable -

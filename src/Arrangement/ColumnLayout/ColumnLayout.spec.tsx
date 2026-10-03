@@ -305,7 +305,7 @@ describe('ColumnLayout', () => {
     const main = screen.getByTestId('main');
     const search = screen.getByRole('textbox', { name: 'Search' });
     search.focus();
-    (search as HTMLInputElement).value = 'jars';
+    fireEvent.change(search, { target: { value: 'jars' } });
     expect(thresholdOf(root)).toBe(
       'calc(0 * var(--column-layout-gap) + max(var(--main) * 1))',
     );

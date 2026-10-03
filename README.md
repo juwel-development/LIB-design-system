@@ -351,9 +351,12 @@ theme class, or on any ancestor of the Root, as a valid nonnegative CSS length:
 
 The token is read each time layout runs, so re-pointing it in a theme class or a media query
 moves the threshold with it. A `rem` resolves against the document root, an `em` or `ch`
-against the Root's inherited type, a `px` as written; a percentage is not a minimum. A missing
-or invalid token is not a responsive configuration: the switch has nothing to compare and the
-columns size from their content instead.
+against the Root's inherited type, a `px` as written. A percentage is not a length the contract
+accepts: a minimum is a readable width, which the holder's width cannot define. A missing or
+invalid token is not a responsive configuration: the switch has nothing to compare and the
+columns size from their content instead. Anything placed beside the columns that is not a
+`Column` is rendered as given but takes no weight, no gap and no part in the threshold, so it
+breaks the proportions; content belongs inside a `Column`.
 
 **What the content owns.** A column never widens for its content and adds no truncation or
 scrolling. Running text wraps inside its track; content that cannot wrap needs its own overflow
