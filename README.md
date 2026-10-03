@@ -297,6 +297,54 @@ padding. It is declared in all three token stylesheets and accepts a nonnegative
 length. Hairlines use the existing `--color-border` role. There are no density,
 padding or arrangement props; child components own their typography and wrapping.
 
+## Box
+
+`Box` is a bounded content group: a semantic surface, a hairline border and an inner inset,
+with square corners and no shadow. The consumer owns the content, any heading and the
+internal arrangement - a `Stack` inside the `Box` arranges and sets the gaps; the `Box` only
+encloses.
+
+```tsx
+import { Box, DefinitionList, H3, Stack } from '@juwel-development/design-system';
+
+<Box name={'Selected artist'}>
+  <Stack>
+    <H3>Selected artist</H3>
+    <DefinitionList.Root>
+      <DefinitionList.Item>
+        <DefinitionList.Term>Genre</DefinitionList.Term>
+        <DefinitionList.Description>Electronic</DefinitionList.Description>
+      </DefinitionList.Item>
+    </DefinitionList.Root>
+  </Stack>
+</Box>;
+```
+
+The props are `children?: ReactNode`, `name?: string` and `testId?: string`, nothing else:
+no size, width, height or padding prop, no heading slot, no `className`.
+
+**Accessible naming.** With a non-empty `name`, the box is an accessible group carrying that
+name. Without one - omitted or an empty string - the box is an ordinary enclosure: no role, no
+label, no landmark. A name renders no visible heading: supply the heading yourself and keep the
+two in step. In neither case does the box add a focus stop or listen for a key, so controls
+inside keep their ordinary keyboard behaviour.
+
+**Width, height and wrapping.** The box fills the width its holder allocates, border and
+padding included, grows with its content and shrinks inside a narrow holder. Long prose and
+unbroken names wrap inside it: it sets `overflow-wrap: anywhere`, which descendants inherit
+unless they set their own wrapping. It sets no height and hides no overflow. Content with its
+own sizing or overflow contract - a table, a figure, a code block - keeps that responsibility;
+the box wraps text and never scrolls or clips on its behalf. An empty box is an empty
+enclosure with no empty-state wording: omit it rather than expecting one.
+
+**Theming.** Surface, text and border read the existing `surface`, `foreground` and `border`
+colour roles. `--space-box-inset` names the inset on all four sides, defaulting to `1em` so it
+follows inherited type. It is a separate role from a Stack's gap, a region's air or a
+Section's band: re-pointing it moves the actual padding of every `Box` and nothing else,
+with no prop and no component CSS override. It is declared in all three token stylesheets
+and accepts a nonnegative CSS length. The box borrows neither the control radius nor the
+floating elevation.
+
 ## Theming
 
 Colour is addressed by **role**, never by shade - `bg-primary`, `text-muted`,

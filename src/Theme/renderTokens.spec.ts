@@ -282,6 +282,20 @@ describe('renderTokens spacing contract', () => {
     }
   });
 
+  it('declares the box inset in every stylesheet as an em role a consumer can re-point (#117)', () => {
+    // Box reads its one inner-padding role from here and offers no padding prop: the theme chooses.
+    for (const css of [
+      renderTokens(),
+      renderLightTokens(),
+      renderDarkTokens(),
+    ]) {
+      expect(css).toMatch(/:root\s*\{[^}]*--space-box-inset:\s*1em;/);
+      for (const block of css.matchAll(/@theme(?: inline)?\s*\{([^}]*)\}/g)) {
+        expect(block[1]).not.toContain('--space-box-inset');
+      }
+    }
+  });
+
   it('emits the three spacing roles into :root, expressed in em so they track the type ramp', () => {
     const css = renderTokens();
     expect(css).toMatch(/--space-stack:\s*[0-9.]+em;/);

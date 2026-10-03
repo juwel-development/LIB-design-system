@@ -2,6 +2,7 @@ import './styles.css';
 
 export { Cluster } from 'Arrangement/Cluster/Cluster';
 export { Stack } from 'Arrangement/Stack/Stack';
+export { Box } from 'Display/Box/Box';
 export { Brandmark } from 'Display/Brandmark/Brandmark';
 export { Checklist } from 'Display/Checklist/Checklist';
 export { Collection } from 'Display/Collection/Collection';
