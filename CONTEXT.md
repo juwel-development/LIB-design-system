@@ -310,15 +310,18 @@ _Avoid_: Close, cancel, abort
 **Tabs**:
 A few named views sharing one surface, with exactly one view active and each tab naming its own
 panel. The consumer owns which view is active and all of its content, including any sharing or
-preservation across views; Tabs owns the controls and the panels that present it.
-_Avoid_: Router, panel manager, tab strip
+preservation across views; Tabs owns the controls and the panels that present it. A tab's label is
+the consumer's content — a text name first, with decoration at most, never a control — and is the
+tab's whole name. The separation between the row and the view is not the row's: a `Stack` between
+`Tabs.Root` and its members owns it, at the stack or the region gap.
+_Avoid_: Router, panel manager, tab strip, tab spacing
 
 **Tab row overflow**:
-How a tab row accommodates labels wider than its space: `scroll` keeps one line and scrolls it,
-`wrap` breaks the row onto further lines. Neither clips, shortens or hides a label - the label is
-the tab's whole text and whole name in both. The separation between the row and the view is not the
-row's: a `Stack` at the region gap between `Tabs.Root` and its members owns it.
-_Avoid_: Truncation, ellipsis, responsive tabs, collapsing tabs, tab spacing
+How a tab row accommodates labels wider than its space: the controls stay on one line, each label's
+text wraps inside its tab down to its longest word, and only when the controls still cannot fit does
+the row scroll — the row, never the page. No label is shortened, elided or hidden, and a tab carried
+past the edge is out of view, not gone: scrolling or focus brings it back.
+_Avoid_: Truncation, ellipsis, responsive tabs, collapsing tabs, multi-row tabs
 
 **Slider**:
 A control that sets one numeric value by moving one thumb along a fixed, visible operating range.

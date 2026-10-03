@@ -1,6 +1,12 @@
 import { Stack } from 'Arrangement/Stack/Stack';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { type FunctionComponent, useEffect, useState } from 'react';
+import {
+  type ComponentProps,
+  type FunctionComponent,
+  type ReactNode,
+  useEffect,
+  useState,
+} from 'react';
 import { Subject } from 'rxjs';
 import { Tabs } from './Tabs';
 
@@ -9,6 +15,19 @@ const meta: Meta<typeof Tabs.Root> = {
   component: Tabs.Root,
   parameters: {
     layout: 'padded',
+    docs: {
+      description: {
+        component: [
+          'A few named views sharing one surface, composed from `Tabs.Root`, `Tabs.List`, `Tabs.Tab` and `Tabs.Panel`. Controlled: the consumer owns the active key, answers `onSelect$`, and supplies every label and view.',
+          '',
+          "**Labels.** A tab's label is the consumer's content: a text name, optionally with an icon, a count or inline emphasis beside it. The whole label is rendered - never clipped, shortened, elided or replaced by a tooltip - and the tab's accessible name is computed from it. Mark decorative parts (an icon that repeats the text) `aria-hidden` so they stay out of the name; a count or an emphasis is meaning and stays in. No part of a label may be interactive: no link, button or input inside a tab, since the tab is the control.",
+          '',
+          "**Width.** The controls stay on one line. As the space narrows, a label's text wraps inside its tab down to its longest word; only when the controls still cannot fit does the row scroll horizontally - the row, never the page. Focusing a scrolled-off tab reveals it, so every tab is reachable by keyboard, and the focus ring survives the scroll clip. Reach for no truncation or responsive collapsing: a long translation is the row's to accommodate.",
+          '',
+          '**Separation.** Tabs sets no spacing between the row and the view. Put a `Stack` between `Tabs.Root` and its members - `<Tabs.Root><Stack gap="region"><Tabs.List/>…<Tabs.Panel/>…</Stack></Tabs.Root>`: `gap="stack"` holds the row and its view together as one block, `gap="region"` sets the view apart as a region of its own. Inactive panels are hidden, so the gap is exactly one whichever panel is active. The members need not be direct children of `Root`; the tabs must stay direct children of the `List`.',
+        ].join('\n'),
+      },
+    },
   },
   tags: ['autodocs'],
   argTypes: {
@@ -35,17 +54,16 @@ const meta: Meta<typeof Tabs.Root> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-type View = { value: string; label: string; content: string };
+type View = { value: string; label: ReactNode; content: string };
 
 // The controlled wiring every consumer repeats: hold the active key, subscribe it to the Subject,
-// and switch the panels' content with it. Tabs itself never selects. `separated` is the separation
-// contract - a Stack between Root and its members puts one region gap between the row and the view.
+// and switch the panels' content with it. Tabs itself never selects. `gap` is the separation
+// contract - a Stack between Root and its members puts that one space role between row and view.
 const ControlledTabs: FunctionComponent<{
   label: string;
   views: View[];
-  overflow?: 'scroll' | 'wrap';
-  separated?: boolean;
-}> = ({ label, views, overflow, separated }) => {
+  gap?: ComponentProps<typeof Stack>['gap'];
+}> = ({ label, views, gap }) => {
   const [active, setActive] = useState(views[0]?.value ?? '');
   const [onSelect$] = useState(() => new Subject<string>());
   useEffect(() => {
@@ -54,7 +72,7 @@ const ControlledTabs: FunctionComponent<{
   }, [onSelect$]);
   const members = (
     <>
-      <Tabs.List overflow={overflow}>
+      <Tabs.List>
         {views.map((view) => (
           <Tabs.Tab key={view.value} value={view.value}>
             {view.label}
@@ -73,7 +91,7 @@ const ControlledTabs: FunctionComponent<{
   );
   return (
     <Tabs.Root active={active} onSelect$={onSelect$} label={label}>
-      {separated ? <Stack gap={'region'}>{members}</Stack> : members}
+      {gap === undefined ? members : <Stack gap={gap}>{members}</Stack>}
     </Tabs.Root>
   );
 };
@@ -89,6 +107,55 @@ const shortViews: View[] = [
     value: 'candidates',
     label: 'Candidates',
     content: 'The candidate list, filled entirely by the consumer.',
+  },
+  {
+    value: 'alumni',
+    label: 'Alumni',
+    content:
+      'Who has left the label - a third view, so first, middle and last are distinct.',
+  },
+];
+
+// A decorative mark beside a label: it repeats the text, so the consumer hides it from the name.
+const Dot: FunctionComponent = () => (
+  <svg
+    aria-hidden={'true'}
+    width={'0.6em'}
+    height={'0.6em'}
+    viewBox={'0 0 10 10'}
+    style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.4em' }}
+  >
+    <circle cx={5} cy={5} r={5} fill={'currentColor'} />
+  </svg>
+);
+
+// Rich labels as a consuming product composes them: an icon the name does without, a count that
+// belongs to the name, an emphasis - every part non-interactive, inside the one control.
+const richViews: View[] = [
+  {
+    value: 'staff',
+    label: (
+      <>
+        <Dot />
+        Staff <em>12</em>
+      </>
+    ),
+    content: 'Twelve people under contract; the count is part of the tab name.',
+  },
+  {
+    value: 'candidates',
+    label: (
+      <>
+        <Dot />
+        Candidates <em>3</em>
+      </>
+    ),
+    content: 'Three open applications.',
+  },
+  {
+    value: 'alumni',
+    label: 'Alumni',
+    content: 'A plain string label beside the rich ones - the same control.',
   },
 ];
 
@@ -117,6 +184,40 @@ const translatedViews: View[] = [
   },
 ];
 
+const englishViews: View[] = [
+  {
+    value: 'staff',
+    label: 'Permanently employed staff members',
+    content: 'Everyone under contract, with role, proficiency and weekly wage.',
+  },
+  {
+    value: 'candidates',
+    label: 'Candidates for the open positions',
+    content: 'All applications, filtered by role.',
+  },
+  {
+    value: 'market',
+    label: 'Market research reports of the current season',
+    content: 'The five markets with focus and report.',
+  },
+  {
+    value: 'alumni',
+    label: 'Alumni',
+    content: 'Who has left the label.',
+  },
+];
+
+// One compound a 24rem column cannot hold even after wrapping: the row's longest word.
+const unbrokenViews: View[] = [
+  {
+    value: 'summary',
+    label: 'Marktforschungsberichtszusammenfassung',
+    content:
+      'Ein Wort breiter als der Platz: die Zeile scrollt, nichts wird gekürzt.',
+  },
+  ...translatedViews.slice(1),
+];
+
 export const Controlled: Story = {
   parameters: {
     docs: {
@@ -129,20 +230,16 @@ export const Controlled: Story = {
   render: () => <ControlledTabs label={'Staff'} views={shortViews} />,
 };
 
-export const Overflow: Story = {
+export const RichLabels: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'Long labels in a narrow column with the default `overflow="scroll"`: the row stays one line and scrolls horizontally. Overflow is an accommodation, not a tab strip - nothing closes, reorders or collapses, and focusing a scrolled-off tab reveals it.',
+          'Labels with an icon and a count beside the text, and a plain string beside them. The icon repeats the text, so the consumer marks it `aria-hidden` and it stays out of the name; the count is meaning and stays in - the second tab is named "Candidates 3". Every part is non-interactive and clicking any of it selects the one tab.',
       },
     },
   },
-  render: () => (
-    <div style={{ maxWidth: '24rem' }}>
-      <ControlledTabs label={'Season'} views={translatedViews} />
-    </div>
-  ),
+  render: () => <ControlledTabs label={'Staff'} views={richViews} />,
 };
 
 export const LongLabels: Story = {
@@ -150,32 +247,58 @@ export const LongLabels: Story = {
     docs: {
       description: {
         story:
-          'The same translated labels with `overflow="wrap"`: the row breaks onto further lines, every tab stays in view, and a label wider than the row breaks across lines instead of being clipped, shortened or scrolled away.',
+          'Translated labels in a 44rem column, narrower than the labels run on one line: each label wraps inside its tab, the controls stay on one line and share one height, so the markers sit on one line, and nothing is clipped, shortened or scrolled away. A tab shrinks no further than its longest word; the row scrolls only once even those do not fit - see Overflow.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ maxWidth: '44rem' }}>
+      <ControlledTabs label={'Saison'} views={translatedViews} />
+    </div>
+  ),
+};
+
+export const Overflow: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An unbroken compound wider than the space its tab can shrink to: the row scrolls horizontally - the row, never the page - and the word stays whole. Overflow is an accommodation, not a tab strip: nothing closes, reorders or collapses, and focusing a scrolled-off tab reveals it with its focus ring intact.',
       },
     },
   },
   render: () => (
     <div style={{ maxWidth: '24rem' }}>
-      <ControlledTabs
-        label={'Season'}
-        views={translatedViews}
-        overflow={'wrap'}
-      />
+      <ControlledTabs label={'Saison'} views={unbrokenViews} />
     </div>
   ),
 };
 
-export const Separation: Story = {
+export const SeparationStack: Story = {
   parameters: {
     docs: {
       description: {
         story:
-          'The separation contract: a `Stack gap="region"` between `Tabs.Root` and its members puts one region gap between the row and the view, from the same token the surrounding groups use. Inactive panels are hidden, so the gap stays exactly one. Compare with Controlled, where the view sits directly under the row.',
+          'The separation contract at the stack gap: a `Stack gap="stack"` between `Tabs.Root` and its members holds the row and its view together as one block, one sibling gap apart. Inactive panels are hidden, so the gap stays exactly one whichever tab is active. Compare with Controlled, where the view sits directly under the row.',
       },
     },
   },
   render: () => (
-    <ControlledTabs label={'Staff'} views={shortViews} separated={true} />
+    <ControlledTabs label={'Staff'} views={shortViews} gap={'stack'} />
+  ),
+};
+
+export const SeparationRegion: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The separation contract at the region gap: a `Stack gap="region"` sets the view apart as a region of its own, from the same token the surrounding groups use - the composition the consuming product asks for between its tab strip and its content.',
+      },
+    },
+  },
+  render: () => (
+    <ControlledTabs label={'Staff'} views={shortViews} gap={'region'} />
   ),
 };
 
@@ -184,46 +307,46 @@ export const KeyboardNavigation: Story = {
     docs: {
       description: {
         story:
-          'Tab into the list: focus lands on the active tab. Left and Right move focus to the neighbouring tab, wrapping at either end, and select it at once; focus stays on the tab. Tab again reaches the active panel, then the action inside it. The focus ring and the selection marker are separate marks, and the behaviour is identical with the row wrapped.',
+          'Tab into the list: focus lands on the active tab. Left and Right move focus to the neighbouring tab, wrapping at either end, and select it at once; focus stays on the tab and a scrolled-off tab scrolls into view. Tab again reaches the active panel, then the action inside it. The focus ring and the selection marker are separate marks.',
+      },
+    },
+  },
+  render: () => (
+    <div style={{ maxWidth: '32rem' }}>
+      <ControlledTabs label={'Saison'} views={unbrokenViews} gap={'region'} />
+    </div>
+  ),
+};
+
+// A real narrow window, locked through the viewport global rather than a frame inside a wide one:
+// the width the story is about is the viewport's.
+export const NarrowDesktop: Story = {
+  globals: { viewport: { value: 'narrowDesktop', isRotated: false } },
+  parameters: {
+    viewport: {
+      options: {
+        narrowDesktop: {
+          name: 'Narrow desktop',
+          styles: { width: '900px', height: '700px' },
+          type: 'desktop',
+        },
+      },
+    },
+    docs: {
+      description: {
+        story:
+          'A narrow desktop window as a consuming product sees it: an English and a German row in the content column a sidebar leaves, labels wrapping inside their tabs onto a second line, the controls still one row, and the region gap separating each row from its view. Nothing is clipped and nothing scrolls sideways.',
       },
     },
   },
   render: () => (
     <Stack gap={'region'}>
-      <ControlledTabs
-        label={'Staff'}
-        views={translatedViews}
-        separated={true}
-      />
-      <div style={{ maxWidth: '32rem' }}>
-        <ControlledTabs
-          label={'Season'}
-          views={translatedViews}
-          overflow={'wrap'}
-          separated={true}
-        />
-      </div>
-    </Stack>
-  ),
-};
-
-export const NarrowDesktop: Story = {
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'A narrow desktop window as a consuming product sees it: a 50rem content frame beside a sidebar, translated labels wrapping onto a second line, and the region gap separating the row from the view. Nothing is clipped and nothing scrolls sideways.',
-      },
-    },
-  },
-  render: () => (
-    <div style={{ maxWidth: '50rem' }}>
+      <ControlledTabs label={'Staff'} views={englishViews} gap={'region'} />
       <ControlledTabs
         label={'Personal'}
         views={translatedViews}
-        overflow={'wrap'}
-        separated={true}
+        gap={'region'}
       />
-    </div>
+    </Stack>
   ),
 };

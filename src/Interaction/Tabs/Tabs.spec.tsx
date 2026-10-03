@@ -1,6 +1,7 @@
 import { Stack } from 'Arrangement/Stack/Stack';
 import { fireEvent, render, screen } from '@testing-library/react';
 import {
+  type ComponentProps,
   type FunctionComponent,
   type ReactNode,
   useEffect,
@@ -434,7 +435,7 @@ describe('Tabs Component', () => {
   });
 
   // Long translated labels are the case the row exists to survive (#121): whatever the row does with
-  // its space, the label itself is never shortened, hidden or replaced by a hint, in either mode.
+  // its space, the label itself is never shortened, hidden or replaced by a hint.
   const translatedViews = [
     { value: 'market', label: 'Marktforschungsberichte der laufenden Saison' },
     {
@@ -447,12 +448,9 @@ describe('Tabs Component', () => {
     },
   ];
 
-  const translatedTabs = (
-    overflow: 'scroll' | 'wrap' | undefined,
-    onSelect$: Subject<string>,
-  ) => (
+  const translatedTabs = (onSelect$: Subject<string>) => (
     <Tabs.Root active={'market'} onSelect$={onSelect$} label={'Personal'}>
-      <Tabs.List overflow={overflow}>
+      <Tabs.List>
         {translatedViews.map((view) => (
           <Tabs.Tab key={view.value} value={view.value}>
             {view.label}
@@ -467,61 +465,93 @@ describe('Tabs Component', () => {
     </Tabs.Root>
   );
 
-  for (const overflow of ['scroll', 'wrap', undefined] as const) {
-    it(`keeps every long label whole as the tab's name and text with overflow ${String(overflow)}`, () => {
-      render(translatedTabs(overflow, new Subject<string>()));
-      for (const view of translatedViews) {
-        const tab = screen.getByRole('tab', { name: view.label });
-        expect(tab).toHaveTextContent(view.label);
-        expect(tab).not.toHaveAttribute('title');
-        expect(tab).not.toHaveAttribute('aria-hidden');
-        expect(tab.querySelector('[aria-hidden]')).toBeNull();
-      }
-    });
-  }
-
-  it('keeps the tab list, selection and panel association intact when the row wraps', () => {
-    render(translatedTabs('wrap', new Subject<string>()));
-    const list = screen.getByRole('tablist', { name: 'Personal' });
-    const tabs = screen.getAllByRole('tab');
-    expect(tabs).toHaveLength(3);
-    for (const tab of tabs) {
-      expect(tab.parentElement).toBe(list);
+  it("keeps every long label whole as the tab's name and text, with no hint standing in for it", () => {
+    render(translatedTabs(new Subject<string>()));
+    for (const view of translatedViews) {
+      const tab = screen.getByRole('tab', { name: view.label });
+      expect(tab).toHaveTextContent(view.label);
+      expect(tab).not.toHaveAttribute('title');
+      expect(tab.querySelector('[aria-hidden]')).toBeNull();
     }
-    const market = screen.getByRole('tab', { name: translatedViews[0]?.label });
-    expect(market).toHaveAttribute('aria-selected', 'true');
-    expect(market).toHaveAttribute('tabindex', '0');
-    const panel = screen.getByRole('tabpanel');
-    expect(market).toHaveAttribute('aria-controls', panel.id);
-    expect(panel).toHaveAttribute('aria-labelledby', market.id);
   });
 
-  it('moves focus and requests selection with the arrow keys, wrapping, when the row wraps', () => {
+  // A rich label (#121): the consumer's own text, icon and count inside the one control. The icon is
+  // decorative and carries the consumer's aria-hidden; the count is meaning and stays in the name.
+  const richTabs = (active: string, onSelect$: Subject<string>) => (
+    <Tabs.Root active={active} onSelect$={onSelect$} label={'Staff'}>
+      <Tabs.List>
+        <Tabs.Tab value={'staff'}>Staff</Tabs.Tab>
+        <Tabs.Tab value={'candidates'}>
+          <svg
+            aria-hidden={'true'}
+            data-testid={'candidates-icon'}
+            width={12}
+            height={12}
+          >
+            <circle cx={6} cy={6} r={5} />
+          </svg>
+          Candidates <em>3</em>
+        </Tabs.Tab>
+      </Tabs.List>
+      <Tabs.Panel value={'staff'}>Staff list</Tabs.Panel>
+      <Tabs.Panel value={'candidates'}>Candidate list</Tabs.Panel>
+    </Tabs.Root>
+  );
+
+  it('renders a rich label as one tab named by its visible text, the decorative icon kept out of the name', () => {
+    render(richTabs('staff', new Subject<string>()));
+    expect(screen.getAllByRole('tab')).toHaveLength(2);
+    const tab = screen.getByRole('tab', { name: 'Candidates 3' });
+    expect(tab).toContainElement(screen.getByTestId('candidates-icon'));
+    expect(tab).toHaveTextContent('Candidates 3');
+  });
+
+  it('associates a rich-labelled tab with its panel exactly as a text label does', () => {
+    render(richTabs('candidates', new Subject<string>()));
+    const tab = screen.getByRole('tab', { name: 'Candidates 3' });
+    const panel = screen.getByRole('tabpanel', { name: 'Candidates 3' });
+    expect(tab).toHaveAttribute('aria-controls', panel.id);
+    expect(panel).toHaveAttribute('aria-labelledby', tab.id);
+  });
+
+  it('requests the same tab value whichever non-interactive part of a rich label is clicked', () => {
     const onSelect$ = new Subject<string>();
     const selected = vi.fn();
     onSelect$.subscribe(selected);
-    render(translatedTabs('wrap', onSelect$));
-    const market = screen.getByRole('tab', { name: translatedViews[0]?.label });
-    market.focus();
+    render(richTabs('staff', onSelect$));
 
-    fireEvent.keyDown(market, { key: 'ArrowLeft' });
+    fireEvent.click(screen.getByText('3'));
+    fireEvent.click(screen.getByTestId('candidates-icon'));
 
-    const staff = screen.getByRole('tab', { name: translatedViews[2]?.label });
-    expect(selected).toHaveBeenLastCalledWith('staff');
-    expect(staff).toHaveFocus();
+    expect(selected).toHaveBeenCalledTimes(2);
+    expect(selected).toHaveBeenNthCalledWith(1, 'candidates');
+    expect(selected).toHaveBeenNthCalledWith(2, 'candidates');
+  });
+
+  it('moves focus and requests selection with the arrow keys across rich and text labels alike', () => {
+    const onSelect$ = new Subject<string>();
+    const selected = vi.fn();
+    onSelect$.subscribe(selected);
+    render(richTabs('staff', onSelect$));
+    const staff = screen.getByRole('tab', { name: 'Staff' });
+    staff.focus();
 
     fireEvent.keyDown(staff, { key: 'ArrowRight' });
 
-    expect(selected).toHaveBeenLastCalledWith('market');
-    expect(market).toHaveFocus();
+    expect(selected).toHaveBeenLastCalledWith('candidates');
+    expect(screen.getByRole('tab', { name: 'Candidates 3' })).toHaveFocus();
   });
 
-  // The separation contract (#121): the consumer puts a Stack between Root and its members, so the
-  // region gap is the one space between the row and the view. Root must not require its members as
-  // direct children for any association, stop or key to work.
-  const separatedTabs = (active: string, onSelect$: Subject<string>) => (
+  // The separation contract (#121): the consumer puts a Stack between Root and its members, so one
+  // space role is the one gap between the row and the view. Root asks nothing of where its members
+  // sit for any association, stop or key to work.
+  const separatedTabs = (
+    gap: NonNullable<ComponentProps<typeof Stack>['gap']>,
+    active: string,
+    onSelect$: Subject<string>,
+  ) => (
     <Tabs.Root active={active} onSelect$={onSelect$} label={'Staff'}>
-      <Stack gap={'region'}>
+      <Stack gap={gap}>
         <Tabs.List>
           <Tabs.Tab value={'staff'}>Staff</Tabs.Tab>
           <Tabs.Tab value={'candidates'}>Candidates</Tabs.Tab>
@@ -535,7 +565,7 @@ describe('Tabs Component', () => {
   );
 
   it('keeps every association when a Stack separates the row from the panels', () => {
-    render(separatedTabs('candidates', new Subject<string>()));
+    render(separatedTabs('region', 'candidates', new Subject<string>()));
     expect(screen.getByRole('tablist', { name: 'Staff' })).toBeInTheDocument();
     const tab = screen.getByRole('tab', { name: 'Candidates' });
     const panel = screen.getByRole('tabpanel', { name: 'Candidates' });
@@ -546,26 +576,42 @@ describe('Tabs Component', () => {
     expect(panel).toHaveAttribute('tabindex', '0');
   });
 
-  it('keeps inactive panels hidden and empty inside the separating Stack, so the gap stays one', () => {
-    render(separatedTabs('staff', new Subject<string>()));
-    const list = screen.getByRole('tablist');
-    const panels = screen.getAllByRole('tabpanel', { hidden: true });
-    expect(panels).toHaveLength(3);
-    for (const panel of panels) {
-      expect(panel.parentElement).toBe(list.parentElement);
-    }
-    const hiddenPanels = panels.filter((panel) => panel.hidden);
-    expect(hiddenPanels).toHaveLength(2);
-    for (const panel of hiddenPanels) {
-      expect(panel).toBeEmptyDOMElement();
-    }
-  });
+  it.each([
+    ['stack', 'staff'],
+    ['stack', 'candidates'],
+    ['stack', 'alumni'],
+    ['region', 'staff'],
+    ['region', 'candidates'],
+    ['region', 'alumni'],
+  ] as const)(
+    'leaves a Stack at the %s gap exactly one visible panel beside the row with %s active, so the gap stays one',
+    (gap, active) => {
+      render(separatedTabs(gap, active, new Subject<string>()));
+      const list = screen.getByRole('tablist');
+      const panels = screen.getAllByRole('tabpanel', { hidden: true });
+      expect(panels).toHaveLength(3);
+      for (const panel of panels) {
+        expect(panel.parentElement).toBe(list.parentElement);
+      }
+      const visible = panels.filter((panel) => !panel.hidden);
+      expect(visible).toHaveLength(1);
+      expect(visible[0]).toHaveAttribute(
+        'id',
+        screen
+          .getByRole('tab', { selected: true })
+          .getAttribute('aria-controls'),
+      );
+      for (const panel of panels.filter((panel) => panel.hidden)) {
+        expect(panel).toBeEmptyDOMElement();
+      }
+    },
+  );
 
   it('navigates with the arrow keys and requests selection through the separating Stack', () => {
     const onSelect$ = new Subject<string>();
     const selected = vi.fn();
     onSelect$.subscribe(selected);
-    render(separatedTabs('staff', onSelect$));
+    render(separatedTabs('stack', 'staff', onSelect$));
     const staff = screen.getByRole('tab', { name: 'Staff' });
     staff.focus();
 
