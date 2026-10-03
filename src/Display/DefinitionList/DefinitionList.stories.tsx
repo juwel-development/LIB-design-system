@@ -143,6 +143,16 @@ const fitsInside = (list: HTMLElement): boolean => {
 const noPageOverflow = (): boolean =>
   document.documentElement.scrollWidth <= document.documentElement.clientWidth;
 
+// The list's own threshold, resolved by the browser from the custom property the Root writes.
+const thresholdOf = (list: HTMLElement): number => {
+  const probe = document.createElement('div');
+  probe.style.width = 'var(--definition-threshold)';
+  list.append(probe);
+  const threshold = probe.getBoundingClientRect().width;
+  probe.remove();
+  return threshold;
+};
+
 const meta: Meta<typeof DefinitionList.Root> = {
   title: 'Display/DefinitionList',
   component: DefinitionList.Root,
@@ -180,7 +190,8 @@ with \`--definition-description-min-width\` (\`10rem\`); either can be given alo
 structural relationships, never pixel targets; a \`minWidth\` is a custom-property name, never a
 length or a \`var()\`, and a consumer's own token is declared in the theme with a nonnegative CSS
 length. A non-positive or non-finite weight, or a \`minWidth\` that is not a token name, throws
-\`DefinitionListConfigurationError\`.
+\`DefinitionListConfigurationError\`; a token that is named but never declared is not a responsive
+configuration - the threshold has nothing to compare and the list stays stacked at every width.
 
 **Container adaptation.** The list measures its own width, never the viewport. The width left after
 the region gap is divided in proportion to the weights; the row holds while both shares are at least
@@ -197,8 +208,8 @@ is truncated and the list never widens past its holder.
 
 **Holders.** Give the list a definite width - a block, a grid track, a \`Box\`, a Dialog's content
 region. Inside a shrink-to-fit frame an inline-size container contributes no width of its own. The
-two-column pin is a container style query (Chrome 111, Safari 18, Firefox 151); a browser without
-them keeps the list stacked and readable at every width.
+two-column pin is a container style query (Chrome 111, Safari 18, Firefox 151); in a browser without
+them every description sits below its terms at the full width, the terms in the term column's width.
 
 **Tokens.** \`--space-definition-item\`, \`--space-definition-item-compact\`,
 \`--definition-term-min-width\` and \`--definition-description-min-width\` are declared in all three
@@ -254,7 +265,7 @@ export const Default: Story = {
   ),
   play: async ({ canvasElement }) => {
     const list = within(canvasElement).getByTestId('list');
-    if (widthOf(list) >= 460) {
+    if (widthOf(list) >= thresholdOf(list)) {
       await expectProportions(list, [1, 2]);
     } else {
       await expect(isStacked(list)).toBe(true);
@@ -266,8 +277,8 @@ export const Default: Story = {
 /** A single item, showing the hairline above and below. */
 export const SingleItem: Story = {
   render: () => (
-    <DefinitionList.Root>
-      <DefinitionList.Item>
+    <DefinitionList.Root testId={'list'}>
+      <DefinitionList.Item testId={'item'}>
         <DefinitionList.Term>Moulding</DefinitionList.Term>
         <DefinitionList.Description>
           Forming a part against a shaped tool, the reverse of the surface it
@@ -276,6 +287,23 @@ export const SingleItem: Story = {
       </DefinitionList.Item>
     </DefinitionList.Root>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const list = canvas.getByTestId('list');
+    await expect(itemsOf(list)).toHaveLength(1);
+    if (widthOf(list) >= thresholdOf(list)) {
+      await expectProportions(list, [1, 2]);
+    } else {
+      await expect(isStacked(list)).toBe(true);
+    }
+    const item = canvas.getByTestId('item');
+    await expect(
+      Number.parseFloat(getComputedStyle(item).borderTopWidth),
+    ).toBeGreaterThan(0);
+    await expect(
+      Number.parseFloat(getComputedStyle(item).borderBottomWidth),
+    ).toBeGreaterThan(0);
+  },
 };
 
 /** Several terms sharing one description - the case the Item wrapper exists to keep intact. */
@@ -492,29 +520,47 @@ export const Threshold: Story = {
   },
 };
 
+const raisedTermMinimum: HolderStyle = {
+  '--definition-term-min-width': '10rem',
+};
+
 /**
- * Two lists of one width, 30rem, one under a theme scope that raises the term minimum from `9rem`
- * to `10rem`. The threshold moves with the token - to one gap plus `30rem` - so the themed list
- * stacks while the default one keeps its columns.
+ * Lists of one width, 30rem, at both densities, half of them under a theme scope that raises the
+ * term minimum from `9rem` to `10rem`. The threshold moves with the token - to one gap plus `30rem`
+ * - so the themed lists stack while the default ones keep their columns.
  */
 export const ThemeMinimums: Story = {
   render: () => (
-    <div style={{ display: 'grid', gap: 'var(--space-region)' }}>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, max-content)',
+        gap: 'var(--space-region)',
+        alignItems: 'start',
+      }}
+    >
       <Holder width={'30rem'}>
-        <Facts testId={'default'} />
+        <Facts testId={'default-comfortable'} />
       </Holder>
-      <Holder
-        width={'30rem'}
-        style={{ '--definition-term-min-width': '10rem' }}
-      >
-        <Facts testId={'themed'} />
+      <Holder width={'30rem'} style={raisedTermMinimum}>
+        <Facts testId={'themed-comfortable'} />
+      </Holder>
+      <Holder width={'30rem'}>
+        <Facts density={'compact'} testId={'default-compact'} />
+      </Holder>
+      <Holder width={'30rem'} style={raisedTermMinimum}>
+        <Facts density={'compact'} testId={'themed-compact'} />
       </Holder>
     </div>
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expectProportions(canvas.getByTestId('default'), [1, 2]);
-    await expect(isStacked(canvas.getByTestId('themed'))).toBe(true);
+    await expectProportions(canvas.getByTestId('default-comfortable'), [1, 2]);
+    await expectProportions(canvas.getByTestId('default-compact'), [1, 2]);
+    await expect(isStacked(canvas.getByTestId('themed-comfortable'))).toBe(
+      true,
+    );
+    await expect(isStacked(canvas.getByTestId('themed-compact'))).toBe(true);
   },
 };
 

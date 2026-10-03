@@ -174,8 +174,8 @@ describe('DefinitionList', () => {
     expect(screen.getByTestId('the-list').className).toContain(
       'var(--space-definition-item-compact)',
     );
-    expect(screen.getByTestId('the-list').className).not.toContain(
-      'var(--space-definition-item)]',
+    expect(screen.getByTestId('the-list').className).not.toMatch(
+      /var\(--space-definition-item\)/,
     );
   });
 
@@ -193,10 +193,8 @@ describe('DefinitionList', () => {
     );
   });
 
-  it('measures its own width, never the viewport: the dl is an inline-size container the items read', () => {
+  it('keys every item on the threshold the list writes, and on no viewport breakpoint', () => {
     renderSpecList({ itemTestId: 'item' });
-    expect(screen.getByTestId('the-list')).toHaveClass('@container');
-    expect(screen.getByTestId('item')).toHaveClass('grid');
     expect(screen.getByTestId('item').className).toContain(
       '--definition-threshold',
     );
@@ -264,17 +262,6 @@ describe('DefinitionList', () => {
     expect(item).toHaveClass('gap-[var(--space-stack)]');
     expect(item.className).toContain('var(--space-region)');
   });
-
-  it.each(['comfortable', 'compact'] as const)(
-    'wraps an unbroken term or value inside its column at %s density instead of overflowing the holder',
-    (density) => {
-      renderSpecList({ density });
-      expect(screen.getByText('Turning')).toHaveClass('wrap-break-word');
-      expect(screen.getByText('Cutting on a lathe.')).toHaveClass(
-        'wrap-break-word',
-      );
-    },
-  );
 
   it('exposes the one sanctioned host hook through testId on Root and Item', () => {
     renderSpecList({ itemTestId: 'the-item' });

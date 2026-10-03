@@ -19,18 +19,18 @@ const definitionList = cva('@container', {
 
 // Rules are the layout; each Item owns its grid and hairlines, and the grids line up because every
 // item resolves the same tracks. The all-or-one switch is ColumnLayout's "Holy Albatross": below the
-// threshold `--definition-stack` is 100% (term track full, gap none) and `--definition-fit` is 1px;
-// at it they are 0, and the style query on the latter pins the dd beside the first, column-one dt.
+// threshold `--definition-stack` is 100% (term track full, gap none) and `--definition-shortfall`
+// 1px; at it both are 0, and the style query on the latter pins the dd beside the column-one dts.
 const item = cva(
   [
     'grid gap-[var(--space-stack)] border-b border-solid border-border first:border-t',
     '[--definition-stack:clamp(0px,(var(--definition-threshold)-100%)*1000000,100%)]',
-    '[--definition-fit:clamp(0px,(var(--definition-threshold)-100cqi)*1000000,1px)]',
+    '[--definition-shortfall:clamp(0px,(var(--definition-threshold)-100cqi)*1000000,1px)]',
     'grid-cols-[max(calc((100%-var(--space-region))*var(--definition-term-share)),var(--definition-stack))_minmax(0,1fr)]',
     'gap-x-[max(0px,var(--space-region)-var(--definition-stack))]',
-    '[&>dt]:col-start-1 [&>dt]:self-baseline [&>dd]:col-start-1 [&>dd]:self-baseline',
-    '[@container_style(--definition-fit:0px)]:[&>dd]:col-start-2',
-    '[@container_style(--definition-fit:0px)]:[&>dd]:row-start-1',
+    '[&>dt]:col-start-1 [&>dt]:self-baseline [&>dd]:col-span-full [&>dd]:self-baseline',
+    '[@container_style(--definition-shortfall:0px)]:[&>dd]:col-start-2',
+    '[@container_style(--definition-shortfall:0px)]:[&>dd]:row-start-1',
   ].join(' '),
 );
 
@@ -50,15 +50,15 @@ const description = cva(
 /** The name of a CSS custom property, as written in a stylesheet: `--summary-term-min-width`. */
 type MinWidthToken = `--${string}`;
 
-/** One of the two columns: its share of the row relative to the other's, and the theme token that
- *  holds its minimum readable width. */
-type Column = { weight: number; minWidth: MinWidthToken };
+/** One column's allocation: its share of the row relative to the other's, and the theme token that
+ *  holds its minimum readable width. Named only through `Root`'s props. */
+type ColumnAllocation = { weight: number; minWidth: MinWidthToken };
 
-const TERM_COLUMN: Column = {
+const TERM_COLUMN: ColumnAllocation = {
   weight: 1,
   minWidth: '--definition-term-min-width',
 };
-const DESCRIPTION_COLUMN: Column = {
+const DESCRIPTION_COLUMN: ColumnAllocation = {
   weight: 2,
   minWidth: '--definition-description-min-width',
 };
@@ -67,10 +67,10 @@ const DESCRIPTION_COLUMN: Column = {
 // a space or a brace can never ride in on the name.
 const TOKEN_NAME = /^--[A-Za-z0-9_-]+$/;
 
-const checkColumn = (
+const validateColumn = (
   name: 'termColumn' | 'descriptionColumn',
-  column: Column,
-): Column => {
+  column: ColumnAllocation,
+): ColumnAllocation => {
   if (!Number.isFinite(column.weight) || column.weight <= 0) {
     throw new DefinitionListConfigurationError(
       `${name} needs a positive finite weight (got ${column.weight})`,
@@ -86,7 +86,10 @@ const checkColumn = (
 
 // The documented threshold, `g + max(m_i * S / w_i)` with the region gap as g, left to the browser
 // to resolve so a theme re-pointing a minimum - or the gap - moves it with no script in between.
-const thresholdOf = (termColumn: Column, descriptionColumn: Column): string => {
+const thresholdOf = (
+  termColumn: ColumnAllocation,
+  descriptionColumn: ColumnAllocation,
+): string => {
   const total = termColumn.weight + descriptionColumn.weight;
   return `calc(var(--space-region) + max(var(${termColumn.minWidth}) * ${total / termColumn.weight}, var(${descriptionColumn.minWidth}) * ${total / descriptionColumn.weight}))`;
 };
@@ -98,28 +101,29 @@ type DefinitionListRootStyle = CSSProperties & {
   '--definition-term-share': string;
 };
 
-interface IDefinitionListRootProps extends VariantProps<typeof definitionList> {
+export interface IDefinitionListRootProps
+  extends VariantProps<typeof definitionList> {
   /** The term column's share of the row and its minimum readable width, shared by every item.
    *  Defaults to weight `1` and the library's `--definition-term-min-width`; a consumer's own
    *  token is declared in the theme with a nonnegative CSS length, as ColumnLayout's are. */
-  termColumn?: Column;
+  termColumn?: ColumnAllocation;
   /** The description column's share and minimum, likewise. Defaults to weight `2` and
    *  `--definition-description-min-width`. */
-  descriptionColumn?: Column;
+  descriptionColumn?: ColumnAllocation;
   children?: ReactNode;
   testId?: string;
 }
 
-interface IDefinitionListItemProps {
+export interface IDefinitionListItemProps {
   children?: ReactNode;
   testId?: string;
 }
 
-interface IDefinitionListTermProps {
+export interface IDefinitionListTermProps {
   children?: ReactNode;
 }
 
-interface IDefinitionListDescriptionProps {
+export interface IDefinitionListDescriptionProps {
   children?: ReactNode;
 }
 
@@ -130,11 +134,17 @@ const DefinitionListRoot: FunctionComponent<IDefinitionListRootProps> = ({
   children,
   testId,
 }) => {
-  const term = checkColumn('termColumn', termColumn);
-  const value = checkColumn('descriptionColumn', descriptionColumn);
+  const termAllocation = validateColumn('termColumn', termColumn);
+  const descriptionAllocation = validateColumn(
+    'descriptionColumn',
+    descriptionColumn,
+  );
   const style: DefinitionListRootStyle = {
-    '--definition-threshold': thresholdOf(term, value),
-    '--definition-term-share': `calc(${term.weight} / ${term.weight + value.weight})`,
+    '--definition-threshold': thresholdOf(
+      termAllocation,
+      descriptionAllocation,
+    ),
+    '--definition-term-share': `calc(${termAllocation.weight} / ${termAllocation.weight + descriptionAllocation.weight})`,
   };
   return (
     <dl
@@ -200,10 +210,12 @@ const DefinitionListDescription: FunctionComponent<
  *   stays intact.
  * - A `minWidth` token the caller names is declared, on the list or an ancestor of it, as a valid
  *   nonnegative CSS length. The library's own two defaults are declared in every token stylesheet.
+ *   A missing or invalid token is not a responsive configuration: the threshold has nothing to
+ *   compare and the list stays stacked at every width.
  * - The holder gives the list a definite width, as any block, grid track or Dialog content region
  *   does. Inside a shrink-to-fit frame an inline-size container contributes no width of its own.
- * - The two-column pin is a container style query. Where a browser lacks them the list stays in
- *   its stacked, readable arrangement at every width.
+ * - The two-column pin is a container style query. Where a browser lacks them every description
+ *   sits below its terms at the full width, the terms in the term column's width.
  *
  * @UXGuidelines
  * - Choose `compact` for a fact list - short values beside their labels in a panel or a content

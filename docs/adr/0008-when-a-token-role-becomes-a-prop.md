@@ -279,16 +279,24 @@ dimensions. This is an additional component-specific exception for compact facts
 dialogs, not authorization for a general size scale. The maintainer also accepted consumer-chosen
 term/value proportions shared across every item, consistent with ColumnLayout, and automatic
 term-above-value stacking when the container cannot accommodate those proportions, in both density
-modes.
+modes. This records an accepted direction, not shipped behavior.
 
-As shipped: the item air is `--space-definition-item` and `--space-definition-item-compact`, two
+Future interactive column resizing is a separate capability. Its agreed direction is consumer-owned
+runtime widths: resizing a proportional column makes it fixed while the other proportional columns
+share remaining space. Those runtime values represent a user's choice rather than a theme default.
+This decision preserves that extension direction; #115 does not ship resize handles, persistence or
+a speculative numeric-width override API.
+
+**What #123 shipped.** The item air is `--space-definition-item` and `--space-definition-item-compact`, two
 roles named for the treatments the way Table's density is supplied. The allocation is `termColumn`
 and `descriptionColumn` on Root, each a positive relative `weight` and a `minWidth` custom-property
 name under the same narrow token-reference authorization as ColumnLayout's columns, with library
 defaults `--definition-term-min-width` and `--definition-description-min-width` so an existing
 composition needs no new prop. Both densities measure the list's own width and stack all or nothing
 at ColumnLayout's threshold; the comfortable list's former 64rem viewport switch and fixed 16rem
-term track are replaced by that behaviour, as the brief intended. This decision authorizes nothing
+term track are replaced by that behaviour, as the brief intended. The switch is stylesheet-only; the
+description's column pin is a container style query on a length the shared stylesheet registers with
+`@property`, the one component-specific registration it carries. This decision authorizes nothing
 beyond DefinitionList: no density on another component, and no reopening of the Figure or Brandmark
 width APIs.
 
