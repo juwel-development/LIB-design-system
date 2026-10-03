@@ -35,7 +35,8 @@ interface IH1Props extends VariantProps<typeof h1> {
  *
  * @Guarantees — enforced on every render
  * - Renders an `h1`; its outline level and the display role are one choice, not two (docs/adr/0005).
- * - Reads `--font-heading`, the heading family that follows `--font-primary` until a theme re-points it (#120), sized by `--text-display`, led by `--leading-display` and optically
+ * - Reads `--font-heading`, the heading family that follows `--font-primary` until a theme
+ *   re-points it (#120), sized by `--text-display`, led by `--leading-display` and optically
  *   corrected by `--tracking-optical`, the large-type correction every role from title up carries.
  * - Bounded at `--measure-display`, the display role's own measure — narrower than the reading column
  *   because bigger type wants fewer characters per line (docs/adr/0004). The bound is the recipe's,

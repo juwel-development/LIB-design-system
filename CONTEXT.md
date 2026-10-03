@@ -107,12 +107,14 @@ primitive is for an annotation no other component owns.
 _Avoid_: Caption, hint, small print, helper text, footnote, disclaimer
 
 **Family role**:
-Which face a piece of text is set in, named by the job of the text and never by the face: `primary`
-for what the visitor came for, `secondary` for what names it, `heading` for the heading ladder and
-`control` for the box a viewer operates. The library sets every one and declares every one, so a
-theme re-points a name and the change lands on every element reading it; the two added later default
-to `primary`, so a theme that never re-points them has one face for content, headings and controls, as
-before. There is no face prop: which face a heading takes is the system's decision, not the heading's.
+Which face a piece of text is set in, named by the job of the text and never by the face: `heading`
+for the heading ladder, `body` for reading matter, `control` for the box a viewer operates, and
+`secondary` for what names or routes to any of them. `primary` is the face those three fall back to
+— what the visitor came for, before it was told apart — so a theme that sets only `primary` and
+`secondary` has one face for headings, reading matter and controls, as before, and a theme that
+re-points one role moves one role. A role resolves on the element reading it, so a theme at any
+scope reaches the text beneath it. There is no face prop: which face a heading takes is the system's
+decision, not the heading's.
 _Avoid_: Font, typeface, font stack, serif/sans role
 
 **Reading measure**:

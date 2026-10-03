@@ -137,6 +137,7 @@ over a serif reading face cannot express it without a third family role, which w
 of a demonstrated need."* The need was demonstrated by
 [#120](https://github.com/juwel-development/LIB-design-system/issues/120), and
 [ADR 0004](./0004-typography-token-contract.md)'s amendment adds `--font-heading`, read by every
-level and by the two `h1` treatments outside `H1`, defaulting to the primary face. Nothing here moves:
+level and by the two `h1` treatments outside `H1`, falling back to the primary face on the element
+reading it, beside a body role for the reading matter and a control role for controls. Nothing here moves:
 a level still fixes its type role, and a heading still has no face prop — the face is the theme's to
 re-point, once, for every heading.

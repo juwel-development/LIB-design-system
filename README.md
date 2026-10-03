@@ -307,6 +307,43 @@ on an ancestor re-points every token underneath it.
 A product re-themes the whole system by supplying its own values for the same role
 names, which is what lets one design system serve several brands.
 
+### Typography family roles
+
+The library ships no typeface. Every piece of text reads one of five **family roles**, each a
+custom property a theme re-points, and no component takes a font prop:
+
+| Role | What reads it | Default |
+| --- | --- | --- |
+| `--font-heading` | `H1`–`H6`, `PageHead`'s title, `Dialog.Title` | falls back to `--font-primary` |
+| `--font-body` | `P`, `Prose`, `Checklist`, `DefinitionList` terms and descriptions, `Table` value cells, `PageHead`'s lede and intro, `Dialog.Description` | falls back to `--font-primary` |
+| `--font-control` | `Button`, and the control of `Input`, `TextArea`, `NumberInput`, `Select`, `MultiSelect` (placeholders follow) | falls back to `--font-primary` |
+| `--font-primary` | nothing directly: the face the three roles above resolve to when unset | `inherit` |
+| `--font-secondary` | labels, hints, errors, eyebrows, captions, header cells, notes, nav, `Link`'s `quiet` treatment, `Choices` | `inherit` |
+
+Serif headings over sans-serif body and controls is three lines, and the theme keeps ownership of
+which face is which:
+
+```css
+:root {
+  --font-heading: Georgia, serif;
+  --font-primary: system-ui, sans-serif; /* body and controls follow it */
+  --font-secondary: system-ui, sans-serif;
+}
+```
+
+Re-point `--font-body` or `--font-control` to move the reading matter or the controls on their own.
+`Link` in its `prose`, `label-link` and `graphic` treatments sets no face and takes its context's,
+as a plain action inside a heading or paragraph does.
+
+**Compatibility.** A theme written before these roles existed — one that sets only
+`--font-primary` and `--font-secondary` — renders exactly as it did: headings, reading matter and
+controls all follow `primary`. The roles resolve on the element reading them, so a theme declared on
+`:root`, on `html`, or on a wrapper element reaches every element beneath it, and all three
+stylesheets (`styles.css`, `styles.light.css`, `styles.dark.css`, and their `tokens.*` siblings)
+carry the same contract. Where a component sets tabular figures (`Table` value cells), the face the
+body role resolves to must carry the `tnum` feature; where it sets small caps, `--font-secondary`
+must carry `smcp` — see [ADR 0004](docs/adr/0004-typography-token-contract.md).
+
 ### Typography status tones
 
 Typography whose colour is selectable accepts the general `success`, `warning`, `error`, and

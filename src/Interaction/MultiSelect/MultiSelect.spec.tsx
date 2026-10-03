@@ -172,15 +172,13 @@ describe('MultiSelect', () => {
     >().toEqualTypeOf<string>();
   });
 
-  it('sets the field box in the control face and its label in the secondary face (#120)', () => {
-    // The box the viewer operates is the field around the trigger; the label above it is apparatus.
+  it('sets the field box in the control face (#120)', () => {
+    // The box the viewer operates is the field around the trigger, which has no role of its own;
+    // the label above it keeps the secondary face, unchanged and left to the story.
     setup();
     const field = trigger().parentElement;
     expect(field?.className).toContain('font-control');
     expect(field?.className).not.toContain('font-primary');
-    expect(field?.parentElement?.className).toContain(
-      '[&>label]:font-secondary',
-    );
   });
 
   it('renders a labelled, collapsed trigger with the empty wording and no chips, clear control or options', () => {

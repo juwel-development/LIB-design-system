@@ -3,17 +3,10 @@ import { cva } from 'class-variance-authority';
 import type { FunctionComponent, ReactNode } from 'react';
 import type { Subject } from 'rxjs';
 
-// No `dark:` classes here by design: every colour below is a semantic token whose value is
-// re-pointed by the `.dark` class in tokens.css, so one set of classes serves both themes.
-// The colour transition is stated once in the base, on the motion token, so no variant can
-// disagree with it - see docs/adr/0001-motion-token-contract.md. The one focus ring is in the
-// base too: identical across variants, drawn with outline, colour at rest so it never fades in -
-// see docs/adr/0002-focus-ring-token-contract.md. The corner is in the base as well, one radius
-// token every variant shares, so none can disagree - see docs/adr/0003-radius-token-contract.md.
-// The face is in the base for the same reason - the control role, which follows the content face
-// until a theme re-points it - see docs/adr/0004-typography-token-contract.md (#90, #120).
-// The size is in the base for the same reason, and here it is load-bearing: the recipe fixes
-// vertical padding and sets no height, so the font-size is what drives it (docs/adr/0004, #92).
+// No `dark:` classes: every colour is a semantic token the `.dark` class re-points. Every other
+// cross-variant decision sits in the base so no variant can disagree - the colour transition
+// (docs/adr/0001), the focus ring (docs/adr/0002), the corner (docs/adr/0003), the control face and
+// the body size (docs/adr/0004; #90, #92, #120); the size drives the height, as padding is fixed.
 const button = cva(
   'font-control text-body transition-colors duration-[var(--motion-duration-color)] rounded-[var(--radius-control)] py-2 sm:py-2 disabled:bg-disabled disabled:hover:bg-disabled-hover cursor-pointer disabled:cursor-not-allowed select-none text-nowrap inline-flex flex-row items-center justify-center gap-2 outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   {

@@ -19,6 +19,13 @@ describe('P', () => {
     expect(screen.getByText('Body copy.').tagName).toBe('P');
   });
 
+  it('reads the body family role, so a theme giving reading matter its own face reaches a paragraph (#120)', () => {
+    // docs/adr/0004, the amendment: body is what the visitor came to read, and it follows the
+    // primary face until a theme re-points --font-body. Asserted on the element, not a wrapper.
+    render(<P>Body copy.</P>);
+    expect(screen.getByText('Body copy.').className).toContain('font-body');
+  });
+
   it.each(statusTones)(
     'leaves the rendered paragraph semantics unchanged when the %s status tone is selected',
     (color) => {

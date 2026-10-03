@@ -29,13 +29,13 @@ describe('PageHead', () => {
 
   it('sets the title in the heading face, so a theme giving headings their own face reaches the subpage head too (#120)', () => {
     // The one h1 treatment outside H1 on the page (docs/adr/0005) reads the same family role as H1-H6,
-    // and its lede and intro stay in the content face: they are what was come for, not the head.
+    // and its lede and intro take the body face: they are what was come for, not the head.
     render(<PageHead title={'Title'} lede={'Lede'} intro={'Intro'} />);
     expect(screen.getByRole('heading', { level: 1 }).className).toContain(
       'font-heading',
     );
-    expect(screen.getByText('Lede').className).toContain('font-primary');
-    expect(screen.getByText('Intro').className).toContain('font-primary');
+    expect(screen.getByText('Lede').className).toContain('font-body');
+    expect(screen.getByText('Intro').className).toContain('font-body');
   });
 
   it('sets the title at the title role, one rung below the hero display, so it can never out-scale the homepage hero', () => {

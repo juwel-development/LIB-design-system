@@ -86,9 +86,9 @@ describe('Dialog Component', () => {
     ).toBeInTheDocument();
   });
 
-  it('sets the title in the heading face and the description in the content face, so a theme giving headings their own face reaches the dialog too (#120)', () => {
+  it('sets the title in the heading face and the description in the body face, so a theme giving headings their own face reaches the dialog too (#120)', () => {
     // The second h1 treatment outside H1 (docs/adr/0005) reads the same family role as H1-H6; the
-    // description is reading matter beside it and stays in the content face.
+    // description is reading matter beside it and takes the body face.
     render(confirmation(new Subject<void>()));
     expect(
       screen.getByRole('heading', { level: 1, name: 'End employment?' })
@@ -96,7 +96,7 @@ describe('Dialog Component', () => {
     ).toContain('font-heading');
     expect(
       screen.getByText("This changes the employee's assignment.").className,
-    ).toContain('font-primary');
+    ).toContain('font-body');
   });
 
   it('resets the heading context, so the h1 states the task rather than continuing the page ladder', () => {

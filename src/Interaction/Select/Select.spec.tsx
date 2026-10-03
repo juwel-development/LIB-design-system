@@ -35,9 +35,9 @@ describe('Select', () => {
     >().toEqualTypeOf<Subject<string> | undefined>();
   });
 
-  it('sets the native control in the control face and its label in the secondary face (#120)', () => {
+  it('sets the native control in the control face (#120)', () => {
     // Select paints its members from the root's one recipe through child selectors, so the face is
-    // read off the root: the control's rule names the control role, the label's the secondary face.
+    // read off the root. The label's secondary face is unchanged and left to the story.
     render(
       <Select.Root
         label={'Home market'}
@@ -50,7 +50,6 @@ describe('Select', () => {
     const root = screen.getByRole('combobox').parentElement;
     expect(root?.className).toContain('[&>select]:font-control');
     expect(root?.className).not.toContain('[&>select]:font-primary');
-    expect(root?.className).toContain('[&>label]:font-secondary');
   });
 
   it('renders consumer components, fragments, arrays and conditional options as native choices', () => {

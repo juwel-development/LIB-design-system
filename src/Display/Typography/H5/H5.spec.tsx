@@ -22,9 +22,7 @@ describe('H5', () => {
   });
 
   it('reads the heading family role, so a theme giving headings their own face reaches this level (#120)', () => {
-    // docs/adr/0004, the amendment: a heading is the one text that departs from the content face on
-    // demand, and every level departs together. Asserted on the element, so a face moved to a wrapper
-    // or left on the content role fails here.
+    // Every level departs together (docs/adr/0004, the amendment); the reasoning is in H1.spec.
     render(<H5>Welcome</H5>);
     const heading = screen.getByRole('heading', { level: 5 });
     expect(heading.className).toContain('font-heading');

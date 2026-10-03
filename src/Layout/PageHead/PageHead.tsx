@@ -25,12 +25,12 @@ const pageHeadTitle = cva(
 
 // The standfirst: the lede role, foreground, run one measure wider than the reading column (#18).
 const pageHeadLede = cva(
-  'font-primary text-lede leading-lede text-foreground max-w-[var(--measure-wide)]',
+  'font-body text-lede leading-lede text-foreground max-w-[var(--measure-wide)]',
 );
 
 // The small print: the small role, muted, held to the reading measure like Prose's tail.
 const pageHeadIntro = cva(
-  'font-primary text-small text-muted max-w-[var(--measure)]',
+  'font-body text-small text-muted max-w-[var(--measure)]',
 );
 
 export interface IPageHeadProps {

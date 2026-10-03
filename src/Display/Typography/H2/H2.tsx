@@ -31,7 +31,8 @@ interface IH2Props extends VariantProps<typeof h2> {
  *
  * @Guarantees — enforced on every render
  * - Renders an `h2`; its outline level and the title role are one choice, not two (docs/adr/0005).
- * - Reads `--font-heading`, the heading family that follows `--font-primary` until a theme re-points it (#120), sized by `--text-title`, led by `--leading-title` and optically corrected
+ * - Reads `--font-heading`, the heading family that follows `--font-primary` until a theme
+ *   re-points it (#120), sized by `--text-title`, led by `--leading-title` and optically corrected
  *   by `--tracking-optical` — the title role is the smallest role that carries it, so `H3` and below
  *   take none.
  * - `color` selects `foreground`, `muted`, `success`, `warning`, `error` or `info`; nothing else

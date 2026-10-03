@@ -3,10 +3,10 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-// Reads every component source off disk and pins which of them read the heading and control family
-// roles (#120, docs/adr/0004 Amendments). Both roles default to the primary face, so in jsdom and on
-// the library's own values the assignment is invisible; what is checkable is the set, so a component
-// that starts or stops reading either role has to change this list and argue for it - the shape
+// Reads every component source off disk and pins which of them read the heading, body and control
+// family roles (#120, docs/adr/0004 Amendments). All three fall back to the primary face, so in jsdom
+// and on the library's own values the assignment is invisible; what is checkable is the set, so a
+// component that starts or stops reading a role has to change this list and argue for it - the shape
 // label-leading-optin.spec.ts uses. The face-literal ban below is the family half of the type-scale
 // ban: the library ships no face, so no component may name one.
 const srcRoot = dirname(fileURLToPath(import.meta.url));
@@ -23,6 +23,9 @@ const componentSources = (dir: string): string[] =>
       : [];
   });
 
+// Word boundaries rather than a trailing space, as in label-leading-optin.spec.ts: a utility written
+// last in a class string has none, and the leading `(?<![\\w-])` keeps `font-body` from matching inside
+// `--font-body` in a TSDoc line, so a component is counted for reading a role, not for naming it.
 const carries = (utility: string, source: string): boolean =>
   new RegExp(`(?<![\\w-])${utility}(?![\\w-])`).test(source);
 
@@ -32,9 +35,11 @@ const carrying = (utility: string): string[] =>
     .map((path) => relative(srcRoot, path))
     .sort();
 
-// Tailwind's own family utilities and the arbitrary-value form, in every variant-prefixed spelling.
-// The role utilities are longer words, so font-primary and font-heading fall outside the alternation.
-const faceLiteral = /\bfont-(?:sans|serif|mono)\b|\bfont-\[/g;
+// Tailwind's own family utilities and every arbitrary form a face can take - `font-[…]`, the v4
+// `font-(…)` shorthand and the `[font-family:…]` property - in any variant-prefixed spelling. A
+// numeric `font-[600]` is a weight, which docs/adr/0005 permits as a literal, so it is let through.
+const faceLiteral =
+  /\bfont-(?:sans|serif|mono)\b|\bfont-\[(?!\d)|\bfont-\(|\[font-family:/g;
 
 describe('family role assignment', () => {
   it('scans at least one component, so an empty roster cannot pass vacuously', () => {
@@ -59,6 +64,23 @@ describe('family role assignment', () => {
     );
   });
 
+  it('gives all reading matter the body family role, and nothing else reads it', () => {
+    // What the visitor came to read: the paragraph primitives, the reading block, a checklist, a
+    // definition list's term and description, a table's value cells, the page head's lede and intro
+    // and the Dialog's description. The term reads body whatever its size: it is not a heading.
+    expect(carrying('font-body')).toEqual(
+      [
+        join('Display', 'Checklist', 'Checklist.tsx'),
+        join('Display', 'DefinitionList', 'DefinitionList.tsx'),
+        join('Display', 'Table', 'Table.tsx'),
+        join('Display', 'Typography', 'P', 'P.tsx'),
+        join('Display', 'Typography', 'Prose', 'Prose.tsx'),
+        join('Layout', 'Dialog', 'Dialog.tsx'),
+        join('Layout', 'PageHead', 'PageHead.tsx'),
+      ].sort(),
+    );
+  });
+
   it('gives every control the control family role, and nothing else reads it', () => {
     // The box the viewer operates (CONTEXT.md: Control): the action and the five fields. Their
     // labels, hints and errors stay apparatus in the secondary face, so the role is on the control
@@ -75,17 +97,15 @@ describe('family role assignment', () => {
     );
   });
 
-  it('leaves no heading reading the content face, so the heading role is the only face a heading has', () => {
-    for (const path of carrying('font-heading')) {
-      const source = readFileSync(join(srcRoot, path), 'utf8');
-      // Dialog paints its description in the content face beside its title; the h1 is what is pinned.
-      const headingElements =
-        source.match(/<h[1-6][^>]*>|className=\{h[1-6]\(/g) ?? [];
-      expect(headingElements.length, path).toBeGreaterThan(0);
-    }
-    expect(carrying('font-primary')).not.toContain(
-      join('Display', 'Typography', 'H1', 'H1.tsx'),
-    );
+  it('leaves no component reading the primary face directly: it is the face the three roles fall back to', () => {
+    // --font-primary stays declared and re-pointable, and a theme that sets only it still moves every
+    // heading, paragraph and control; but no element names it, so re-pointing one role moves one role.
+    expect(carrying('font-primary')).toEqual([]);
+  });
+
+  it('keeps the secondary face on the apparatus that names things, untouched by the three roles', () => {
+    // The labelling half of the contract is unchanged by #120: anything carrying it before still does.
+    expect(carrying('font-secondary').length).toBeGreaterThan(10);
   });
 
   it.each([
@@ -94,6 +114,10 @@ describe('family role assignment', () => {
     'font-mono',
     'md:font-serif',
     'font-[Georgia]',
+    'font-[family-name:var(--brand)]',
+    'font-(family-name:--brand)',
+    'font-(--brand)',
+    '[font-family:Georgia]',
   ])('catches the face literal %s', (literal) => {
     expect(
       `className={'${literal} text-body'}`.match(faceLiteral),
@@ -104,9 +128,11 @@ describe('family role assignment', () => {
     'font-primary',
     'font-secondary',
     'font-heading',
+    'font-body',
     'font-control',
     'font-medium',
-  ])('leaves the role utility %s alone', (role) => {
+    'font-[600]',
+  ])('leaves the role or weight utility %s alone', (role) => {
     expect(`className={'${role} text-body'}`.match(faceLiteral)).toBeNull();
   });
 

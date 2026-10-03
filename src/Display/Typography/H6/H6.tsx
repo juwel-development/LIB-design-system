@@ -31,7 +31,8 @@ interface IH6Props extends VariantProps<typeof h6> {
  *
  * @Guarantees — enforced on every render
  * - Renders an `h6`; its outline level and the body role are one choice, not two (docs/adr/0005).
- * - Reads `--font-heading`, the heading family that follows `--font-primary` until a theme re-points it (#120), sized by `--text-body`, medium so it stands apart from a paragraph.
+ * - Reads `--font-heading`, the heading family that follows `--font-primary` until a theme
+ *   re-points it (#120), sized by `--text-body`, medium so it stands apart from a paragraph.
  * - `color` selects `foreground`, `muted`, `success`, `warning`, `error` or `info`; nothing else
  *   paints text. A status tone changes colour only and adds no announcement semantics.
  *

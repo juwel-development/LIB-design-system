@@ -31,7 +31,8 @@ interface IH3Props extends VariantProps<typeof h3> {
  *
  * @Guarantees — enforced on every render
  * - Renders an `h3`; its outline level and the subtitle role are one choice, not two (docs/adr/0005).
- * - Reads `--font-heading`, the heading family that follows `--font-primary` until a theme re-points it (#120), sized by `--text-subtitle` and led by `--leading-subtitle`.
+ * - Reads `--font-heading`, the heading family that follows `--font-primary` until a theme
+ *   re-points it (#120), sized by `--text-subtitle` and led by `--leading-subtitle`.
  * - `color` selects `foreground`, `muted`, `success`, `warning`, `error` or `info`; nothing else
  *   paints text. A status tone changes colour only and adds no announcement semantics.
  *

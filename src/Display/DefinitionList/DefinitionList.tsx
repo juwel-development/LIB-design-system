@@ -15,12 +15,14 @@ const item = cva(
 );
 
 // The term at the subtitle role - a step below title (docs/adr/0005 fixes the role, no size prop), so
-// terms never tie with the heading introducing the list. Foreground, and no measure cap.
-const term = cva('font-primary text-subtitle leading-subtitle text-foreground');
+// terms never tie with the heading introducing the list. Foreground, and no measure cap. The term
+// is sized like a heading and is not one: with its description it is the reading matter, so both
+// take the body face, never the heading face (docs/adr/0004, #120).
+const term = cva('font-body text-subtitle leading-subtitle text-foreground');
 
 // The description at the body role, muted, capped at the reading measure in both layout modes.
 const description = cva(
-  'font-primary text-body leading-body text-muted max-w-[var(--measure)]',
+  'font-body text-body leading-body text-muted max-w-[var(--measure)]',
 );
 
 interface IDefinitionListRootProps {

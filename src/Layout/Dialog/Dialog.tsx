@@ -375,7 +375,7 @@ const DialogDescription: FunctionComponent<IDialogDescriptionProps> = ({
     >
       <p
         id={descriptionId}
-        className={'font-primary text-body leading-body text-foreground'}
+        className={'font-body text-body leading-body text-foreground'}
       >
         {children}
       </p>
