@@ -10,7 +10,15 @@ import { Box } from './Box';
 const meta: Meta<typeof Box> = {
   title: 'Display/Box',
   component: Box,
-  parameters: { layout: 'padded' },
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "`Box` is a bounded content group: a semantic surface, a hairline border and an inner inset,\nwith square corners and no shadow. The consumer owns the content, any heading and the\ninternal arrangement - a `Stack` inside the `Box` arranges and sets the gaps; the `Box` only\nencloses.\n\n```tsx\nimport { Box, DefinitionList, H3, Stack } from '@juwel-development/design-system';\n\n<Box name={'Selected artist'}>\n  <Stack>\n    <H3>Selected artist</H3>\n    <DefinitionList.Root>\n      <DefinitionList.Item>\n        <DefinitionList.Term>Genre</DefinitionList.Term>\n        <DefinitionList.Description>Electronic</DefinitionList.Description>\n      </DefinitionList.Item>\n    </DefinitionList.Root>\n  </Stack>\n</Box>;\n```\n\nThe props are `children?: ReactNode`, `name?: string` and `testId?: string`, nothing else:\nno size, width, height or padding prop, no heading slot, no `className`.\n\n**Accessible naming.** With a non-empty `name`, the box is an accessible group carrying that\nname. Without one - omitted or an empty string - the box is an ordinary enclosure: no role, no\nlabel, no landmark. A name renders no visible heading: supply the heading yourself and keep the\ntwo in step. In neither case does the box add a focus stop or listen for a key, so controls\ninside keep their ordinary keyboard behaviour.\n\n**Width, height and wrapping.** The box fills the width its holder allocates, border and\npadding included, grows with its content and shrinks inside a narrow holder. Long prose and\nunbroken names wrap inside it: it sets `overflow-wrap: anywhere`, which descendants inherit\nunless they set their own wrapping. It sets no height and hides no overflow. Content with its\nown sizing or overflow contract - a table, a figure, a code block - keeps that responsibility;\nthe box wraps text and never scrolls or clips on its behalf. An empty box is an empty\nenclosure with no empty-state wording: omit it rather than expecting one.\n\n**Theming.** Surface, text and border read the existing `surface`, `foreground` and `border`\ncolour roles. `--space-box-inset` names the inset on all four sides, defaulting to `1em` so it\nfollows inherited type. It is a separate role from a Stack's gap, a region's air or a\nSection's band: re-pointing it moves the actual padding of every `Box` and nothing else,\nwith no prop and no component CSS override. It is declared in all three token stylesheets\nand accepts a nonnegative CSS length. The box borrows neither the control radius nor the\nfloating elevation.",
+      },
+    },
+    layout: 'padded',
+  },
   decorators: [
     (Story) => (
       <div

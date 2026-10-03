@@ -44,7 +44,9 @@ scripts/
 ```
 
 - **A component owns a directory.** Implementation, tests, and stories sit together, named after
-  the component. A component with no story is not finished.
+  the component. A component with no story is not finished. Component API, usage and behavior
+  documentation belongs in Storybook, not the README; the README covers package integration,
+  theming, development and releases.
 - **Categories are roles, not kinds.** `Interaction/` holds things a user acts on. Add a category
   when a second primitive genuinely shares a role — never a `components/` or `common/` bucket.
 - **`Theme/` is the foundation.** It imports nothing from the rest of `src`.

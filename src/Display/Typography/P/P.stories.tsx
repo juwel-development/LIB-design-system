@@ -5,6 +5,12 @@ const meta: Meta<typeof P> = {
   title: 'Display/Typography/P',
   component: P,
   parameters: {
+    docs: {
+      description: {
+        component:
+          "### Typography status tones\n\nTypography whose colour is selectable accepts the general `success`, `warning`, `error`, and\n`info` status tones alongside `foreground` and `muted`. This includes `H1`–`H6`, `Eyebrow`, `P`,\n`Note`, and `Prose.Body`; fixed-colour members such as `Prose.Lede` and `Prose.Tail` remain fixed.\n\n```tsx\n<P color={'warning'}>Warning: patience is low and the offer gap is wide.</P>\n```\n\nA status tone reinforces status that the content already communicates: never use colour as the\nonly cue. Selecting one changes only the semantic text colour and does not add an ARIA role, live\nregion, icon, or wording. The caller remains responsible for announcement behavior when a changing\nstatus needs it.\n\nAll four palette roles must remain at least 4.5:1 against `surface` in every theme because they can\npaint normal-size and small text. They remain general roles rather than typography-only tokens, so\nconstraints from other carriers also apply; `error`, for example, remains Meter's depletion\nendpoint and must keep that complete path at least 3:1 against `meterTrack`.",
+      },
+    },
     layout: 'centered',
   },
   tags: ['autodocs'],
