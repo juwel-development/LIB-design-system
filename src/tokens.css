@@ -216,6 +216,12 @@
   --space-collection-item: 1em;
 }
 
+/* DefinitionList item air sits in :root beside the collection role, one value per density (#123). */
+:root {
+  --space-definition-item: 1.5rem;
+  --space-definition-item-compact: 0.5rem;
+}
+
 /* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
 :root {
   --gutter: clamp(1.5rem, 5vw, 4rem);

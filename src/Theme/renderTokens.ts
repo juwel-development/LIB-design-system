@@ -169,6 +169,16 @@ const COLLECTION_SPACING = `:root {
   --space-collection-item: 1em;
 }`;
 
+/* DefinitionList item air, one role per density (#123): comfortable keeps the value py-6 resolved to,
+   compact matches a Table cell's py-2 so a compact fact row and a compact table row carry the same air.
+   In rem like Table's padding, not em like Collection's: the term and description set their own type
+   roles, so there is no inherited size for the item's air to follow. Two treatments named for a job the
+   way Table's density is (docs/adr/0008, Amendments), not a ladder a component picks a rung from. */
+const DEFINITION_SPACING = `:root {
+  --space-definition-item: 1.5rem;
+  --space-definition-item-compact: 0.5rem;
+}`;
+
 /* The gutter is the horizontal inset holding content off the viewport edge (#9), and the one spacing role
    measured against the screen rather than the type: it answers to how much room there is, not how large
    the words are, so it is in rem/vw and never em. A clamp() lets it grow with the viewport with no
@@ -345,6 +355,9 @@ ${SPACING}
 
 /* Collection's vertical item padding, measured against inherited type. */
 ${COLLECTION_SPACING}
+
+/* DefinitionList item air sits in :root beside the collection role, one value per density (#123). */
+${DEFINITION_SPACING}
 
 /* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
 ${GUTTER}

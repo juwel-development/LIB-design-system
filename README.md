@@ -297,6 +297,55 @@ padding. It is declared in all three token stylesheets and accepts a nonnegative
 length. Hairlines use the existing `--color-border` role. There are no density,
 padding or arrangement props; child components own their typography and wrapping.
 
+## DefinitionList
+
+`DefinitionList` is a typeset list of terms and their descriptions whose rules are the
+layout. `Root` renders the `dl`, `Item` the grouping `div`, `Term` a `dt` and
+`Description` a `dd`; the consumer composes the four and owns every word.
+
+```tsx
+import { DefinitionList } from '@juwel-development/design-system';
+
+<DefinitionList.Root density={'compact'}>
+  <DefinitionList.Item>
+    <DefinitionList.Term>Genre</DefinitionList.Term>
+    <DefinitionList.Description>Folk</DefinitionList.Description>
+  </DefinitionList.Item>
+  <DefinitionList.Item>
+    <DefinitionList.Term>Royalty</DefinitionList.Term>
+    <DefinitionList.Description>12 %</DefinitionList.Description>
+  </DefinitionList.Item>
+</DefinitionList.Root>;
+```
+
+`Root` takes `density?: 'comfortable' | 'compact'` beside `children` and `testId`; the other
+members take only `children` (and `testId` on `Item`). The resolved density is stated on the
+`dl` as `data-density`.
+
+- **`comfortable`** (the default) is unchanged: terms at the subtitle role, descriptions body and
+  muted, capped at `--measure`, and two columns with a fixed term track from a 64rem *viewport*
+  upward. It is the glossary treatment.
+- **`compact`** is the fact-list treatment for short labelled values in a panel or a content
+  Dialog. Terms take the label role in the secondary family, muted, as a Table labels a column;
+  descriptions take the small role, foreground, with tabular figures, still capped at `--measure`,
+  and wrap an unbroken value inside their column. Its two proportional (1:2) columns key on the
+  width of the list's own *container*: a single column with the term above its value below a 24rem
+  container, two baseline-aligned columns from there upward, whatever the viewport is doing.
+
+Density here changes typography, which Table's does not: Table's type is already at the small
+role, so its compact varies padding alone, while a comfortable term's subtitle role is itself the
+room compact removes. Choose by what the list holds, never by how much air a page wants.
+
+A compact list sizes from its holder, so give it one with a definite inline size: a block, a grid
+track, a Dialog's content region. In a shrink-to-fit frame that sizes from its content, an
+inline-size container contributes no width of its own.
+
+`--space-definition-item` (`1.5rem`) and `--space-definition-item-compact` (`0.5rem`) name the
+vertical padding inside an item at each density, in rem like Table's cell padding. Both are
+declared in all three token stylesheets and accept a nonnegative CSS length; re-pointing one moves
+only that treatment. Hairlines use the existing `--color-border` role, column gaps the existing
+`--space-stack` and `--space-region` roles. There is no size, measure or column prop.
+
 ## Theming
 
 Colour is addressed by **role**, never by shade - `bg-primary`, `text-muted`,

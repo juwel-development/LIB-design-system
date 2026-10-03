@@ -277,6 +277,25 @@ share remaining space. Those runtime values represent a user's choice rather tha
 This decision preserves that extension direction; #115 does not ship resize handles, persistence or
 a speculative numeric-width override API.
 
+**DefinitionList compact density ([#123](https://github.com/juwel-development/LIB-design-system/issues/123)).**
+The maintainer's specification accepted a per-list `comfortable` (default) and `compact` density on
+DefinitionList, for compact facts inside a one-third summary panel and a content Dialog. It is the
+second narrow exception beside Table's and is argued on its own evidence, not inherited from it: the
+consumer's reference found the comfortable term's subtitle role reading as a section heading beside a
+one-word value, so here density *does* re-seat the type roles - a compact term takes the label role in
+the secondary family, as Table's header cells do, and a compact description the small role with tabular
+figures, as Table's value cells do. Both are roles the library already names; no size prop, no new type
+role and no rung is introduced. Item air comes from two tokens named for the treatments,
+`--space-definition-item` and `--space-definition-item-compact`, the way Table's density is supplied.
+
+Compact also changes what the column switch answers to. Comfortable keys its fixed term track on a
+64rem viewport and is left exactly as it was; compact makes the list an inline-size container and
+switches its proportional 1:2 columns on that container at 24rem. Under the structural test both
+alternatives are right - a glossary on a page reads from the viewport, facts in a panel from the panel -
+and the breakpoint stays an implementation detail outside the vocabulary, as `Stack`'s does. This
+decision authorizes nothing beyond DefinitionList: it does not open a density on any other component,
+and it does not reopen the Figure or Brandmark width APIs.
+
 **Two claims about [#83](https://github.com/juwel-development/LIB-design-system/issues/83) were wrong
 and are corrected above.** Both assumed `Section` was missing a `bleed` value that keeps content inset
 while the band bleeds. It is not: `Section` paints no background, takes no `max-width` and draws no

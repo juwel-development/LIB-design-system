@@ -282,6 +282,23 @@ describe('renderTokens spacing contract', () => {
     }
   });
 
+  it('declares the DefinitionList item air for both densities in every stylesheet, in rem like Table cell padding (#123)', () => {
+    // Comfortable keeps the value py-6 resolved to; compact matches a Table cell's py-2, so a compact
+    // fact row and a compact table row carry the same air. Two treatments named for a job, not a ladder.
+    for (const css of [
+      renderTokens(),
+      renderLightTokens(),
+      renderDarkTokens(),
+    ]) {
+      expect(css).toMatch(
+        /:root\s*\{[^}]*--space-definition-item:\s*1\.5rem;[^}]*--space-definition-item-compact:\s*0\.5rem;/,
+      );
+      for (const block of css.matchAll(/@theme(?: inline)?\s*\{([^}]*)\}/g)) {
+        expect(block[1]).not.toContain('--space-definition-item');
+      }
+    }
+  });
+
   it('emits the three spacing roles into :root, expressed in em so they track the type ramp', () => {
     const css = renderTokens();
     expect(css).toMatch(/--space-stack:\s*[0-9.]+em;/);

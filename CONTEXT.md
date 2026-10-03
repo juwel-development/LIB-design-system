@@ -235,6 +235,17 @@ The amount of space around cell content, chosen per table as comfortable or comp
 It does not change the typography or the dimensions of controls within cells.
 _Avoid_: Font size, control size
 
+**DefinitionList density**:
+How much room a DefinitionList gives each item, chosen per list as comfortable or compact. Named for
+the job each serves: comfortable is the glossary, terms at the subtitle role and descriptions in a
+reading line; compact is the fact list, short values beside their labels in a panel or a content
+Dialog. Unlike Table density it re-seats the type roles - a compact term takes the label role and a
+compact description the small role - because the comfortable term's subtitle role is itself the room
+compact removes. A compact list also keys its two proportional columns on the width of its own
+container rather than the viewport, so a one-third panel on a wide screen gets the arrangement its
+width allows. Two treatments, not a scale: nothing in between is offered.
+_Avoid_: Fact list, key-value list, small DefinitionList, size
+
 **Table row selection**:
 The consumer-owned state identifying a chosen table row, communicated independently of keyboard
 focus and whether the row can be activated. Selection may remain while its row is unavailable for
