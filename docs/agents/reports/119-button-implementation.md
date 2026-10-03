@@ -1,5 +1,10 @@
 # Button game action variants and wrapping - implementation evidence (#119)
 
+> **Superseded in part by [119-review.md](./119-review.md) (2026-10-03).** This report was written
+> before the maintainer's approved Agent Brief reached the issue, and the contract it records -
+> `outline`, an outlined-then-filled `destructive`, an `inline` prop, a hard width floor - was
+> corrected to the brief during review. It stays as the record of the first pass and its evidence.
+
 Date: 2026-10-03. Implemented by an Orca worker (Claude) on branch `feature/ticket-119`, cut from
 local `main` at `3739997` (package 3.9.1). Nothing was pushed, merged, published or versioned; review
 and release stay with the coordinator and a human publisher. Implementation and publication are
