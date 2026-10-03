@@ -86,8 +86,11 @@ An earlier pass on a shared port produced identical figures. Figures are from th
 ## Compatibility
 
 Additive minor change: both props optional, no token removed or renamed, no required prop changed,
-no breaking marker. Static tables render byte-for-byte the same markup and the same geometry (the
-`:has()` rules match nothing there). `Observable`/`Subject` are the existing `rxjs` peer.
+no breaking marker. Static tables render the same attributes, geometry and paint as before; only the
+`class` strings of the wrapper and of each `tr` gain utilities that are gated on `:has([aria-selected])`,
+`:has(tr[tabindex])` or `[aria-selected=true]` and so match nothing there (corrected in the #113
+review: an earlier wording claimed byte-identical markup). `Observable`/`Subject` are the existing
+`rxjs` peer.
 
 ## Limitations
 

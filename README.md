@@ -333,8 +333,16 @@ scroll region; a table with neither keeps its static geometry exactly.
 
 Table holds no row identity, selection registry or policy. Tie each row's streams to its own stable
 identity so a reordered or temporarily removed row finds the same streams again; removing a row
-never asks the consumer to clear or replace its selection. An interactive row announces no verb of
-its own, so word the caption, a row header or a nested link to make the row's purpose plain.
+never asks the consumer to clear or replace its selection. Make each `isSelected$` once per row, not
+inline per render: a source created in render is a replacement every time, and a replaced source
+reads unselected until it emits. An interactive row announces no verb of its own, so word the
+caption, a row header or a nested link to make the row's purpose plain.
+
+The row stays a `tr` in a `table`: no grid semantics, no arrow-key navigation. WAI-ARIA lists
+`aria-selected` as a state of `row`, and the attribute is valid here, but ARIA describes it as
+relevant inside a `grid` or `treegrid`, so assistive technology may not announce it on a plain table
+row. The marker bar is therefore the one guaranteed selection cue; a consumer that needs the
+selection spoken words it in the row's content or in a live region of its own.
 
 `--table-selection-marker-thickness` names the marker bar's weight, defaulting to `2px`, declared
 in all three token stylesheets. It must stay above zero: it is the one persistent selection cue.

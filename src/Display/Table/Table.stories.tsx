@@ -1,7 +1,12 @@
 import { Button } from 'Interaction/Button/Button';
 import { Link } from 'Interaction/Link/Link';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { type FunctionComponent, useEffect, useState } from 'react';
+import {
+  type ComponentProps,
+  type FunctionComponent,
+  useEffect,
+  useState,
+} from 'react';
 import { BehaviorSubject, map, type Observable, Subject } from 'rxjs';
 import { Table } from './Table';
 
@@ -221,7 +226,11 @@ const rowsFor = (
     isSelected$: selected$.pipe(map((id) => id === artist.id)),
   }));
 
-type ArtistRosterProps = {
+// The story's args are the Root's own `caption` and `notes`, so the docs controls drive the table.
+type ArtistRosterProps = Pick<
+  ComponentProps<typeof Table.Root>,
+  'caption' | 'notes'
+> & {
   artists?: readonly Artist[];
   /** The consumer's starting selection; `undefined` starts without one. */
   initial?: string;
@@ -233,18 +242,17 @@ type ArtistRosterProps = {
   rearrangeable?: boolean;
   /** A control that takes activation away and gives it back while the selection stays. */
   availabilityToggle?: boolean;
-  /** No note column, so the table is the scrollable region - the case where ring room matters. */
-  scrollRegion?: boolean;
 };
 
 const ArtistRoster: FunctionComponent<ArtistRosterProps> = ({
+  caption,
+  notes,
   artists = ARTISTS,
   initial,
   interactive = true,
   nestedControls = false,
   rearrangeable = false,
   availabilityToggle = false,
-  scrollRegion = false,
 }) => {
   const [selected$] = useState(
     () => new BehaviorSubject<string | undefined>(initial),
@@ -324,10 +332,7 @@ const ArtistRoster: FunctionComponent<ArtistRosterProps> = ({
           )}
         </div>
       )}
-      <Table.Root
-        caption={'Artists on the roster'}
-        notes={scrollRegion ? undefined : 'supplementary'}
-      >
+      <Table.Root caption={caption} notes={notes}>
         <Table.Head>
           <Table.Row>
             <Table.HeaderCell scope={'col'}>Artist</Table.HeaderCell>
@@ -396,7 +401,7 @@ const ArtistRoster: FunctionComponent<ArtistRosterProps> = ({
  */
 export const InteractiveRows: Story = {
   args: { caption: 'Artists on the roster', notes: 'supplementary' },
-  render: () => <ArtistRoster />,
+  render: (args) => <ArtistRoster {...args} />,
 };
 
 /**
@@ -405,7 +410,9 @@ export const InteractiveRows: Story = {
  */
 export const SelectedWithoutActivation: Story = {
   args: { caption: 'Artists on the roster', notes: 'supplementary' },
-  render: () => <ArtistRoster initial={'kestrel'} interactive={false} />,
+  render: (args) => (
+    <ArtistRoster {...args} initial={'kestrel'} interactive={false} />
+  ),
 };
 
 /**
@@ -415,7 +422,7 @@ export const SelectedWithoutActivation: Story = {
  */
 export const IndependentNestedControls: Story = {
   args: { caption: 'Artists on the roster', notes: 'supplementary' },
-  render: () => <ArtistRoster initial={'nova'} nestedControls />,
+  render: (args) => <ArtistRoster {...args} initial={'nova'} nestedControls />,
 };
 
 /**
@@ -424,21 +431,19 @@ export const IndependentNestedControls: Story = {
  */
 export const ChangingActivationAvailability: Story = {
   args: { caption: 'Artists on the roster', notes: 'supplementary' },
-  render: () => <ArtistRoster initial={'oyelaran'} availabilityToggle />,
+  render: (args) => (
+    <ArtistRoster {...args} initial={'oyelaran'} availabilityToggle />
+  ),
 };
 
 /**
  * Long names and notes wrap inside interactive, selected rows; the marker spans the grown row. With
- * no note column the table is the scrollable region, and a focused row's ring stays unclipped.
+ * `notes` unset the table is the scrollable region, and a focused row's ring stays unclipped.
  */
 export const LongLabels: Story = {
   args: { caption: 'Artists on the roster' },
-  render: () => (
-    <ArtistRoster
-      artists={LONG_NAME_ARTISTS}
-      initial={'orchestra'}
-      scrollRegion
-    />
+  render: (args) => (
+    <ArtistRoster {...args} artists={LONG_NAME_ARTISTS} initial={'orchestra'} />
   ),
 };
 
@@ -449,5 +454,7 @@ export const LongLabels: Story = {
  */
 export const StableIdentities: Story = {
   args: { caption: 'Artists on the roster', notes: 'supplementary' },
-  render: () => <ArtistRoster initial={'kestrel'} rearrangeable />,
+  render: (args) => (
+    <ArtistRoster {...args} initial={'kestrel'} rearrangeable />
+  ),
 };

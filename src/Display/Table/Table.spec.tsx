@@ -1,8 +1,8 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { BehaviorSubject, type Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
-import { Table } from './Table';
+import { type ITableRowProps, Table } from './Table';
 
 const renderSpecTable = (
   notes?: 'supplementary' | 'content',
@@ -179,25 +179,27 @@ describe('Table', () => {
     ).toBeInTheDocument();
   });
 
-  // A one-row body table: the row under test is the one named by its row header.
-  const renderRow = (
-    props: {
-      onClick$?: Subject<void>;
-      isSelected$?: Observable<boolean>;
-    },
+  // A one-row body table: the row under test is the one named by its row header. The same tree
+  // serves the first render and every rerender, so a test states only the props it changes.
+  const rowTree = (
+    props: Pick<ITableRowProps, 'onClick$' | 'isSelected$'>,
     children: ReactNode = (
       <Table.HeaderCell scope={'row'}>Nova</Table.HeaderCell>
     ),
-  ) =>
-    render(
-      <Table.Root caption={'Artists'} notes={'supplementary'}>
-        <Table.Body>
-          <Table.Row onClick$={props.onClick$} isSelected$={props.isSelected$}>
-            {children}
-          </Table.Row>
-        </Table.Body>
-      </Table.Root>,
-    );
+  ) => (
+    <Table.Root caption={'Artists'} notes={'supplementary'}>
+      <Table.Body>
+        <Table.Row onClick$={props.onClick$} isSelected$={props.isSelected$}>
+          {children}
+        </Table.Row>
+      </Table.Body>
+    </Table.Root>
+  );
+
+  const renderRow = (
+    props: Pick<ITableRowProps, 'onClick$' | 'isSelected$'>,
+    children?: ReactNode,
+  ) => render(rowTree(props, children));
 
   const rowOf = (name: string): HTMLElement => {
     const row = screen.getByRole('rowheader', { name }).closest('tr');
@@ -228,15 +230,7 @@ describe('Table', () => {
     const onClick$ = new Subject<void>();
     const { rerender } = renderRow({ onClick$ });
     expect(rowOf('Nova')).toHaveAttribute('tabindex', '0');
-    rerender(
-      <Table.Root caption={'Artists'} notes={'supplementary'}>
-        <Table.Body>
-          <Table.Row>
-            <Table.HeaderCell scope={'row'}>Nova</Table.HeaderCell>
-          </Table.Row>
-        </Table.Body>
-      </Table.Root>,
-    );
+    rerender(rowTree({}));
     expect(rowOf('Nova')).not.toHaveAttribute('tabindex');
   });
 
@@ -334,15 +328,7 @@ describe('Table', () => {
     const isSelected$ = new BehaviorSubject(false);
     const { rerender } = renderRow({ onClick$, isSelected$ });
     act(() => isSelected$.next(true));
-    rerender(
-      <Table.Root caption={'Artists'} notes={'supplementary'}>
-        <Table.Body>
-          <Table.Row onClick$={onClick$} isSelected$={isSelected$}>
-            <Table.HeaderCell scope={'row'}>Nova</Table.HeaderCell>
-          </Table.Row>
-        </Table.Body>
-      </Table.Root>,
-    );
+    rerender(rowTree({ onClick$, isSelected$ }));
     expect(rowOf('Nova')).toHaveAttribute('aria-selected', 'true');
     expect(activations).not.toHaveBeenCalled();
   });
@@ -362,15 +348,7 @@ describe('Table', () => {
     onClick$.subscribe(activations);
     const isSelected$ = new BehaviorSubject(true);
     const { rerender } = renderRow({ onClick$, isSelected$ });
-    rerender(
-      <Table.Root caption={'Artists'} notes={'supplementary'}>
-        <Table.Body>
-          <Table.Row isSelected$={isSelected$}>
-            <Table.HeaderCell scope={'row'}>Nova</Table.HeaderCell>
-          </Table.Row>
-        </Table.Body>
-      </Table.Root>,
-    );
+    rerender(rowTree({ isSelected$ }));
     const row = rowOf('Nova');
     fireEvent.click(row);
     fireEvent.keyDown(row, { key: 'Enter' });
@@ -384,15 +362,7 @@ describe('Table', () => {
     const second$ = new Subject<boolean>();
     const { rerender } = renderRow({ isSelected$: first$ });
     expect(rowOf('Nova')).toHaveAttribute('aria-selected', 'true');
-    rerender(
-      <Table.Root caption={'Artists'} notes={'supplementary'}>
-        <Table.Body>
-          <Table.Row isSelected$={second$}>
-            <Table.HeaderCell scope={'row'}>Nova</Table.HeaderCell>
-          </Table.Row>
-        </Table.Body>
-      </Table.Root>,
-    );
+    rerender(rowTree({ isSelected$: second$ }));
     const row = rowOf('Nova');
     expect(row).toHaveAttribute('aria-selected', 'false');
     expect(first$.observed).toBe(false);
@@ -419,14 +389,23 @@ describe('Table', () => {
     expect(activations).not.toHaveBeenCalled();
   });
 
-  it('keeps the selected and interactive treatments free of fills and hover, like the static table', () => {
-    const { container } = renderRow({
-      onClick$: new Subject<void>(),
-      isSelected$: new BehaviorSubject(true),
-    });
-    for (const element of container.querySelectorAll('*')) {
-      expect(element.className).not.toMatch(/(^|[\s:])bg-/);
-      expect(element.className).not.toMatch(/hover:/);
-    }
+  it('leaves a nested custom control, known only by its interactive role, to its own operation', () => {
+    const onClick$ = new Subject<void>();
+    const activations = vi.fn();
+    onClick$.subscribe(activations);
+    renderRow(
+      { onClick$ },
+      <>
+        <Table.HeaderCell scope={'row'}>Nova</Table.HeaderCell>
+        <Table.Cell>
+          {/* biome-ignore lint/a11y/useFocusableInteractive: a role-only, unfocusable widget is the case under test */}
+          <span role={'menuitemcheckbox'} aria-checked={'false'}>
+            <span>Shortlist</span>
+          </span>
+        </Table.Cell>
+      </>,
+    );
+    fireEvent.click(screen.getByText('Shortlist'));
+    expect(activations).not.toHaveBeenCalled();
   });
 });

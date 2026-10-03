@@ -234,11 +234,10 @@ const TAB_MARKER = `:root {
   --tab-marker-thickness: 2px;
 }`;
 
-/* Not a colour: like the tab marker it lives in :root only, so a brand re-points the bar's weight
-   without Table gaining a prop. It names the persistent mark along the leading edge of a selected
-   row (#113), drawn in `foreground` - the cue that survives without colour perception, kept apart
-   from the focus ring. Not the tab marker's token: that names a line under a tab, a different
-   position (docs/adr/0008). Constraint: > 0 - zero erases the one persistent selection cue. */
+/* Not a colour: like the tab marker it lives in :root only, so a brand re-points the weight of the
+   mark along a selected row's leading edge (#113) without Table gaining a prop. Not the tab marker's
+   token: that is a line under a tab, a different position (docs/adr/0008). Constraint: > 0 - zero
+   erases the one persistent selection cue. */
 const TABLE_SELECTION_MARKER = `:root {
   --table-selection-marker-thickness: 2px;
 }`;

@@ -47,13 +47,10 @@ const table = cva(
   ].join(' '),
 );
 
-// One hairline above every row, in `border`. Root promotes the first row's colour to `rule`; the last
-// row takes no bottom rule, so the block stays open at the foot - the difference from a closed list.
-// Selection is a marker bar along the row's leading edge, drawn in `foreground` on the first cell's
-// pseudo-element inside the inset Root reserves, and keyed on aria-selected so the attribute the
-// device reads is the one the paint follows (the Tabs/Choices treatment). No fill, no hover: the
-// static guarantee holds for a selected row too. The interactive row's ring is the shared one
-// (docs/adr/0002), outside the row at the token offset so it never covers the marker; Root makes room.
+// One hairline above every row, in `border`; Root promotes the first to `rule` and the last row takes
+// no bottom rule, so the block stays open at the foot. Selection is a `foreground` marker bar on the
+// first cell's pseudo-element, keyed on aria-selected as in Tabs; no fill, no hover. The ring is the
+// shared one (docs/adr/0002), outside the row at the token offset so it never covers the marker.
 const tableRow = cva(
   [
     'border-t border-solid border-border',
@@ -90,15 +87,23 @@ const NESTED_CONTROL_SELECTOR = [
   '[role="radio"]',
   '[role="switch"]',
   '[role="menuitem"]',
+  '[role="menuitemcheckbox"]',
+  '[role="menuitemradio"]',
   '[role="tab"]',
   '[role="option"]',
+  '[role="treeitem"]',
+  '[role="combobox"]',
+  '[role="textbox"]',
+  '[role="searchbox"]',
+  '[role="slider"]',
+  '[role="spinbutton"]',
 ].join(', ');
 
 const isFromNestedControl = (
   row: HTMLTableRowElement,
-  target: EventTarget | null,
+  target: EventTarget,
 ): boolean => {
-  if (!(target instanceof Element) || target === row) {
+  if (!(target instanceof Element)) {
     return false;
   }
   const control = target.closest(NESTED_CONTROL_SELECTOR);
@@ -131,7 +136,7 @@ const tableHeaderCell = cva(
   },
 );
 
-interface ITableRootProps {
+export interface ITableRootProps {
   /** The table's accessible name. Rendered as the first child; always present. */
   caption: string;
   /** What the note column is. Governs narrow-viewport behaviour; omit when there is none. */
@@ -140,11 +145,11 @@ interface ITableRootProps {
   testId?: string;
 }
 
-interface ITableSectionProps {
+export interface ITableSectionProps {
   children?: ReactNode;
 }
 
-interface ITableRowProps {
+export interface ITableRowProps {
   children?: ReactNode;
   testId?: string;
   /** Emits once per activation of the row body - a click, or Enter or Space while the row has
@@ -158,11 +163,12 @@ interface ITableRowProps {
   isSelected$?: Observable<boolean>;
 }
 
-interface ITableCellProps extends VariantProps<typeof tableCell> {
+export interface ITableCellProps extends VariantProps<typeof tableCell> {
   children?: ReactNode;
 }
 
-interface ITableHeaderCellProps extends VariantProps<typeof tableHeaderCell> {
+export interface ITableHeaderCellProps
+  extends VariantProps<typeof tableHeaderCell> {
   /** Explicit, never inferred from Head/Body position - inference would need render-time context. */
   scope: 'row' | 'col';
   children?: ReactNode;
