@@ -6,6 +6,7 @@ import { Button } from 'Interaction/Button/Button';
 import { Link } from 'Interaction/Link/Link';
 import { Section } from 'Layout/Section/Section';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, userEvent, within } from 'storybook/test';
 import { Header } from './Header';
 
 const meta: Meta<typeof Header> = {
@@ -13,6 +14,37 @@ const meta: Meta<typeof Header> = {
   component: Header,
   parameters: {
     layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
+The shell's top edge, in one of two mutually exclusive modes. The props type is a union of the two
+shapes, so a call that mixes them does not compile.
+
+**Navigation bar** — the default, and what every existing caller renders unchanged: \`standing\` (the
+consumer's own anchor), the nav links as \`children\`, \`navName\` once a page has a second nav. The
+links sit inside a single \`<nav>\`; a readout or a button never goes there, because the nav is a
+navigation landmark and announces its contents as navigation.
+
+**Status/action bar** — for a product whose shell reports and acts rather than navigates, the Label
+Manager's Top bar among them (#125): \`status\` at the start edge, first in reading order; \`action\`
+at the end edge, last in reading and keyboard order. Neither slot is a landmark: each is a plain
+\`div\` with no role, no name and no live region, and no \`<nav>\` renders at all. There is no standing
+link in this bar; a date or a mark that must show belongs in \`status\`. An omitted or withheld slot
+(\`{ready && <Button/>}\`) renders no box and reserves no space.
+
+**Layout** — the two slots share one line while both fit, the control flush with the end content edge.
+Below that width the control drops below the readout and keeps its edge; the readout then takes the
+whole line and wraps inside it, unbroken wording included, so the bar never widens the page. Gaps are
+\`--space-region\` along a line and \`--space-stack\` between lines; the inset is \`--gutter\`. The break
+is CSS alone, so a width change keeps descendant state and focus.
+
+**The consumer owns** the wording and type role of what fills a slot (a bare string reads at the
+label role; a \`P\`, a \`Note\` or a \`Button\` wears its own), whether a changing readout is announced
+(wrap your own live region inside \`status\`), and whether the control is available (pass it disabled,
+or withhold it). Header adds no live region, no announcement and no game behaviour.
+`,
+      },
+    },
   },
   tags: ['autodocs'],
   argTypes: {
@@ -21,11 +53,56 @@ const meta: Meta<typeof Header> = {
       options: ['none', 'rule'],
       description: 'Whether the shell draws a bottom hairline',
     },
+    standing: {
+      control: false,
+      description:
+        'Navigation bar: the standing link, supplied whole by the consumer',
+    },
+    children: {
+      control: false,
+      description: 'Navigation bar: the nav links, inside the single `<nav>`',
+    },
+    navName: {
+      control: false,
+      description:
+        'Navigation bar: names the nav once a page has more than one',
+    },
+    status: {
+      control: false,
+      description:
+        'Status/action bar: the readout at the start edge, in a plain box',
+    },
+    action: {
+      control: false,
+      description:
+        'Status/action bar: the control at the end edge, in a plain box',
+    },
   },
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+// Geometry read the way a viewer sees it. The content edges are the header's box minus its inset, so
+// "flush with the content edge" is a number a play function can hold to half a pixel.
+const contentEdges = (header: HTMLElement) => {
+  const box = header.getBoundingClientRect();
+  const style = getComputedStyle(header);
+  return {
+    start: box.left + Number.parseFloat(style.paddingLeft),
+    end: box.right - Number.parseFloat(style.paddingRight),
+  };
+};
+
+const shareALine = (first: Element, second: Element): boolean => {
+  const a = first.getBoundingClientRect();
+  const b = second.getBoundingClientRect();
+  return a.top < b.bottom && b.top < a.bottom;
+};
+
+const overflowsNothing = (header: HTMLElement): boolean =>
+  header.scrollWidth <= header.clientWidth &&
+  document.documentElement.scrollWidth <= document.documentElement.clientWidth;
 
 const standing = (
   <Link treatment={'quiet'} href={'/'}>
@@ -48,9 +125,30 @@ const nav = (
 );
 
 /** A place-name standing link and three quiet nav links, one of them current. The current item sits at
- *  the foreground colour every other item only reaches on hover - Header applies it from `aria-current`. */
+ *  the foreground colour every other item only reaches on hover - Header applies it from `aria-current`.
+ *  The play function pins the arrangement #125 left alone: two children, the nav flush with the end
+ *  content edge, on one line that never wraps as a whole. */
 export const Default: Story = {
   render: () => <Header standing={standing}>{nav}</Header>,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole('banner');
+    const navigation = canvas.getByRole('navigation');
+    await expect(header.children).toHaveLength(2);
+    await expect(header.lastElementChild).toBe(navigation);
+    await expect(getComputedStyle(header).flexWrap).toBe('nowrap');
+    await expect(
+      Math.abs(
+        navigation.getBoundingClientRect().right - contentEdges(header).end,
+      ),
+    ).toBeLessThanOrEqual(0.5);
+    await expect(
+      shareALine(
+        canvas.getByRole('link', { name: 'JuweL Development' }),
+        navigation,
+      ),
+    ).toBe(true);
+  },
 };
 
 /** `edge="none"` drops the bottom rule - the direction whose rules are worked below the fold. */
@@ -193,14 +291,15 @@ export const AboveSections: Story = {
   ),
 };
 
-const date = (
+// The consumer's context group: date and Balance, composed by the caller in a Cluster. The matter wears
+// its own type roles; the slot around it adds none.
+const readout = (
   <Cluster gap={'stack'}>
     <P>Monday, 3 October 2026</P>
     <Note color={'muted'}>09:00</Note>
+    <P testId={'balance'}>{'Balance: $1,250,000'}</P>
   </Cluster>
 );
-
-const balance = <P testId={'balance'}>{'Balance: $1,250,000'}</P>;
 
 const continueAction = (
   <Button variant={'primary'} testId={'continue'}>
@@ -208,67 +307,100 @@ const continueAction = (
   </Button>
 );
 
-/** A bar that reports and does not navigate: a date in the standing slot, a Balance in `status` beside
- *  it, and no `children`, so no `<nav>` renders at all. The status slot is a plain box - no landmark, no
- *  live region - and the matter inside it wears its own type roles. */
+const slotOf = (element: HTMLElement): HTMLElement => {
+  const slot = element.closest('header > div');
+  if (!(slot instanceof HTMLElement)) {
+    throw new Error('The matter is not inside a Header slot');
+  }
+  return slot;
+};
+
+/** A bar that only reports: the date and Balance in `status`, nothing else. No `<nav>` renders, the
+ *  readout starts at the start content edge with no standing slot reserved before it, and the slot
+ *  around it is a plain box - no landmark, no live region. */
 export const StatusOnly: Story = {
-  render: () => <Header standing={date} status={balance} />,
+  render: () => <Header status={readout} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole('banner');
+    await expect(canvas.queryByRole('navigation')).toBeNull();
+    await expect(header.children).toHaveLength(1);
+    const slot = slotOf(canvas.getByTestId('balance'));
+    await expect(
+      Math.abs(slot.getBoundingClientRect().left - contentEdges(header).start),
+    ).toBeLessThanOrEqual(0.5);
+    await expect(slot).not.toHaveAttribute('role');
+    await expect(slot).not.toHaveAttribute('aria-live');
+  },
 };
 
-/** A lone action: nothing between the standing slot and the far edge, where the action's own auto
- *  margin puts it. Not inside a nav - a button is not navigation - and with no `children` there is no
- *  nav to be inside. */
+/** A lone action: the control alone at the end content edge, with no empty status box before it and
+ *  no nav around it - a button is not navigation. The first Tab lands on it and shows its own focus ring. */
 export const ActionOnly: Story = {
-  render: () => <Header standing={date} action={continueAction} />,
+  render: () => <Header action={continueAction} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole('banner');
+    const action = canvas.getByRole('button', { name: 'Continue' });
+    await expect(canvas.queryByRole('navigation')).toBeNull();
+    await expect(header.children).toHaveLength(1);
+    await expect(
+      Math.abs(action.getBoundingClientRect().right - contentEdges(header).end),
+    ).toBeLessThanOrEqual(0.5);
+    await userEvent.tab();
+    await expect(action).toHaveFocus();
+    await expect(getComputedStyle(action).outlineStyle).toBe('solid');
+  },
 };
 
-/** The consumer's Top bar (#125): status on the left beside the standing date, Continue at the far right,
- *  no navigation landmark anywhere. Reading and keyboard order run left to right - date, Balance, Continue -
- *  and the Continue button keeps its own focus ring; tab into the story to see it. */
+/** The Label Manager's Top bar (#125): date and Balance at the start edge, Continue at the end edge,
+ *  one line, no navigation landmark anywhere. Reading and keyboard order run readout, then control. */
 export const StatusAndAction: Story = {
-  render: () => (
-    <Header standing={date} status={balance} action={continueAction} />
-  ),
+  render: () => <Header status={readout} action={continueAction} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole('banner');
+    const status = slotOf(canvas.getByTestId('balance'));
+    const action = canvas.getByRole('button', { name: 'Continue' });
+    const edges = contentEdges(header);
+    await expect(canvas.queryByRole('navigation')).toBeNull();
+    await expect(header.children).toHaveLength(2);
+    await expect(header.firstElementChild).toBe(status);
+    await expect(
+      Math.abs(status.getBoundingClientRect().left - edges.start),
+    ).toBeLessThanOrEqual(0.5);
+    await expect(
+      Math.abs(action.getBoundingClientRect().right - edges.end),
+    ).toBeLessThanOrEqual(0.5);
+    await expect(shareALine(status, action)).toBe(true);
+    await userEvent.tab();
+    await expect(action).toHaveFocus();
+  },
 };
 
-/** All four slots at once, for a page that both navigates and acts. The status slot stays beside the
- *  standing one, the nav sits with the matter before it, and the action alone takes the far edge - one
- *  auto margin, because two on a line would float the nav halfway across. Reading order is standing,
- *  status, nav, action. */
-export const WithNav: Story = {
-  render: () => (
-    <Header
-      navName={'Primary'}
-      standing={standing}
-      status={<P>{'Signed in as Alex'}</P>}
-      action={<Button variant={'secondary'}>Sign out</Button>}
-    >
-      {nav}
-    </Header>
-  ),
-};
+const longReadout = (
+  <Cluster gap={'stack'}>
+    <P>Montag, 3. Oktober 2026</P>
+    <Note color={'muted'}>09:00 Uhr</Note>
+    <P>{'Kontostand: 1.250.000 $'}</P>
+    <Note>{'Eine Antwort wird erwartet, bevor die Woche weitergeht'}</Note>
+    <Note testId={'reference'}>
+      {
+        'Vorgang 3f9c1b7e2d8a4c6f0b5e9d1a7c3f2b8e4d6a0c9f1e7b3d5a2c8f4e6b0d9a1c7e3f9c1b7e2d8a4c6f0b5e9d1a7c3f2b8e4d6a'
+      }
+    </Note>
+  </Cluster>
+);
 
-/** Several readouts and a note in one status slot, composed by the caller in a `Cluster` - the library
- *  arranges nothing inside a slot. Long translated wording: the Cluster wraps inside its slot while
- *  room remains, and once the line is spent the bar breaks - whole slots drop in reading order - while
- *  the action keeps its edge and its label, which never wraps. */
+/** Long translated wording and one unbroken token in the readout, a long disabled label on the control.
+ *  The Cluster wraps inside its slot while room remains; once the line is spent the control drops below
+ *  the readout and keeps its end edge, and the readout takes the whole line - the unbroken token
+ *  breaking inside it rather than widening the page. Nothing clips and the page gains no horizontal
+ *  scroll, which the play function holds at the width the story is viewed at. */
 export const LongLabels: Story = {
   render: () => (
     <Header
-      standing={
-        <Cluster gap={'stack'}>
-          <P>Montag, 3. Oktober 2026</P>
-          <Note color={'muted'}>09:00 Uhr</Note>
-        </Cluster>
-      }
-      status={
-        <Cluster gap={'stack'}>
-          <P>{'Kontostand: 1.250.000 $'}</P>
-          <Note>
-            {'Eine Antwort wird erwartet, bevor die Woche weitergeht'}
-          </Note>
-        </Cluster>
-      }
+      status={longReadout}
       action={
         <Button variant={'primary'} disabled={true}>
           {'Weiter zur nächsten Woche'}
@@ -276,26 +408,68 @@ export const LongLabels: Story = {
       }
     />
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole('banner');
+    const status = slotOf(canvas.getByTestId('reference'));
+    const action = canvas.getByRole('button', {
+      name: 'Weiter zur nächsten Woche',
+    });
+    await expect(overflowsNothing(header)).toBe(true);
+    await expect(status.scrollWidth).toBeLessThanOrEqual(status.clientWidth);
+    await expect(
+      Math.abs(action.getBoundingClientRect().right - contentEdges(header).end),
+    ).toBeLessThanOrEqual(0.5);
+    await expect(action).toBeDisabled();
+  },
 };
 
-/** The same bar held at a narrow desktop width. The standing slot and the action keep their width;
- *  what no longer fits on the first line drops to the next, gapped with `--space-stack`, and Continue
- *  stays flush with the bar's content edge on whichever line it lands - its right edge is the header's
- *  right edge minus the gutter. Nothing overflows and the page gains no horizontal scroll. The frame is
- *  story furniture; a product never fixes the width. */
+/** The Top bar held at a narrow desktop width. Below the fit threshold the control drops below the
+ *  readout and stays flush with the end content edge; the readout takes the line and its unbroken token
+ *  wraps inside the slot. The play function then widens the frame and narrows it again with Continue
+ *  focused: the same button is still there and still focused, because the break is CSS alone. The frame
+ *  is story furniture; a product never fixes the width. */
 export const NarrowDesktop: Story = {
   render: () => (
-    <div style={{ width: '48rem', maxWidth: '100%' }}>
-      <Header
-        standing={date}
-        status={
-          <Cluster gap={'stack'}>
-            <P>{'Kontostand: 1.250.000 $'}</P>
-            <Note>{'Eine Antwort wird erwartet'}</Note>
-          </Cluster>
-        }
-        action={continueAction}
-      />
+    <div data-testid={'frame'} style={{ width: '48rem', maxWidth: '100%' }}>
+      <Header status={longReadout} action={continueAction} />
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const frame = canvas.getByTestId('frame');
+    const header = canvas.getByRole('banner');
+    const reference = canvas.getByTestId('reference');
+    const status = slotOf(reference);
+    const action = canvas.getByRole('button', { name: 'Continue' });
+    const nextFrame = () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
+      });
+
+    await expect(overflowsNothing(header)).toBe(true);
+    await expect(shareALine(status, action)).toBe(false);
+    await expect(action.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      status.getBoundingClientRect().bottom,
+    );
+    await expect(
+      Math.abs(action.getBoundingClientRect().right - contentEdges(header).end),
+    ).toBeLessThanOrEqual(0.5);
+    const range = document.createRange();
+    range.selectNodeContents(reference);
+    await expect(range.getClientRects().length).toBeGreaterThan(1);
+    await expect(status.scrollWidth).toBeLessThanOrEqual(status.clientWidth);
+
+    await userEvent.tab();
+    await expect(action).toHaveFocus();
+    frame.style.width = '100rem';
+    await nextFrame();
+    await expect(action.isConnected).toBe(true);
+    await expect(action).toHaveFocus();
+    frame.style.width = '48rem';
+    await nextFrame();
+    await expect(canvas.getByRole('button', { name: 'Continue' })).toBe(action);
+    await expect(action).toHaveFocus();
+    await expect(shareALine(status, action)).toBe(false);
+  },
 };
