@@ -2,11 +2,14 @@ import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
 import {
   type FunctionComponent,
+  type KeyboardEvent,
+  type MouseEvent,
   type ReactNode,
   useLayoutEffect,
   useRef,
   useState,
 } from 'react';
+import type { Observable, Subject } from 'rxjs';
 
 // Rules are the layout. One recipe styles the whole table from its wrapper, so the block reads as a
 // table from two rule weights and nothing else: no cell borders, no fill, no zebra, no hover. Colours
@@ -34,12 +37,84 @@ const table = cva(
     '[&[data-notes=content]>table]:max-md:block',
     '[&[data-notes=content]_thead]:max-md:block [&[data-notes=content]_tbody]:max-md:block [&[data-notes=content]_tfoot]:max-md:block',
     '[&[data-notes=content]_tr]:max-md:block [&[data-notes=content]_td]:max-md:block [&[data-notes=content]_th]:max-md:block',
+    // A table carrying a selection input anywhere gives every row's first cell the ordinary cell inset
+    // instead of the flush edge - head and foot included - so the selected row's marker bar (Row) has
+    // room inside the cell and no column shifts as the selection moves (#113).
+    '[&:has([aria-selected])_tr>*:first-child]:pl-4',
+    // A table with an interactive row makes ring room the way Tabs does: padding holds the wrapper's
+    // edge (and the scroll clip, when it is the region) off a focused row's outline, the negative
+    // margin hands the room back to the page, so the ring sits outside the row and never covers the
+    // marker at its leading edge. Written from the two ring tokens so it cannot drift from the ring.
+    '[&:has(tr[tabindex])]:p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
+    '[&:has(tr[tabindex])]:m-[calc(-1*(var(--focus-ring-width)+var(--focus-ring-offset)))]',
+    '[&:has(tr[tabindex])]:scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
   ].join(' '),
 );
 
-// One hairline above every row, in `border`. Root promotes the first row's colour to `rule`; the last
-// row takes no bottom rule, so the block stays open at the foot - the difference from a closed list.
-const tableRow = cva('border-t border-solid border-border');
+// One hairline above every row, in `border`; Root promotes the first to `rule` and the last row takes
+// no bottom rule, so the block stays open at the foot. Selection is a `foreground` marker bar on the
+// first cell's pseudo-element, keyed on aria-selected as in Tabs; no fill, no hover. The ring is the
+// shared one (docs/adr/0002), outside the row at the token offset so it never covers the marker.
+const tableRow = cva(
+  [
+    'border-t border-solid border-border',
+    '[&[aria-selected=true]>*:first-child]:relative',
+    '[&[aria-selected=true]>*:first-child]:before:absolute [&[aria-selected=true]>*:first-child]:before:inset-y-0 [&[aria-selected=true]>*:first-child]:before:left-0',
+    '[&[aria-selected=true]>*:first-child]:before:border-l-[length:var(--table-selection-marker-thickness)] [&[aria-selected=true]>*:first-child]:before:border-solid [&[aria-selected=true]>*:first-child]:before:border-foreground',
+  ].join(' '),
+  {
+    variants: {
+      interactive: {
+        true: 'cursor-pointer outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
+        false: '',
+      },
+    },
+    defaultVariants: { interactive: false },
+  },
+);
+
+// What a row body is not: a control with an operation of its own, or anything inside one. An
+// activation that starts there is the control's, never the row's, so a consumer stops no propagation.
+const NESTED_CONTROL_SELECTOR = [
+  'a[href]',
+  'button',
+  'input',
+  'select',
+  'textarea',
+  'summary',
+  'label',
+  '[contenteditable]',
+  '[tabindex]',
+  '[role="button"]',
+  '[role="link"]',
+  '[role="checkbox"]',
+  '[role="radio"]',
+  '[role="switch"]',
+  '[role="menuitem"]',
+  '[role="menuitemcheckbox"]',
+  '[role="menuitemradio"]',
+  '[role="tab"]',
+  '[role="option"]',
+  '[role="treeitem"]',
+  '[role="combobox"]',
+  '[role="textbox"]',
+  '[role="searchbox"]',
+  '[role="slider"]',
+  '[role="spinbutton"]',
+].join(', ');
+
+const isFromNestedControl = (
+  row: HTMLTableRowElement,
+  target: EventTarget,
+): boolean => {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+  const control = target.closest(NESTED_CONTROL_SELECTOR);
+  return control !== null && control !== row && row.contains(control);
+};
+
+const ACTIVATION_KEYS: ReadonlySet<string> = new Set(['Enter', ' ']);
 
 // A value is the body face with real tabular figures; a note is the muted secondary face. Both sit
 // at the small role, which carries the enforced 15px floor below which figures stop comparing.
@@ -65,7 +140,7 @@ const tableHeaderCell = cva(
   },
 );
 
-interface ITableRootProps {
+export interface ITableRootProps {
   /** The table's accessible name. Rendered as the first child; always present. */
   caption: string;
   /** What the note column is. Governs narrow-viewport behaviour; omit when there is none. */
@@ -74,20 +149,30 @@ interface ITableRootProps {
   testId?: string;
 }
 
-interface ITableSectionProps {
+export interface ITableSectionProps {
   children?: ReactNode;
 }
 
-interface ITableRowProps {
+export interface ITableRowProps {
   children?: ReactNode;
   testId?: string;
+  /** Emits once per activation of the row body - a click, or Enter or Space while the row has
+   *  focus. Its presence is what makes the row interactive: a tab stop, a visible focus ring and a
+   *  pointer cursor. Nested links and controls keep their own operations and never emit here.
+   *  Activation changes nothing about the row; the consumer decides what the request means. */
+  onClick$?: Subject<void>;
+  /** The consumer's selection for this row. Rendered as `aria-selected` and the marker bar; omitted
+   *  or not yet emitted means unselected. Selection is independent of `onClick$`: a selected row
+   *  may be noninteractive, and an interactive row may be unselected. */
+  isSelected$?: Observable<boolean>;
 }
 
-interface ITableCellProps extends VariantProps<typeof tableCell> {
+export interface ITableCellProps extends VariantProps<typeof tableCell> {
   children?: ReactNode;
 }
 
-interface ITableHeaderCellProps extends VariantProps<typeof tableHeaderCell> {
+export interface ITableHeaderCellProps
+  extends VariantProps<typeof tableHeaderCell> {
   /** Explicit, never inferred from Head/Body position - inference would need render-time context. */
   scope: 'row' | 'col';
   /** The order the column is *currently* displayed in, as accessibility metadata only. Omit it on a
@@ -192,11 +277,62 @@ const TableFooter: FunctionComponent<ITableSectionProps> = ({ children }) => (
   <tfoot>{children}</tfoot>
 );
 
-const TableRow: FunctionComponent<ITableRowProps> = ({ children, testId }) => (
-  <tr className={tableRow()} data-testid={testId}>
-    {children}
-  </tr>
-);
+const TableRow: FunctionComponent<ITableRowProps> = ({
+  children,
+  testId,
+  onClick$,
+  isSelected$,
+}) => {
+  const [isSelected, setIsSelected] = useState(false);
+  // Reset, then follow: a replaced source reads unselected until it emits, and the subscription's
+  // teardown is the row's (docs/adr/0013). A layout effect so a replaying source paints in the same
+  // frame as the row, never a frame unselected first.
+  useLayoutEffect(() => {
+    setIsSelected(false);
+    const subscription = isSelected$?.subscribe((value) =>
+      setIsSelected(value),
+    );
+    return () => subscription?.unsubscribe();
+  }, [isSelected$]);
+
+  const requestByPointer = (event: MouseEvent<HTMLTableRowElement>): void => {
+    if (!isFromNestedControl(event.currentTarget, event.target)) {
+      onClick$?.next();
+    }
+  };
+
+  // Keys reach the row only when it is the focused element itself: a key pressed on a nested
+  // control bubbles here too, and that press is the control's. Space scrolls the page by default
+  // and a held key repeats; one press is one request.
+  const requestByKey = (event: KeyboardEvent<HTMLTableRowElement>): void => {
+    if (
+      event.target !== event.currentTarget ||
+      !ACTIVATION_KEYS.has(event.key)
+    ) {
+      return;
+    }
+    if (event.key === ' ') {
+      event.preventDefault();
+    }
+    if (!event.repeat) {
+      onClick$?.next();
+    }
+  };
+
+  const interactive = onClick$ !== undefined;
+  return (
+    <tr
+      className={tableRow({ interactive })}
+      data-testid={testId}
+      tabIndex={interactive ? 0 : undefined}
+      aria-selected={isSelected$ === undefined ? undefined : isSelected}
+      onClick={interactive ? requestByPointer : undefined}
+      onKeyDown={interactive ? requestByKey : undefined}
+    >
+      {children}
+    </tr>
+  );
+};
 
 const TableHeaderCell: FunctionComponent<ITableHeaderCellProps> = ({
   scope,
@@ -239,6 +375,33 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *   keyboard-reachable while there is something to scroll - always, as a named region, with no note
  *   column; as a named group only once the table overflows, with one. No vertical bound is ever set:
  *   a long table sits inside a `ScrollContainer` with `axis="vertical"`, which owns that axis.
+ * - A `Row` given `onClick$` is interactive: a tab stop with the shared focus ring, activated by a
+ *   click on its body or by Enter or Space while focused, emitting exactly once per activation. A
+ *   nested link, button or other control - and anything inside one - performs its own operation and
+ *   never activates the row. Without `onClick$` the row body is inert and adds no tab stop; nested
+ *   controls stay operable. Activation never changes selection.
+ * - A `Row` given `isSelected$` carries `aria-selected` and, when true, the marker bar along its
+ *   leading edge in `foreground` - a shape, not a colour, and not the focus ring. Omitted or not yet
+ *   emitted reads unselected; a replaced source reads unselected until it emits; unmounting
+ *   unsubscribes. The selection input is independent of `onClick$`, so a row may be selected and
+ *   noninteractive, interactive and unselected, or both. Rendering and selection changes emit nothing.
+ * - The row stays a `tr` in a `table`: no grid role, no arrow-key navigation. `aria-selected` is a
+ *   WAI-ARIA 1.2 state of `row` and valid here, but Chromium exposes a row's selected state only
+ *   inside a `grid`, so Chrome and Edge screen readers do not announce it on these rows (accepted
+ *   limitation, #113). The marker bar is the one guaranteed selection cue.
+ * - A table holding a selection input anywhere insets every row's first cell by the cell padding,
+ *   head and foot included, so the marker has room and no column shifts as the selection moves. A
+ *   table holding an interactive row makes ring room around itself, so a focused row's ring is never
+ *   clipped by the scroll region. A table with neither keeps its static geometry exactly.
+ *
+ * @CallerMustEnsure — the component cannot see these and does not check them
+ * - Each row's `onClick$` and `isSelected$` are tied to that row's stable identity, so a reordered or
+ *   temporarily removed row keeps its association. Table holds no identity, registry or policy, and
+ *   removing a row never asks the consumer to clear or replace its selection.
+ * - What an activation means - select, open, toggle - is the consumer's answer, given by rerendering
+ *   from its own state. A request left unanswered leaves the rendered selection unchanged.
+ * - An interactive row announces no verb of its own; the caption, a row header or a nested link
+ *   should make the row's purpose plain.
  *
  * @UXGuidelines
  * - A sortable column is composed, not configured: a `Button variant="plain"` inside the `HeaderCell`

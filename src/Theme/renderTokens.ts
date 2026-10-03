@@ -261,6 +261,14 @@ const TAB_MARKER = `:root {
   --tab-marker-thickness: 2px;
 }`;
 
+/* Not a colour: like the tab marker it lives in :root only, so a brand re-points the weight of the
+   mark along a selected row's leading edge (#113) without Table gaining a prop. Not the tab marker's
+   token: that is a line under a tab, a different position (docs/adr/0008). Constraint: > 0 - zero
+   erases the one persistent selection cue. */
+const TABLE_SELECTION_MARKER = `:root {
+  --table-selection-marker-thickness: 2px;
+}`;
+
 /* The slider's two dimensions are not colours: like the tick they live in :root only, never @theme
    inline. Named because both are drawn on vendor pseudo-elements (::-webkit-slider-thumb and kin)
    no consumer selector can reach - ADR 0004's test. The control takes its height from the thumb, so
@@ -394,6 +402,9 @@ ${TICK}
 
 /* The tab marker's thickness is not a colour either, and sits in :root beside the tick block. */
 ${TAB_MARKER}
+
+/* The table selection marker's thickness is not a colour either, and sits in :root beside the tab marker. */
+${TABLE_SELECTION_MARKER}
 
 ${TAB_INSETS}
 
