@@ -560,7 +560,7 @@ const rowsFor = (
 // The story's args are the Root's own `caption` and `notes`, so the docs controls drive the table.
 type ArtistRosterProps = Pick<
   ComponentProps<typeof Table.Root>,
-  'caption' | 'notes'
+  'caption' | 'notes' | 'columns' | 'density'
 > & {
   artists?: readonly Artist[];
   /** The consumer's starting selection; `undefined` starts without one. */
@@ -578,6 +578,8 @@ type ArtistRosterProps = Pick<
 const ArtistRoster: FunctionComponent<ArtistRosterProps> = ({
   caption,
   notes,
+  columns,
+  density,
   artists = ARTISTS,
   initial,
   interactive = true,
@@ -663,7 +665,12 @@ const ArtistRoster: FunctionComponent<ArtistRosterProps> = ({
           )}
         </div>
       )}
-      <Table.Root caption={caption} notes={notes}>
+      <Table.Root
+        caption={caption}
+        notes={notes}
+        columns={columns}
+        density={density}
+      >
         <Table.Head>
           <Table.Row>
             <Table.HeaderCell scope={'col'}>Artist</Table.HeaderCell>
@@ -1648,5 +1655,71 @@ export const ThemedColumnWidths: Story = {
     await expect(widthsOf(canvas.getByTestId('themed')).slice(0, 3)).toEqual([
       320, 96, 352,
     ]);
+  },
+};
+
+/**
+ * Selection (#113) inside a compact allocation: the marker bar paints on the selected row's first
+ * cell at the compact inset, every row's first cell keeps that inset so no column shifts as the
+ * selection moves, the focused row draws the ring outside the row, and activation still moves the
+ * selection where the consumer's policy says - the allocation adds nothing to any of it.
+ */
+export const SelectionUnderAllocation: Story = {
+  args: { caption: 'Artists on the roster', notes: 'supplementary' },
+  render: (args) => (
+    <ArtistRoster
+      {...args}
+      density={'compact'}
+      columns={[
+        { weight: 2, minWidth: 'name' },
+        { weight: 1, minWidth: 'fact' },
+        { width: 'figure' },
+        { width: 'action' },
+        { weight: 1 },
+      ]}
+      initial={'nova'}
+      nestedControls
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const markerOf = (row: HTMLElement): string =>
+      getComputedStyle(row.children[0] as Element, '::before').borderLeftWidth;
+    const selected = canvas.getByTestId('row-nova');
+    await expect(selected).toHaveAttribute('aria-selected', 'true');
+    await expect(markerOf(selected)).toBe('2px');
+    for (const row of canvas.getAllByRole('row')) {
+      await expect(
+        getComputedStyle(row.children[0] as Element).paddingLeft,
+      ).toBe('8px');
+    }
+    await expect(isEveryRowOn(canvasElement, edgesOf(canvasElement))).toBe(
+      true,
+    );
+    // The first stop is the selected row itself: ring and marker coexist on one row.
+    await userEvent.tab();
+    await expect(document.activeElement).toBe(selected);
+    await expect(getComputedStyle(selected).outlineStyle).toBe('solid');
+    await expect(markerOf(selected)).toBe('2px');
+    // On to the next row - past the row's own link and button - and activate it there.
+    let focused = document.activeElement as HTMLElement;
+    for (
+      let stop = 0;
+      stop < 6 && (focused === selected || focused.tagName !== 'TR');
+      stop += 1
+    ) {
+      await userEvent.tab();
+      focused = document.activeElement as HTMLElement;
+    }
+    await expect(focused.tagName).toBe('TR');
+    await expect(getComputedStyle(focused).outlineStyle).toBe('solid');
+    await expect(markerOf(focused)).toBe('0px');
+    await userEvent.keyboard('{Enter}');
+    await expect(focused).toHaveAttribute('aria-selected', 'true');
+    await expect(markerOf(focused)).toBe('2px');
+    await expect(markerOf(selected)).toBe('0px');
+    await expect(isEveryRowOn(canvasElement, edgesOf(canvasElement))).toBe(
+      true,
+    );
   },
 };
