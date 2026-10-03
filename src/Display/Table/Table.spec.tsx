@@ -1,5 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Table } from './Table';
 
 const renderSpecTable = (
@@ -175,5 +175,143 @@ describe('Table', () => {
     expect(
       within(row as HTMLElement).getByText('dry, no cable'),
     ).toBeInTheDocument();
+  });
+
+  it.each(['none', 'ascending', 'descending', 'other'] as const)(
+    'exposes a consumer-supplied ariaSort of %s on the header cell, so assistive technology hears the displayed order',
+    (ariaSort) => {
+      render(
+        <Table.Root caption={'Parts'}>
+          <Table.Head>
+            <Table.Row>
+              <Table.HeaderCell scope={'col'} ariaSort={ariaSort}>
+                Name
+              </Table.HeaderCell>
+            </Table.Row>
+          </Table.Head>
+        </Table.Root>,
+      );
+      expect(
+        screen.getByRole('columnheader', { name: 'Name' }),
+      ).toHaveAttribute('aria-sort', ariaSort);
+    },
+  );
+
+  it('leaves aria-sort absent when no ariaSort is given, so a non-sortable header announces nothing about order', () => {
+    renderSpecTable();
+    for (const header of screen.getAllByRole('columnheader')) {
+      expect(header).not.toHaveAttribute('aria-sort');
+    }
+  });
+
+  it('follows the consumer through updates and removal of ariaSort, and never reorders a row itself', () => {
+    const rows = (
+      <Table.Body>
+        <Table.Row>
+          <Table.Cell>Bracket</Table.Cell>
+        </Table.Row>
+        <Table.Row>
+          <Table.Cell>Enclosure</Table.Cell>
+        </Table.Row>
+      </Table.Body>
+    );
+    const at = (ariaSort?: 'ascending' | 'descending') => (
+      <Table.Root caption={'Parts'}>
+        <Table.Head>
+          <Table.Row>
+            <Table.HeaderCell scope={'col'} ariaSort={ariaSort}>
+              Name
+            </Table.HeaderCell>
+          </Table.Row>
+        </Table.Head>
+        {rows}
+      </Table.Root>
+    );
+    const { rerender } = render(at('ascending'));
+    const header = screen.getByRole('columnheader', { name: 'Name' });
+    const order = () =>
+      screen.getAllByRole('cell').map((cell) => cell.textContent);
+    expect(order()).toEqual(['Bracket', 'Enclosure']);
+
+    rerender(at('descending'));
+    expect(header).toHaveAttribute('aria-sort', 'descending');
+    // The attribute describes the displayed order; the rows are the consumer's and stay put.
+    expect(order()).toEqual(['Bracket', 'Enclosure']);
+
+    rerender(at(undefined));
+    expect(header).not.toHaveAttribute('aria-sort');
+  });
+
+  it.each([undefined, 'supplementary', 'content'] as const)(
+    'lets residual horizontal overflow scroll in the %s notes mode, with no opt-in and no vertical bound',
+    (notes) => {
+      renderSpecTable(notes, 'spec');
+      const wrapper = screen.getByTestId('spec');
+      // Horizontal overflow is the wrapper's job in every mode; a vertical bound never is - that
+      // belongs to a ScrollContainer around the table.
+      expect(wrapper.className).toMatch(/\boverflow-x-auto\b/);
+      expect(wrapper.className).not.toMatch(/overflow-y-|max-h-|\bh-/);
+    },
+  );
+
+  describe('residual overflow with a note column', () => {
+    const overflowBy = (scrollWidth: number, clientWidth: number) => {
+      vi.spyOn(Element.prototype, 'scrollWidth', 'get').mockReturnValue(
+        scrollWidth,
+      );
+      vi.spyOn(Element.prototype, 'clientWidth', 'get').mockReturnValue(
+        clientWidth,
+      );
+    };
+    afterEach(() => vi.restoreAllMocks());
+
+    it('stays a plain grouping element with no tab stop while the table fits, so nothing is added for a user to tab through', () => {
+      overflowBy(300, 300);
+      renderSpecTable('supplementary', 'spec');
+      const wrapper = screen.getByTestId('spec');
+      expect(wrapper).not.toHaveAttribute('tabindex');
+      expect(wrapper).not.toHaveAttribute('role');
+      expect(screen.queryByRole('group')).not.toBeInTheDocument();
+    });
+
+    it('becomes a keyboard-reachable group named by the caption once the table overflows, so the scroll is operable without a pointer', () => {
+      overflowBy(600, 300);
+      renderSpecTable('content', 'spec');
+      const group = screen.getByRole('group', {
+        name: 'Material specification',
+      });
+      expect(group).toBe(screen.getByTestId('spec'));
+      expect(group).toHaveAttribute('tabindex', '0');
+      // Still not a landmark: the caption names the table; the wrapper is a generic scroll group.
+      expect(screen.queryByRole('region')).not.toBeInTheDocument();
+    });
+
+    it('re-evaluates after a layout change without moving focus away from a control in the table', () => {
+      overflowBy(300, 300);
+      render(
+        <Table.Root caption={'Parts'} notes={'supplementary'} testId={'spec'}>
+          <Table.Head>
+            <Table.Row>
+              <Table.HeaderCell scope={'col'}>
+                <button type={'button'}>Name</button>
+              </Table.HeaderCell>
+            </Table.Row>
+          </Table.Head>
+        </Table.Root>,
+      );
+      const control = screen.getByRole('button', { name: 'Name' });
+      control.focus();
+      expect(screen.getByTestId('spec')).not.toHaveAttribute('tabindex');
+
+      overflowBy(900, 300);
+      fireEvent(window, new Event('resize'));
+      expect(screen.getByTestId('spec')).toHaveAttribute('tabindex', '0');
+      expect(control).toHaveFocus();
+
+      overflowBy(300, 300);
+      fireEvent(window, new Event('resize'));
+      expect(screen.getByTestId('spec')).not.toHaveAttribute('tabindex');
+      expect(control).toHaveFocus();
+    });
   });
 });

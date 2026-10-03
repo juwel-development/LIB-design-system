@@ -1,6 +1,12 @@
 import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
-import type { FunctionComponent, ReactNode } from 'react';
+import {
+  type FunctionComponent,
+  type ReactNode,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 
 // Rules are the layout. One recipe styles the whole table from its wrapper, so the block reads as a
 // table from two rule weights and nothing else: no cell borders, no fill, no zebra, no hover. Colours
@@ -9,9 +15,12 @@ import type { FunctionComponent, ReactNode } from 'react';
 // hydration and the mode is one attribute a stylesheet and a test can both read.
 const table = cva(
   [
-    // With no note column the wrapper becomes a horizontally scrollable region (see Root); the scroll
-    // sits here so the table keeps its table formatting context and the figures stay column-aligned.
-    '[&:not([data-notes])]:overflow-x-auto',
+    // Residual horizontal overflow scrolls in every mode (#114); the scroll sits on the wrapper so
+    // the table keeps its table formatting context and the figures stay column-aligned. No vertical
+    // bound: a long table is bounded by the ScrollContainer a consumer puts around it.
+    'overflow-x-auto',
+    // The wrapper takes the one focus ring when it is keyboard-reachable - docs/adr/0002.
+    'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
     // The table: full width, collapsed borders so adjacent row rules meet as one line, text flush left.
     '[&>table]:w-full [&>table]:border-collapse [&>table]:text-left',
     // The required caption, rendered first, as the table's label in the tracked grotesk device.
@@ -81,8 +90,43 @@ interface ITableCellProps extends VariantProps<typeof tableCell> {
 interface ITableHeaderCellProps extends VariantProps<typeof tableHeaderCell> {
   /** Explicit, never inferred from Head/Body position - inference would need render-time context. */
   scope: 'row' | 'col';
+  /** The order the column is *currently* displayed in, as accessibility metadata only. Omit it on a
+   *  column that is not sortable; set it on the one ordered column. Changing it neither reorders rows
+   *  nor triggers anything - the consumer owns the sort and composes the action in `children`. */
+  ariaSort?: 'none' | 'ascending' | 'descending' | 'other';
   children?: ReactNode;
 }
+
+// With a note column the wrapper is a plain grouping element until the table overflows it; from
+// then on it is a named group with a tab stop, so the scroll is keyboard-operable (WCAG 2.1.1)
+// without adding a stop while nothing scrolls. Reachable until measured, so server markup is
+// operable before hydration. The table is observed as well as the wrapper because content growing
+// inside an overflow box changes the table's size, never the wrapper's.
+const useHorizontalOverflow = (
+  wrapper: { current: HTMLElement | null },
+  table: { current: HTMLElement | null },
+): boolean => {
+  const [isOverflowing, setIsOverflowing] = useState(true);
+  useLayoutEffect(() => {
+    const element = wrapper.current;
+    if (element === null) return;
+    const measure = () =>
+      setIsOverflowing(element.scrollWidth > element.clientWidth);
+    measure();
+    const observer =
+      typeof ResizeObserver === 'undefined'
+        ? undefined
+        : new ResizeObserver(measure);
+    observer?.observe(element);
+    if (table.current !== null) observer?.observe(table.current);
+    window.addEventListener('resize', measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [wrapper, table]);
+  return isOverflowing;
+};
 
 const TableRoot: FunctionComponent<ITableRootProps> = ({
   caption,
@@ -90,16 +134,19 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
   children,
   testId,
 }) => {
+  const wrapper = useRef<HTMLDivElement>(null);
+  const tableElement = useRef<HTMLTableElement>(null);
+  const isOverflowing = useHorizontalOverflow(wrapper, tableElement);
   const content = (
-    <table>
+    <table ref={tableElement}>
       <caption>{caption}</caption>
       {children}
     </table>
   );
   // No note column: the wrapper is a labelled region (a named `section`) so the horizontally
   // scrolled table is keyboard-operable - WCAG 2.1.1 needs the scroll container itself focusable,
-  // there being no focusable cell content to carry it. With a note column there is nothing to
-  // scroll to, so the wrapper stays a plain grouping element.
+  // there being no focusable cell content to carry it. With a note column the wrapper is a plain
+  // grouping element that becomes a named, reachable group only while the table overflows it.
   if (notes === undefined) {
     return (
       <section
@@ -114,7 +161,16 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
     );
   }
   return (
-    <div className={table()} data-notes={notes} data-testid={testId}>
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: the name and the `group` role are set together; biome cannot see the pair
+    <div
+      ref={wrapper}
+      className={table()}
+      data-notes={notes}
+      data-testid={testId}
+      role={isOverflowing ? 'group' : undefined}
+      aria-label={isOverflowing ? caption : undefined}
+      tabIndex={isOverflowing ? 0 : undefined}
+    >
       {content}
     </div>
   );
@@ -141,9 +197,10 @@ const TableRow: FunctionComponent<ITableRowProps> = ({ children, testId }) => (
 const TableHeaderCell: FunctionComponent<ITableHeaderCellProps> = ({
   scope,
   align,
+  ariaSort,
   children,
 }) => (
-  <th scope={scope} className={tableHeaderCell({ align })}>
+  <th scope={scope} aria-sort={ariaSort} className={tableHeaderCell({ align })}>
     {children}
   </th>
 );
@@ -172,9 +229,19 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  * - The block reads as a table from two rule weights alone: the heavier `rule` above the first row,
  *   `border` hairlines between rows, and no bottom rule on the last. No cell borders, fill, zebra or hover.
  * - `Cell variant="value"` sets tabular figures; `variant="note"` does not. Both at the 15px small role.
- * - `HeaderCell` emits the `scope` it is given; none is inferred.
+ * - `HeaderCell` emits the `scope` it is given; none is inferred. It emits `ariaSort` the same way:
+ *   the attribute states the displayed order and the component never orders, cycles or requests one.
+ * - Residual horizontal overflow scrolls in every `notes` mode, with no opt-in. The wrapper is
+ *   keyboard-reachable while there is something to scroll - always, as a named region, with no note
+ *   column; as a named group only once the table overflows, with one. No vertical bound is ever set:
+ *   a long table sits inside a `ScrollContainer` with `axis="vertical"`, which owns that axis.
  *
  * @UXGuidelines
+ * - A sortable column is composed, not configured: a `Button variant="plain"` inside the `HeaderCell`
+ *   carries the label and an `Icon` (`sort`, `sort-ascending`, `sort-descending`) that matches the
+ *   order the consumer currently displays, and `ariaSort` on the same cell says so to assistive
+ *   technology. Only the ordered column carries `ariaSort`; an action-only column carries no sort
+ *   control. Until the consumer's data arrives, both icon and `ariaSort` keep stating the old order.
  * - `align` is a cell property but reads as a column one: set the same `align` on a `HeaderCell` and
  *   every `Cell` beneath it, and keep them in sync - the component cannot align a column for you.
  * - Choose `notes` by what the note column *is*: `"supplementary"` drops it below 48rem for everyone

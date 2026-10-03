@@ -74,7 +74,7 @@ describe('Button Component', () => {
     );
   });
 
-  it.each(['primary', 'secondary', 'ghost'] as const)(
+  it.each(['primary', 'secondary', 'ghost', 'plain'] as const)(
     'carries no elevation on the %s variant, so press has no geometry',
     (variant) => {
       render(<Button variant={variant}>Click Me</Button>);
@@ -87,7 +87,7 @@ describe('Button Component', () => {
     },
   );
 
-  it.each(['primary', 'secondary', 'ghost'] as const)(
+  it.each(['primary', 'secondary', 'ghost', 'plain'] as const)(
     'transitions colour through the motion token on the %s variant, never transition-all or a hard-coded duration',
     (variant) => {
       render(<Button variant={variant}>Click Me</Button>);
@@ -141,7 +141,7 @@ describe('Button Component', () => {
     expect(className).not.toContain('--control-min-width');
   });
 
-  it.each(['primary', 'secondary', 'ghost'] as const)(
+  it.each(['primary', 'secondary', 'ghost', 'plain'] as const)(
     'draws one focus ring as an outline on the %s variant, identical across variants and never a box-shadow ring',
     (variant) => {
       render(<Button variant={variant}>Click Me</Button>);
@@ -160,7 +160,7 @@ describe('Button Component', () => {
     },
   );
 
-  it.each(['primary', 'secondary', 'ghost'] as const)(
+  it.each(['primary', 'secondary', 'ghost', 'plain'] as const)(
     'sets the focus-ring colour at rest on the %s variant, so it cannot fade in on focus',
     (variant) => {
       render(<Button variant={variant}>Click Me</Button>);
@@ -238,4 +238,89 @@ describe('Button Component', () => {
     expect(inFooter?.className).toContain('text-body');
     expect(inHeader?.className).toBe(inFooter?.className);
   });
+
+  it('renders the plain variant as the same native button: default type, click output, disabled semantics', () => {
+    const onClick$ = new Subject<void>();
+    const handleClick = vi.fn();
+    onClick$.subscribe(handleClick);
+    const { rerender } = render(
+      <Button variant={'plain'} onClick$={onClick$}>
+        Name
+      </Button>,
+    );
+    const button = screen.getByRole('button', { name: 'Name' });
+    expect(button).toHaveAttribute('type', 'button');
+    fireEvent.click(button);
+    expect(handleClick).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <Button variant={'plain'} onClick$={onClick$} disabled={true}>
+        Name
+      </Button>,
+    );
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives the plain variant no face of its own, so it reads in the typography and colour of what surrounds it (#114)', () => {
+    render(<Button variant={'plain'}>Name</Button>);
+    const className = screen.getByRole('button').className;
+
+    // docs/adr/0004, the plain amendment: plain is the one accepted exception to the face and size in
+    // the base, and docs/adr/0003 likewise to the corner. None of the button-face treatment survives:
+    // no face, no size, no corner, no fill, no padding, no width floor, no hover underline, no nowrap.
+    expect(className).not.toContain('font-primary');
+    expect(className).not.toContain('text-body');
+    expect(className).not.toMatch(/rounded-/);
+    expect(className).not.toMatch(/(?:^|\s)bg-(?!transparent)/);
+    expect(className).not.toMatch(/(?:^|\s)(?:sm:)?p[xy]?-(?!0\b)/);
+    expect(className).not.toMatch(/min-w-(?!0\b)/);
+    expect(className).not.toMatch(/hover:/);
+    expect(className).not.toContain('text-nowrap');
+    expect(className).not.toContain('select-none');
+  });
+
+  it('inherits its face, size, tracking and colour explicitly on the plain variant, rather than trusting the reset to do it', () => {
+    render(<Button variant={'plain'}>Name</Button>);
+    const className = screen.getByRole('button').className;
+
+    expect(className).toContain('[font:inherit]');
+    expect(className).toContain('[letter-spacing:inherit]');
+    expect(className).toContain('[color:inherit]');
+  });
+
+  it('tells a disabled plain button apart through a semantic token, never through the fill the faced variants use', () => {
+    render(
+      <Button variant={'plain'} disabled={true}>
+        Name
+      </Button>,
+    );
+    const className = screen.getByRole('button').className;
+
+    expect(className).toContain('disabled:text-disabled');
+    expect(className).not.toContain('disabled:bg-');
+  });
+
+  it('names an icon-only plain button through ariaLabel, like every other variant', () => {
+    render(<Button variant={'plain'} ariaLabel={'Sort by name'} />);
+    expect(
+      screen.getByRole('button', { name: 'Sort by name' }),
+    ).toBeInTheDocument();
+  });
+
+  it.each(['primary', 'secondary', 'ghost'] as const)(
+    'keeps the %s face exactly as it was, so adding plain changes nothing a consumer already renders',
+    (variant) => {
+      render(<Button variant={variant}>Send</Button>);
+      const className = screen.getByRole('button').className;
+
+      expect(className).toContain('font-primary');
+      expect(className).toContain('text-body');
+      expect(className).toContain('rounded-[var(--radius-control)]');
+      expect(className).toContain('py-2');
+      expect(className).toContain('inline-flex');
+      expect(className).toContain('disabled:bg-disabled');
+    },
+  );
 });

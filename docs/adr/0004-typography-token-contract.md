@@ -324,6 +324,33 @@ this amendment deliberately leaves alone — the height defect is fixed by pinni
 by touching the padding — and the opt-in rule the label role's leading established above holds here
 too: a leading is a decision somebody makes per call site, not a default that spreads.
 
+## Amended: the plain Button inherits its face and size, and that is the one exception
+
+The two amendments above put the content face and the `body` size in `Button`'s recipe base "so no
+variant can disagree". The maintainer then accepted a variant that must
+([#114](https://github.com/juwel-development/LIB-design-system/issues/114)): `variant="plain"`, a
+plain action - an operable, focusable button presented in the typography and colour of the content
+around it. A sortable column header is the case that forced it: the action *is* the header's label,
+so a button there set at the content face and `body` size would put a 17px serif action inside a
+13px tracked grotesk label row. The rule the face amendment stated still sorts it correctly - the
+visitor came to a table for its figures, and a header that happens to be operable is still the
+apparatus routing the eye - which is exactly why the action must take the header's face rather than
+an action's.
+
+**Plain inherits all four: face, size, tracking and colour**, stated explicitly in its recipe
+(`font`, `letter-spacing`, `color` and `text-align` set to `inherit`) rather than left to the
+preflight reset, so the contract survives a host that ships its own base styles. It declares no
+type role of its own for the same reason `Link`'s `quiet` treatment declares none: its documented
+homes set different sizes on their own roots, and a role on the button would break every placement
+but one.
+
+**The three faced variants are untouched.** The face and the size moved out of the base into one
+string `primary`, `secondary` and `ghost` share verbatim, so they still cannot disagree with each
+other; the tests that pin `font-primary` and `text-body` on each of them still run on each of them.
+`ghost` is not the plain action and keeps its face: it is a quiet but still button-shaped action,
+padded and at the body size, with the hover underline. Plain is the exception, named for the job,
+and the roster now has one of each rather than a knob between them.
+
 ## Amended: the Dialog title is its own type role
 
 `Dialog.Title` adds `--text-dialog-title: clamp(1.5rem, 3vw, 2.25rem)` and
