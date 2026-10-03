@@ -12,8 +12,9 @@ Standards sources: the four `docs/agents/standards/*` documents, ADR 0013 (input
 or dismissed; fixes were driven test-first; the stories were re-inspected in a real Chrome against
 the rebuilt Storybook.
 
-**Status:** implementation reviewed and fixed; **accessible selection state is an open decision**
-(see below) and **no release has been published**. Nothing here claims a version.
+**Status:** implementation reviewed and fixed; the accessible-selection gap below was **accepted by
+the user** (option C) with the approved API unchanged; **no release has been published**. Nothing
+here claims a version.
 
 ## Standards axis
 
@@ -91,12 +92,13 @@ Findings:
    → **Applied**: one README sentence; the stories already memoise per identity.
 4. **`aria-selected` on a plain table row** — the brief: "`isSelected$` drives both visible
    selection and appropriate accessible selection state without turning a noninteractive row into
-   an activation target". **Open**; see the next section.
+   an activation target". Escalated with evidence and alternatives; **accepted as a limitation by
+   the user**, see the next section.
 5. **Long-label wrapping and visible focus have no DOM test** — accepted under the brief's own
    "inspect the stories … that DOM tests cannot establish visually"; re-measured below.
 6. **The release criterion is not met** — expected; recorded under Publication.
 
-## Accessible selection state — open decision
+## Accessible selection state — accepted limitation
 
 Evidence gathered during this review:
 
@@ -123,16 +125,26 @@ selectable table, which Chromium exposes but which implies arrow-key cell naviga
 out of scope and replaces the table semantics the brief preserves; (C) keep `aria-selected` only
 and document the gap, which the coordinator has rejected as acceptance.
 
-**Coordinator status**: none approved; the user is being asked to choose between triaging this and
-extending the API with consumer-provided selection wording. Until that lands, the accessibility
-criterion is **not** marked satisfied, no selection-contract change is made, and the README states
-the current, honest behaviour.
+A fourth option, a required consumer-translated `selectedDescription` exposed as the row's
+accessible description while selected, was discussed by the coordinator and the user.
+
+**Decision (user, relayed by the coordinator)**: option C — keep native table semantics and
+`aria-selected` only; no `selectedDescription`, `aria-current`, grid role or other new prop; the
+approved API remains `onClick$`/`isSelected$`. The gap is accepted: Chrome does not expose the row's
+selected state to assistive technology. It is recorded as an accepted limitation in the Storybook
+component description, the `Table` TSDoc and this report, not as a satisfied criterion.
 
 ## Fixes applied
 
 | Commit | Scope |
 |---|---|
 | `b179fbb` | `fix(table): apply the #113 review's standards and spec findings` — selector roles, exported interfaces, comment budgets, spec cleanup, story args, README sentences, report correction |
+| `2fc6b74` | `docs(table): move the Table guidance from the README into Storybook (#113)` — the component description on the `Display/Table` meta now carries the consumer guidance and the accepted accessibility limitation; README has no Table section; TSDoc gains the limitation |
+
+**Documentation location.** Consumer guidance for `Table` lives in Storybook: the `Display/Table`
+docs page (`parameters.docs.description.component` on the stories meta) plus the `Table` TSDoc
+reachable from the editor. The README carries no component section for Table, per the user's
+instruction that components are not documented in the README.
 
 ## Checks (after the fixes)
 
@@ -200,7 +212,8 @@ The ticket has not been moved to In Review by this worker (the brief forbids sta
 
 ## Limitations
 
-- Accessible selection state is unresolved as described above.
+- Chrome and Edge do not expose the row's selected state to assistive technology on a plain
+  table; accepted by the user as described above.
 - `:has()` carries the inset and ring-room rules; browsers without it (Firefox < 121) render the
   marker over the flush first cell and may clip the ring in the scroll region.
 - `notes="content"` below 48rem stacks cells, so the marker spans the stacked first cell only.
