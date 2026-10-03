@@ -324,6 +324,10 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *   emitted reads unselected; a replaced source reads unselected until it emits; unmounting
  *   unsubscribes. The selection input is independent of `onClick$`, so a row may be selected and
  *   noninteractive, interactive and unselected, or both. Rendering and selection changes emit nothing.
+ * - The row stays a `tr` in a `table`: no grid role, no arrow-key navigation. `aria-selected` is a
+ *   WAI-ARIA 1.2 state of `row` and valid here, but Chromium exposes a row's selected state only
+ *   inside a `grid`, so Chrome and Edge screen readers do not announce it on these rows (accepted
+ *   limitation, #113). The marker bar is the one guaranteed selection cue.
  * - A table holding a selection input anywhere insets every row's first cell by the cell padding,
  *   head and foot included, so the marker has room and no column shifts as the selection moves. A
  *   table holding an interactive row makes ring room around itself, so a focused row's ring is never

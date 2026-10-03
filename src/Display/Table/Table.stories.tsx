@@ -15,6 +15,18 @@ const meta: Meta<typeof Table.Root> = {
   component: Table.Root,
   parameters: {
     layout: 'padded',
+    docs: {
+      description: {
+        component: [
+          "`Table` is a composable data table where the rules are the layout: compose `Table.Root` (with its required `caption`) from `Head`, `Body`, `Footer`, `Row`, `HeaderCell` and `Cell`. `Table.Row` additionally supports consumer-owned selection and independent row activation through two optional props, `onClick$?: Subject<void>` and `isSelected$?: Observable<boolean>`, tied by the consumer to each row's own stable identity.",
+          '`onClick$` makes the row body interactive: the `tr` keeps its row semantics and gains a tab stop, the shared focus ring and a pointer cursor. Clicking the row body, or pressing Enter or Space while the row has focus, emits exactly once; Space does not scroll the page and a held key does not repeat the request. A nested link, button or other control - and anything inside one - performs its own operation and never activates the row, so consumers stop no propagation. Activation changes nothing about the row: the consumer decides what the request means and answers by rerendering from its own state. Without `onClick$` the row body is inert and adds no tab stop while nested controls stay operable; removing it stops activation and keeps the rendered selection.',
+          "`isSelected$` is the consumer's selection for the row, rendered as `aria-selected` and as a marker bar along the row's leading edge in `--color-foreground` - a shape that survives without colour perception, distinct from the focus ring. Omitted or not yet emitted reads unselected; a replaced source reads unselected until it emits; unmounting unsubscribes. Make each `isSelected$` once per row, not inline per render. Selection and activation are independent, so a row may be selected and noninteractive, interactive and unselected, or both; rendering and selection changes never emit an activation. A table holding a selection input insets every row's first cell by the cell padding, head and foot included, so the marker has room and no column shifts as the selection moves; a table holding an interactive row makes ring room around itself so a focused row's ring is never clipped by the scroll region; a table with neither keeps its static geometry exactly.",
+          "Table holds no row identity, selection registry or policy. A reordered or temporarily removed row finds the same streams again through its identity, and removing a row never asks the consumer to clear or replace its selection. An interactive row announces no verb of its own, so word the caption, a row header or a nested link to make the row's purpose plain.",
+          "Accessibility, an accepted limitation (#113): the row stays a `tr` in a `table` - no grid role, no arrow-key navigation. `aria-selected` is a WAI-ARIA 1.2 state of `row` and valid here, but Chromium exposes a row's selected state only inside a `grid`, so Chrome and Edge screen readers do not announce selection on these rows. The marker bar is the one guaranteed selection cue; a consumer that needs the selection spoken words it in the row's content or in a live region of its own.",
+          "`--table-selection-marker-thickness` names the marker bar's weight, defaulting to `2px`, declared in all three token stylesheets. It must stay above zero: it is the one persistent selection cue.",
+        ].join('\n\n'),
+      },
+    },
   },
   tags: ['autodocs'],
   argTypes: {
