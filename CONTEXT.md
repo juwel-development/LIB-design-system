@@ -185,6 +185,11 @@ convert: every value it emits is a role already named. That emptiness is the ent
 past one (see [ADR 0008](docs/adr/0008-when-a-token-role-becomes-a-prop.md)).
 _Avoid_: Layout, wrapper, box, flex container
 
+**Box**:
+A bounded content group with a semantic surface, border and inner padding. The consumer owns its
+content, headings and internal arrangement.
+_Avoid_: Panel, card, generic styling container
+
 **Stack**:
 A vertical arrangement: children in a column, separated by one named space role and optionally bounded
 by the reading measure. One axis and one gap. It takes no outer space, so whatever holds it owns the
@@ -198,11 +203,49 @@ sit from each other stops reading as one group. It declares no landmark, so a na
 caller's to name.
 _Avoid_: Row, HStack, inline list, nav, toolbar
 
+**ColumnLayout**:
+An arrangement of any number of columns with consumer-chosen relative widths and a minimum readable
+width for each column. When the available space cannot satisfy every column's minimum at those
+proportions, the whole arrangement becomes one column in the same reading order.
+_Avoid_: Proportional Stack, split Stack, Columns
+
 **Collection**:
 A vertical group of freely composed items, separated by hairlines between neighbours with its outer
 edges open. The library owns the spacing and separation; the consumer owns each item's content,
 arrangement and any interaction within it.
 _Avoid_: Roster, item group, divided list
+
+**Plain action**:
+An action presented in the typography of its surrounding content, without a separate button face or
+spacing of its own. It remains an operable button with a visible keyboard focus mark.
+_Avoid_: Ghost button, clickable text
+
+**ScrollContainer**:
+A library component that makes overflowing content reachable along chosen axes within space supplied
+by its parent layout. It owns scrolling, while the consumer owns the content and the allocation of space.
+_Avoid_: Table scroller, sized panel
+
+**Table column allocation**:
+The consumer's assignment of space to a table column, independent of the rows currently displayed.
+An allocation is fixed or a proportional share of available space, optionally bounded by a minimum.
+_Avoid_: Content width, automatic sizing
+
+**Table density**:
+The amount of space around cell content, chosen per table as comfortable or compact.
+It does not change the typography or the dimensions of controls within cells.
+_Avoid_: Font size, control size
+
+**Table row selection**:
+The consumer-owned state identifying a chosen table row, communicated independently of keyboard
+focus and whether the row can be activated. Selection may remain while its row is unavailable for
+activation or absent from the current table view.
+_Avoid_: Highlight, active row, focused row
+
+**Table row activation**:
+A pointer or keyboard request from the body of an interactive table row, whose meaning belongs to
+the consumer. It does not itself change selection, and links and controls inside the row retain
+their own independent operations.
+_Avoid_: Automatic selection, row navigation
 
 **Control**:
 A primitive the viewer operates through a box of its own — a button, an input, a textarea. Not every
@@ -318,6 +361,12 @@ The label, control and messages a form control renders as one unit. Not a primit
 `TextArea`, `Select` and `NumberInput` each *are* a field, and the library offers no wrapper for
 composing one.
 _Avoid_: Field wrapper, form group, form row
+
+**FieldRow**:
+A wrapping group of labelled fields and trailing shared actions, aligned by the bottom edges of
+their controls within each row, independently of labels and messages. Actions stay together unless
+their group itself must wrap; reading and keyboard order follow the content order.
+_Avoid_: Filter toolbar, baseline row, field wrapper
 
 **Driver**:
 Whatever performs a form's submission and carries its state — a native round-trip or a hydrated

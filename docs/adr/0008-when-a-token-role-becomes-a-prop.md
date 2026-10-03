@@ -220,6 +220,63 @@ no component ships with it.
 
 ## Amendments
 
+**ColumnLayout proportional arrangements ([#116](https://github.com/juwel-development/LIB-design-system/issues/116)).**
+The maintainer chose a separate Arrangement with a compound `Root`/`Column` contract rather than
+extending Stack. Each column supplies a positive relative weight and a consumer-defined CSS custom
+property name for its minimum readable width. Weights express structural relationships, not raw
+lengths. The minimum-width reference deliberately permits consumer-defined theme roles: library
+roles such as `comparison` and `summary` were rejected as too use-case-specific for this arrangement.
+This is a narrow authorization for token-name references, not arbitrary CSS values or a style prop.
+The consumer declares those tokens with valid nonnegative lengths in the column's theme context.
+
+The available container width, relative allocations and token-defined minimums decide whether all
+columns fit. If any allocation is below its minimum, the entire arrangement stacks in reading order;
+minimums then cease to constrain width. Existing `stack` and `region` gap roles apply in either mode,
+defaulting to `region`. Columns align at the top and omitted columns reserve no space. Stack's
+existing axis-switching behavior remains its own contract. This decision does not reopen the Figure
+or Brandmark width APIs or introduce a general measurement escape hatch.
+
+**Field/action arrangements ([#118](https://github.com/juwel-development/LIB-design-system/issues/118)).**
+The maintainer accepted a dedicated arrangement for several labelled fields and trailing shared
+actions. Controls align by their bottom edges within each row, independently of wrapping labels
+and messages below them. Input, NumberInput, Select, MultiSelect and TextArea are in scope.
+Items wrap progressively in reading and keyboard order. Actions move as a group and wrap internally
+only when that group cannot fit on its own. This supplies a distinct control-alignment use case;
+it does not change Cluster's baseline contract or authorize a generic Cluster alignment prop.
+
+Field widths follow the ColumnLayout decision: positive consumer-chosen relative weights, equal
+by default, and consumer-defined theme-token references for minimum readable widths. Actions take
+their content width. Minimums determine wrapping, but yield when a field alone cannot fit the
+container. Unlike ColumnLayout, this arrangement wraps progressively rather than switching the
+whole group to one column. This extends the same narrow token-reference authorization, not an
+arbitrary CSS-value or style escape hatch.
+
+The accepted public shape is `FieldRow.Root`, `FieldRow.Field` and `FieldRow.Actions`.
+Each Field member wraps an existing labelled field and carries its width choices; the Actions
+member holds the trailing buttons. Labels, hints and errors remain on the existing field
+components. Root selects the existing `stack` or `region` inline gap, defaulting to `stack`;
+wrapped rows and the actions group use `stack`. Retained controls preserve state and focus through
+reflow. The maintainer confirmed this contract for agent implementation.
+
+**Table column allocation and density ([#115](https://github.com/juwel-development/LIB-design-system/issues/115)).**
+The maintainer accepted fixed and proportional column allocations, with optional minimum widths,
+to prevent filtering, paging and content updates from moving comparison columns. Fixed widths and
+minimums use named theme tokens; proportions express structural relationships. Token names and
+defaults must describe evidenced column jobs rather than introduce a general small/medium/large
+width ladder. This decision authorizes the table-specific token contract; it does not reopen the
+rejected Figure or Brandmark width APIs.
+
+The maintainer also explicitly accepted per-table `comfortable` (default) and `compact` density.
+This is a narrow exception to the distinct-job rule: these choices vary cell padding for different
+comparison densities, with each treatment supplied by theme tokens. They do not select typography,
+resize descendant controls, or authorize density/size scales on other components.
+
+Future interactive column resizing is a separate capability. Its agreed direction is consumer-owned
+runtime widths: resizing a proportional column makes it fixed while the other proportional columns
+share remaining space. Those runtime values represent a user's choice rather than a theme default.
+This decision preserves that extension direction; #115 does not ship resize handles, persistence or
+a speculative numeric-width override API.
+
 **Two claims about [#83](https://github.com/juwel-development/LIB-design-system/issues/83) were wrong
 and are corrected above.** Both assumed `Section` was missing a `bleed` value that keeps content inset
 while the band bleeds. It is not: `Section` paints no background, takes no `max-width` and draws no
