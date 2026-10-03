@@ -15,6 +15,7 @@ import {
 } from 'react';
 import { BehaviorSubject, map, type Observable, Subject } from 'rxjs';
 import { expect, userEvent, within } from 'storybook/test';
+import { MINIMAL_VIEWPORTS } from 'storybook/viewport';
 import { Table, type TableColumnAllocation } from './Table';
 
 const meta: Meta<typeof Table.Root> = {
@@ -22,6 +23,7 @@ const meta: Meta<typeof Table.Root> = {
   component: Table.Root,
   parameters: {
     layout: 'padded',
+    viewport: { options: MINIMAL_VIEWPORTS },
     docs: {
       description: {
         component: [
@@ -57,7 +59,7 @@ Until the consumer's data arrives, the icon and \`ariaSort\` keep stating the ol
           [
             "**Column allocation (#115).** `Table.Root columns` declares every column's share of the width once, in the order the cells of every row are written, and every row shares it: `{ width: role }` is a fixed column that takes its role's theme width at any available width; `{ weight: n, minWidth?: role }` is a proportional column that shares the width the fixed columns leave by its positive weight, floored at its named minimum. While a minimum holds one column, the other proportional columns share what is left; a fixed `width` smaller than its `minWidth` resolves to the minimum; all-fixed columns do not stretch. Nothing a row holds moves a boundary: filtering, sorting, paging, long or short content, an empty body and its repopulation leave the allocation as it was - only the definitions, the theme and the available width can change it. Omit `columns` and widths follow content exactly as before.",
             "The width roles are `name`, `fact`, `figure` and `action` - the four column jobs the consumer specification attests, each a theme token a brand re-points (`--table-column-name` 12rem, `--table-column-fact` 9rem, `--table-column-figure` 8rem, `--table-column-action` 12.5rem by default, cell insets included; `action` holds one standard control at comfortable density). They are jobs, not a size ladder: allocate the subject's `name` first, proportional with a floor so it wraps rather than vanishes; facts proportional at `fact`; figures fixed at `figure` and right-aligned; the action column fixed at `action`, last.",
-            "Under an allocation the table lays out as a CSS grid of subgrids - still a semantic `table`, every `tr` still a box carrying its rule - and no narrow-viewport `notes` rule applies: the note column stays, rows stay tabular, and what does not fit scrolls in the wrapper as it does for every table. Text wraps inside its allocation, an unbroken run included; the table never truncates, hides or resizes content. A cell whose content cannot wrap - a `Button`, an `Input` - needs a column whose width or minimum holds it: the allocation never widens for content, so an under-allocated control overflows its cell. Every row must write exactly as many cells as there are `columns`. Cells align to the top of their row under an allocation; a content-driven table keeps the browser's middle alignment.",
+            "Under an allocation the table lays out as a CSS grid of subgrids - still a semantic `table`, every `tr` still a box carrying its rule - and no narrow-viewport `notes` rule applies: the note column stays, rows stay tabular, and what does not fit scrolls in the wrapper as it does for every table. Text wraps inside its allocation, an unbroken run included; the table never truncates, hides or resizes content. A cell whose content cannot wrap - a `Button`, an `Input` - needs a column whose width or minimum holds it: the allocation never widens for content, so an under-allocated control overflows its cell. A proportional column with no `minWidth` may shrink to nothing once the fixed widths and floors alone exceed the available width, which is why the subject's `name` column carries a floor. Every row must write exactly as many cells as there are `columns`. Cells align to the top of their row under an allocation; a content-driven table keeps the browser's middle alignment.",
             '**Density (#115).** `Table.Root density` is `comfortable` (the default, the former cell spacing exactly: `--table-cell-inset-inline` 1rem and `--table-cell-inset-block` 0.5rem) or `compact` (`--table-cell-inset-inline-compact` 0.5rem, `--table-cell-inset-block-compact` 0.25rem). It insets every header and body cell from the chosen pair and nothing else: no type size moves, no control inside a cell changes its dimensions, and two tables on one page may differ. Compact is for a dense comparison the viewer scans, not for fitting more in.',
           ].join('\n\n'),
         ].join('\n\n'),
@@ -907,10 +909,12 @@ const orderedCandidates = (
   if (order === undefined) return [...rows];
   const sign = order.direction === 'ascending' ? 1 : -1;
   return [...rows].sort((left, right) => {
-    const a = left[order.column];
-    const b = right[order.column];
-    if (typeof a === 'number' && typeof b === 'number') return (a - b) * sign;
-    return String(a).localeCompare(String(b), 'de') * sign;
+    const leftValue = left[order.column];
+    const rightValue = right[order.column];
+    if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+      return (leftValue - rightValue) * sign;
+    }
+    return String(leftValue).localeCompare(String(rightValue), 'de') * sign;
   });
 };
 
@@ -1120,14 +1124,21 @@ const widthsOf = (root: HTMLElement): number[] =>
       (header) => Math.round(header.getBoundingClientRect().width * 10) / 10,
     );
 
+const boundaryOf = (element: Element): string => {
+  const box = element.getBoundingClientRect();
+  return `${Math.round(box.left)}-${Math.round(box.right)}`;
+};
+
 const edgesOf = (root: HTMLElement): string =>
+  within(root).getAllByRole('columnheader').map(boundaryOf).join(' ');
+
+// Every row's cells sit on the header's boundaries: the fact that makes an allocation one.
+const isEveryRowOn = (root: HTMLElement, edges: string): boolean =>
   within(root)
-    .getAllByRole('columnheader')
-    .map((header) => {
-      const rect = header.getBoundingClientRect();
-      return `${Math.round(rect.left)}-${Math.round(rect.right)}`;
-    })
-    .join(' ');
+    .getAllByRole('row')
+    .every(
+      (row) => Array.from(row.children).map(boundaryOf).join(' ') === edges,
+    );
 
 const dimensionRows = (
   <>
@@ -1173,6 +1184,9 @@ export const FixedColumns: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(widthsOf(canvasElement)).toEqual([192, 128, 128]);
+    await expect(isEveryRowOn(canvasElement, edgesOf(canvasElement))).toBe(
+      true,
+    );
     const holder = canvas.getByTestId('holder').getBoundingClientRect();
     const last = canvas.getAllByRole('columnheader').at(-1);
     await expect(last?.getBoundingClientRect().right).toBeLessThan(
@@ -1264,6 +1278,7 @@ export const ComparisonStability: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const edges = edgesOf(canvasElement);
+    await expect(isEveryRowOn(canvasElement, edges)).toBe(true);
     await userEvent.click(canvas.getByRole('button', { name: /^Name/ }));
     await expect(edgesOf(canvasElement)).toBe(edges);
     await userEvent.click(canvas.getByRole('button', { name: /^Wage/ }));
@@ -1272,6 +1287,7 @@ export const ComparisonStability: Story = {
     await expect(edgesOf(canvasElement)).toBe(edges);
     await userEvent.click(canvas.getByRole('button', { name: 'Long labels' }));
     await expect(edgesOf(canvasElement)).toBe(edges);
+    await expect(isEveryRowOn(canvasElement, edges)).toBe(true);
     const search = canvas.getByRole('textbox', { name: 'Search by name' });
     await userEvent.type(search, 'Sato');
     await expect(canvas.getAllByRole('row')).toHaveLength(2);
@@ -1282,6 +1298,7 @@ export const ComparisonStability: Story = {
     await userEvent.clear(search);
     await expect(canvas.getAllByRole('row')).toHaveLength(1 + PAGE_SIZE);
     await expect(edgesOf(canvasElement)).toBe(edges);
+    await expect(isEveryRowOn(canvasElement, edges)).toBe(true);
   },
 };
 
@@ -1454,13 +1471,46 @@ export const InsufficientWidth: Story = {
 };
 
 /**
- * Narrow the viewport below 48rem: the first table, with no allocation, drops its supplementary
- * note column as before; the second and third keep every column and every row tabular under their
- * allocation, whatever `notes` says - the residual overflow scrolls instead. Note typography is
- * unchanged in all three.
+ * Below 48rem (the large-mobile viewport here, or any narrower window): the first table, with no
+ * allocation, drops its supplementary note column as before; the second and third keep every
+ * column and every row tabular under their allocation, whatever `notes` says - the residual
+ * overflow scrolls instead. Note typography is unchanged in all three. Above 48rem all three show
+ * every column, and the play checks whichever case the viewport is in.
  */
 export const NotesKeptUnderAllocation: Story = {
   args: { caption: 'Material specification', notes: 'supplementary' },
+  globals: { viewport: { value: 'mobile2', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const isNarrow = window.innerWidth < 768;
+    const noteDisplays = (holder: string) =>
+      Array.from(
+        canvas.getByTestId(holder).querySelectorAll('[data-variant=note]'),
+      ).map((cell) => getComputedStyle(cell).display);
+    const contentDriven = noteDisplays('content-driven');
+    await expect(contentDriven.length).toBeGreaterThan(0);
+    await expect(contentDriven.every((display) => display === 'none')).toBe(
+      isNarrow,
+    );
+    for (const holder of ['allocated-supplementary', 'allocated-content']) {
+      const root = canvas.getByTestId(holder);
+      await expect(
+        noteDisplays(holder).every((display) => display !== 'none'),
+      ).toBe(true);
+      await expect(within(root).getAllByRole('cell')).toHaveLength(
+        within(root).getAllByRole('row').length * 2 - 2,
+      );
+      for (const row of within(root).getAllByRole('row')) {
+        const tops = new Set(
+          Array.from(row.children).map((cell) =>
+            Math.round(cell.getBoundingClientRect().top),
+          ),
+        );
+        await expect(tops.size).toBe(1);
+      }
+      await expect(root.scrollWidth).toBeGreaterThanOrEqual(root.clientWidth);
+    }
+  },
   render: (args) => (
     <div className={'flex flex-col gap-[var(--space-region)]'}>
       <Table.Root {...args} testId={'content-driven'}>

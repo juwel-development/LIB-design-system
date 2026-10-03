@@ -167,10 +167,8 @@ const MEASURE = `:root {
 }`;
 
 /* The table's column width roles (#115) are not colours: like the measures they live in :root only,
-   so a brand re-points one and every table allocating by that role moves. Four jobs the consumer
-   specification attests - the subject's name, a short comparison fact, a tabular figure with its
-   unit, one action control - and no small/medium/large ladder (docs/adr/0008, Amendments). A column
-   takes a role as its fixed width or as the floor under a proportional share, cell insets included;
+   so a brand re-points one and every table allocating by that role moves. Four column jobs the
+   consumer attests - name, fact, figure, action - and no size ladder (docs/adr/0008, Amendments);
    action holds --control-min-width plus the comfortable insets. Constraint: positive lengths. */
 const TABLE_COLUMN = `:root {
   --table-column-name: 12rem;
@@ -209,11 +207,10 @@ const BOX_INSET = `:root {
   --space-box-inset: 1em;
 }`;
 
-/* Table cell insets (#115): two axis-specific jobs per density, like the tab insets, in :root so a
-   brand tunes both treatments without Table gaining a measurement prop. comfortable is exactly what
-   px-4 / py-2 resolved to, so the default moves nothing; compact halves both. In rem, not em: cell
-   type is fixed at the small and label roles, so there is no inherited size to track. Constraint:
-   nonnegative, and each compact inset no larger than its comfortable one - two treatments, not a ladder. */
+/* Table cell insets (#115): one inline/block pair per density, in :root so a brand tunes both
+   treatments without Table gaining a measurement prop. comfortable is exactly what px-4 / py-2
+   resolved to, so the default moves nothing; compact halves both. In rem: cell type is fixed at the
+   small and label roles. Constraint: nonnegative, each compact inset no larger than its comfortable. */
 const TABLE_CELL_INSET = `:root {
   --table-cell-inset-inline: 1rem;
   --table-cell-inset-block: 0.5rem;

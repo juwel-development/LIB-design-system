@@ -63,6 +63,18 @@
 			"includes": ["**/src/**/*.tsx", "!**/src/**/*.stories.tsx"]
 		}
 	],
+	"overrides": [
+		{
+			"includes": ["**/src/Display/Table/Table.tsx"],
+			"linter": {
+				"rules": {
+					"a11y": {
+						"noRedundantRoles": "off"
+					}
+				}
+			}
+		}
+	],
 	"formatter": {
 		"enabled": true
 	},

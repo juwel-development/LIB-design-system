@@ -18,6 +18,8 @@ import { TableConfigurationError } from './TableConfigurationError';
 // are semantic tokens re-pointed by `.dark`, so no selector carries a `dark:` class. The responsive
 // behaviour is keyed on the wrapper's `data-notes`, so a server renders the right markup with no
 // hydration and the mode is one attribute a stylesheet and a test can both read.
+const DEFAULT_DENSITY = 'comfortable';
+
 const table = cva(
   [
     // Residual horizontal overflow scrolls in every mode (#114); the scroll sits on the wrapper so
@@ -76,7 +78,7 @@ const table = cva(
           '[--table-cell-padding-inline:var(--table-cell-inset-inline-compact)] [--table-cell-padding-block:var(--table-cell-inset-block-compact)]',
       },
     },
-    defaultVariants: { density: 'comfortable' },
+    defaultVariants: { density: DEFAULT_DENSITY },
   },
 );
 
@@ -204,16 +206,16 @@ export type TableColumnAllocation =
 // is declared here so the style object stays typed without an assertion.
 type TableRootStyle = CSSProperties & { '--table-columns'?: string };
 
-const roleOf = (role: TableColumnWidthRole): string =>
+const widthOf = (role: TableColumnWidthRole): string =>
   `var(--table-column-${role})`;
 
 // One grid track per definition: a fixed role, floored by max() when it has a minimum so it holds at
 // any width; a share as minmax(floor, weight fr), which is the browser's own floor-and-redistribute.
 const trackOf = (column: TableColumnAllocation, index: number): string => {
   const minimum =
-    column.minWidth === undefined ? undefined : roleOf(column.minWidth);
+    column.minWidth === undefined ? undefined : widthOf(column.minWidth);
   if (column.width !== undefined) {
-    const width = roleOf(column.width);
+    const width = widthOf(column.width);
     return minimum === undefined ? width : `max(${minimum}, ${width})`;
   }
   if (!Number.isFinite(column.weight) || column.weight <= 0) {
@@ -224,7 +226,7 @@ const trackOf = (column: TableColumnAllocation, index: number): string => {
   return `minmax(${minimum ?? '0'}, ${column.weight}fr)`;
 };
 
-const allocationOf = (
+const trackListOf = (
   columns: readonly TableColumnAllocation[] | undefined,
 ): string | undefined =>
   columns === undefined || columns.length === 0
@@ -278,11 +280,9 @@ export interface ITableHeaderCellProps
 }
 
 // With a note column the wrapper is a named group with a tab stop only while the table overflows it
-// (WCAG 2.1.1): reachable until measured so server markup is operable before hydration, and kept
-// reachable while it holds focus itself, since dropping tabindex from the focused element relocates
-// focus. The table and the caption are observed too: growth inside an overflow box never changes the
-// wrapper's size, and under a declared allocation the tracks overflow the table's own box while the
-// caption, spanning every track, is what grows (#115).
+// (WCAG 2.1.1): reachable until measured, so server markup is operable before hydration, and while
+// it holds focus, since dropping tabindex from the focused element relocates it. The table and the
+// caption are observed too: under an allocation the caption, spanning every track, is what grows.
 const useHorizontalOverflow = (
   wrapper: { current: HTMLElement | null },
   table: { current: HTMLElement | null },
@@ -328,17 +328,17 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
   const wrapper = useRef<HTMLDivElement>(null);
   const tableElement = useRef<HTMLTableElement>(null);
   const captionElement = useRef<HTMLTableCaptionElement>(null);
-  const allocation = allocationOf(columns);
+  const trackList = trackListOf(columns);
   const isOverflowing = useHorizontalOverflow(
     wrapper,
     tableElement,
     captionElement,
   );
   const style: TableRootStyle | undefined =
-    allocation === undefined ? undefined : { '--table-columns': allocation };
-  const columnCount = allocation === undefined ? undefined : columns?.length;
+    trackList === undefined ? undefined : { '--table-columns': trackList };
+  const columnCount = trackList === undefined ? undefined : columns?.length;
   const content = (
-    <table ref={tableElement}>
+    <table ref={tableElement} role={'table'}>
       <caption ref={captionElement}>{caption}</caption>
       {children}
     </table>
@@ -353,7 +353,7 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
         className={table({ density })}
         style={style}
         data-columns={columnCount}
-        data-density={density ?? 'comfortable'}
+        data-density={density ?? DEFAULT_DENSITY}
         data-testid={testId}
         aria-label={caption}
         // biome-ignore lint/a11y/noNoninteractiveTabindex: a scroll container must be keyboard-operable (WCAG 2.1.1)
@@ -371,7 +371,7 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
       style={style}
       data-notes={notes}
       data-columns={columnCount}
-      data-density={density ?? 'comfortable'}
+      data-density={density ?? DEFAULT_DENSITY}
       data-testid={testId}
       role={isOverflowing ? 'group' : undefined}
       aria-label={isOverflowing ? caption : undefined}
@@ -382,16 +382,20 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
   );
 };
 
+// Every member states its table role explicitly, so the semantics survive the display changes the
+// recipe makes - the allocation's grid (#115) and the stacked `content` notes - in any engine. Chrome
+// keeps the implicit roles under `display: grid` (measured through CDP); WebKit's native tree could
+// not be read, so nothing depends on it. biome.json excepts this file from noRedundantRoles for it.
 const TableHead: FunctionComponent<ITableSectionProps> = ({ children }) => (
-  <thead>{children}</thead>
+  <thead role={'rowgroup'}>{children}</thead>
 );
 
 const TableBody: FunctionComponent<ITableSectionProps> = ({ children }) => (
-  <tbody>{children}</tbody>
+  <tbody role={'rowgroup'}>{children}</tbody>
 );
 
 const TableFooter: FunctionComponent<ITableSectionProps> = ({ children }) => (
-  <tfoot>{children}</tfoot>
+  <tfoot role={'rowgroup'}>{children}</tfoot>
 );
 
 const TableRow: FunctionComponent<ITableRowProps> = ({
@@ -439,6 +443,7 @@ const TableRow: FunctionComponent<ITableRowProps> = ({
   const interactive = onClick$ !== undefined;
   return (
     <tr
+      role={'row'}
       className={tableRow({ interactive })}
       data-testid={testId}
       tabIndex={interactive ? 0 : undefined}
@@ -457,7 +462,12 @@ const TableHeaderCell: FunctionComponent<ITableHeaderCellProps> = ({
   ariaSort,
   children,
 }) => (
-  <th scope={scope} aria-sort={ariaSort} className={tableHeaderCell({ align })}>
+  <th
+    role={scope === 'row' ? 'rowheader' : 'columnheader'}
+    scope={scope}
+    aria-sort={ariaSort}
+    className={tableHeaderCell({ align })}
+  >
     {children}
   </th>
 );
@@ -468,6 +478,7 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
   children,
 }) => (
   <td
+    role={'cell'}
     className={tableCell({ variant, align })}
     data-variant={variant ?? 'value'}
   >

@@ -578,7 +578,7 @@ describe('Table', () => {
   // The allocation is one custom property the Root writes and the stylesheet reads as the grid's
   // track list; the spec reads it back as the observable form of the contract, as ColumnLayout's
   // spec reads its threshold. Geometry itself is a browser fact and lives in the stories.
-  const allocationOf = (element: HTMLElement): string =>
+  const trackListOf = (element: HTMLElement): string =>
     element.style.getPropertyValue('--table-columns');
 
   type Allocation = NonNullable<
@@ -695,7 +695,7 @@ describe('Table', () => {
     render(renderAllocated(undefined));
     const wrapper = screen.getByTestId('spec');
     expect(wrapper).not.toHaveAttribute('data-columns');
-    expect(allocationOf(wrapper)).toBe('');
+    expect(trackListOf(wrapper)).toBe('');
   });
 
   it('treats an empty column list as no allocation', () => {
@@ -713,14 +713,14 @@ describe('Table', () => {
     );
     const wrapper = screen.getByTestId('spec');
     expect(wrapper).toHaveAttribute('data-columns', '3');
-    expect(allocationOf(wrapper)).toBe(
+    expect(trackListOf(wrapper)).toBe(
       'var(--table-column-name) var(--table-column-figure) var(--table-column-action)',
     );
   });
 
   it('writes a proportional-only allocation as weighted shares from nothing, so 3:1 follows that ratio', () => {
     render(renderAllocated([{ weight: 3 }, { weight: 1 }, { weight: 1 }]));
-    expect(allocationOf(screen.getByTestId('spec'))).toBe(
+    expect(trackListOf(screen.getByTestId('spec'))).toBe(
       'minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1fr)',
     );
   });
@@ -733,7 +733,7 @@ describe('Table', () => {
         { weight: 1, minWidth: 'fact' },
       ]),
     );
-    expect(allocationOf(screen.getByTestId('spec'))).toBe(
+    expect(trackListOf(screen.getByTestId('spec'))).toBe(
       'minmax(var(--table-column-name), 2fr) var(--table-column-figure) minmax(var(--table-column-fact), 1fr)',
     );
   });
@@ -746,7 +746,7 @@ describe('Table', () => {
         { weight: 1 },
       ]),
     );
-    expect(allocationOf(screen.getByTestId('spec'))).toBe(
+    expect(trackListOf(screen.getByTestId('spec'))).toBe(
       'max(var(--table-column-fact), var(--table-column-figure)) minmax(0, 1fr) minmax(0, 1fr)',
     );
   });
@@ -759,7 +759,7 @@ describe('Table', () => {
     ];
     const { rerender } = render(renderAllocated(columns));
     const wrapper = screen.getByTestId('spec');
-    const allocation = allocationOf(wrapper);
+    const allocation = trackListOf(wrapper);
     for (const rows of [
       ['Bracket'],
       ['Bracket', 'Enclosure'],
@@ -768,7 +768,7 @@ describe('Table', () => {
     ]) {
       rerender(renderAllocated(columns, rows));
       expect(screen.getByTestId('spec')).toBe(wrapper);
-      expect(allocationOf(wrapper)).toBe(allocation);
+      expect(trackListOf(wrapper)).toBe(allocation);
       expect(wrapper).toHaveAttribute('data-columns', '3');
     }
   });
@@ -780,7 +780,7 @@ describe('Table', () => {
     rerender(
       renderAllocated([{ width: 'name' }, { weight: 3 }, { weight: 1 }]),
     );
-    expect(allocationOf(screen.getByTestId('spec'))).toBe(
+    expect(trackListOf(screen.getByTestId('spec'))).toBe(
       'var(--table-column-name) minmax(0, 3fr) minmax(0, 1fr)',
     );
   });
@@ -817,6 +817,29 @@ describe('Table', () => {
     }
     for (const header of screen.getAllByRole('columnheader')) {
       expect(header).not.toHaveAttribute('aria-sort');
+    }
+  });
+
+  it('states every table role explicitly, so neither the allocation grid nor the stacked content notes cost an engine the table semantics', () => {
+    render(
+      renderAllocated([{ weight: 1 }, { width: 'figure' }, { weight: 1 }]),
+    );
+    const table = screen.getByRole('table', { name: 'Parts' });
+    expect(table).toHaveAttribute('role', 'table');
+    for (const group of table.querySelectorAll('thead, tbody')) {
+      expect(group).toHaveAttribute('role', 'rowgroup');
+    }
+    for (const row of table.querySelectorAll('tr')) {
+      expect(row).toHaveAttribute('role', 'row');
+    }
+    for (const header of table.querySelectorAll('th[scope=col]')) {
+      expect(header).toHaveAttribute('role', 'columnheader');
+    }
+    for (const header of table.querySelectorAll('th[scope=row]')) {
+      expect(header).toHaveAttribute('role', 'rowheader');
+    }
+    for (const cell of table.querySelectorAll('td')) {
+      expect(cell).toHaveAttribute('role', 'cell');
     }
   });
 
