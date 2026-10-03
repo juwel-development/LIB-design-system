@@ -62,6 +62,17 @@ describe('DefinitionList', () => {
     expect(term.className).not.toMatch(/\bmax-w-/);
   });
 
+  it('sets the term and the description in the body family role, whatever size the term takes (#120)', () => {
+    // docs/adr/0004, the amendment: the term and its description are together the reading matter,
+    // so both read --font-body - the term is sized like a heading and is not one.
+    renderSpecList();
+    expect(screen.getByText('Turning').className).toContain('font-body');
+    expect(screen.getByText('Turning').className).not.toContain('font-heading');
+    expect(screen.getByText('Cutting on a lathe.').className).toContain(
+      'font-body',
+    );
+  });
+
   it('sets the description at the body role, muted, and caps it at the reading measure', () => {
     renderSpecList();
     const description = screen.getByText('Cutting on a lathe.');

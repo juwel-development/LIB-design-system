@@ -9,7 +9,7 @@ import type { FunctionComponent, ReactNode } from 'react';
 // semantic token re-pointed by `.dark`, so no variant carries a `dark:` class. The measure is base and
 // not a variant because the role fixes it and a caller picks nothing (docs/adr/0008, #87).
 const h1 = cva(
-  'font-primary text-display leading-display tracking-optical max-w-[var(--measure-display)]',
+  'font-heading text-display leading-display tracking-optical max-w-[var(--measure-display)]',
   {
     variants: {
       color: {
@@ -35,7 +35,8 @@ interface IH1Props extends VariantProps<typeof h1> {
  *
  * @Guarantees — enforced on every render
  * - Renders an `h1`; its outline level and the display role are one choice, not two (docs/adr/0005).
- * - Reads `--font-primary`, sized by `--text-display`, led by `--leading-display` and optically
+ * - Reads `--font-heading`, the heading family that follows `--font-primary` until a theme
+ *   re-points it (#120), sized by `--text-display`, led by `--leading-display` and optically
  *   corrected by `--tracking-optical`, the large-type correction every role from title up carries.
  * - Bounded at `--measure-display`, the display role's own measure — narrower than the reading column
  *   because bigger type wants fewer characters per line (docs/adr/0004). The bound is the recipe's,

@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { Table } from './Table';
+import { type ITableRowProps, Table } from './Table';
 import { TableConfigurationError } from './TableConfigurationError';
 
 const renderSpecTable = (
@@ -102,6 +103,18 @@ describe('Table', () => {
     const note = screen.getByRole('cell', { name: 'dry, no cable' });
     expect(value).toHaveClass('tabular-nums');
     expect(note).not.toHaveClass('tabular-nums');
+  });
+
+  it('sets a value cell in the body family and a note cell in the secondary family (#120)', () => {
+    // docs/adr/0004, the amendment: the figures are what was come for and read --font-body, which
+    // is why the tnum constraint is stated on the effective body face; the note is apparatus.
+    renderSpecTable();
+    expect(screen.getByRole('cell', { name: '2.4 kg' }).className).toContain(
+      'font-body',
+    );
+    expect(
+      screen.getByRole('cell', { name: 'dry, no cable' }).className,
+    ).toContain('font-secondary');
   });
 
   it('never boxes a cell: no td or th carries a border of its own', () => {
@@ -330,6 +343,235 @@ describe('Table', () => {
     act(() => wrapper.blur());
     expect(wrapper).not.toHaveAttribute('tabindex');
     expect(wrapper).not.toHaveAttribute('role');
+  });
+  // A one-row body table: the row under test is the one named by its row header. The same tree
+  // serves the first render and every rerender, so a test states only the props it changes.
+  const rowTree = (
+    props: Pick<ITableRowProps, 'onClick$' | 'isSelected$'>,
+    children: ReactNode = (
+      <Table.HeaderCell scope={'row'}>Nova</Table.HeaderCell>
+    ),
+  ) => (
+    <Table.Root caption={'Artists'} notes={'supplementary'}>
+      <Table.Body>
+        <Table.Row onClick$={props.onClick$} isSelected$={props.isSelected$}>
+          {children}
+        </Table.Row>
+      </Table.Body>
+    </Table.Root>
+  );
+
+  const renderRow = (
+    props: Pick<ITableRowProps, 'onClick$' | 'isSelected$'>,
+    children?: ReactNode,
+  ) => render(rowTree(props, children));
+
+  const rowOf = (name: string): HTMLElement => {
+    const row = screen.getByRole('rowheader', { name }).closest('tr');
+    if (row === null) {
+      throw new Error(`no row named ${name}`);
+    }
+    return row;
+  };
+
+  it('keeps a static row noninteractive: no tab stop and no selection state announced', () => {
+    renderSpecTable();
+    for (const row of screen.getAllByRole('row')) {
+      expect(row).not.toHaveAttribute('tabindex');
+      expect(row).not.toHaveAttribute('aria-selected');
+    }
+  });
+
+  it('emits exactly once on onClick$ when the row body is activated by pointer', () => {
+    const onClick$ = new Subject<void>();
+    const activations = vi.fn();
+    onClick$.subscribe(activations);
+    renderRow({ onClick$ });
+    fireEvent.click(screen.getByRole('rowheader', { name: 'Nova' }));
+    expect(activations).toHaveBeenCalledTimes(1);
+  });
+
+  it('adds an activation tab stop only while onClick$ is supplied', () => {
+    const onClick$ = new Subject<void>();
+    const { rerender } = renderRow({ onClick$ });
+    expect(rowOf('Nova')).toHaveAttribute('tabindex', '0');
+    rerender(rowTree({}));
+    expect(rowOf('Nova')).not.toHaveAttribute('tabindex');
+  });
+
+  it('activates on Enter and on Space from the keyboard, each exactly once, so no pointer is needed', () => {
+    const onClick$ = new Subject<void>();
+    const activations = vi.fn();
+    onClick$.subscribe(activations);
+    renderRow({ onClick$ });
+    const row = rowOf('Nova');
+    fireEvent.keyDown(row, { key: 'Enter' });
+    expect(activations).toHaveBeenCalledTimes(1);
+    fireEvent.keyDown(row, { key: ' ' });
+    expect(activations).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps Space from scrolling the page and ignores a held-down key, so a press is one request', () => {
+    const onClick$ = new Subject<void>();
+    const activations = vi.fn();
+    onClick$.subscribe(activations);
+    renderRow({ onClick$ });
+    const row = rowOf('Nova');
+    const space = new KeyboardEvent('keydown', {
+      key: ' ',
+      bubbles: true,
+      cancelable: true,
+    });
+    row.dispatchEvent(space);
+    expect(space.defaultPrevented).toBe(true);
+    fireEvent.keyDown(row, { key: 'Enter', repeat: true });
+    fireEvent.keyDown(row, { key: 'a' });
+    expect(activations).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets a nested link, button and their descendants perform their own operation without activating the row', () => {
+    const onClick$ = new Subject<void>();
+    const activations = vi.fn();
+    onClick$.subscribe(activations);
+    const action = vi.fn();
+    renderRow(
+      { onClick$ },
+      <>
+        <Table.HeaderCell scope={'row'}>Nova</Table.HeaderCell>
+        <Table.Cell>
+          <a href={'/artists/nova'}>Open profile</a>
+        </Table.Cell>
+        <Table.Cell>
+          <button type={'button'} onClick={action}>
+            <span>Sign</span>
+          </button>
+        </Table.Cell>
+      </>,
+    );
+    fireEvent.click(screen.getByRole('link', { name: 'Open profile' }));
+    fireEvent.click(screen.getByText('Sign'));
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Sign' }), {
+      key: 'Enter',
+    });
+    expect(action).toHaveBeenCalledTimes(1);
+    expect(activations).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('rowheader', { name: 'Nova' }));
+    expect(activations).toHaveBeenCalledTimes(1);
+  });
+
+  it('announces the selection the consumer supplies, without a tab stop when the row cannot be activated', () => {
+    renderRow({ isSelected$: new BehaviorSubject(true) });
+    const row = rowOf('Nova');
+    expect(row).toHaveAttribute('aria-selected', 'true');
+    expect(row).not.toHaveAttribute('tabindex');
+  });
+
+  it('reads as unselected until the selection input emits, and follows every later value', () => {
+    const isSelected$ = new Subject<boolean>();
+    renderRow({ isSelected$ });
+    const row = rowOf('Nova');
+    expect(row).toHaveAttribute('aria-selected', 'false');
+    act(() => isSelected$.next(true));
+    expect(row).toHaveAttribute('aria-selected', 'true');
+    act(() => isSelected$.next(false));
+    expect(row).toHaveAttribute('aria-selected', 'false');
+  });
+
+  it('never changes selection by itself: an unanswered activation leaves the rendered selection as it was', () => {
+    const onClick$ = new Subject<void>();
+    renderRow({ onClick$, isSelected$: new BehaviorSubject(false) });
+    const row = rowOf('Nova');
+    fireEvent.click(row);
+    fireEvent.keyDown(row, { key: 'Enter' });
+    expect(row).toHaveAttribute('aria-selected', 'false');
+  });
+
+  it('emits no activation for rendering or for a change of selection', () => {
+    const onClick$ = new Subject<void>();
+    const activations = vi.fn();
+    onClick$.subscribe(activations);
+    const isSelected$ = new BehaviorSubject(false);
+    const { rerender } = renderRow({ onClick$, isSelected$ });
+    act(() => isSelected$.next(true));
+    rerender(rowTree({ onClick$, isSelected$ }));
+    expect(rowOf('Nova')).toHaveAttribute('aria-selected', 'true');
+    expect(activations).not.toHaveBeenCalled();
+  });
+
+  it('can still request activation while selected - the consumer decides what that means', () => {
+    const onClick$ = new Subject<void>();
+    const activations = vi.fn();
+    onClick$.subscribe(activations);
+    renderRow({ onClick$, isSelected$: new BehaviorSubject(true) });
+    fireEvent.click(rowOf('Nova'));
+    expect(activations).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops activation when onClick$ is removed while keeping the supplied selection', () => {
+    const onClick$ = new Subject<void>();
+    const activations = vi.fn();
+    onClick$.subscribe(activations);
+    const isSelected$ = new BehaviorSubject(true);
+    const { rerender } = renderRow({ onClick$, isSelected$ });
+    rerender(rowTree({ isSelected$ }));
+    const row = rowOf('Nova');
+    fireEvent.click(row);
+    fireEvent.keyDown(row, { key: 'Enter' });
+    expect(activations).not.toHaveBeenCalled();
+    expect(row).toHaveAttribute('aria-selected', 'true');
+    expect(row).not.toHaveAttribute('tabindex');
+  });
+
+  it('switches to a replaced selection source: unselected until it emits, and deaf to the old one', () => {
+    const first$ = new BehaviorSubject(true);
+    const second$ = new Subject<boolean>();
+    const { rerender } = renderRow({ isSelected$: first$ });
+    expect(rowOf('Nova')).toHaveAttribute('aria-selected', 'true');
+    rerender(rowTree({ isSelected$: second$ }));
+    const row = rowOf('Nova');
+    expect(row).toHaveAttribute('aria-selected', 'false');
+    expect(first$.observed).toBe(false);
+    act(() => first$.next(true));
+    expect(row).toHaveAttribute('aria-selected', 'false');
+    act(() => second$.next(true));
+    expect(row).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('unsubscribes from the selection input when the row unmounts, and asks nothing of the consumer', () => {
+    const isSelected$ = new BehaviorSubject(true);
+    const onClick$ = new Subject<void>();
+    const activations = vi.fn();
+    onClick$.subscribe(activations);
+    const { rerender } = renderRow({ onClick$, isSelected$ });
+    expect(isSelected$.observed).toBe(true);
+    rerender(
+      <Table.Root caption={'Artists'} notes={'supplementary'}>
+        <Table.Body />
+      </Table.Root>,
+    );
+    expect(isSelected$.observed).toBe(false);
+    expect(isSelected$.getValue()).toBe(true);
+    expect(activations).not.toHaveBeenCalled();
+  });
+
+  it('leaves a nested custom control, known only by its interactive role, to its own operation', () => {
+    const onClick$ = new Subject<void>();
+    const activations = vi.fn();
+    onClick$.subscribe(activations);
+    renderRow(
+      { onClick$ },
+      <>
+        <Table.HeaderCell scope={'row'}>Nova</Table.HeaderCell>
+        <Table.Cell>
+          {/* biome-ignore lint/a11y/useFocusableInteractive: a role-only, unfocusable widget is the case under test */}
+          <span role={'menuitemcheckbox'} aria-checked={'false'}>
+            <span>Shortlist</span>
+          </span>
+        </Table.Cell>
+      </>,
+    );
+    fireEvent.click(screen.getByText('Shortlist'));
+    expect(activations).not.toHaveBeenCalled();
   });
 
   // --- Column allocation and density (#115) ------------------------------------------------------

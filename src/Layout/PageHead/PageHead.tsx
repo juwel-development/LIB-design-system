@@ -16,20 +16,21 @@ const pageHead = cva(
   'flex flex-col gap-[var(--space-stack)] py-[var(--space-band)] px-[var(--gutter)]',
 );
 
-// The scale event: the title role, led and tracked as a large heading, foreground. No measure - the
-// head is full-bleed and the consumer keeps titles short.
+// The scale event: the title role, led and tracked as a large heading, foreground, in the heading
+// face every heading reads (#120). No measure - the head is full-bleed and the consumer keeps titles
+// short.
 const pageHeadTitle = cva(
-  'font-primary text-title leading-title tracking-optical text-foreground',
+  'font-heading text-title leading-title tracking-optical text-foreground',
 );
 
 // The standfirst: the lede role, foreground, run one measure wider than the reading column (#18).
 const pageHeadLede = cva(
-  'font-primary text-lede leading-lede text-foreground max-w-[var(--measure-wide)]',
+  'font-body text-lede leading-lede text-foreground max-w-[var(--measure-wide)]',
 );
 
 // The small print: the small role, muted, held to the reading measure like Prose's tail.
 const pageHeadIntro = cva(
-  'font-primary text-small text-muted max-w-[var(--measure)]',
+  'font-body text-small text-muted max-w-[var(--measure)]',
 );
 
 export interface IPageHeadProps {

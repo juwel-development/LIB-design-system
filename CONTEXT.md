@@ -112,6 +112,17 @@ to `Form`'s note and a table's to the note cell, each painted by the component t
 primitive is for an annotation no other component owns.
 _Avoid_: Caption, hint, small print, helper text, footnote, disclaimer
 
+**Family role**:
+Which face a piece of text is set in, named by the job of the text and never by the face: `heading`
+for the heading ladder, `body` for reading matter, `control` for the box a viewer operates, and
+`secondary` for what names or routes to any of them. `primary` is the face those three fall back to
+— what the visitor came for, before it was told apart — so a theme that sets only `primary` and
+`secondary` has one face for headings, reading matter and controls, as before, and a theme that
+re-points one role moves one role. A role resolves on the element reading it, so a theme at any
+scope reaches the text beneath it. There is no face prop: which face a heading takes is the system's
+decision, not the heading's.
+_Avoid_: Font, typeface, font stack, serif/sans role
+
 **Reading measure**:
 The width running text is bounded to, counted in characters rather than in length — because
 character count is what reading tolerance is defined in, and a width held still lets the count drift
@@ -239,6 +250,11 @@ _Avoid_: Content width, automatic sizing
 **Table density**:
 The amount of space around cell content, chosen per table as comfortable or compact.
 It does not change the typography or the dimensions of controls within cells.
+_Avoid_: Font size, control size
+
+**Definition list density**:
+The amount of space around terms and descriptions, chosen per definition list as comfortable or
+compact. It does not change typography or the dimensions of controls within descriptions.
 _Avoid_: Font size, control size
 
 **Table row selection**:
