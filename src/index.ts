@@ -1,6 +1,7 @@
 import './styles.css';
 
 export { Cluster } from 'Arrangement/Cluster/Cluster';
+export { FieldRow } from 'Arrangement/FieldRow/FieldRow';
 export { Stack } from 'Arrangement/Stack/Stack';
 export { Brandmark } from 'Display/Brandmark/Brandmark';
 export { Checklist } from 'Display/Checklist/Checklist';

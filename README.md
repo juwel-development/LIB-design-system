@@ -297,6 +297,70 @@ padding. It is declared in all three token stylesheets and accepts a nonnegative
 length. Hairlines use the existing `--color-border` role. There are no density,
 padding or arrangement props; child components own their typography and wrapping.
 
+## FieldRow
+
+A wrapping row of labelled fields and the shared actions that trail them, aligned on the
+bottom edges of the controls themselves rather than on the fields' boxes. A label that
+wraps, an optional marker, a hint or an error on one field never pushes its neighbours'
+controls out of line. It is an Arrangement: no form, no landmark, no filter meaning, no
+wording and no outer space of its own.
+
+```tsx
+<FieldRow.Root gap={'stack'}>
+  <FieldRow.Field weight={2} minWidth={'--search-field-min-width'}>
+    <Input name={'search'} label={'Name'} />
+  </FieldRow.Field>
+  <FieldRow.Field minWidth={'--quality-field-min-width'}>
+    <NumberInput name={'quality'} label={'Minimum quality'} />
+  </FieldRow.Field>
+  <FieldRow.Actions>
+    <Button>Apply</Button>
+    <Button variant={'secondary'}>Reset</Button>
+  </FieldRow.Actions>
+</FieldRow.Root>;
+```
+
+`Root` takes `children` and an optional `gap`, `'stack'` (the default, the sibling gap of
+controls that act together) or `'region'`; the gap between wrapped rows and between the
+action buttons is always `--space-stack`. `Field` wraps exactly one existing labelled field -
+`Input`, `NumberInput`, `Select`, `MultiSelect` or `TextArea` - and carries its width choices:
+an optional positive finite `weight`, `1` when omitted, and a required `minWidth` naming a
+CSS custom property such as `--search-field-min-width`. `Actions` holds the consumer's
+buttons and takes their content width. Every member accepts `testId`.
+
+Each row shares its width among its fields in proportion to their weights, after the gaps
+and the actions' content width are reserved. Items wrap progressively at the width available
+to the row, not the viewport: a field moves to the next row when its minimum no longer fits,
+each row aligns its own controls, and a field alone on a row narrower than its minimum fits
+the row rather than overflowing it. The actions move to the next row as one group and wrap
+their buttons inside the group only once the group cannot fit a row by itself. Reading and
+keyboard order are the content's, and a resize, a message appearing or a field taken in or
+out keeps every retained control mounted with its value, selection and focus.
+
+The control is whatever a field's own label labels, so a field keeps its label, hint,
+optional marker and error and FieldRow reads none of their wording. `Field` and `Actions` are
+direct children of `Root`, through arrays, fragments and consumer components that render
+them, but never wrapped in an element of the consumer's own.
+
+### Minimum-width tokens
+
+FieldRow ships no width presets. The consumer declares every token a `Field` names, with a
+nonnegative CSS length in any unit, on the row or an ancestor - a product stylesheet, a page
+or the row's own holder - so one field role can take different minimums in different places:
+
+```css
+.label-filter {
+  --search-field-min-width: 14rem;
+  --quality-field-min-width: 9rem;
+}
+```
+
+The value is resolved live, so a theme change re-wraps the row. `minWidth` accepts a token
+name only, never a length, a `var()` or an expression; a weight that is not a positive finite
+number or a malformed name throws a `FieldRowConfigurationError`, and a member outside `Root`
+throws a `FieldRowCompositionError`. An undeclared token is not a responsive configuration:
+the field then falls back to its content's own minimum width.
+
 ## Theming
 
 Colour is addressed by **role**, never by shade - `bg-primary`, `text-muted`,
