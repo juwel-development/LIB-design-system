@@ -210,6 +210,11 @@
   --tab-marker-thickness: 2px;
 }
 
+/* The table selection marker's thickness is not a colour either, and sits in :root beside the tab marker. */
+:root {
+  --table-selection-marker-thickness: 2px;
+}
+
 :root {
   --tab-inset-inline: 1em;
   --tab-inset-block: 0.5em;
