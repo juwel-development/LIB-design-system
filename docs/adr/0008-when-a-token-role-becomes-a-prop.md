@@ -271,7 +271,7 @@ This is a narrow exception to the distinct-job rule: these choices vary cell pad
 comparison densities, with each treatment supplied by theme tokens. They do not select typography,
 resize descendant controls, or authorize density/size scales on other components.
 
-**DefinitionList density ([#123](https://github.com/juwel-development/LIB-design-system/issues/123)).**
+**DefinitionList density and allocation ([#123](https://github.com/juwel-development/LIB-design-system/issues/123)).**
 During triage the maintainer explicitly extended the same density contract to DefinitionList:
 `density?: 'comfortable' | 'compact'` on Root, with `comfortable` as the default. Compact reduces
 spacing through semantic theme tokens; density does not change typography or descendant control
@@ -286,6 +286,19 @@ runtime widths: resizing a proportional column makes it fixed while the other pr
 share remaining space. Those runtime values represent a user's choice rather than a theme default.
 This decision preserves that extension direction; #115 does not ship resize handles, persistence or
 a speculative numeric-width override API.
+
+**What #123 shipped.** The item air is `--space-definition-item` and `--space-definition-item-compact`, two
+roles named for the treatments the way Table's density is supplied. The allocation is `termColumn`
+and `descriptionColumn` on Root, each a positive relative `weight` and a `minWidth` custom-property
+name under the same narrow token-reference authorization as ColumnLayout's columns, with library
+defaults `--definition-term-min-width` and `--definition-description-min-width` so an existing
+composition needs no new prop. Both densities measure the list's own width and stack all or nothing
+at ColumnLayout's threshold; the comfortable list's former 64rem viewport switch and fixed 16rem
+term track are replaced by that behaviour, as the brief intended. The switch is stylesheet-only; the
+description's column pin is a container style query on a length the shared stylesheet registers with
+`@property`, the one component-specific registration it carries. This decision authorizes nothing
+beyond DefinitionList: no density on another component, and no reopening of the Figure or Brandmark
+width APIs.
 
 **Two claims about [#83](https://github.com/juwel-development/LIB-design-system/issues/83) were wrong
 and are corrected above.** Both assumed `Section` was missing a `bleed` value that keeps content inset

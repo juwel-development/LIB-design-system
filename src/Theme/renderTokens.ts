@@ -188,6 +188,17 @@ const COLLECTION_SPACING = `:root {
   --space-collection-item: 1em;
 }`;
 
+/* DefinitionList's four roles (#123): item air per density, in rem like Table's cell padding since
+   the members set their own type roles, and the two columns' minimum readable widths, in rem like
+   --control-min-width since a column is counted against the root. Theme-overridable; the item air
+   accepts any nonnegative length, a minimum any nonnegative length a `calc()` can read. */
+const DEFINITION_SPACING = `:root {
+  --space-definition-item: 1.5rem;
+  --space-definition-item-compact: 0.5rem;
+  --definition-term-min-width: 9rem;
+  --definition-description-min-width: 10rem;
+}`;
+
 /* Box's inner padding (#117): one role on all four sides, distinct from a sibling gap, a region's
    air or a page band, so a brand tunes every Box at once and no Box gains a padding prop (ADR 0008,
    the token-role test). In em like --space-collection-item, so it tracks the inherited type.
@@ -384,6 +395,9 @@ ${SPACING}
 
 /* Collection's vertical item padding, measured against inherited type. */
 ${COLLECTION_SPACING}
+
+/* DefinitionList's item air and column minimums sit in :root beside the collection role (#123). */
+${DEFINITION_SPACING}
 
 /* Box's inner padding, measured against inherited type, beside Collection's. */
 ${BOX_INSET}
