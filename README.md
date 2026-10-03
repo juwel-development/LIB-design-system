@@ -323,15 +323,17 @@ import { Box, DefinitionList, H3, Stack } from '@juwel-development/design-system
 The props are `children?: ReactNode`, `name?: string` and `testId?: string`, nothing else:
 no size, width, height or padding prop, no heading slot, no `className`.
 
-**Accessible naming.** With `name`, the box is an accessible group carrying that name.
-Without it, the box is an ordinary enclosure - no role, no label, no landmark. A name renders
-no visible heading: supply the heading yourself and keep the two in step. In neither case
-does the box add a focus stop, so controls inside keep their ordinary keyboard behaviour.
+**Accessible naming.** With a non-empty `name`, the box is an accessible group carrying that
+name. Without one - omitted or an empty string - the box is an ordinary enclosure: no role, no
+label, no landmark. A name renders no visible heading: supply the heading yourself and keep the
+two in step. In neither case does the box add a focus stop or listen for a key, so controls
+inside keep their ordinary keyboard behaviour.
 
 **Width, height and wrapping.** The box fills the width its holder allocates, border and
 padding included, grows with its content and shrinks inside a narrow holder. Long prose and
-unbroken names wrap inside it. It sets no height and hides no overflow. Content with its own
-sizing or overflow contract - a table, a figure, a code block - keeps that responsibility;
+unbroken names wrap inside it: it sets `overflow-wrap: anywhere`, which descendants inherit
+unless they set their own wrapping. It sets no height and hides no overflow. Content with its
+own sizing or overflow contract - a table, a figure, a code block - keeps that responsibility;
 the box wraps text and never scrolls or clips on its behalf. An empty box is an empty
 enclosure with no empty-state wording: omit it rather than expecting one.
 

@@ -51,6 +51,18 @@ describe('Box', () => {
     expect(screen.queryByRole('region')).not.toBeInTheDocument();
   });
 
+  it('treats an empty name as no name, so it never exposes a group that has nothing to announce', () => {
+    render(
+      <Box name={''} testId={'blank'}>
+        <p>Fact</p>
+      </Box>,
+    );
+    const box = screen.getByTestId('blank');
+    expect(box).not.toHaveAttribute('role');
+    expect(box).not.toHaveAttribute('aria-label');
+    expect(screen.queryByRole('group')).not.toBeInTheDocument();
+  });
+
   it('renders an empty enclosure with no invented empty-state text', () => {
     render(<Box testId={'empty'} />);
     const box = screen.getByTestId('empty');
@@ -68,8 +80,9 @@ describe('Box', () => {
         Fact
       </Box>,
     );
-    expect(screen.getByTestId('box')).not.toHaveAttribute('tabindex');
-    expect(screen.getByTestId('box').tabIndex).toBe(-1);
+    const named = screen.getByRole('group', { name: 'Named' });
+    expect(named).not.toHaveAttribute('tabindex');
+    expect(named.tabIndex).toBe(-1);
   });
 
   it('leaves consumer controls inside it independently focusable and operable', () => {
@@ -79,12 +92,12 @@ describe('Box', () => {
       activations.push('activated'),
     );
     render(
-      <Box name={'Actions'} testId={'box'}>
+      <Box name={'Actions'}>
         <Input label={'Artist'} name={'artist'} />
         <Button onClick$={activate$}>Activate</Button>
       </Box>,
     );
-    const box = screen.getByTestId('box');
+    const box = screen.getByRole('group', { name: 'Actions' });
     const input = within(box).getByRole('textbox', { name: 'Artist' });
     const button = within(box).getByRole('button', { name: 'Activate' });
     input.focus();
@@ -98,6 +111,27 @@ describe('Box', () => {
     fireEvent.click(box);
     expect(activations).toEqual(['activated']);
     subscription.unsubscribe();
+  });
+
+  it('intercepts no key: Tab and Enter pass through the box unprevented, so controls keep their ordinary keyboard behaviour', () => {
+    render(
+      <Box name={'Actions'}>
+        <Input label={'Artist'} name={'artist'} />
+        <Button>Activate</Button>
+      </Box>,
+    );
+    const box = screen.getByRole('group', { name: 'Actions' });
+    const input = within(box).getByRole('textbox', { name: 'Artist' });
+    const button = within(box).getByRole('button', { name: 'Activate' });
+    input.focus();
+    // fireEvent returns false when a listener called preventDefault: the box must never do so.
+    expect(fireEvent.keyDown(input, { key: 'Tab' })).toBe(true);
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(true);
+    expect(input).toHaveFocus();
+    button.focus();
+    expect(fireEvent.keyDown(button, { key: 'Enter' })).toBe(true);
+    expect(fireEvent.keyDown(button, { key: ' ' })).toBe(true);
+    expect(button).toHaveFocus();
   });
 
   it('maps testId to the test hook attribute and omits it otherwise', () => {

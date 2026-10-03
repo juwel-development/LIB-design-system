@@ -1,12 +1,10 @@
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent, ReactNode } from 'react';
 
-// One recipe on a plain <div>, no variants: a Box has nothing to choose. Square corners and no
-// shadow are the absence of any radius or shadow utility rather than literal resets - the control
-// radius and the floating elevation belong to other roles (docs/adr/0003, docs/adr/0012). `min-w-0` lets
-// a flex or grid holder shrink it below its content's min-content width, and `overflow-wrap:
-// anywhere` (MultiSelect's idiom) breaks an unbroken name inside it; no overflow is hidden, so
-// content with its own sizing contract is never clipped as a stand-in for wrapping.
+// No variants: a Box has nothing to choose. `min-w-0` lets a flex or grid holder shrink it below its
+// content's min-content width, and `overflow-wrap: anywhere` (MultiSelect's idiom) breaks an unbroken
+// name inside it; no overflow is hidden, so content with its own sizing contract is never clipped as
+// a stand-in for wrapping. Square corners and no shadow are the absence of a utility, not a reset.
 const box = cva(
   [
     'min-w-0 border border-solid border-border bg-surface text-foreground',
@@ -17,9 +15,9 @@ const box = cva(
 export interface IBoxProps {
   /** The enclosed matter - a Stack, a heading, facts. Rendered unmodified: Box imposes no anatomy. */
   children?: ReactNode;
-  /** Exposes the enclosure as an accessible group with this name. Omit for an ordinary enclosure:
-   *  an unnamed Box has no role and is inert to assistive technology. The name is never rendered -
-   *  the consumer supplies any visible heading. */
+  /** Exposes the enclosure as an accessible group with this name. Omit it, or pass an empty string,
+   *  for an ordinary enclosure: an unnamed Box has no role and is inert to assistive technology. The
+   *  name is never rendered - the consumer supplies any visible heading. */
   name?: string;
   testId?: string;
 }
@@ -36,9 +34,9 @@ export interface IBoxProps {
  * - It fills the width its holder allocates, border and padding included, grows with its content
  *   and shrinks inside a narrow holder: no fixed width, height, minimum viewport or aspect. Long
  *   prose and unbroken text wrap inside it rather than truncate, and nothing is clipped.
- * - With `name` it is an accessible group carrying that name; without, a plain `div` with no role,
- *   no label and no landmark. In neither case does it add a focus stop, so controls inside keep
- *   their ordinary keyboard behaviour.
+ * - With a non-empty `name` it is an accessible group carrying that name; without one, a plain
+ *   `div` with no role, no label and no landmark. In neither case does it add a focus stop or
+ *   listen for a key, so controls inside keep their ordinary keyboard behaviour.
  * - An empty Box is an empty enclosure - surface, border and padding - with no invented wording.
  * - `children` render unmodified, in order, and it needs no JavaScript.
  *
@@ -60,8 +58,9 @@ export const Box: FunctionComponent<IBoxProps> = ({
   testId,
 }) =>
   // Two renders rather than a conditional aria-label: a label on a role-less div is invalid ARIA,
-  // and the lint rule that says so cannot see that the role arrives with the name.
-  name === undefined ? (
+  // and the lint rule that says so cannot see that the role arrives with the name. An empty name
+  // is no name (Brandmark's idiom): a group with nothing to announce is worse than no group.
+  name === undefined || name === '' ? (
     <div className={box()} data-testid={testId}>
       {children}
     </div>

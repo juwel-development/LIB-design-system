@@ -169,11 +169,10 @@ const COLLECTION_SPACING = `:root {
   --space-collection-item: 1em;
 }`;
 
-/* Box's inner padding is air inside a bounded content group (#117): one role on all four sides,
-   distinct from a sibling gap, a region's air or a page band, so a brand tunes the inset of every
-   Box at once without moving any other group and no Box gains a padding or size prop (ADR 0008:
-   one role in the position, so the recipe fixes it). In em like --space-collection-item, so it
-   tracks the inherited type rather than a fixed length. Constraint: a nonnegative CSS length. */
+/* Box's inner padding (#117): one role on all four sides, distinct from a sibling gap, a region's
+   air or a page band, so a brand tunes every Box at once and no Box gains a padding prop (ADR 0008,
+   the token-role test). In em like --space-collection-item, so it tracks the inherited type.
+   Constraint: a nonnegative CSS length. */
 const BOX_INSET = `:root {
   --space-box-inset: 1em;
 }`;
