@@ -220,6 +220,28 @@ An action presented in the typography of its surrounding content, without a sepa
 spacing of its own. It remains an operable button with a visible keyboard focus mark.
 _Avoid_: Ghost button, clickable text
 
+**Destructive action**:
+An action that removes or ends something - a contract, an employment, an entry - set in the
+`error` status tone on its boundary and ink so the consequence reads before the press. The tone
+reinforces words and never replaces them: the label, or the accessible name of a symbol-only
+button, says what the action does. A `Button` variant, not a status event: it announces nothing
+and carries no confirmation of its own.
+_Avoid_: Danger button, red button, delete button
+
+**Outline action**:
+The quiet secondary: an unfilled `Button` identified by its `controlBorder` edge the way a field
+is, for an action beside a primary one that must not compete with it. It keeps the control inset
+and minimum width, so it aligns with the filled variants in a row.
+_Avoid_: Outlined button, bordered button, tertiary button
+
+**Inline fit**:
+A faced `Button` sized to its content - the control minimum width dropped, the inset the one every
+field control renders - for an action in a table cell or at the end of a filter row. Structural:
+the width floor either applies or it does not (see
+[ADR 0008](docs/adr/0008-when-a-token-role-becomes-a-prop.md)). Not a plain action, which gives up
+the face as well.
+_Avoid_: Compact button, small button, button size
+
 **ScrollContainer**:
 A library component that makes overflowing content reachable along chosen axes within space supplied
 by its parent layout. It owns scrolling, while the consumer owns the content and the allocation of space.

@@ -121,7 +121,9 @@ export type PaletteTokens = {
    *  constraint stated on `success`. */
   warning: string;
   /** The error status tone. Carries the general status-tone contract and 4.5:1-against-`surface`
-   *  constraint stated on `success`, plus the depletion-path constraint stated on `meterFill`. */
+   *  constraint stated on `success`, plus the depletion-path constraint stated on `meterFill`. It is
+   *  also Button's destructive boundary at rest and its fill on hover, carrying `surface` as ink -
+   *  both discharged by that same 4.5:1, since contrast is symmetric (#119). */
   error: string;
   /** The informational status tone. Carries the general status-tone contract and
    *  4.5:1-against-`surface` constraint stated on `success`. */

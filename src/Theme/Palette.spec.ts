@@ -237,6 +237,24 @@ describe('Palette', () => {
     },
   );
 
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ] as const)(
+    "carries surface as the ink on the %s theme's `error` fill at 4.5:1 and keeps the fill 3:1 against surface, so Button's destructive hover reads (#119)",
+    (_theme, tokens) => {
+      // Button's destructive variant fills with `error` on hover and sets its text to `surface`.
+      // Contrast is symmetric, so the status-tone floor (docs/adr/0011) already carries the ink;
+      // this pins that reading so a palette edit that drops it fails here and not in a browser.
+      expect(
+        contrastRatio(tokens.error, tokens.surface),
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrastRatio(tokens.error, tokens.surface),
+      ).toBeGreaterThanOrEqual(3);
+    },
+  );
+
   it('keeps each light fill distinct from the hover it steps into, with hover the darker of the two', () => {
     // Light hover steps *darker* than rest; dark inverts that (see the palette's dark comment).
     // Pinned so correcting a fill that fails its floor cannot be done by promoting the hover value

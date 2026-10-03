@@ -66,3 +66,19 @@ caller or a component that owns a status event remains responsible for announcem
 - This ships as an additive, non-breaking enhancement. The palette adjustments are not announced or
   versioned as breaking changes.
 
+## Amendments
+
+**`error` gains a control carrier: Button's destructive variant
+([#119](https://github.com/juwel-development/LIB-design-system/issues/119)).** The variant draws
+its boundary and text in `error` at rest and fills with `error` on hover, taking `surface` as its
+ink. Both positions are discharged by the constraint this ADR already states: a text tone at 4.5:1
+against `surface` clears the 3:1 a boundary needs, and contrast is symmetric, so `surface` drawn on
+an `error` fill reads at the same 4.5:1. No role was added for it - a `destructiveHover` or an
+`errorForeground` would anticipate a job the symmetric reading already serves, which is the ground
+`warningForeground` was refused on above. The hover inverts to the tone rather than tinting with
+`backing` because `error` text on `backing` measures 4.11:1 in the shipped light theme, under the
+text floor; `Palette.spec.ts` pins the reading so a palette edit that drops it fails there.
+
+The general rule holds: using the tone changes colour only. The destructive variant adds no ARIA
+role, no confirmation and no wording, and its label - or the accessible name of a symbol-only
+button - is what states the consequence.

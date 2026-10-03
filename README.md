@@ -32,6 +32,54 @@ If the host already imports Tailwind and only wants the palette, take the tokens
 @import "@juwel-development/design-system/tokens.css";
 ```
 
+## Button
+
+`Button` renders one `<button>` in one of five closed variants. The three that shipped first
+are unchanged: `primary` and `secondary` are the filled actions, floored at
+`--control-min-width` so a row of them aligns, and `ghost` is the padded text action with a
+hover underline and no floor. Two were added for the game action roles (#119):
+
+```tsx
+<Button variant={'outline'} onClick$={reset$}>Filter zurücksetzen</Button>
+<Button variant={'destructive'} onClick$={end$}>Vertrag beenden</Button>
+```
+
+- **`outline`** is the quiet secondary: an unfilled control identified by its `controlBorder`
+  edge, exactly as `Input` is, with `foreground` text. Hover tints it with `backing`; disabled
+  takes the `disabled` edge and `muted` ink, with no fill. Because the edge sits outside the
+  inset, as on `Input`, an outline button is the same height as a field and two pixels taller
+  than a filled one beside it - a flex row with the default `stretch` alignment evens them.
+- **`destructive`** is an action that removes or ends something. It is outlined and inked in
+  the `error` status tone and fills with it on hover, carrying `surface` as ink; both states are
+  discharged by the existing 4.5:1 `error`-against-`surface` constraint, so a consumer palette
+  that keeps that floor keeps the hover readable. The tone reinforces words and never replaces
+  them: the label, or the `ariaLabel` of a symbol-only button, must say what the action does.
+
+Every variant draws the one focus ring, carries native `disabled` and emits nothing while
+disabled.
+
+### Content-sized actions
+
+`inline` sizes a faced button to its content: the control minimum width is dropped and the
+inset becomes the `px-3` every field control renders, so an action in a table cell or at the
+end of a filter row sits flush with the field beside it.
+
+```tsx
+<Button variant={'outline'} inline={true} onClick$={open$}>Öffnen</Button>
+```
+
+It is structural, not a size: the floor either applies or it does not. `ghost` never had one,
+so `inline` leaves it unchanged. An action set in the typography of its surrounding text - a
+name in a table cell that opens a profile - is a plain action, not an inline one.
+
+### Long labels
+
+A label wraps where the layout constrains it and nowhere else: in a wide row a short label
+renders on one line exactly as before, and in a holder narrower than its words a long
+translated label breaks between words, in balanced lines, growing the button instead of
+running past its edge. The break never falls inside a word, as nowhere else in the library:
+one word wider than its holder is wording to shorten or a holder to widen.
+
 ## Select
 
 `Select` is a compound namespace: `Select.Root` renders a labelled, uncontrolled native
