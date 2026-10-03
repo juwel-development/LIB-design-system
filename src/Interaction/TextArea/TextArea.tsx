@@ -12,7 +12,7 @@ import type { Subject } from 'rxjs';
 // docs/adr/0004's (#90); so is its size (#92) - `body` is the role clearing the 16px below which
 // iOS Safari zooms a focused control.
 const textArea = cva(
-  'block min-h-24 w-full rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent px-3 py-2 font-primary text-body text-foreground transition-colors duration-[var(--motion-duration-color)] outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)] [&:user-invalid]:border-error aria-[invalid=true]:border-error disabled:cursor-not-allowed disabled:border-disabled disabled:text-muted',
+  'block min-h-24 w-full rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent px-3 py-2 font-control text-body text-foreground transition-colors duration-[var(--motion-duration-color)] outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)] [&:user-invalid]:border-error aria-[invalid=true]:border-error disabled:cursor-not-allowed disabled:border-disabled disabled:text-muted',
 );
 
 interface ITextAreaProps {

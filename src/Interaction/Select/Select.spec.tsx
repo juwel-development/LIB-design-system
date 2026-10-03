@@ -35,6 +35,23 @@ describe('Select', () => {
     >().toEqualTypeOf<Subject<string> | undefined>();
   });
 
+  it('sets the native control in the control face (#120)', () => {
+    // Select paints its members from the root's one recipe through child selectors, so the face is
+    // read off the root. The label's secondary face is unchanged and left to the story.
+    render(
+      <Select.Root
+        label={'Home market'}
+        name={'homeMarket'}
+        placeholder={'Choose'}
+      >
+        <Select.Option value={'de'}>{'Germany'}</Select.Option>
+      </Select.Root>,
+    );
+    const root = screen.getByRole('combobox').parentElement;
+    expect(root?.className).toContain('[&>select]:font-control');
+    expect(root?.className).not.toContain('[&>select]:font-primary');
+  });
+
   it('renders consumer components, fragments, arrays and conditional options as native choices', () => {
     const EuropeanMarkets = () => (
       <>

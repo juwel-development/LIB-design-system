@@ -101,6 +101,45 @@ describe('renderTokens typography contract', () => {
     expect(theme).toContain('--font-secondary: inherit;');
   });
 
+  it('keeps the @theme family roles at exactly primary and secondary, so the theme contract a consumer re-points is unchanged (#120)', () => {
+    // The three content-side roles are deliberately not theme variables: a value at :root would
+    // resolve var(--font-primary) there and strand a theme scoped to a wrapper (docs/adr/0004).
+    const families = themeBlock().match(/--font-[a-z-]+:[^;]+;/g) ?? [];
+    expect(families).toEqual([
+      '--font-primary: inherit;',
+      '--font-secondary: inherit;',
+    ]);
+  });
+
+  it.each(['heading', 'body', 'control'])(
+    'resolves the %s family role on the element reading it, falling back to the primary face there (#120)',
+    (role) => {
+      // docs/adr/0004, the amendment: the utility carries the fallback, so --font-<role> is read
+      // where the text is and --font-primary is read where the text is when the role is unset. A
+      // theme re-pointing either name on :root or on a wrapper moves the text underneath it.
+      expect(renderTokens()).toContain(
+        `@utility font-${role} {\n  font-family: var(--font-${role}, var(--font-primary));\n}`,
+      );
+    },
+  );
+
+  it.each(['heading', 'body', 'control'])(
+    'declares no value for --font-%s anywhere, so the primary fallback can fire (#120)',
+    (role) => {
+      // A declared value - even var(--font-primary) - is valid where it is declared and makes the
+      // fallback dead; the role exists as a name the utility reads, never as a shipped value.
+      expect(renderTokens()).not.toMatch(new RegExp(`--font-${role}:`));
+    },
+  );
+
+  it('emits the three family utilities in every shipped stylesheet, so a single-theme consumer gets the same contract', () => {
+    for (const css of [renderLightTokens(), renderDarkTokens()]) {
+      expect(css).toContain('@utility font-heading {');
+      expect(css).toContain('@utility font-body {');
+      expect(css).toContain('@utility font-control {');
+    }
+  });
+
   it('declares the type roles, leading and tracking so the utilities exist', () => {
     const theme = themeBlock();
     expect(theme).toContain('--text-display: clamp(3rem, 7vw, 6rem);');
@@ -295,6 +334,20 @@ describe('renderTokens spacing contract', () => {
       );
       for (const block of css.matchAll(/@theme(?: inline)?\s*\{([^}]*)\}/g)) {
         expect(block[1]).not.toContain('--space-definition-item');
+      }
+    }
+  });
+
+  it('declares the box inset in every stylesheet as an em role a consumer can re-point (#117)', () => {
+    // Box reads its one inner-padding role from here and offers no padding prop: the theme chooses.
+    for (const css of [
+      renderTokens(),
+      renderLightTokens(),
+      renderDarkTokens(),
+    ]) {
+      expect(css).toMatch(/:root\s*\{[^}]*--space-box-inset:\s*1em;/);
+      for (const block of css.matchAll(/@theme(?: inline)?\s*\{([^}]*)\}/g)) {
+        expect(block[1]).not.toContain('--space-box-inset');
       }
     }
   });

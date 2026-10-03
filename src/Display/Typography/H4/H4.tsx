@@ -6,7 +6,7 @@ import type { FunctionComponent, ReactNode } from 'react';
 // (docs/adr/0005). The `font-bold` is load-bearing - Tailwind's preflight resets h1-h6 to
 // font-weight: inherit, so without it an h4 renders identically to a paragraph. Colour is a semantic
 // token re-pointed by `.dark`, so no variant carries a `dark:` class.
-const h4 = cva('font-primary text-body leading-body font-bold', {
+const h4 = cva('font-heading text-body leading-body font-bold', {
   variants: {
     color: {
       foreground: 'text-foreground',
@@ -30,7 +30,8 @@ interface IH4Props extends VariantProps<typeof h4> {
  *
  * @Guarantees — enforced on every render
  * - Renders an `h4`; its outline level and the body role are one choice, not two (docs/adr/0005).
- * - Reads `--font-primary`, sized by `--text-body`, and is bold so it stands apart from a paragraph.
+ * - Reads `--font-heading`, the heading family that follows `--font-primary` until a theme
+ *   re-points it (#120), sized by `--text-body`, and is bold so it stands apart from a paragraph.
  * - `color` selects `foreground`, `muted`, `success`, `warning`, `error` or `info`; nothing else
  *   paints text. A status tone changes colour only and adds no announcement semantics.
  *

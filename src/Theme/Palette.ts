@@ -9,7 +9,8 @@
  *
  * Light and dark are two complete sets of the same roles rather than a set of `dark:` overrides
  * scattered through the components. A component therefore carries no dark-mode classes at all:
- * swapping the `.dark` class re-points the variables underneath it.
+ * swapping the `.dark` class re-points the variables underneath it. Complete means `Required`: the
+ * two roles the type marks optional are optional for a consumer's palette object, never here.
  *
  * The values below are still depot-tracker's brand (primary is its violet). They are carried over
  * so nothing changed visually during the extraction - a starting point to replace, not a decision.
@@ -121,8 +122,28 @@ export type PaletteTokens = {
    *  constraint stated on `success`. */
   warning: string;
   /** The error status tone. Carries the general status-tone contract and 4.5:1-against-`surface`
-   *  constraint stated on `success`, plus the depletion-path constraint stated on `meterFill`. */
+   *  constraint stated on `success`, plus the depletion-path constraint stated on `meterFill`. It is
+   *  also Button's destructive fill (#119), identified like `primary` by the fill alone: at least 3:1
+   *  against `surface` in the same theme, `errorHover` included - which the 4.5:1 text floor already
+   *  clears - and constrained from the other side by the ink it carries, stated on `errorForeground`.
+   *  See docs/adr/0011-status-tones-are-general-roles.md, Amendments. */
   error: string;
+  /** The destructive fill's hover step. Constraint (WCAG 2.2 SC 1.4.11): at least 3:1 against
+   *  `surface` in the same theme, and at least 4.5:1 against `errorForeground`, since a hovered
+   *  control has to stay identifiable and readable too. Not a status tone: it carries no text of its
+   *  own and the status-tone text floor does not apply to it. Optional in the type so a palette
+   *  object written before #119 keeps compiling: the shipped stylesheet declares `--color-error-hover`,
+   *  and a theme that omits the role inherits that default - which pairs with the shipped `error`,
+   *  so a theme that re-points `error` re-points this too. */
+  errorHover?: string;
+  /** Text and icons drawn on top of `error` and `errorHover`. Constraint (WCAG 2.2 SC 1.4.3): at
+   *  least 4.5:1 against both in the same theme, hover included. Optional in the type for the same
+   *  reason as `errorHover`, with the same obligation: the shipped default is the ink for the
+   *  shipped `error`. The ink inverts with the theme as `primaryForeground` does, and in light it is
+   *  pure white rather than slate-50 because the shipped `error` sits exactly on the 4.5:1 floor
+   *  against white (4.501:1) and slate-50 measures 4.30:1 - under it. Not required against
+   *  `disabled`, which SC 1.4.3 exempts. */
+  errorForeground?: string;
   /** The informational status tone. Carries the general status-tone contract and
    *  4.5:1-against-`surface` constraint stated on `success`. */
   info: string;
@@ -147,7 +168,7 @@ export type PaletteTokens = {
  *   against `#0f172a`, the dark set's own `surface`, sky-600 lands at 4.36 and fails. It also buys
  *   a light theme with white text on one button and black on the one beside it.
  */
-export const light: PaletteTokens = {
+export const light: Required<PaletteTokens> = {
   surface: '#ffffff',
   foreground: '#0f172a',
   muted: '#64748b',
@@ -179,6 +200,8 @@ export const light: PaletteTokens = {
   success: '#047857',
   warning: '#b45309',
   error: '#d63384',
+  errorHover: '#be185d',
+  errorForeground: '#ffffff',
   info: '#0e7490',
 };
 
@@ -193,11 +216,14 @@ export const light: PaletteTokens = {
  * under its darker ones. The pair is the two ends of the one neutral ramp the rest of the palette is
  * already built from - `#f8fafc` is slate-50, `surface` slate-900, `muted` slate-500 - rather than a
  * new colour arriving for a single job. `#020617` is also the lightest slate step that still admits
- * violet-500 and sky-600, which is what leaves this set's `secondary` pair unmoved: slate-900 draws
- * 4.22 and 4.36 against them and fails. Why the ink follows the theme at all, and the two routes
- * rejected in getting here: see the light set.
+ * violet-500: slate-900 draws 4.22 against it and fails. The `secondary` pair sits one ramp step
+ * above where it first shipped - sky-500 at rest, sky-400 on hover, where it was sky-600 and sky-500 -
+ * because #119 made `secondary` an ink as well as a fill: the outlined Button draws its text and edge
+ * in it, and sky-600 measures 4.36:1 against this surface, under the 4.5:1 text floor (now 6.44:1
+ * and 8.33:1, both still clearing `secondaryForeground` at 7.28:1 and 9.42:1). Why the ink follows
+ * the theme at all, and the two routes rejected in getting here: see the light set.
  */
-export const dark: PaletteTokens = {
+export const dark: Required<PaletteTokens> = {
   surface: '#0f172a',
   foreground: '#f8fafc',
   muted: '#94a3b8',
@@ -215,8 +241,8 @@ export const dark: PaletteTokens = {
   primaryHover: '#a78bfa',
   primaryForeground: '#020617',
 
-  secondary: '#0284c7',
-  secondaryHover: '#0ea5e9',
+  secondary: '#0ea5e9',
+  secondaryHover: '#38bdf8',
   secondaryForeground: '#020617',
 
   disabled: '#475569',
@@ -229,5 +255,7 @@ export const dark: PaletteTokens = {
   success: '#34d399',
   warning: '#fbbf24',
   error: '#f48fb1',
+  errorHover: '#f8bbd0',
+  errorForeground: '#020617',
   info: '#22d3ee',
 };

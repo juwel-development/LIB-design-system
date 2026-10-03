@@ -13,12 +13,12 @@ const proseRoot = cva(
 
 // The opening paragraph, at the new lede role: larger than body and led tighter (docs/adr/0004), but
 // still running-text leading, not a heading's. Colour is the foreground token, re-pointed by `.dark`.
-const proseLede = cva('font-primary text-lede leading-lede text-foreground');
+const proseLede = cva('font-body text-lede leading-lede text-foreground');
 
 // The body role inside the column - the same utilities P emits, restated because the no-cross-import
 // rule forbids reusing P's recipe. A test pins the two equal so they cannot drift. Colour is a
 // semantic token re-pointed by `.dark`, so no variant carries a `dark:` class.
-const proseBody = cva('font-primary text-body leading-body', {
+const proseBody = cva('font-body text-body leading-body', {
   variants: {
     color: {
       foreground: 'text-foreground',
@@ -33,7 +33,7 @@ const proseBody = cva('font-primary text-body leading-body', {
 });
 
 // The stepped-down closing note: the small role, always muted. small carries the enforced 15px floor.
-const proseTail = cva('font-primary text-small text-muted');
+const proseTail = cva('font-body text-small text-muted');
 
 interface IProseRootProps {
   children?: ReactNode;

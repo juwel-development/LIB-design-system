@@ -73,3 +73,18 @@ opaque variants render identically.
 any `rounded-` occurrence that is not `rounded-[var(--radius-…)]`. biome cannot match a substring
 inside a long class string, so this is the chosen mechanism rather than a lint rule; the
 component-authoring standard's enforcement table records that.
+
+## Amendments
+
+**The plain Button draws no corner ([#114](https://github.com/juwel-development/LIB-design-system/issues/114)).**
+"Every control styles its corners from `--radius-control`" assumed every control draws a box. The
+maintainer accepted `Button variant="plain"`: a plain action, operable and focusable, presented in
+the typography of the content around it with no face, fill, padding or corner of its own. A corner
+on it would paint nothing - the box is the text - and it is the one accepted exception to the rule
+above. The *Base placement* consequence foresaw this: a variant needing its own corner relocates the
+radius out of the base rather than overriding it, and that is what was done. The radius now lives in
+the face string the three faced variants share verbatim, so `primary`, `secondary` and `ghost` still
+cannot disagree, and `plain` carries no `rounded-*` at all - which the source-scan test still
+enforces, since the ban is on literals rather than on absence. The focus ring on `plain` follows the
+text's box, square; [ADR 0002](./0002-focus-ring-token-contract.md) holds unchanged, since the
+ring is the same role drawn the same way, only around a box with no radius.

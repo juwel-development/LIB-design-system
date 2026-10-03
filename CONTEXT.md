@@ -79,6 +79,12 @@ text fills rather than picking a step on a ramp. There is exactly one role per j
 leaves a component nothing to choose between.
 _Avoid_: Text size, type scale step, heading size
 
+**Family role**:
+The job that determines a text's typeface, independently of its size: heading, body or control,
+alongside the existing secondary family for supporting text. A heading family belongs to actual
+headings; reading content does not become a heading because it shares a heading's size.
+_Avoid_: Font size, type scale step
+
 **Heading level**:
 A heading's position in the document outline, `h1` through `h6`. The level *fixes* the type role
 rather than defaulting it: a level-2 heading is the title role and cannot be asked to render as
@@ -105,6 +111,17 @@ Eyebrow. The device has three carriers and the primitive is only one: a form's o
 to `Form`'s note and a table's to the note cell, each painted by the component that owns it, so the
 primitive is for an annotation no other component owns.
 _Avoid_: Caption, hint, small print, helper text, footnote, disclaimer
+
+**Family role**:
+Which face a piece of text is set in, named by the job of the text and never by the face: `heading`
+for the heading ladder, `body` for reading matter, `control` for the box a viewer operates, and
+`secondary` for what names or routes to any of them. `primary` is the face those three fall back to
+— what the visitor came for, before it was told apart — so a theme that sets only `primary` and
+`secondary` has one face for headings, reading matter and controls, as before, and a theme that
+re-points one role moves one role. A role resolves on the element reading it, so a theme at any
+scope reaches the text beneath it. There is no face prop: which face a heading takes is the system's
+decision, not the heading's.
+_Avoid_: Font, typeface, font stack, serif/sans role
 
 **Reading measure**:
 The width running text is bounded to, counted in characters rather than in length — because
@@ -220,6 +237,21 @@ An action presented in the typography of its surrounding content, without a sepa
 spacing of its own. It remains an operable button with a visible keyboard focus mark.
 _Avoid_: Ghost button, clickable text
 
+**Destructive action**:
+An action that removes or ends something - a contract, an employment, an entry - filled with the
+`error` status tone and inked with `errorForeground`, so the consequence reads before the press. The
+tone reinforces words and never replaces them: the label, or the accessible name of a symbol-only
+button, says what the action does. A `Button` variant, not a tone prop and not a status event: it
+combines with no other variant, announces nothing and carries no confirmation of its own.
+_Avoid_: Danger button, red button, delete button, error button
+
+**Outlined action**:
+The quiet secondary: an unfilled `Button` whose text and edge are drawn in `secondary`, so it reads
+as the quiet form of the filled secondary beside a primary one. It shares the faced variants' inset,
+height and minimum width, so it aligns with them in a row. The one opt-in edge a `Button` draws: a
+filled button still draws none.
+_Avoid_: Outline button, bordered button, tertiary button, secondary outline
+
 **ScrollContainer**:
 A library component that makes overflowing content reachable along chosen axes within space supplied
 by its parent layout. It owns scrolling, while the consumer owns the content and the allocation of space.
@@ -235,16 +267,10 @@ The amount of space around cell content, chosen per table as comfortable or comp
 It does not change the typography or the dimensions of controls within cells.
 _Avoid_: Font size, control size
 
-**DefinitionList density**:
-How much room a DefinitionList gives each item, chosen per list as comfortable or compact. Named for
-the job each serves: comfortable is the glossary, terms at the subtitle role and descriptions in a
-reading line; compact is the fact list, short values beside their labels in a panel or a content
-Dialog. Unlike Table density it re-seats the type roles - a compact term takes the label role and a
-compact description the small role - because the comfortable term's subtitle role is itself the room
-compact removes. A compact list also keys its two proportional columns on the width of its own
-container rather than the viewport, so a one-third panel on a wide screen gets the arrangement its
-width allows. Two treatments, not a scale: nothing in between is offered.
-_Avoid_: Fact list, key-value list, small DefinitionList, size
+**Definition list density**:
+The amount of space around terms and descriptions, chosen per definition list as comfortable or
+compact. It does not change typography or the dimensions of controls within descriptions.
+_Avoid_: Font size, control size
 
 **Table row selection**:
 The consumer-owned state identifying a chosen table row, communicated independently of keyboard

@@ -33,6 +33,24 @@ describe('NumberInput', () => {
     >().toEqualTypeOf<string | undefined>();
   });
 
+  it('sets the control in the control face and everything naming it in the secondary face (#120)', () => {
+    // docs/adr/0004, the amendments: the value is what was come for and takes the control role,
+    // which follows the content face by default; the apparatus around it is secondary.
+    render(
+      <NumberInput
+        label={'Maximum price'}
+        name={'maxPrice'}
+        hint={'In euros'}
+        invalid={true}
+        errorMessage={'Enter a number'}
+      />,
+    );
+    expect(screen.getByRole('textbox').className).toContain('font-control');
+    for (const naming of ['Maximum price', 'In euros', 'Enter a number']) {
+      expect(screen.getByText(naming).className).toContain('font-secondary');
+    }
+  });
+
   it('renders a labelled text control that asks for a decimal keyboard without claiming spinbutton semantics', () => {
     render(<NumberInput label={'Maximum price'} name={'maxPrice'} />);
     const control = screen.getByRole('textbox', { name: 'Maximum price' });

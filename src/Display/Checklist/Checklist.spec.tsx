@@ -20,6 +20,15 @@ describe('Checklist', () => {
     expect(list).toHaveAttribute('role', 'list');
   });
 
+  it('sets each item in the body family role: a checklist is reading matter, not apparatus (#120)', () => {
+    // docs/adr/0004, the amendment: the items are content the visitor came to read, so they take
+    // --font-body with the paragraphs around them, never the labelling face.
+    renderSpecChecklist();
+    for (const item of screen.getAllByRole('listitem')) {
+      expect(item.className).toContain('font-body');
+    }
+  });
+
   it('renders each item as an li', () => {
     renderSpecChecklist();
     const items = screen.getAllByRole('listitem');

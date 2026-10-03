@@ -89,8 +89,9 @@ const UNDERLINE = `:root {
    Tailwind built-in is re-pointed; only new role names. See docs/adr/0004-typography-token-contract.md. */
 const TYPOGRAPHY = `@theme {
   /* Both faces default to inherit, so the library ships no @font-face and no face and a one-face
-     consumer renders as today. --font-primary is carried by content, --font-secondary by labels; a
-     component sets font-variant-numeric: tabular-nums only on a --font-primary carrying tnum and
+     consumer renders as today. --font-primary is the default face of headings, body and controls
+     (the three roles below, #120), --font-secondary the face of labels; a component sets
+     font-variant-numeric: tabular-nums only on an effective body face carrying tnum and
      font-variant-caps: small-caps only on a --font-secondary carrying smcp - both fail silently otherwise. */
   --font-primary: inherit;
   --font-secondary: inherit;
@@ -136,6 +137,24 @@ const TYPOGRAPHY = `@theme {
   --tracking-optical: -0.02em;
 }`;
 
+/* Three family roles that depart from the primary face on demand (#120): heading for every heading,
+   body for reading matter, control for the box a viewer operates. Utilities rather than @theme
+   variables, because the fallback has to resolve on the element reading it: a value at :root would
+   substitute var(--font-primary) there, so a theme re-pointing primary on a wrapper would move its
+   paragraphs and strand its headings. Read this way, a theme re-points a role or primary at any scope
+   and the text underneath follows. No value is declared for the three, so the fallback stays live. */
+const FAMILY_ROLES = `@utility font-heading {
+  font-family: var(--font-heading, var(--font-primary));
+}
+
+@utility font-body {
+  font-family: var(--font-body, var(--font-primary));
+}
+
+@utility font-control {
+  font-family: var(--font-control, var(--font-primary));
+}`;
+
 /* The reading measures are in ch so the character count holds when the body size moves under them:
    --measure-display narrower because bigger type wants fewer characters per line, --measure-wide a
    little past the reading column for the page-head standfirst (PageHead #18). --measure-action is
@@ -177,6 +196,14 @@ const COLLECTION_SPACING = `:root {
 const DEFINITION_SPACING = `:root {
   --space-definition-item: 1.5rem;
   --space-definition-item-compact: 0.5rem;
+}`;
+
+/* Box's inner padding (#117): one role on all four sides, distinct from a sibling gap, a region's
+   air or a page band, so a brand tunes every Box at once and no Box gains a padding prop (ADR 0008,
+   the token-role test). In em like --space-collection-item, so it tracks the inherited type.
+   Constraint: a nonnegative CSS length. */
+const BOX_INSET = `:root {
+  --space-box-inset: 1em;
 }`;
 
 /* The gutter is the horizontal inset holding content off the viewport edge (#9), and the one spacing role
@@ -244,6 +271,14 @@ const TAB_MARKER = `:root {
   --tab-marker-thickness: 2px;
 }`;
 
+/* Not a colour: like the tab marker it lives in :root only, so a brand re-points the weight of the
+   mark along a selected row's leading edge (#113) without Table gaining a prop. Not the tab marker's
+   token: that is a line under a tab, a different position (docs/adr/0008). Constraint: > 0 - zero
+   erases the one persistent selection cue. */
+const TABLE_SELECTION_MARKER = `:root {
+  --table-selection-marker-thickness: 2px;
+}`;
+
 /* The slider's two dimensions are not colours: like the tick they live in :root only, never @theme
    inline. Named because both are drawn on vendor pseudo-elements (::-webkit-slider-thumb and kin)
    no consumer selector can reach - ADR 0004's test. The control takes its height from the thumb, so
@@ -290,7 +325,7 @@ const toKebabCase = (name: string): string =>
   name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 
 const declarations = (
-  tokens: PaletteTokens,
+  tokens: Required<PaletteTokens>,
   value: (name: string) => string,
 ): string =>
   Object.keys(tokens)
@@ -300,7 +335,7 @@ const declarations = (
 // The library no longer declares --color-ring but still reads it as a fallback, so a consumer's
 // existing value keeps working; the plain hex in the palette is the default and what the contrast
 // test checks. See docs/adr/0002-focus-ring-token-contract.md.
-const raw = (tokens: PaletteTokens) => (name: string) => {
+const raw = (tokens: Required<PaletteTokens>) => (name: string) => {
   const value = tokens[name as keyof PaletteTokens];
   return name === 'focusRing' ? `var(--color-ring, ${value})` : value;
 };
@@ -340,6 +375,10 @@ ${UNDERLINE}
    utilities, so it is not carried in @theme inline with the palette. */
 ${TYPOGRAPHY}
 
+/* The heading, body and control family roles are utilities with a fallback to the primary face, not
+   @theme variables, so a theme re-pointing either name at any scope reaches the text beneath it. */
+${FAMILY_ROLES}
+
 /* The aspect roles are Tailwind theme namespaces like typography, so they take their own @theme block
    after it and are not carried in @theme inline with the palette. */
 ${ASPECT}
@@ -359,6 +398,9 @@ ${COLLECTION_SPACING}
 /* DefinitionList item air sits in :root beside the collection role, one value per density (#123). */
 ${DEFINITION_SPACING}
 
+/* Box's inner padding, measured against inherited type, beside Collection's. */
+${BOX_INSET}
+
 /* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
 ${GUTTER}
 
@@ -373,6 +415,9 @@ ${TICK}
 
 /* The tab marker's thickness is not a colour either, and sits in :root beside the tick block. */
 ${TAB_MARKER}
+
+/* The table selection marker's thickness is not a colour either, and sits in :root beside the tab marker. */
+${TABLE_SELECTION_MARKER}
 
 ${TAB_INSETS}
 
@@ -416,7 +461,7 @@ ${colourMapAndTail()}`;
    differ only in header and which palette set lands in `:root`, so both render through here. */
 const renderSingleTheme = (
   header: string,
-  tokens: PaletteTokens,
+  tokens: Required<PaletteTokens>,
 ): string => `${header}
 
 :root {
