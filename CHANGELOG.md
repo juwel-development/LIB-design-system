@@ -1,3 +1,99 @@
+# [3.10.0](https://github.com/juwel-development/LIB-design-system/compare/v3.9.1...v3.10.0) (2026-10-03)
+
+
+### Bug Fixes
+
+* **box:** treat an empty name as no name and prove key pass-through ([#117](https://github.com/juwel-development/LIB-design-system/issues/117)) ([1b86e1b](https://github.com/juwel-development/LIB-design-system/commit/1b86e1b0c67fef2f99d9716bc6bb7921799c7362))
+* **definition-list:** apply the [#123](https://github.com/juwel-development/LIB-design-system/issues/123) review's standards and spec findings ([4726e82](https://github.com/juwel-development/LIB-design-system/commit/4726e827627c15b2d2b7b8dda188a26cecb545a1)), closes [#115](https://github.com/juwel-development/LIB-design-system/issues/115)
+* **definition-list:** keep dialog layout responsive and remove task artifacts ([27d3a9c](https://github.com/juwel-development/LIB-design-system/commit/27d3a9cc890608b116216fec36d592a1ca8f1726))
+* **definition-list:** preserve column spacing across stylesheet entries ([28a099b](https://github.com/juwel-development/LIB-design-system/commit/28a099b17892ffc50464511ade5e9f7ba15131d4))
+* **field-row:** re-align when only a field's label changes height ([#118](https://github.com/juwel-development/LIB-design-system/issues/118)) ([4e214e2](https://github.com/juwel-development/LIB-design-system/commit/4e214e2bf5469843176668635e80b26e5ed2e6f0))
+* **header:** apply the [#125](https://github.com/juwel-development/LIB-design-system/issues/125) review's spec and standards findings ([77cef9b](https://github.com/juwel-development/LIB-design-system/commit/77cef9b769685455cab24cfc9baf57b272cc9514)), closes [#119](https://github.com/juwel-development/LIB-design-system/issues/119)
+* keep a scroll surface reachable while it holds focus, and tidy the [#114](https://github.com/juwel-development/LIB-design-system/issues/114) review findings ([1375345](https://github.com/juwel-development/LIB-design-system/commit/13753456b75f714a148c2a3ea6155eba43522d20))
+* **release:** keep generated notes out of the release commit ([6203b00](https://github.com/juwel-development/LIB-design-system/commit/6203b007ff25816dd01dd14ab9526a5126df8566))
+* **sidebar:** wrap long translated labels inside the navigation track ([#122](https://github.com/juwel-development/LIB-design-system/issues/122)) ([89a04cc](https://github.com/juwel-development/LIB-design-system/commit/89a04ccce159c57b99061fc6d7c7751e545b86aa))
+* **table:** apply the [#113](https://github.com/juwel-development/LIB-design-system/issues/113) review's standards and spec findings ([b179fbb](https://github.com/juwel-development/LIB-design-system/commit/b179fbbf167b0f3a7cc0f5ef3d5354b38b15552c))
+* **table:** state table roles explicitly and prove header/body alignment in the [#115](https://github.com/juwel-development/LIB-design-system/issues/115) stories ([2c48521](https://github.com/juwel-development/LIB-design-system/commit/2c485216bfef461d748c32b9062ddd9382665d2e))
+
+
+### Documentation
+
+* **button:** record the [#119](https://github.com/juwel-development/LIB-design-system/issues/119) review, fixes and browser evidence ([cdfee6d](https://github.com/juwel-development/LIB-design-system/commit/cdfee6d3b97639546ff2d1e41d255c4e559d6ab4))
+
+
+### Features
+
+* **box:** add the bounded content group with a themed inset ([#117](https://github.com/juwel-development/LIB-design-system/issues/117)) ([5992222](https://github.com/juwel-development/LIB-design-system/commit/599222237bfe924cb265a088a1b63e2830791b61))
+* **button:** add outline and destructive variants, inline fit and wrapping labels ([#119](https://github.com/juwel-development/LIB-design-system/issues/119)) ([56e7359](https://github.com/juwel-development/LIB-design-system/commit/56e735952728fe25ab64c8a95924bdfbf4adee65)), closes [#114](https://github.com/juwel-development/LIB-design-system/issues/114)
+* **button:** ship the approved [#119](https://github.com/juwel-development/LIB-design-system/issues/119) contract - outlined, filled destructive, yielding floor ([f6492b7](https://github.com/juwel-development/LIB-design-system/commit/f6492b7e20e37ccc2f9f98c46b700598a835e37b))
+* **column-layout:** add the proportional column arrangement that stacks all or none ([#116](https://github.com/juwel-development/LIB-design-system/issues/116)) ([c33658e](https://github.com/juwel-development/LIB-design-system/commit/c33658e9b2a2b232ccfd1de198dd012972da26a7))
+* composable table actions, sort icons, plain buttons and ScrollContainer ([#114](https://github.com/juwel-development/LIB-design-system/issues/114)) ([787ea50](https://github.com/juwel-development/LIB-design-system/commit/787ea50728b799a7df63046a3f77db32b46af62b))
+* **definition-list:** add compact density with container-aware columns ([#123](https://github.com/juwel-development/LIB-design-system/issues/123)) ([606aca3](https://github.com/juwel-development/LIB-design-system/commit/606aca38021fea11e0511cacc73a4ffd3dd528b6))
+* **definition-list:** allocate the columns per list and fit them to the container ([#123](https://github.com/juwel-development/LIB-design-system/issues/123)) ([f312f0a](https://github.com/juwel-development/LIB-design-system/commit/f312f0a6f9b4760e4bc54ec794ba7e12dc6835a0))
+* **field-row:** add the control-aligned row of fields and trailing actions ([#118](https://github.com/juwel-development/LIB-design-system/issues/118)) ([c83ceb5](https://github.com/juwel-development/LIB-design-system/commit/c83ceb540ff398f5039881cc81acc3a1ffef207f))
+* **header:** add status and action slots outside the nav landmark ([#125](https://github.com/juwel-development/LIB-design-system/issues/125)) ([cd5081a](https://github.com/juwel-development/LIB-design-system/commit/cd5081a8aea9aba5ab8c0f5d761ea92b2a3a99a6))
+* **table:** column allocations and per-table density on Table.Root ([#115](https://github.com/juwel-development/LIB-design-system/issues/115)) ([2bddabb](https://github.com/juwel-development/LIB-design-system/commit/2bddabba97a679dc9f4843fec5146f7e29410b94))
+* **table:** selectable rows with independent activation on `Table.Row` ([#113](https://github.com/juwel-development/LIB-design-system/issues/113)) ([3e0cc29](https://github.com/juwel-development/LIB-design-system/commit/3e0cc2986b1bffc29c953277a10b5637ea9201f1))
+* **tabs:** wrap label text inside one scrolling row and accept rich labels ([#121](https://github.com/juwel-development/LIB-design-system/issues/121)) ([9a75c0b](https://github.com/juwel-development/LIB-design-system/commit/9a75c0b7ee460afc0388fde3f5fe4bd4b7f1eed9))
+* **tabs:** wrap long labels on request and name the separation contract ([#121](https://github.com/juwel-development/LIB-design-system/issues/121)) ([10386b5](https://github.com/juwel-development/LIB-design-system/commit/10386b51e27bb91df09e6ad240d39a09094a1e7c))
+* **theme:** add the error fill's hover and ink roles and lift the dark secondary ([#119](https://github.com/juwel-development/LIB-design-system/issues/119)) ([cd7c922](https://github.com/juwel-development/LIB-design-system/commit/cd7c9221269efd97a66f4c68605af916681d2054))
+* **typography:** add heading and control family roles ([#120](https://github.com/juwel-development/LIB-design-system/issues/120)) ([8a3f771](https://github.com/juwel-development/LIB-design-system/commit/8a3f77153b0f8b42fc00112177fc30fafe3b9d4d))
+* **typography:** add the body family role and resolve all three where the text is ([#120](https://github.com/juwel-development/LIB-design-system/issues/120)) ([5014974](https://github.com/juwel-development/LIB-design-system/commit/50149749a68af159c5bcec73dfbe622f0704a4f6))
+
+
+### NOTE
+
+* **header:** footer is owed. The status/action bar reserves no standing floor: the
+readout starts at the start content edge, the control sits at the end edge,
+and a slot the caller named but withheld (`action={ready && <Button/>}`)
+keeps the bar in that mode without an empty box. The readout wraps unbroken
+wording (`wrap-anywhere`) and the action slot no longer refuses to shrink, so
+* **definition-list:** A comfortable (default) DefinitionList now measures its own width instead of the viewport.
+Its two columns open where both column minimums fit, one region gap plus 27rem at the defaults,
+and stack otherwise, in a 1:2 split with the column gap on --space-region; this replaces the 64rem
+viewport switch, the fixed 16rem term track and the 3rem gap. Nothing a consumer wrote stops
+working.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+* **tabs:** A tab label now wraps inside its tab as the row narrows, down to its longest word, before
+the row scrolls horizontally. Rows that had room keep one line as before.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+* **button:** pointing here.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+* **button:** The faced Button variants' minimum width now yields to a holder narrower than it: such a
+button shrinks and wraps its label instead of overflowing. In a holder sized to its own content
+(an auto grid track, a table cell, an inline wrapper) the floor does not apply and the button
+takes its content width.
+* **button:** A word wider than its Button breaks inside the word instead of running past the edge, and
+the filled variants draw a one-pixel boundary under forced colours only.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+* **theme:** `PaletteTokens` gains two optional roles, `errorHover` and `errorForeground`, rendered
+as `--color-error-hover` and `--color-error-foreground` with defaults tuned for the shipped
+`error`. A palette object without them keeps compiling; a theme that re-points `--color-error`
+should re-point both alongside it.
+* **theme:** The dark `secondary` fill moves from `#0284c7` to `#0ea5e9` and `secondaryHover` from
+`#0ea5e9` to `#38bdf8`, so `secondary` clears 4.5:1 as text on the dark surface. Dark secondary
+buttons render one ramp step lighter; the light values are unchanged.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+* A Table with no note column now draws the library's shared focus ring on its scroll region
+instead of the browser's default outline. The region, its name and its tab stop are as before.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+* **button:** a Button label now wraps where its holder is narrower than the words, where it
+used to run on one line past the holder's edge. A short label in a wide row renders
+exactly as before.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+* With a note column, Table's wrapper now scrolls residual horizontal overflow and, only
+while the table overflows it, becomes a group named by the caption with a tab stop. A table
+that fits renders exactly as before.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
 ## [3.9.1](https://github.com/juwel-development/LIB-design-system/compare/v3.9.0...v3.9.1) (2026-09-28)
 
 
