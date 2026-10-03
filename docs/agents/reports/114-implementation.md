@@ -37,8 +37,9 @@ publication are separate: no release version exists for this work yet.
   `calc(var(--focus-ring-width) + var(--focus-ring-offset))` so a focusable child flush with the
   edge keeps a visible ring. Exported from `src/index.ts`.
 - Docs: amendments to ADR 0003 and ADR 0004 record `plain` as the one accepted exception to the
-  universal corner, face and size; `README.md` gains a section on the composition and the parent
-  layout `ScrollContainer` needs. `CONTEXT.md` already carried the glossary entries.
+  universal corner, face and size; the composition and the parent layout `ScrollContainer` needs
+  are documented in Storybook as each component's description (moved there from the README by
+  the review, `3d758ab`). `CONTEXT.md` already carried the glossary entries.
 - Stories: `Display/Icon` (Sort, SortAscending, SortDescending, BesideText); `Interaction/Button`
   (Plain, PlainInProse, PlainInLabel, PlainDisabled, PlainIconOnly); `Display/Table`
   (SortableHeaders, SortableHeadersDelayedResponse, ResidualOverflowWithNotes,
