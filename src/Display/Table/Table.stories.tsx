@@ -1,17 +1,21 @@
 import { Icon } from 'Display/Icon/Icon';
 import { Button } from 'Interaction/Button/Button';
+import { Input } from 'Interaction/Input/Input';
 import { Link } from 'Interaction/Link/Link';
 import { ScrollContainer } from 'Layout/ScrollContainer/ScrollContainer';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   type ComponentProps,
+  type CSSProperties,
   type FunctionComponent,
+  type ReactNode,
   useEffect,
   useMemo,
   useState,
 } from 'react';
 import { BehaviorSubject, map, type Observable, Subject } from 'rxjs';
-import { Table } from './Table';
+import { expect, userEvent, within } from 'storybook/test';
+import { Table, type TableColumnAllocation } from './Table';
 
 const meta: Meta<typeof Table.Root> = {
   title: 'Display/Table',
@@ -50,6 +54,12 @@ Until the consumer's data arrives, the icon and \`ariaSort\` keep stating the ol
             "Accessibility, an accepted limitation (#113): the row stays a `tr` in a `table` - no grid role, no arrow-key navigation. `aria-selected` is a WAI-ARIA 1.2 state of `row` and valid here, but Chromium exposes a row's selected state only inside a `grid`, so Chrome and Edge screen readers do not announce selection on these rows. The marker bar is the one guaranteed selection cue; a consumer that needs the selection spoken words it in the row's content or in a live region of its own.",
             "`--table-selection-marker-thickness` names the marker bar's weight, defaulting to `2px`, declared in all three token stylesheets. It must stay above zero: it is the one persistent selection cue.",
           ].join('\n\n'),
+          [
+            "**Column allocation (#115).** `Table.Root columns` declares every column's share of the width once, in the order the cells of every row are written, and every row shares it: `{ width: role }` is a fixed column that takes its role's theme width at any available width; `{ weight: n, minWidth?: role }` is a proportional column that shares the width the fixed columns leave by its positive weight, floored at its named minimum. While a minimum holds one column, the other proportional columns share what is left; a fixed `width` smaller than its `minWidth` resolves to the minimum; all-fixed columns do not stretch. Nothing a row holds moves a boundary: filtering, sorting, paging, long or short content, an empty body and its repopulation leave the allocation as it was - only the definitions, the theme and the available width can change it. Omit `columns` and widths follow content exactly as before.",
+            "The width roles are `name`, `fact`, `figure` and `action` - the four column jobs the consumer specification attests, each a theme token a brand re-points (`--table-column-name` 12rem, `--table-column-fact` 9rem, `--table-column-figure` 8rem, `--table-column-action` 12.5rem by default, cell insets included; `action` holds one standard control at comfortable density). They are jobs, not a size ladder: allocate the subject's `name` first, proportional with a floor so it wraps rather than vanishes; facts proportional at `fact`; figures fixed at `figure` and right-aligned; the action column fixed at `action`, last.",
+            "Under an allocation the table lays out as a CSS grid of subgrids - still a semantic `table`, every `tr` still a box carrying its rule - and no narrow-viewport `notes` rule applies: the note column stays, rows stay tabular, and what does not fit scrolls in the wrapper as it does for every table. Text wraps inside its allocation, an unbroken run included; the table never truncates, hides or resizes content. A cell whose content cannot wrap - a `Button`, an `Input` - needs a column whose width or minimum holds it: the allocation never widens for content, so an under-allocated control overflows its cell. Every row must write exactly as many cells as there are `columns`. Cells align to the top of their row under an allocation; a content-driven table keeps the browser's middle alignment.",
+            '**Density (#115).** `Table.Root density` is `comfortable` (the default, the former cell spacing exactly: `--table-cell-inset-inline` 1rem and `--table-cell-inset-block` 0.5rem) or `compact` (`--table-cell-inset-inline-compact` 0.5rem, `--table-cell-inset-block-compact` 0.25rem). It insets every header and body cell from the chosen pair and nothing else: no type size moves, no control inside a cell changes its dimensions, and two tables on one page may differ. Compact is for a dense comparison the viewer scans, not for fitting more in.',
+          ].join('\n\n'),
         ].join('\n\n'),
       },
     },
@@ -64,6 +74,16 @@ Until the consumer's data arrives, the icon and \`ariaSort\` keep stating the ol
       control: { type: 'radio' },
       options: [undefined, 'supplementary', 'content'],
       description: 'What the note column is; governs narrow-viewport behaviour',
+    },
+    density: {
+      control: { type: 'radio' },
+      options: ['comfortable', 'compact'],
+      description: 'The cell insets, per table; comfortable is the default',
+    },
+    columns: {
+      control: false,
+      description:
+        'The column allocations in cell order; omit for content-driven widths',
     },
   },
 };
@@ -766,4 +786,817 @@ export const StableIdentities: Story = {
   render: (args) => (
     <ArtistRoster {...args} initial={'kestrel'} rearrangeable />
   ),
+};
+
+// --- Column allocation and density (#115) --------------------------------------------------------
+// The consumer declares the allocation once on Root. Everything below the table in these stories -
+// search, sort, paging, the long/short toggle - is the consumer's, and none of it moves a boundary.
+
+type Candidate = {
+  id: string;
+  name: string;
+  role: string;
+  proficiency: string;
+  age: number;
+  wage: number;
+};
+
+const CANDIDATES: readonly Candidate[] = [
+  {
+    id: 'hagenbach',
+    name: 'Friederike Hagenbach-Wittgenstein',
+    role: 'Marktforschungsabteilungsleitung',
+    proficiency: 'Außergewöhnlich',
+    age: 34,
+    wage: 1250,
+  },
+  {
+    id: 'okonkwo',
+    name: 'Chukwuemeka Okonkwo-Adeyemi',
+    role: 'Artists and repertoire scouting',
+    proficiency: 'Hervorragend',
+    age: 29,
+    wage: 980,
+  },
+  {
+    id: 'brandstaetter',
+    name: 'Maximiliane Brandstätter',
+    role: 'Songwriting',
+    proficiency: 'Durchschnittlich',
+    age: 41,
+    wage: 1100,
+  },
+  {
+    id: 'sato',
+    name: 'Sato Haruki',
+    role: 'Market research',
+    proficiency: 'Gut',
+    age: 26,
+    wage: 760,
+  },
+  {
+    id: 'vanderberg',
+    name: 'Johanna van der Berg-Oosterhuis',
+    role: 'Artists and repertoire scouting',
+    proficiency: 'Außergewöhnlich',
+    age: 38,
+    wage: 1400,
+  },
+  {
+    id: 'ndiaye',
+    name: 'Aminata Ndiaye',
+    role: 'Songwriting',
+    proficiency: 'Gut',
+    age: 31,
+    wage: 890,
+  },
+  {
+    id: 'eisenhauer',
+    name: 'Theodor Eisenhauer',
+    role: 'Marktforschungsabteilungsleitung',
+    proficiency: 'Durchschnittlich',
+    age: 52,
+    wage: 1020,
+  },
+  {
+    id: 'quintero',
+    name: 'María Fernanda Quintero Salazar',
+    role: 'Market research',
+    proficiency: 'Hervorragend',
+    age: 45,
+    wage: 1180,
+  },
+  {
+    id: 'lindqvist',
+    name: 'Åsa Lindqvist',
+    role: 'Songwriting',
+    proficiency: 'Außergewöhnlich',
+    age: 27,
+    wage: 1310,
+  },
+  {
+    id: 'papadopoulos',
+    name: 'Konstantinos Papadopoulos',
+    role: 'Artists and repertoire scouting',
+    proficiency: 'Gut',
+    age: 36,
+    wage: 940,
+  },
+];
+
+// The Staff: Candidates comparison from the consumer specification: the name first, proportional
+// with a floor so it wraps rather than vanishes; two facts proportional; two figures and the action
+// column fixed, last.
+const CANDIDATE_COLUMNS: readonly TableColumnAllocation[] = [
+  { weight: 2, minWidth: 'name' },
+  { weight: 1, minWidth: 'fact' },
+  { weight: 1, minWidth: 'fact' },
+  { width: 'figure' },
+  { width: 'figure' },
+  { width: 'action' },
+];
+
+type CandidateColumn = 'name' | 'role' | 'proficiency' | 'age' | 'wage';
+
+const PAGE_SIZE = 4;
+
+const orderedCandidates = (
+  rows: readonly Candidate[],
+  order: { column: CandidateColumn; direction: Direction } | undefined,
+): Candidate[] => {
+  if (order === undefined) return [...rows];
+  const sign = order.direction === 'ascending' ? 1 : -1;
+  return [...rows].sort((left, right) => {
+    const a = left[order.column];
+    const b = right[order.column];
+    if (typeof a === 'number' && typeof b === 'number') return (a - b) * sign;
+    return String(a).localeCompare(String(b), 'de') * sign;
+  });
+};
+
+type CandidatesProps = {
+  rows?: readonly Candidate[];
+  density?: ComponentProps<typeof Table.Root>['density'];
+  /** Search, paging and the label toggle; off for the static comparisons. */
+  controls?: boolean;
+  caption?: string;
+};
+
+const Candidates: FunctionComponent<CandidatesProps> = ({
+  rows = CANDIDATES,
+  density,
+  controls = false,
+  caption = 'Candidates',
+}) => {
+  const [query, setQuery] = useState('');
+  const [order, setOrder] = useState<
+    { column: CandidateColumn; direction: Direction } | undefined
+  >(undefined);
+  const [page, setPage] = useState(0);
+  const [isVerbose, setIsVerbose] = useState(false);
+  const [search$] = useState(() => new Subject<string>());
+  const [sort$] = useState(
+    () =>
+      new Map<CandidateColumn, Subject<void>>(
+        (['name', 'role', 'proficiency', 'age', 'wage'] as const).map(
+          (column) => [column, new Subject<void>()],
+        ),
+      ),
+  );
+  const [nextPage$] = useState(() => new Subject<void>());
+  const [previousPage$] = useState(() => new Subject<void>());
+  const [toggleLabels$] = useState(() => new Subject<void>());
+
+  useEffect(() => {
+    const subscriptions = [
+      search$.subscribe((value) => {
+        setQuery(value);
+        setPage(0);
+      }),
+      nextPage$.subscribe(() => setPage((current) => current + 1)),
+      previousPage$.subscribe(() =>
+        setPage((current) => Math.max(0, current - 1)),
+      ),
+      toggleLabels$.subscribe(() => setIsVerbose((current) => !current)),
+      ...[...sort$].map(([column, request$]) =>
+        request$.subscribe(() =>
+          setOrder((current) => ({
+            column,
+            direction:
+              current?.column === column && current.direction === 'ascending'
+                ? 'descending'
+                : 'ascending',
+          })),
+        ),
+      ),
+    ];
+    return () => {
+      for (const subscription of subscriptions) subscription.unsubscribe();
+    };
+  }, [search$, sort$, nextPage$, previousPage$, toggleLabels$]);
+
+  const matching = rows.filter((candidate) =>
+    candidate.name.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+  const ordered = orderedCandidates(matching, order);
+  const shown = controls
+    ? ordered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+    : ordered;
+  const pageCount = Math.max(1, Math.ceil(ordered.length / PAGE_SIZE));
+
+  const header = (column: CandidateColumn, label: string) => (
+    <Table.HeaderCell
+      scope={'col'}
+      align={column === 'age' || column === 'wage' ? 'right' : 'left'}
+      ariaSort={order?.column === column ? order.direction : undefined}
+    >
+      <Button variant={'plain'} onClick$={sort$.get(column)}>
+        {label}{' '}
+        <Icon
+          name={order?.column === column ? `sort-${order.direction}` : 'sort'}
+        />
+      </Button>
+    </Table.HeaderCell>
+  );
+
+  return (
+    <div className={'flex flex-col gap-[var(--space-region)]'}>
+      {controls && (
+        <div
+          className={
+            'flex flex-row flex-wrap items-end gap-[var(--space-stack)]'
+          }
+        >
+          <Input
+            label={'Search by name'}
+            name={'candidate-search'}
+            onInput$={search$}
+          />
+          <Button variant={'ghost'} onClick$={toggleLabels$}>
+            {isVerbose ? 'Short labels' : 'Long labels'}
+          </Button>
+        </div>
+      )}
+      <Table.Root
+        caption={caption}
+        columns={CANDIDATE_COLUMNS}
+        density={density}
+      >
+        <Table.Head>
+          <Table.Row>
+            {header(
+              'name',
+              isVerbose ? 'Name der Bewerberin oder des Bewerbers' : 'Name',
+            )}
+            {header('role', isVerbose ? 'Bevorzugte Rolle' : 'Preferred role')}
+            {header(
+              'proficiency',
+              isVerbose ? 'Rollenkompetenz' : 'Proficiency',
+            )}
+            {header('age', isVerbose ? 'Alter' : 'Age')}
+            {header('wage', isVerbose ? 'Wochenlohn' : 'Wage per week')}
+            <Table.HeaderCell scope={'col'}>
+              {isVerbose ? 'Einstellungsaktionen' : 'Actions'}
+            </Table.HeaderCell>
+          </Table.Row>
+        </Table.Head>
+        <Table.Body>
+          {shown.map((candidate) => (
+            <Table.Row key={candidate.id}>
+              <Table.HeaderCell scope={'row'}>
+                <Link href={`#${candidate.id}`}>{candidate.name}</Link>
+              </Table.HeaderCell>
+              <Table.Cell variant={'note'}>{candidate.role}</Table.Cell>
+              <Table.Cell variant={'note'}>{candidate.proficiency}</Table.Cell>
+              <Table.Cell align={'right'}>{candidate.age}</Table.Cell>
+              <Table.Cell align={'right'}>
+                {isVerbose
+                  ? `${candidate.wage.toLocaleString('de-DE')} $ pro Woche`
+                  : `${candidate.wage} $/wk`}
+              </Table.Cell>
+              <Table.Cell variant={'note'}>
+                <Button variant={'ghost'}>
+                  {isVerbose ? 'Einstellen' : 'Hire'}
+                </Button>
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>
+      {controls && (
+        <div
+          className={
+            'flex flex-row flex-wrap items-center gap-[var(--space-stack)]'
+          }
+        >
+          <Button
+            variant={'ghost'}
+            onClick$={previousPage$}
+            disabled={page === 0}
+          >
+            Previous page
+          </Button>
+          <Button
+            variant={'ghost'}
+            onClick$={nextPage$}
+            disabled={page + 1 >= pageCount}
+          >
+            Next page
+          </Button>
+          <p
+            className={'font-secondary text-muted text-small'}
+            aria-live={'polite'}
+          >
+            {ordered.length === 0
+              ? 'No candidates match.'
+              : `Page ${page + 1} of ${pageCount}, ${ordered.length} candidates.`}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+type HolderStyle = CSSProperties & {
+  '--table-column-name'?: string;
+  '--table-column-figure'?: string;
+};
+
+const Holder: FunctionComponent<{
+  width: string;
+  style?: HolderStyle;
+  testId?: string;
+  children?: ReactNode;
+}> = ({ width, style, testId, children }) => (
+  <div style={{ width, ...style }} data-testid={testId}>
+    {children}
+  </div>
+);
+
+const widthsOf = (root: HTMLElement): number[] =>
+  within(root)
+    .getAllByRole('columnheader')
+    .map(
+      (header) => Math.round(header.getBoundingClientRect().width * 10) / 10,
+    );
+
+const edgesOf = (root: HTMLElement): string =>
+  within(root)
+    .getAllByRole('columnheader')
+    .map((header) => {
+      const rect = header.getBoundingClientRect();
+      return `${Math.round(rect.left)}-${Math.round(rect.right)}`;
+    })
+    .join(' ');
+
+const dimensionRows = (
+  <>
+    <Table.Head>
+      <Table.Row>
+        <Table.HeaderCell scope={'col'}>Part</Table.HeaderCell>
+        <Table.HeaderCell scope={'col'} align={'right'}>
+          Height
+        </Table.HeaderCell>
+        <Table.HeaderCell scope={'col'} align={'right'}>
+          Width
+        </Table.HeaderCell>
+      </Table.Row>
+    </Table.Head>
+    <Table.Body>
+      {parts.map((part) => (
+        <Table.Row key={part.name}>
+          <Table.HeaderCell scope={'row'}>{part.name}</Table.HeaderCell>
+          <Table.Cell align={'right'}>{part.height} mm</Table.Cell>
+          <Table.Cell align={'right'}>{part.width} mm</Table.Cell>
+        </Table.Row>
+      ))}
+    </Table.Body>
+  </>
+);
+
+/**
+ * Fixed-only: `name`, `figure`, `figure` take their theme widths (12rem, 8rem, 8rem at the
+ * defaults) and nothing stretches to fill the 64rem holder - unused space stays unused.
+ */
+export const FixedColumns: Story = {
+  args: { caption: 'Dimensions' },
+  render: (args) => (
+    <Holder width={'64rem'} testId={'holder'}>
+      <Table.Root
+        {...args}
+        columns={[{ width: 'name' }, { width: 'figure' }, { width: 'figure' }]}
+      >
+        {dimensionRows}
+      </Table.Root>
+    </Holder>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(widthsOf(canvasElement)).toEqual([192, 128, 128]);
+    const holder = canvas.getByTestId('holder').getBoundingClientRect();
+    const last = canvas.getAllByRole('columnheader').at(-1);
+    await expect(last?.getBoundingClientRect().right).toBeLessThan(
+      holder.right - 400,
+    );
+  },
+};
+
+/** Proportional-only at `3` and `1`: three quarters and one quarter of the 48rem holder. */
+export const ProportionalColumns: Story = {
+  args: { caption: 'Parts and their notes' },
+  render: (args) => (
+    <Holder width={'48rem'}>
+      <Table.Root {...args} columns={[{ weight: 3 }, { weight: 1 }]}>
+        <Table.Head>
+          <Table.Row>
+            <Table.HeaderCell scope={'col'}>Part</Table.HeaderCell>
+            <Table.HeaderCell scope={'col'}>Note</Table.HeaderCell>
+          </Table.Row>
+        </Table.Head>
+        <Table.Body>
+          {parts.map((part) => (
+            <Table.Row key={part.name}>
+              <Table.HeaderCell scope={'row'}>{part.name}</Table.HeaderCell>
+              <Table.Cell variant={'note'}>as shipped, dry</Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>
+    </Holder>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(widthsOf(canvasElement)).toEqual([576, 192]);
+  },
+};
+
+/**
+ * Minimums redistribute predictably. Above: `3` and `1` both floored at `name` (12rem) in a 40rem
+ * holder - the quarter share (10rem) falls under its floor, so that column takes 12rem and the
+ * other takes the 28rem left, not its nominal 30rem. Below: a `figure` column floored at `name`
+ * resolves to the 12rem minimum, not its 8rem width.
+ */
+export const RedistributionAtMinimums: Story = {
+  args: { caption: 'Parts and their notes' },
+  render: (args) => (
+    <div className={'flex flex-col gap-[var(--space-region)]'}>
+      <Holder width={'40rem'} testId={'proportional'}>
+        <Table.Root
+          {...args}
+          columns={[
+            { weight: 3, minWidth: 'name' },
+            { weight: 1, minWidth: 'name' },
+          ]}
+        >
+          {dimensionRows}
+        </Table.Root>
+      </Holder>
+      <Holder width={'40rem'} testId={'fixed'}>
+        <Table.Root
+          caption={'Dimensions, figure floored at name'}
+          columns={[{ width: 'figure', minWidth: 'name' }, { weight: 1 }]}
+        >
+          {dimensionRows}
+        </Table.Root>
+      </Holder>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      widthsOf(canvas.getByTestId('proportional')).slice(0, 2),
+    ).toEqual([448, 192]);
+    await expect(widthsOf(canvas.getByTestId('fixed')).slice(0, 2)).toEqual([
+      192, 448,
+    ]);
+  },
+};
+
+/**
+ * The consumer's Staff: Candidates comparison, with its own search, sort, paging and a toggle
+ * between short English and long German labels. Every one of those changes the rows and none of
+ * them moves a column boundary; an empty result keeps the header on the same boundaries and the
+ * next match comes back onto them. Long names wrap inside the `name` floor; the `action` column
+ * holds its control at any width.
+ */
+export const ComparisonStability: Story = {
+  args: { caption: 'Candidates' },
+  render: () => <Candidates controls />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const edges = edgesOf(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: /^Name/ }));
+    await expect(edgesOf(canvasElement)).toBe(edges);
+    await userEvent.click(canvas.getByRole('button', { name: /^Wage/ }));
+    await expect(edgesOf(canvasElement)).toBe(edges);
+    await userEvent.click(canvas.getByRole('button', { name: 'Next page' }));
+    await expect(edgesOf(canvasElement)).toBe(edges);
+    await userEvent.click(canvas.getByRole('button', { name: 'Long labels' }));
+    await expect(edgesOf(canvasElement)).toBe(edges);
+    const search = canvas.getByRole('textbox', { name: 'Search by name' });
+    await userEvent.type(search, 'Sato');
+    await expect(canvas.getAllByRole('row')).toHaveLength(2);
+    await expect(edgesOf(canvasElement)).toBe(edges);
+    await userEvent.type(search, 'xyz');
+    await expect(canvas.getAllByRole('row')).toHaveLength(1);
+    await expect(edgesOf(canvasElement)).toBe(edges);
+    await userEvent.clear(search);
+    await expect(canvas.getAllByRole('row')).toHaveLength(1 + PAGE_SIZE);
+    await expect(edgesOf(canvasElement)).toBe(edges);
+  },
+};
+
+const RESIZABLE_WIDTHS = ['64rem', '40rem'] as const;
+
+const ResizableCandidates: FunctionComponent = () => {
+  const [index, setIndex] = useState(0);
+  const [toggle$] = useState(() => new Subject<void>());
+  useEffect(() => {
+    const subscription = toggle$.subscribe(() =>
+      setIndex((current) => (current + 1) % RESIZABLE_WIDTHS.length),
+    );
+    return () => subscription.unsubscribe();
+  }, [toggle$]);
+  return (
+    <div className={'flex flex-col gap-[var(--space-region)]'}>
+      <div>
+        <Button variant={'ghost'} onClick$={toggle$}>
+          Holder is {RESIZABLE_WIDTHS[index]}: toggle
+        </Button>
+      </div>
+      <Holder width={RESIZABLE_WIDTHS[index] ?? '64rem'} testId={'holder'}>
+        <Table.Root
+          caption={'Candidates'}
+          columns={[
+            { weight: 2, minWidth: 'name' },
+            { weight: 1, minWidth: 'fact' },
+            { width: 'figure' },
+            { width: 'action' },
+          ]}
+          testId={'table'}
+        >
+          <Table.Head>
+            <Table.Row>
+              <Table.HeaderCell scope={'col'}>Name</Table.HeaderCell>
+              <Table.HeaderCell scope={'col'}>Preferred role</Table.HeaderCell>
+              <Table.HeaderCell scope={'col'} align={'right'}>
+                Wage per week
+              </Table.HeaderCell>
+              <Table.HeaderCell scope={'col'}>Actions</Table.HeaderCell>
+            </Table.Row>
+          </Table.Head>
+          <Table.Body>
+            {CANDIDATES.slice(0, 4).map((candidate) => (
+              <Table.Row key={candidate.id}>
+                <Table.HeaderCell scope={'row'}>
+                  {candidate.name}
+                </Table.HeaderCell>
+                <Table.Cell variant={'note'}>{candidate.role}</Table.Cell>
+                <Table.Cell align={'right'}>{candidate.wage} $/wk</Table.Cell>
+                <Table.Cell variant={'note'}>
+                  <Button variant={'ghost'}>Hire</Button>
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table.Root>
+      </Holder>
+    </div>
+  );
+};
+
+/**
+ * The available width changes and the proportional columns redistribute while the fixed ones hold.
+ * At 64rem `name` and `role` share the 43.5rem the figure and action columns leave as 29rem and
+ * 14.5rem. At 40rem both floors bind (12rem and 9rem), the fixed columns keep 8rem and 12.5rem,
+ * and the 1.5rem that no longer fits scrolls in the wrapper. Back at 64rem the shares return.
+ */
+export const AvailableWidthChanges: Story = {
+  args: { caption: 'Candidates' },
+  render: () => <ResizableCandidates />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const wide = [464, 232, 128, 200];
+    await expect(widthsOf(canvasElement)).toEqual(wide);
+    await userEvent.click(canvas.getByRole('button', { name: /toggle/ }));
+    await expect(widthsOf(canvasElement)).toEqual([192, 144, 128, 200]);
+    const wrapper = canvas.getByTestId('table');
+    await expect(wrapper.scrollWidth).toBeGreaterThan(wrapper.clientWidth);
+    await userEvent.click(canvas.getByRole('button', { name: /toggle/ }));
+    await expect(widthsOf(canvasElement)).toEqual(wide);
+    await expect(wrapper.scrollWidth).toBe(wrapper.clientWidth);
+  },
+};
+
+const UNBROKEN_IDENTIFIER =
+  'LBL-2026-STAFF-CANDIDATE-00042-HAGENBACH-WITTGENSTEIN';
+
+/**
+ * Insufficient width: a 30rem holder for 32.5rem of floors and fixed widths. The allocation holds -
+ * `name` at its 12rem floor, `figure` and `action` at their widths - and the wrapper scrolls the
+ * 2.5rem that does not fit, with no page-wide scrolling. The secondary Button keeps its own width
+ * inside the `action` column, the long German label and the unbroken identifier wrap inside the
+ * `name` column, and no cell's content crosses into its neighbour.
+ */
+export const InsufficientWidth: Story = {
+  args: { caption: 'Candidates' },
+  render: (args) => (
+    <Holder width={'30rem'}>
+      <Table.Root
+        {...args}
+        columns={[
+          { weight: 2, minWidth: 'name' },
+          { width: 'figure' },
+          { width: 'action' },
+        ]}
+        testId={'table'}
+      >
+        <Table.Head>
+          <Table.Row>
+            <Table.HeaderCell scope={'col'}>
+              Name der Bewerberin oder des Bewerbers
+            </Table.HeaderCell>
+            <Table.HeaderCell scope={'col'} align={'right'}>
+              Wochenlohn
+            </Table.HeaderCell>
+            <Table.HeaderCell scope={'col'}>
+              Einstellungsaktionen
+            </Table.HeaderCell>
+          </Table.Row>
+        </Table.Head>
+        <Table.Body>
+          <Table.Row>
+            <Table.HeaderCell scope={'row'}>
+              Friederike Hagenbach-Wittgenstein
+            </Table.HeaderCell>
+            <Table.Cell align={'right'}>1.250 $</Table.Cell>
+            <Table.Cell variant={'note'}>
+              <Button variant={'secondary'}>Einstellen</Button>
+            </Table.Cell>
+          </Table.Row>
+          <Table.Row>
+            <Table.HeaderCell scope={'row'}>
+              {UNBROKEN_IDENTIFIER}
+            </Table.HeaderCell>
+            <Table.Cell align={'right'}>980 $</Table.Cell>
+            <Table.Cell variant={'note'}>
+              <Button variant={'secondary'}>Einstellen</Button>
+            </Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table.Root>
+    </Holder>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(widthsOf(canvasElement)).toEqual([192, 128, 200]);
+    const wrapper = canvas.getByTestId('table');
+    await expect(wrapper.scrollWidth).toBeGreaterThan(wrapper.clientWidth);
+    const page = document.documentElement;
+    await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth);
+    for (const row of canvas.getAllByRole('row')) {
+      const cells = Array.from(row.children);
+      cells.forEach((cell, index) => {
+        const next = cells[index + 1];
+        if (next !== undefined) {
+          expect(cell.getBoundingClientRect().right).toBeLessThanOrEqual(
+            next.getBoundingClientRect().left + 0.5,
+          );
+        }
+        for (const child of cell.children) {
+          expect(child.getBoundingClientRect().right).toBeLessThanOrEqual(
+            cell.getBoundingClientRect().right + 0.5,
+          );
+        }
+        expect(cell.scrollWidth).toBeLessThanOrEqual(cell.clientWidth + 1);
+      });
+    }
+  },
+};
+
+/**
+ * Narrow the viewport below 48rem: the first table, with no allocation, drops its supplementary
+ * note column as before; the second and third keep every column and every row tabular under their
+ * allocation, whatever `notes` says - the residual overflow scrolls instead. Note typography is
+ * unchanged in all three.
+ */
+export const NotesKeptUnderAllocation: Story = {
+  args: { caption: 'Material specification', notes: 'supplementary' },
+  render: (args) => (
+    <div className={'flex flex-col gap-[var(--space-region)]'}>
+      <Table.Root {...args} testId={'content-driven'}>
+        {specificationRows}
+      </Table.Root>
+      <Table.Root
+        {...args}
+        columns={[
+          { weight: 1, minWidth: 'fact' },
+          { width: 'figure' },
+          { weight: 2 },
+        ]}
+        testId={'allocated-supplementary'}
+      >
+        {specificationRows}
+      </Table.Root>
+      <Table.Root
+        caption={'Release notes'}
+        notes={'content'}
+        columns={[{ width: 'figure' }, { width: 'figure' }, { weight: 1 }]}
+        testId={'allocated-content'}
+      >
+        <Table.Head>
+          <Table.Row>
+            <Table.HeaderCell scope={'col'}>Version</Table.HeaderCell>
+            <Table.HeaderCell scope={'col'} align={'right'}>
+              Date
+            </Table.HeaderCell>
+            <Table.HeaderCell scope={'col'}>Change</Table.HeaderCell>
+          </Table.Row>
+        </Table.Head>
+        <Table.Body>
+          <Table.Row>
+            <Table.HeaderCell scope={'row'}>1.2.0</Table.HeaderCell>
+            <Table.Cell align={'right'}>2026-08-11</Table.Cell>
+            <Table.Cell variant={'note'}>Added the Table primitive.</Table.Cell>
+          </Table.Row>
+          <Table.Row>
+            <Table.HeaderCell scope={'row'}>1.1.0</Table.HeaderCell>
+            <Table.Cell align={'right'}>2026-08-11</Table.Cell>
+            <Table.Cell variant={'note'}>Added the Eyebrow label.</Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table.Root>
+    </div>
+  ),
+};
+
+/**
+ * Comfortable and compact on one page: the same comparison twice, the second with `density="compact"`.
+ * Compact halves the cell insets and changes nothing else - type sizes, the action buttons' height,
+ * the header buttons' ring and the sortable headers behave the same in both.
+ */
+export const Density: Story = {
+  args: { caption: 'Candidates' },
+  render: () => (
+    <div className={'flex flex-col gap-[var(--space-region)]'}>
+      <div data-testid={'comfortable'}>
+        <Candidates
+          rows={CANDIDATES.slice(0, 4)}
+          caption={'Candidates, comfortable'}
+        />
+      </div>
+      <div data-testid={'compact'}>
+        <Candidates
+          rows={CANDIDATES.slice(0, 4)}
+          density={'compact'}
+          caption={'Candidates, compact'}
+        />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const cellOf = (holder: string) =>
+      within(canvas.getByTestId(holder)).getAllByRole('cell')[0];
+    const comfortable = cellOf('comfortable');
+    const compact = cellOf('compact');
+    if (comfortable === undefined || compact === undefined)
+      throw new Error('no cells');
+    await expect(getComputedStyle(comfortable).paddingLeft).toBe('16px');
+    await expect(getComputedStyle(comfortable).paddingTop).toBe('8px');
+    await expect(getComputedStyle(compact).paddingLeft).toBe('8px');
+    await expect(getComputedStyle(compact).paddingTop).toBe('4px');
+    await expect(getComputedStyle(compact).fontSize).toBe(
+      getComputedStyle(comfortable).fontSize,
+    );
+    const buttonHeight = (holder: string) =>
+      within(canvas.getByTestId(holder))
+        .getAllByRole('button', { name: 'Hire' })[0]
+        ?.getBoundingClientRect().height;
+    await expect(buttonHeight('compact')).toBe(buttonHeight('comfortable'));
+  },
+};
+
+/**
+ * A theme moves a role and every table allocating by it moves: the second holder re-points
+ * `--table-column-name` to 20rem and `--table-column-figure` to 6rem, so the same markup takes
+ * 20rem and 6rem instead of the 12rem and 8rem defaults beside it.
+ */
+export const ThemedColumnWidths: Story = {
+  args: { caption: 'Dimensions' },
+  render: (args) => (
+    <div className={'flex flex-col gap-[var(--space-region)]'}>
+      <Holder width={'48rem'} testId={'default'}>
+        <Table.Root
+          {...args}
+          columns={[{ width: 'name' }, { width: 'figure' }, { weight: 1 }]}
+        >
+          {dimensionRows}
+        </Table.Root>
+      </Holder>
+      <Holder
+        width={'48rem'}
+        style={{
+          '--table-column-name': '20rem',
+          '--table-column-figure': '6rem',
+        }}
+        testId={'themed'}
+      >
+        <Table.Root
+          caption={'Dimensions, under a theme scope'}
+          columns={[{ width: 'name' }, { width: 'figure' }, { weight: 1 }]}
+        >
+          {dimensionRows}
+        </Table.Root>
+      </Holder>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(widthsOf(canvas.getByTestId('default')).slice(0, 3)).toEqual([
+      192, 128, 448,
+    ]);
+    await expect(widthsOf(canvas.getByTestId('themed')).slice(0, 3)).toEqual([
+      320, 96, 352,
+    ]);
+  },
 };
