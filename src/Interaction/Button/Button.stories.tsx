@@ -120,6 +120,7 @@ const variants = [
   'outlined',
   'destructive',
   'ghost',
+  'plain',
 ] as const;
 
 /** One of every variant, so a story can show them in a row with the same args. */
@@ -250,7 +251,7 @@ export const WithIcon: Story = {
   ),
 };
 
-/** The five variants side by side, so the quiet and destructive treatments read against primary
+/** The six variants side by side, so the quiet and destructive treatments read against primary
  *  and secondary (#119). The four faced ones share one height, inset and minimum width. */
 export const ActionVariants: Story = {
   args: { onClick$: clickSubject },

@@ -314,3 +314,7 @@ Build, lint, typecheck, all 1,178 tests and Storybook build pass. Chrome checks 
 confirm plain typography in three themes, Table sorting/selection/nested actions, and FieldRow
 alignment, real multi-line actions, no horizontal overflow, retained input values and focus through
 1440/800/360px resizing. The #118 integration gap is resolved. Publication remains pending.
+
+The shared constrained-width stories now include all six variants, including plain. Chrome confirms
+all six wrap inside 8rem holders and wrap unbroken words inside 9rem holders with zero horizontal
+overflow; plain retains zero padding. The combined Storybook build passes.
