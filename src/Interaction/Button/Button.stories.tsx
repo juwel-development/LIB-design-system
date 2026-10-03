@@ -8,6 +8,11 @@ const meta: Meta<typeof Button> = {
   component: Button,
   parameters: {
     layout: 'centered',
+    docs: {
+      description: {
+        component: `\`primary\` and \`secondary\` are the faced actions, \`ghost\` the quiet but still button-shaped one. \`plain\` is a plain action: an operable button in the typography and colour of what surrounds it, with no fill, border, corner, padding, width floor or hover underline of its own. It keeps native button semantics, \`disabled\` (told apart by the disabled text tone), \`type\`, \`ariaLabel\` for icon-only use, \`onClick$\` and the shared focus ring. Reach for it where the action belongs to a line of content - a sortable column header composed with \`Icon\`, see Display/Table - and for \`ghost\` where a quiet but button-shaped action is wanted.`,
+      },
+    },
   },
   tags: ['autodocs'],
   argTypes: {

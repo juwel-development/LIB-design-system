@@ -265,60 +265,6 @@ instance, and the shared focus ring and field presentation apply in both themes.
 the actual keyboard: a decimal separator and digits are requested, but a particular layout, a minus
 key or the exclusion of other characters is not promised.
 
-## Table actions, sort icons, plain buttons and ScrollContainer
-
-A sortable table is composed, not configured. The consumer owns every part of the sort - the
-ordered column, its direction, the ordering of the rows and when a request is answered - and the
-library supplies three pieces to compose it from:
-
-- `Table.HeaderCell` takes `ariaSort` (`'none' | 'ascending' | 'descending' | 'other'`). It is
-  accessibility metadata describing the order *currently displayed*: set it on the one ordered
-  column, omit it on the rest. Changing it neither reorders rows nor triggers anything.
-- `Button variant="plain"` is a plain action: an operable button in the typography and colour of
-  what surrounds it, with no fill, border, corner, padding, width floor or hover underline of its
-  own. It keeps native button semantics, `disabled`, `type`, `ariaLabel`, `onClick$` and the shared
-  focus ring. `ghost` is unchanged and remains the quiet but button-shaped action.
-- `Icon` draws one of three shapes - `sort` (up and down), `sort-ascending` (up) and
-  `sort-descending` (down). It is hidden from assistive technology, adds no tab stop, and takes the
-  size and colour of the text it sits in; the button label and `ariaSort` carry the meaning.
-
-```tsx
-<Table.HeaderCell scope={'col'} ariaSort={order.column === 'name' ? order.direction : undefined}>
-  <Button variant={'plain'} onClick$={sortByName$}>
-    Name <Icon name={order.column === 'name' ? `sort-${order.direction}` : 'sort'} />
-  </Button>
-</Table.HeaderCell>
-```
-
-Until the consumer's data arrives, the icon and `ariaSort` keep stating the old order - metadata
-describes what is displayed, never what was requested.
-
-`Table` handles residual horizontal overflow automatically in every `notes` mode, with no opt-in,
-and never bounds its own height. For a long table, put it inside a `ScrollContainer`:
-
-```tsx
-<div style={{ height: '20rem' }}>
-  <ScrollContainer axis={'vertical'} ariaLabel={'Parts catalogue'}>
-    <Table.Root caption={'Parts'}>…</Table.Root>
-  </ScrollContainer>
-</div>
-```
-
-Name the container for what it holds rather than repeating the caption: the container and the
-table's own scroll region are two consecutive tab stops, and two stops announced by one name read
-as one thing.
-
-`ScrollContainer` makes overflowing content reachable along `axis` (`'both'`, the default,
-`'horizontal'` or `'vertical'`) within the space its parent allocates - it takes no size of its
-own, invents no viewport bound, and adds only the focus ring's room around its content so a
-focusable child flush with its edge keeps a visible ring. Content wraps normally; what still overflows an enabled axis
-scrolls, and what overflows a disabled axis is clipped, so give the content a layout that fits
-that axis - clipping is not a way to hide essential content or controls. While an enabled axis
-overflows the container is a keyboard-reachable group named by the required `ariaLabel`; while
-everything fits it adds no tab stop. Scrolling is native, controls inside keep their own keys and
-focus is never trapped. In a flex column the wrapper around it needs `flex: 1 1 0; min-height: 0`;
-in a grid, `min-height: 0` on the `1fr` cell - the Storybook examples show both.
-
 ## Collection
 
 `Collection` is a vertical group of freely composed items with internal hairlines and

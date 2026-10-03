@@ -7,6 +7,11 @@ const meta: Meta<typeof ScrollContainer> = {
   component: ScrollContainer,
   parameters: {
     layout: 'padded',
+    docs: {
+      description: {
+        component: `Makes overflowing content reachable along \`axis\` (\`'both'\`, the default, \`'horizontal'\` or \`'vertical'\`) within the space its parent allocates - it takes no size of its own, invents no viewport bound, and adds only the focus ring's room around its content so a focusable child flush with its edge keeps a visible ring. Content wraps normally; what still overflows an enabled axis scrolls, and what overflows a disabled axis is clipped, so give the content a layout that fits that axis - clipping is not a way to hide essential content or controls. While an enabled axis overflows the container is a keyboard-reachable group named by the required \`ariaLabel\`; while everything fits it adds no tab stop, and a stop it already holds focus on outlives the overflow until focus moves on. Scrolling is native, controls inside keep their own keys and focus is never trapped. The parent must allocate finite space on every scrolling axis: in a flex column the wrapper around it needs \`flex: 1 1 0; min-height: 0\`; in a grid, \`min-height: 0\` on the \`1fr\` cell - the stories below show both, and a Table inside a vertical container is shown under Display/Table.`,
+      },
+    },
   },
   tags: ['autodocs'],
   argTypes: {

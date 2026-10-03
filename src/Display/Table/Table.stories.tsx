@@ -11,6 +11,31 @@ const meta: Meta<typeof Table.Root> = {
   component: Table.Root,
   parameters: {
     layout: 'padded',
+    docs: {
+      description: {
+        component: `A sortable table is composed, not configured. The consumer owns every part of the sort - the ordered column, its direction, the ordering of the rows and when a request is answered - and the library supplies three pieces to compose it from: \`Table.HeaderCell\` takes \`ariaSort\` (\`'none' | 'ascending' | 'descending' | 'other'\`), accessibility metadata describing the order *currently displayed* - set it on the one ordered column, omit it on the rest; changing it neither reorders rows nor triggers anything. \`Button variant="plain"\` carries the header's label and action in the header's own typography. \`Icon\` draws \`sort\`, \`sort-ascending\` or \`sort-descending\` to match the displayed order.
+
+\`\`\`tsx
+<Table.HeaderCell scope={'col'} ariaSort={order.column === 'name' ? order.direction : undefined}>
+  <Button variant={'plain'} onClick$={sortByName$}>
+    Name <Icon name={order.column === 'name' ? \`sort-\${order.direction}\` : 'sort'} />
+  </Button>
+</Table.HeaderCell>
+\`\`\`
+
+Until the consumer's data arrives, the icon and \`ariaSort\` keep stating the old order - metadata describes what is displayed, never what was requested.
+
+\`Table\` handles residual horizontal overflow automatically in every \`notes\` mode, with no opt-in, and never bounds its own height. For a long table, put it inside a \`ScrollContainer\` with \`axis="vertical"\`, named for what it holds rather than with the caption: the container and the table's own scroll region are two consecutive tab stops, and two stops announced by one name read as one thing.
+
+\`\`\`tsx
+<div style={{ height: '20rem' }}>
+  <ScrollContainer axis={'vertical'} ariaLabel={'Parts catalogue'}>
+    <Table.Root caption={'Parts'}>…</Table.Root>
+  </ScrollContainer>
+</div>
+\`\`\``,
+      },
+    },
   },
   tags: ['autodocs'],
   argTypes: {

@@ -6,6 +6,11 @@ const meta: Meta<typeof Icon> = {
   component: Icon,
   parameters: {
     layout: 'centered',
+    docs: {
+      description: {
+        component: `Draws one of three shapes - \`sort\` (up and down), \`sort-ascending\` (up) and \`sort-descending\` (down). It is hidden from assistive technology, adds no tab stop, and takes the size and colour of the text it sits in; the control or text beside it carries the meaning - a \`Button\` label, a header cell's \`ariaSort\`. A name selects a drawing, never a state or a behaviour: the consumer picks the icon that matches the order it currently displays. The composed header is shown under Display/Table.`,
+      },
+    },
   },
   tags: ['autodocs'],
   argTypes: {
