@@ -142,7 +142,7 @@ describe('Input Component', () => {
 
     // docs/adr/0004, the amendment: the value is what was come for, everything naming it is
     // apparatus. Asserted per element, so a face moved up to the wrapper fails here.
-    expect(screen.getByRole('textbox').className).toContain('font-primary');
+    expect(screen.getByRole('textbox').className).toContain('font-control');
     for (const naming of [
       'Email',
       'optional',

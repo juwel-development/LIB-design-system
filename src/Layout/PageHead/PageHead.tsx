@@ -16,10 +16,11 @@ const pageHead = cva(
   'flex flex-col gap-[var(--space-stack)] py-[var(--space-band)] px-[var(--gutter)]',
 );
 
-// The scale event: the title role, led and tracked as a large heading, foreground. No measure - the
-// head is full-bleed and the consumer keeps titles short.
+// The scale event: the title role, led and tracked as a large heading, foreground, in the heading
+// face every heading reads (#120). No measure - the head is full-bleed and the consumer keeps titles
+// short.
 const pageHeadTitle = cva(
-  'font-primary text-title leading-title tracking-optical text-foreground',
+  'font-heading text-title leading-title tracking-optical text-foreground',
 );
 
 // The standfirst: the lede role, foreground, run one measure wider than the reading column (#18).

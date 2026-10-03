@@ -95,6 +95,13 @@ const TYPOGRAPHY = `@theme {
   --font-primary: inherit;
   --font-secondary: inherit;
 
+  /* Two roles that depart from content on demand (#120): --font-heading is read by every heading,
+     --font-control by the box a viewer operates. Each follows --font-primary rather than inherit, so
+     a consumer who re-pointed primary keeps the headings and controls it had; the var() resolves on
+     the element declaring it, so a theme scoped below :root re-points all four roles there. */
+  --font-heading: var(--font-primary);
+  --font-control: var(--font-primary);
+
   /* Type roles, not a scale: one role per job, so a component asks for what its text is, never a rung.
      display > title > subtitle are the three heading steps H1-H3 bind to; H4-H6 share body and split
      by weight, so there is no fourth role. display is the hero and must out-scale every subpage head. */

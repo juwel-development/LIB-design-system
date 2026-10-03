@@ -338,6 +338,62 @@ ladder, and no component or prop chooses between it and `subtitle`. The title se
 leading, so the pair follows the existing heading-role contract rather than inheriting a line box
 from its placement.
 
+## Amended: a heading family and a control family, so headings and controls can depart from content
+
+[ADR 0005](./0005-heading-level-fixes-type-role.md) closed with *"Headings and body copy share a face
+… A consumer wanting a grotesk display face over a serif reading face cannot express it without a
+third family role, which was declined for want of a demonstrated need."* The need arrived as
+[#120](https://github.com/juwel-development/LIB-design-system/issues/120): a product whose headings
+are serif and whose body and controls are sans-serif, with the theme keeping ownership of which face is
+which. Under two roles that product has one move — re-point `primary` to the serif — and it moves every
+paragraph, every entered value and every action with the headings, because all of them read `primary`.
+
+So two roles are added, and the two that exist are untouched:
+
+> **`--font-heading`** — the face every heading is set in: `H1` to `H6`, `PageHead`'s `h1` and
+> `Dialog.Title`'s `h1`, the whole of the heading ladder and the two `h1` treatments outside it.
+> **`--font-control`** — the face the box a viewer operates is set in: `Button`, and the control
+> element of `Input`, `TextArea`, `NumberInput`, `Select` and `MultiSelect`.
+
+**Both default to `var(--font-primary)`, not `inherit`.** The operative rule above sorts a heading and
+a control as `primary` — what the visitor came for — and that sorting is kept as each role's default
+rather than discarded, so the roles are additive: a one-face consumer renders as today, and a two-face
+consumer who re-pointed `primary` keeps the headings and controls that re-pointing gave them. `inherit`
+was rejected for exactly that consumer, whose headings would have moved from the primary face to the
+page's behind their back. The library still ships no face: `inherit` resolves through `primary`, as it
+did.
+
+**Where the default resolves.** A `var()` in a custom property's value substitutes on the element
+declaring it, and the library declares these on `:root`. A theme that re-points `--font-primary` on
+`:root` — or on `html`, where every consumer theme to date sits — therefore moves headings and
+controls with it. A theme scoped to a wrapper element re-points the heading and control roles there
+too, or they keep following the root's `primary`. This is the shape `--color-focus-ring` already takes
+and the one Tailwind documents for a theme variable referencing another; it is stated here so a
+wrapper-scoped theme is told rather than surprised.
+
+**The labelling half of a control is unchanged.** A field's label, hint, error and optional marker
+keep `secondary`; only the box takes `control`, declared on that element, so the three faces of a
+field sit on three elements and no wrapper carries one. `MultiSelect`'s chips and count stay
+`secondary` — they name the selected set, they are not the box. `Choices` reads no control role: it is
+a row of named options with a marker, apparatus the viewer reads before choosing, and the one
+primitive the amendment leaves where it was.
+
+**Considered and rejected: a heading role only.** The consumer's shape — serif headings over a
+sans body *and* sans controls — needs just the heading role, and a fourth name was not free. It is
+added because the box a viewer operates is already a named role in the domain model (`Control`), a
+control's face is set by the library on an element a consumer cannot reach (this ADR's own test), and
+a product keeping a grotesk on its controls while its body reads in a serif is the stranding case the
+two-role section above refused to leave open. A role a theme can leave at its default costs nothing.
+
+**Considered and rejected: a `font` prop, again.** The argument the two-role section makes holds a
+step up: which face a heading takes is a property of the design system, not of the heading, and a
+prop would let two `H2`s on one page disagree. The roles give the theme the same control
+system-wide. `H1`–`H6` still expose no face, no size and no role.
+
+`family-role-assignment.spec.ts` pins which component sources read each new role, the way
+`label-leading-optin.spec.ts` pins the leading, and bans a face literal in any component — the
+family half of the type-scale ban — so the library's "no face" stays checkable as the roster grows.
+
 ## Constraints published on the tokens
 
 In the shape [ADR 0002](./0002-focus-ring-token-contract.md) established: stated numerically on the

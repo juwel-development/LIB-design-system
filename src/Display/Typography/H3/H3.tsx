@@ -6,7 +6,7 @@ import type { FunctionComponent, ReactNode } from 'react';
 // inherits - Tailwind's preflight resets h1-h6 to font-weight: inherit, so the sized levels carry no
 // weight class. Colour is a semantic token re-pointed by `.dark`, so no variant carries a `dark:`
 // class.
-const h3 = cva('font-primary text-subtitle leading-subtitle', {
+const h3 = cva('font-heading text-subtitle leading-subtitle', {
   variants: {
     color: {
       foreground: 'text-foreground',
@@ -31,7 +31,7 @@ interface IH3Props extends VariantProps<typeof h3> {
  *
  * @Guarantees — enforced on every render
  * - Renders an `h3`; its outline level and the subtitle role are one choice, not two (docs/adr/0005).
- * - Reads `--font-primary`, sized by `--text-subtitle` and led by `--leading-subtitle`.
+ * - Reads `--font-heading`, the heading family that follows `--font-primary` until a theme re-points it (#120), sized by `--text-subtitle` and led by `--leading-subtitle`.
  * - `color` selects `foreground`, `muted`, `success`, `warning`, `error` or `info`; nothing else
  *   paints text. A status tone changes colour only and adds no announcement semantics.
  *

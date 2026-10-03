@@ -101,6 +101,26 @@ describe('renderTokens typography contract', () => {
     expect(theme).toContain('--font-secondary: inherit;');
   });
 
+  it('names a heading family and a control family that follow the primary face by default, so a one- or two-face consumer renders as before (#120)', () => {
+    // docs/adr/0004, the amendment: the roles are additive. Each defaults to var(--font-primary)
+    // rather than inherit, because a two-face consumer who re-pointed primary already had headings
+    // and controls in that face - inherit would move them to the page's face behind their back.
+    const theme = themeBlock();
+    expect(theme).toContain('--font-heading: var(--font-primary);');
+    expect(theme).toContain('--font-control: var(--font-primary);');
+  });
+
+  it('keeps the two original family roles at inherit beside the new ones, so nothing a consumer re-pointed moves', () => {
+    const theme = themeBlock();
+    const families = theme.match(/--font-[a-z-]+:[^;]+;/g) ?? [];
+    expect(families).toEqual([
+      '--font-primary: inherit;',
+      '--font-secondary: inherit;',
+      '--font-heading: var(--font-primary);',
+      '--font-control: var(--font-primary);',
+    ]);
+  });
+
   it('declares the type roles, leading and tracking so the utilities exist', () => {
     const theme = themeBlock();
     expect(theme).toContain('--text-display: clamp(3rem, 7vw, 6rem);');

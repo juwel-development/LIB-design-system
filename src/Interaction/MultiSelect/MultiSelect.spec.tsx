@@ -172,6 +172,17 @@ describe('MultiSelect', () => {
     >().toEqualTypeOf<string>();
   });
 
+  it('sets the field box in the control face and its label in the secondary face (#120)', () => {
+    // The box the viewer operates is the field around the trigger; the label above it is apparatus.
+    setup();
+    const field = trigger().parentElement;
+    expect(field?.className).toContain('font-control');
+    expect(field?.className).not.toContain('font-primary');
+    expect(field?.parentElement?.className).toContain(
+      '[&>label]:font-secondary',
+    );
+  });
+
   it('renders a labelled, collapsed trigger with the empty wording and no chips, clear control or options', () => {
     setup({ hint: 'Combine as many as you like', testId: 'topics' });
     const control = trigger();

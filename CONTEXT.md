@@ -106,6 +106,15 @@ to `Form`'s note and a table's to the note cell, each painted by the component t
 primitive is for an annotation no other component owns.
 _Avoid_: Caption, hint, small print, helper text, footnote, disclaimer
 
+**Family role**:
+Which face a piece of text is set in, named by the job of the text and never by the face: `primary`
+for what the visitor came for, `secondary` for what names it, `heading` for the heading ladder and
+`control` for the box a viewer operates. The library sets every one and declares every one, so a
+theme re-points a name and the change lands on every element reading it; the two added later default
+to `primary`, so a theme that never re-points them has one face for content, headings and controls, as
+before. There is no face prop: which face a heading takes is the system's decision, not the heading's.
+_Avoid_: Font, typeface, font stack, serif/sans role
+
 **Reading measure**:
 The width running text is bounded to, counted in characters rather than in length — because
 character count is what reading tolerance is defined in, and a width held still lets the count drift

@@ -131,6 +131,12 @@ Levels four to six therefore *must* state their weight explicitly or render iden
 paragraph. This is the reason the weight lever runs out at level six and a seventh level would have
 nothing left to distinguish it.
 
-**Headings and body copy share a face.** Both read the primary family role; the secondary role stays
-with the label device. A consumer wanting a grotesk display face over a serif reading face cannot
-express it without a third family role, which was declined for want of a demonstrated need.
+**Headings and body copy share a face by default, and no longer by construction.** As first written
+this paragraph read *"Both read the primary family role … a consumer wanting a grotesk display face
+over a serif reading face cannot express it without a third family role, which was declined for want
+of a demonstrated need."* The need was demonstrated by
+[#120](https://github.com/juwel-development/LIB-design-system/issues/120), and
+[ADR 0004](./0004-typography-token-contract.md)'s amendment adds `--font-heading`, read by every
+level and by the two `h1` treatments outside `H1`, defaulting to the primary face. Nothing here moves:
+a level still fixes its type role, and a heading still has no face prop — the face is the theme's to
+re-point, once, for every heading.
