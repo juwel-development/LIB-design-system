@@ -216,6 +216,11 @@
   --space-collection-item: 1em;
 }
 
+/* Box's inner padding, measured against inherited type, beside Collection's. */
+:root {
+  --space-box-inset: 1em;
+}
+
 /* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
 :root {
   --gutter: clamp(1.5rem, 5vw, 4rem);

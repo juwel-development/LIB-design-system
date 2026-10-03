@@ -169,6 +169,15 @@ const COLLECTION_SPACING = `:root {
   --space-collection-item: 1em;
 }`;
 
+/* Box's inner padding is air inside a bounded content group (#117): one role on all four sides,
+   distinct from a sibling gap, a region's air or a page band, so a brand tunes the inset of every
+   Box at once without moving any other group and no Box gains a padding or size prop (ADR 0008:
+   one role in the position, so the recipe fixes it). In em like --space-collection-item, so it
+   tracks the inherited type rather than a fixed length. Constraint: a nonnegative CSS length. */
+const BOX_INSET = `:root {
+  --space-box-inset: 1em;
+}`;
+
 /* The gutter is the horizontal inset holding content off the viewport edge (#9), and the one spacing role
    measured against the screen rather than the type: it answers to how much room there is, not how large
    the words are, so it is in rem/vw and never em. A clamp() lets it grow with the viewport with no
@@ -345,6 +354,9 @@ ${SPACING}
 
 /* Collection's vertical item padding, measured against inherited type. */
 ${COLLECTION_SPACING}
+
+/* Box's inner padding, measured against inherited type, beside Collection's. */
+${BOX_INSET}
 
 /* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
 ${GUTTER}
