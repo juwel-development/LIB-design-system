@@ -514,6 +514,21 @@ site. What fills it belongs to the consumer, a mark being a brand asset and a pl
 own word.
 _Avoid_: Logo link, home link, brand link, masthead
 
+**Status slot**:
+The status/action bar's place for a readout - a date, a balance, a short note - at the start edge and
+first in reading order. It is a slot and not a landmark: a plain box with no role, no name and no live
+region, so what fills it carries its own semantics and whether a change is announced is the consumer's
+decision. The library words nothing in it.
+_Avoid_: Status bar, info area, live region, context group, nav item
+
+**Action slot**:
+The status/action bar's place for the bar's control - a Button, or a Cluster of them - at the end edge
+and last in reading and keyboard order. Like the status slot it is not a landmark, and it is never inside
+a nav: a button is not navigation. The bar holding these two slots is Header's second mode, with no
+standing link and no navigation landmark at all; a shell that navigates is the first mode, and the
+component's props type keeps the two from mixing.
+_Avoid_: CTA area, nav button, toolbar, right slot
+
 **Section**:
 The page's structural unit — a band carrying its own vertical air and, unless it bleeds, the gutter.
 It arranges nothing inside itself: what it owns is the join to the section before it, which is why it
