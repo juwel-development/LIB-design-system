@@ -683,3 +683,61 @@ describe('renderTokens meter track contract', () => {
     }
   });
 });
+
+describe('renderTokens table column contract', () => {
+  it('names the four evidenced column jobs as width roles with positive rem defaults, not a size ladder (#115)', () => {
+    const css = renderTokens();
+    for (const role of ['name', 'fact', 'figure', 'action']) {
+      const value = css.match(
+        new RegExp(`--table-column-${role}: ([\\d.]+)rem;`),
+      )?.[1];
+      expect(Number.parseFloat(value ?? '0')).toBeGreaterThan(0);
+    }
+  });
+
+  it('keeps the column widths in :root, out of every @theme block and the colour map, since they are not colours', () => {
+    const css = renderTokens();
+    const themeBlock = css.match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).not.toContain('--table-column-');
+    expect(themeInline).not.toContain('--table-column-');
+  });
+
+  it('carries the column widths in all three stylesheet variants', () => {
+    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+      expect(render()).toContain('--table-column-name:');
+    }
+  });
+});
+
+describe('renderTokens table density contract', () => {
+  it('ships comfortable cell insets equal to what px-4 and py-2 resolved to, so the default moves nothing (#115)', () => {
+    const css = renderTokens();
+    expect(css).toContain('--table-cell-inset-inline: 1rem;');
+    expect(css).toContain('--table-cell-inset-block: 0.5rem;');
+  });
+
+  it('ships compact insets smaller than comfortable on both axes, which is the whole of what compact means', () => {
+    const css = renderTokens();
+    const rem = (name: string): number =>
+      Number.parseFloat(
+        css.match(new RegExp(`${name}: ([\\d.]+)rem;`))?.[1] ?? 'NaN',
+      );
+    expect(rem('--table-cell-inset-inline-compact')).toBeLessThan(
+      rem('--table-cell-inset-inline'),
+    );
+    expect(rem('--table-cell-inset-block-compact')).toBeLessThan(
+      rem('--table-cell-inset-block'),
+    );
+    expect(rem('--table-cell-inset-inline-compact')).toBeGreaterThan(0);
+    expect(rem('--table-cell-inset-block-compact')).toBeGreaterThan(0);
+  });
+
+  it('keeps the cell insets in :root, out of every @theme block and the colour map', () => {
+    const css = renderTokens();
+    const themeBlock = css.match(/@theme \{([^}]*)\}/)?.[1] ?? '';
+    const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
+    expect(themeBlock).not.toContain('--table-cell-inset');
+    expect(themeInline).not.toContain('--table-cell-inset');
+  });
+});

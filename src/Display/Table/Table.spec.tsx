@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { type ITableRowProps, Table } from './Table';
+import { TableConfigurationError } from './TableConfigurationError';
 
 const renderSpecTable = (
   notes?: 'supplementary' | 'content',
@@ -572,4 +573,298 @@ describe('Table', () => {
     fireEvent.click(screen.getByText('Shortlist'));
     expect(activations).not.toHaveBeenCalled();
   });
+
+  // --- Column allocation and density (#115) ------------------------------------------------------
+  // The allocation is one custom property the Root writes and the stylesheet reads as the grid's
+  // track list; the spec reads it back as the observable form of the contract, as ColumnLayout's
+  // spec reads its threshold. Geometry itself is a browser fact and lives in the stories.
+  const trackListOf = (element: HTMLElement): string =>
+    element.style.getPropertyValue('--table-columns');
+
+  type Allocation = NonNullable<
+    ComponentProps<typeof Table.Root>['columns']
+  >[number];
+
+  const renderAllocated = (
+    columns: readonly Allocation[] | undefined,
+    rows: readonly string[] = ['Enclosure', 'Bracket'],
+    notes?: 'supplementary' | 'content',
+  ) => (
+    <Table.Root
+      caption={'Parts'}
+      columns={columns}
+      notes={notes}
+      testId={'spec'}
+    >
+      <Table.Head>
+        <Table.Row>
+          <Table.HeaderCell scope={'col'}>Part</Table.HeaderCell>
+          <Table.HeaderCell scope={'col'} align={'right'}>
+            Height
+          </Table.HeaderCell>
+          <Table.HeaderCell scope={'col'}>Note</Table.HeaderCell>
+        </Table.Row>
+      </Table.Head>
+      <Table.Body>
+        {rows.map((name) => (
+          <Table.Row key={name}>
+            <Table.HeaderCell scope={'row'}>{name}</Table.HeaderCell>
+            <Table.Cell align={'right'}>44 mm</Table.Cell>
+            <Table.Cell variant={'note'}>as shipped</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table.Root>
+  );
+
+  it('offers density as the two accepted treatments only, and constrains a column to a width role or a weight', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof Table.Root>['density']>
+    >().toEqualTypeOf<'comfortable' | 'compact'>();
+    expectTypeOf<Allocation['minWidth']>().toEqualTypeOf<
+      'name' | 'fact' | 'figure' | 'action' | undefined
+    >();
+    // @ts-expect-error a raw length is not a width role
+    const length: Allocation = { width: '12rem' };
+    // @ts-expect-error a consumer custom property is not a library width role
+    const custom: Allocation = { weight: 1, minWidth: '--main-column' };
+    // @ts-expect-error a column is fixed or proportional, never both
+    const both: Allocation = { width: 'figure', weight: 2 };
+    // @ts-expect-error a column is fixed or proportional, never neither
+    const neither: Allocation = { minWidth: 'name' };
+    expect([length, custom, both, neither]).toHaveLength(4);
+  });
+
+  it('defaults to the comfortable density and says so on the wrapper, so a stylesheet and a test can read it', () => {
+    renderSpecTable(undefined, 'spec');
+    expect(screen.getByTestId('spec')).toHaveAttribute(
+      'data-density',
+      'comfortable',
+    );
+  });
+
+  it('selects density per table, so a compact table and a comfortable one coexist on one page', () => {
+    render(
+      <>
+        <Table.Root caption={'Dense'} density={'compact'} testId={'dense'}>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>1</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table.Root>
+        <Table.Root caption={'Airy'} testId={'airy'}>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>2</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table.Root>
+      </>,
+    );
+    expect(screen.getByTestId('dense')).toHaveAttribute(
+      'data-density',
+      'compact',
+    );
+    expect(screen.getByTestId('airy')).toHaveAttribute(
+      'data-density',
+      'comfortable',
+    );
+  });
+
+  it('insets header and body cells from the one published density, so both move together and neither carries a literal', () => {
+    // jsdom computes no Tailwind style, so the utility the cells read is the observable fact: one
+    // inline and one block inset the Root publishes, no px-4 / py-2 literal left on any cell.
+    renderSpecTable(undefined, 'spec');
+    for (const cell of [
+      ...screen.getAllByRole('cell'),
+      ...screen.getAllByRole('columnheader'),
+      ...screen.getAllByRole('rowheader'),
+    ]) {
+      expect(cell.className).toMatch(
+        /px-\[var\(--table-cell-padding-inline\)\]/,
+      );
+      expect(cell.className).toMatch(
+        /py-\[var\(--table-cell-padding-block\)\]/,
+      );
+      expect(cell.className).not.toMatch(/\bp[xy]-\d/);
+    }
+  });
+
+  it('declares no allocation when columns are omitted, so widths follow content exactly as before', () => {
+    render(renderAllocated(undefined));
+    const wrapper = screen.getByTestId('spec');
+    expect(wrapper).not.toHaveAttribute('data-columns');
+    expect(trackListOf(wrapper)).toBe('');
+  });
+
+  it('treats an empty column list as no allocation', () => {
+    render(renderAllocated([]));
+    expect(screen.getByTestId('spec')).not.toHaveAttribute('data-columns');
+  });
+
+  it('writes a fixed-only allocation as the named width roles, read from the theme, with nothing to stretch', () => {
+    render(
+      renderAllocated([
+        { width: 'name' },
+        { width: 'figure' },
+        { width: 'action' },
+      ]),
+    );
+    const wrapper = screen.getByTestId('spec');
+    expect(wrapper).toHaveAttribute('data-columns', '3');
+    expect(trackListOf(wrapper)).toBe(
+      'var(--table-column-name) var(--table-column-figure) var(--table-column-action)',
+    );
+  });
+
+  it('writes a proportional-only allocation as weighted shares from nothing, so 3:1 follows that ratio', () => {
+    render(renderAllocated([{ weight: 3 }, { weight: 1 }, { weight: 1 }]));
+    expect(trackListOf(screen.getByTestId('spec'))).toBe(
+      'minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1fr)',
+    );
+  });
+
+  it('floors a proportional column at its named minimum, leaving the browser to redistribute the rest', () => {
+    render(
+      renderAllocated([
+        { weight: 2, minWidth: 'name' },
+        { width: 'figure' },
+        { weight: 1, minWidth: 'fact' },
+      ]),
+    );
+    expect(trackListOf(screen.getByTestId('spec'))).toBe(
+      'minmax(var(--table-column-name), 2fr) var(--table-column-figure) minmax(var(--table-column-fact), 1fr)',
+    );
+  });
+
+  it('floors a fixed column at its minimum, so a fixed width smaller than its minimum resolves to the minimum', () => {
+    render(
+      renderAllocated([
+        { width: 'figure', minWidth: 'fact' },
+        { weight: 1 },
+        { weight: 1 },
+      ]),
+    );
+    expect(trackListOf(screen.getByTestId('spec'))).toBe(
+      'max(var(--table-column-fact), var(--table-column-figure)) minmax(0, 1fr) minmax(0, 1fr)',
+    );
+  });
+
+  it('keeps the allocation while rows are filtered, reordered, emptied and repopulated, so columns never jump with the data', () => {
+    const columns: Allocation[] = [
+      { weight: 2, minWidth: 'name' },
+      { width: 'figure' },
+      { weight: 1 },
+    ];
+    const { rerender } = render(renderAllocated(columns));
+    const wrapper = screen.getByTestId('spec');
+    const allocation = trackListOf(wrapper);
+    for (const rows of [
+      ['Bracket'],
+      ['Bracket', 'Enclosure'],
+      [],
+      ['Lid', 'Foot', 'Enclosure', 'Bracket'],
+    ]) {
+      rerender(renderAllocated(columns, rows));
+      expect(screen.getByTestId('spec')).toBe(wrapper);
+      expect(trackListOf(wrapper)).toBe(allocation);
+      expect(wrapper).toHaveAttribute('data-columns', '3');
+    }
+  });
+
+  it('follows an explicit change of definitions, which is the one consumer-side change that moves columns', () => {
+    const { rerender } = render(
+      renderAllocated([{ weight: 1 }, { weight: 1 }, { weight: 1 }]),
+    );
+    rerender(
+      renderAllocated([{ width: 'name' }, { weight: 3 }, { weight: 1 }]),
+    );
+    expect(trackListOf(screen.getByTestId('spec'))).toBe(
+      'var(--table-column-name) minmax(0, 3fr) minmax(0, 1fr)',
+    );
+  });
+
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+    'refuses a weight of %s loudly, since a share of nothing or of everything is a programmer error',
+    (weight) => {
+      expect(() =>
+        render(renderAllocated([{ weight }, { weight: 1 }, { weight: 1 }])),
+      ).toThrow(TableConfigurationError);
+    },
+  );
+
+  it('keeps the semantic table, its caption and header associations when columns are declared', () => {
+    render(
+      renderAllocated([
+        { weight: 2, minWidth: 'name' },
+        { width: 'figure' },
+        { weight: 1 },
+      ]),
+    );
+    const table = screen.getByRole('table', { name: 'Parts' });
+    expect(table.tagName).toBe('TABLE');
+    expect(table.firstElementChild?.tagName).toBe('CAPTION');
+    expect(screen.getAllByRole('rowgroup')).toHaveLength(2);
+    expect(screen.getAllByRole('columnheader')).toHaveLength(3);
+    expect(
+      screen.getByRole('rowheader', { name: 'Bracket' }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+    // Allocating space adds no behaviour: no row gains a tab stop, no header announces an order.
+    for (const row of screen.getAllByRole('row')) {
+      expect(row).not.toHaveAttribute('tabindex');
+    }
+    for (const header of screen.getAllByRole('columnheader')) {
+      expect(header).not.toHaveAttribute('aria-sort');
+    }
+  });
+
+  it('states every table role explicitly, so neither the allocation grid nor the stacked content notes cost an engine the table semantics', () => {
+    render(
+      renderAllocated([{ weight: 1 }, { width: 'figure' }, { weight: 1 }]),
+    );
+    const table = screen.getByRole('table', { name: 'Parts' });
+    expect(table).toHaveAttribute('role', 'table');
+    for (const group of table.querySelectorAll('thead, tbody')) {
+      expect(group).toHaveAttribute('role', 'rowgroup');
+    }
+    for (const row of table.querySelectorAll('tr')) {
+      expect(row).toHaveAttribute('role', 'row');
+    }
+    for (const header of table.querySelectorAll('th[scope=col]')) {
+      expect(header).toHaveAttribute('role', 'columnheader');
+    }
+    for (const header of table.querySelectorAll('th[scope=row]')) {
+      expect(header).toHaveAttribute('role', 'rowheader');
+    }
+    for (const cell of table.querySelectorAll('td')) {
+      expect(cell).toHaveAttribute('role', 'cell');
+    }
+  });
+
+  it.each(['supplementary', 'content'] as const)(
+    'keeps every %s-notes narrow-viewport rule off once columns are declared, so the note column and the rows stay tabular',
+    (notes) => {
+      render(
+        renderAllocated(
+          [{ weight: 1 }, { width: 'figure' }, { weight: 1 }],
+          undefined,
+          notes,
+        ),
+      );
+      const wrapper = screen.getByTestId('spec');
+      // The wrapper still says what the note column is - that keeps its overflow-group contract -
+      // while every rule keyed on a narrow viewport is gated on the allocation being absent.
+      expect(wrapper).toHaveAttribute('data-notes', notes);
+      expect(wrapper).toHaveAttribute('data-columns', '3');
+      const narrowRules = wrapper.className
+        .split(/\s+/)
+        .filter((utility) => utility.includes('max-md:'));
+      expect(narrowRules.length).toBeGreaterThan(0);
+      for (const utility of narrowRules) {
+        expect(utility).toContain(':not([data-columns])');
+      }
+    },
+  );
 });

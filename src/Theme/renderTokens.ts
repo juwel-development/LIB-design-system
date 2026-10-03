@@ -166,6 +166,17 @@ const MEASURE = `:root {
   --measure-action: 20rem;
 }`;
 
+/* The table's column width roles (#115) are not colours: like the measures they live in :root only,
+   so a brand re-points one and every table allocating by that role moves. Four column jobs the
+   consumer attests - name, fact, figure, action - and no size ladder (docs/adr/0008, Amendments);
+   action holds --control-min-width plus the comfortable insets. Constraint: positive lengths. */
+const TABLE_COLUMN = `:root {
+  --table-column-name: 12rem;
+  --table-column-fact: 9rem;
+  --table-column-figure: 8rem;
+  --table-column-action: 12.5rem;
+}`;
+
 /* Three spacing roles, not a ladder: --space-stack is the sibling gap in a stack, --space-region the air
    around a region of a page - a form's region groups and the shell's bars, above and below the header and
    the footer and between the header's nav items (#14/#15) - and --space-band the vertical air inside a page
@@ -213,6 +224,17 @@ const DEFINITION_SPACING = `:root {
    Constraint: a nonnegative CSS length. */
 const BOX_INSET = `:root {
   --space-box-inset: 1em;
+}`;
+
+/* Table cell insets (#115): one inline/block pair per density, in :root so a brand tunes both
+   treatments without Table gaining a measurement prop. comfortable is exactly what px-4 / py-2
+   resolved to, so the default moves nothing; compact halves both. In rem: cell type is fixed at the
+   small and label roles. Constraint: nonnegative, each compact inset no larger than its comfortable. */
+const TABLE_CELL_INSET = `:root {
+  --table-cell-inset-inline: 1rem;
+  --table-cell-inset-block: 0.5rem;
+  --table-cell-inset-inline-compact: 0.5rem;
+  --table-cell-inset-block-compact: 0.25rem;
 }`;
 
 /* The gutter is the horizontal inset holding content off the viewport edge (#9), and the one spacing role
@@ -397,6 +419,10 @@ ${ASPECT}
    of controls rather than a reading line (docs/adr/0008, Amendments). */
 ${MEASURE}
 
+/* The table column width roles have no Tailwind namespace either, and sit in :root beside the measures:
+   widths a column job needs, counted in rem against the root like the action column. */
+${TABLE_COLUMN}
+
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
    re-pointing - so the three roles sit in :root beside the measure. */
 ${SPACING}
@@ -409,6 +435,9 @@ ${DEFINITION_SPACING}
 
 /* Box's inner padding, measured against inherited type, beside Collection's. */
 ${BOX_INSET}
+
+/* Table's cell insets, one pair per density, beside Box's. */
+${TABLE_CELL_INSET}
 
 /* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
 ${GUTTER}
