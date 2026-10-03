@@ -203,6 +203,15 @@
   --measure-action: 20rem;
 }
 
+/* The table column width roles have no Tailwind namespace either, and sit in :root beside the measures:
+   widths a column job needs, counted in rem against the root like the action column. */
+:root {
+  --table-column-name: 12rem;
+  --table-column-fact: 9rem;
+  --table-column-figure: 8rem;
+  --table-column-action: 12.5rem;
+}
+
 /* Spacing has no Tailwind namespace either - --spacing is a single base multiplier ADR 0004 forbids
    re-pointing - so the three roles sit in :root beside the measure. */
 :root {
@@ -219,6 +228,14 @@
 /* Box's inner padding, measured against inherited type, beside Collection's. */
 :root {
   --space-box-inset: 1em;
+}
+
+/* Table's cell insets, one pair per density, beside Box's. */
+:root {
+  --table-cell-inset-inline: 1rem;
+  --table-cell-inset-block: 0.5rem;
+  --table-cell-inset-inline-compact: 0.5rem;
+  --table-cell-inset-block-compact: 0.25rem;
 }
 
 /* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
