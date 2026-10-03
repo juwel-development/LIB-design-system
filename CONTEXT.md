@@ -495,9 +495,9 @@ _Avoid_: Variant, version, size, mark variant
 
 **Shell**:
 The neutral frame around a page's content — its top and bottom edges. It carries none of the page's
-own matter: a standing link, a short nav, and whatever a footer files are the product speaking, not
-the page. Deliberately small, because a shell that scales with the page competes with whatever the
-page is actually for.
+own matter: standing identity and navigation, application status and actions, and whatever a footer
+files are the product speaking, not the page. Deliberately small, because a shell that scales with
+the page competes with whatever the page is actually for.
 _Avoid_: Chrome, frame, layout, wrapper, masthead
 
 **Standing link**:
