@@ -200,3 +200,12 @@ after the fact. The issue stays open and its board status unchanged.
 
 Sources for the browser-support statement: [web.dev, New to the web platform in May 2026](https://web.dev/blog/web-platform-05-2026),
 [Bugzilla 1795622, style() container queries](https://bugzilla.mozilla.org/show_bug.cgi?id=1795622).
+
+## Main integration follow-up
+
+Preserved the original 3rem column gap as `--space-definition-column`, shared by
+both densities. This supersedes the region-gap judgment above: default columns
+fit at 30rem. The CSS property registration now ships in every generated token
+entrypoint, including light and dark variants. Browser geometry checks passed
+for all six stylesheet/token entrypoints at 479, 480, 481 and 600px, including
+stacking, proportions, the 48px gap and overflow. The full 1,205-test suite passed.

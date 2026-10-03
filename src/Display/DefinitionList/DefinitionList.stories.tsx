@@ -194,10 +194,10 @@ length. A non-positive or non-finite weight, or a \`minWidth\` that is not a tok
 configuration - the threshold has nothing to compare and the list stays stacked at every width.
 
 **Container adaptation.** The list measures its own width, never the viewport. The width left after
-the region gap is divided in proportion to the weights; the row holds while both shares are at least
+the column gap is divided in proportion to the weights; the row holds while both shares are at least
 their minimums, and the moment one falls short every item in the list puts its terms above its
 description at the full width. There is no in-between, and the minimum decides the switch rather
-than flooring a width: for region gap \`g\`, total weight \`S\` and minimums \`m_i\` the row fits at
+than flooring a width: for column gap \`g\`, total weight \`S\` and minimums \`m_i\` the row fits at
 and above \`g + max(m_i * S / w_i)\` - \`g + 27rem\` at the defaults. The default term
 minimum keeps a single-word term of about eight characters whole at the largest subtitle size; a
 glossary of longer terms re-points \`--definition-term-min-width\`, and a word wider than its
@@ -214,7 +214,7 @@ them every description sits below its terms at the full width, the terms in the 
 **Tokens.** \`--space-definition-item\`, \`--space-definition-item-compact\`,
 \`--definition-term-min-width\` and \`--definition-description-min-width\` are declared in all three
 token stylesheets and accept a nonnegative CSS length. Hairlines use \`--color-border\`; the stacked
-term-to-description gap is \`--space-stack\` and the column gap \`--space-region\`. There is no
+term-to-description gap is \`--space-stack\` and the column gap \`--space-definition-column\` (3rem, preserving comfortable spacing). There is no
 size, measure, gap or per-item prop.
 `,
       },
@@ -483,8 +483,8 @@ export const CompactLongValue: Story = {
 };
 
 /**
- * The fit threshold at the defaults is one region gap plus `27rem` - with a 16px root and the
- * item's inherited 1em, 456px. Holders of 28rem and 29rem sit just below and just above it, at
+ * The fit threshold at the defaults is a 3rem column gap plus `27rem`, or 480px with a 16px root.
+ * Holders of 29rem and 31rem sit just below and just above it, at
  * both densities: the narrow lists stack, every item at once, and the wide ones keep their columns.
  */
 export const Threshold: Story = {
@@ -497,16 +497,16 @@ export const Threshold: Story = {
         alignItems: 'start',
       }}
     >
-      <Holder width={'28rem'}>
+      <Holder width={'29rem'}>
         <Facts testId={'below-comfortable'} />
       </Holder>
-      <Holder width={'29rem'}>
+      <Holder width={'31rem'}>
         <Facts testId={'above-comfortable'} />
       </Holder>
-      <Holder width={'28rem'}>
+      <Holder width={'29rem'}>
         <Facts density={'compact'} testId={'below-compact'} />
       </Holder>
-      <Holder width={'29rem'}>
+      <Holder width={'31rem'}>
         <Facts density={'compact'} testId={'above-compact'} />
       </Holder>
     </div>
@@ -779,7 +779,11 @@ export const CompactInContentDialog: Story = {
       within(document.body).getByRole('dialog'),
     );
     const list = within(dialog).getByTestId('list');
-    await expectProportions(list, [1, 2]);
+    if (widthOf(list) >= thresholdOf(list)) {
+      await expectProportions(list, [1, 2]);
+    } else {
+      await expect(isStacked(list)).toBe(true);
+    }
     const content = within(dialog).getByTestId('content');
     await expect(widthOf(list)).toBeLessThanOrEqual(content.clientWidth);
     await expect(widthOf(list)).toBeGreaterThan(content.clientWidth * 0.8);

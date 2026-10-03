@@ -188,15 +188,23 @@ const COLLECTION_SPACING = `:root {
   --space-collection-item: 1em;
 }`;
 
-/* DefinitionList's four roles (#123): item air per density, in rem like Table's cell padding since
+/* DefinitionList's spacing and minimum roles (#123): item air per density, in rem like Table's cell padding since
    the members set their own type roles, and the two columns' minimum readable widths, in rem like
    --control-min-width since a column is counted against the root. Theme-overridable; the item air
    accepts any nonnegative length, a minimum any nonnegative length a `calc()` can read. */
 const DEFINITION_SPACING = `:root {
   --space-definition-item: 1.5rem;
   --space-definition-item-compact: 0.5rem;
+  --space-definition-column: 3rem;
   --definition-term-min-width: 9rem;
   --definition-description-min-width: 10rem;
+}
+
+/* Register the fit value in every token entry point so style queries compare a computed length. */
+@property --definition-shortfall {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 1px;
 }`;
 
 /* Box's inner padding (#117): one role on all four sides, distinct from a sibling gap, a region's

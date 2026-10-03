@@ -201,10 +201,10 @@ describe('DefinitionList', () => {
     expect(screen.getByTestId('item').className).not.toMatch(/\blg:/);
   });
 
-  it('writes the default fit threshold - one region gap plus the larger of each library minimum scaled by S / w - for a 1:2 split', () => {
+  it('writes the default fit threshold - one column gap plus the larger of each library minimum scaled by S / w - for a 1:2 split', () => {
     renderSpecList();
     expect(thresholdOf()).toBe(
-      'calc(var(--space-region) + max(var(--definition-term-min-width) * 3, var(--definition-description-min-width) * 1.5))',
+      'calc(var(--space-definition-column) + max(var(--definition-term-min-width) * 3, var(--definition-description-min-width) * 1.5))',
     );
     expect(termShareOf()).toBe('calc(1 / 3)');
   });
@@ -218,7 +218,7 @@ describe('DefinitionList', () => {
       },
     });
     expect(thresholdOf()).toBe(
-      'calc(var(--space-region) + max(var(--summary-term-min-width) * 4, var(--summary-description-min-width) * 1.3333333333333333))',
+      'calc(var(--space-definition-column) + max(var(--summary-term-min-width) * 4, var(--summary-description-min-width) * 1.3333333333333333))',
     );
     expect(termShareOf()).toBe('calc(1 / 4)');
   });
@@ -228,7 +228,7 @@ describe('DefinitionList', () => {
       termColumn: { weight: 2, minWidth: '--definition-term-min-width' },
     });
     expect(thresholdOf()).toBe(
-      'calc(var(--space-region) + max(var(--definition-term-min-width) * 2, var(--definition-description-min-width) * 2))',
+      'calc(var(--space-definition-column) + max(var(--definition-term-min-width) * 2, var(--definition-description-min-width) * 2))',
     );
     expect(termShareOf()).toBe('calc(2 / 4)');
   });
@@ -256,11 +256,11 @@ describe('DefinitionList', () => {
     ).toThrow(/termColumn/);
   });
 
-  it('separates a stacked term from its description by the stack role and the two columns by the region role', () => {
+  it('separates a stacked term from its description by the stack role and the two columns by their dedicated spacing role', () => {
     renderSpecList({ itemTestId: 'item' });
     const item = screen.getByTestId('item');
     expect(item).toHaveClass('gap-[var(--space-stack)]');
-    expect(item.className).toContain('var(--space-region)');
+    expect(item.className).toContain('var(--space-definition-column)');
   });
 
   it('exposes the one sanctioned host hook through testId on Root and Item', () => {

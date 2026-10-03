@@ -26,8 +26,8 @@ const item = cva(
     'grid gap-[var(--space-stack)] border-b border-solid border-border first:border-t',
     '[--definition-stack:clamp(0px,(var(--definition-threshold)-100%)*1000000,100%)]',
     '[--definition-shortfall:clamp(0px,(var(--definition-threshold)-100cqi)*1000000,1px)]',
-    'grid-cols-[max(calc((100%-var(--space-region))*var(--definition-term-share)),var(--definition-stack))_minmax(0,1fr)]',
-    'gap-x-[max(0px,var(--space-region)-var(--definition-stack))]',
+    'grid-cols-[max(calc((100%-var(--space-definition-column))*var(--definition-term-share)),var(--definition-stack))_minmax(0,1fr)]',
+    'gap-x-[max(0px,var(--space-definition-column)-var(--definition-stack))]',
     '[&>dt]:col-start-1 [&>dt]:self-baseline [&>dd]:col-span-full [&>dd]:self-baseline',
     '[@container_style(--definition-shortfall:0px)]:[&>dd]:col-start-2',
     '[@container_style(--definition-shortfall:0px)]:[&>dd]:row-start-1',
@@ -84,14 +84,14 @@ const validateColumn = (
   return column;
 };
 
-// The documented threshold, `g + max(m_i * S / w_i)` with the region gap as g, left to the browser
+// The documented threshold, `g + max(m_i * S / w_i)` with the column gap as g, left to the browser
 // to resolve so a theme re-pointing a minimum - or the gap - moves it with no script in between.
 const thresholdOf = (
   termColumn: ColumnAllocation,
   descriptionColumn: ColumnAllocation,
 ): string => {
   const total = termColumn.weight + descriptionColumn.weight;
-  return `calc(var(--space-region) + max(var(${termColumn.minWidth}) * ${total / termColumn.weight}, var(${descriptionColumn.minWidth}) * ${total / descriptionColumn.weight}))`;
+  return `calc(var(--space-definition-column) + max(var(${termColumn.minWidth}) * ${total / termColumn.weight}, var(${descriptionColumn.minWidth}) * ${total / descriptionColumn.weight}))`;
 };
 
 // React's CSSProperties is closed over known properties; the two custom properties the item
@@ -191,11 +191,11 @@ const DefinitionListDescription: FunctionComponent<
  * - A hairline sits above the first item and below every item, in `border`, and the block closes at
  *   the foot. No card, box, fill, icon or bullet - it reads from the rules alone.
  * - Every item shares one allocation: the term column and the description column each take a share
- *   of the width left after the region gap in proportion to their weights, `1` and `2` unless the
+ *   of the width left after the column gap in proportion to their weights, `1` and `2` unless the
  *   caller says otherwise. The row holds while both shares are at least their minimum readable
  *   width; the moment one falls short, every item in the list puts its terms above its description
  *   at the full width, separated by the stack role. There is no in-between, and the minimum decides
- *   the switch rather than flooring a width. For region gap g, total weight S and minimums m_i the
+ *   the switch rather than flooring a width. For column gap g, total weight S and minimums m_i the
  *   row fits at and above `g + max(m_i * S / w_i)`.
  * - The width measured is the list's own, never the viewport, so a narrow list on a wide screen
  *   stacks while a wide one beside it keeps its columns, and a theme that re-points a minimum -

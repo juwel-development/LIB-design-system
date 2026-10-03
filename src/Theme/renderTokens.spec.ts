@@ -332,6 +332,10 @@ describe('renderTokens spacing contract', () => {
       expect(css).toMatch(
         /:root\s*\{[^}]*--space-definition-item:\s*1\.5rem;[^}]*--space-definition-item-compact:\s*0\.5rem;[^}]*--definition-term-min-width:\s*9rem;[^}]*--definition-description-min-width:\s*10rem;/,
       );
+      expect(css).toMatch(/--space-definition-column:\s*3rem;/);
+      expect(css).toMatch(
+        /@property --definition-shortfall\s*\{\s*syntax: "<length>";\s*inherits: false;\s*initial-value: 1px;/,
+      );
       for (const block of css.matchAll(/@theme(?: inline)?\s*\{([^}]*)\}/g)) {
         expect(block[1]).not.toContain('--space-definition-item');
         expect(block[1]).not.toContain('--definition-');
