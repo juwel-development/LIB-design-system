@@ -345,6 +345,72 @@ with no prop and no component CSS override. It is declared in all three token st
 and accepts a nonnegative CSS length. The box borrows neither the control radius nor the
 floating elevation.
 
+## ColumnLayout
+
+`ColumnLayout` is an arrangement of weighted columns that becomes one column when the space
+it is given cannot satisfy every column's minimum at the requested proportions. It owns the
+arrangement and nothing else: no landmark, no band, no gutter, no fill, no scrolling. `Stack`'s
+`split` keeps its own viewport-keyed contract; `ColumnLayout` answers to the width of whatever
+holds it.
+
+```tsx
+import { ColumnLayout } from '@juwel-development/design-system';
+
+<ColumnLayout.Root gap={'region'}>
+  <ColumnLayout.Column weight={2} minWidth={'--main-column-min-width'}>
+    <Table.Root caption={'A&R roster'}>…</Table.Root>
+  </ColumnLayout.Column>
+  {selected && (
+    <ColumnLayout.Column weight={1} minWidth={'--support-column-min-width'}>
+      <DefinitionList.Root>…</DefinitionList.Root>
+    </ColumnLayout.Column>
+  )}
+</ColumnLayout.Root>;
+```
+
+`Root` takes `gap?: 'stack' | 'region'` (defaulting to `region`), `children` and `testId`. The
+same gap separates the columns across the row and between the stacked lines. `Column` takes a
+required positive finite `weight`, a required `minWidth`, `children` and `testId`. Supply
+columns directly, through maps, in fragments or with conditional omissions; a column rendered
+through a wrapping component, loose, or nested inside another column throws
+`ColumnLayoutCompositionError`, and an invalid weight or token name throws
+`ColumnLayoutConfigurationError`.
+
+**Allocation.** In the row the gaps come off the Root's width and the rest is divided by weight:
+`2` beside `1` is two thirds and one third of what is left. Columns align at the top and keep
+their own heights. The row holds only while every share is at least its own minimum; the moment
+one is not, every column takes a line of its own and fills the Root's width, a column narrower
+than its minimum included. There is no partial wrap and no clamping. For `n` columns with gap
+`g`, total weight `S` and minimums `mᵢ`, the row fits at and above
+`(n − 1) × g + max(mᵢ × S ⁄ wᵢ)`; the space measured is the Root's, never the viewport's.
+
+**Minimum-width tokens.** `minWidth` names a CSS custom property the consumer declares, never a
+length or a `var()`. The name is a theme role of the product's own (`--main-column-min-width`),
+not a library preset: the library ships no column-width ladder. Declare it on `:root`, on a
+theme class, or on any ancestor of the Root, as a valid nonnegative CSS length:
+
+```css
+:root {
+  --main-column-min-width: 28rem;
+  --support-column-min-width: 12rem;
+}
+.dark { --support-column-min-width: 14rem; }
+```
+
+The token is read each time layout runs, so re-pointing it in a theme class or a media query
+moves the threshold with it. A `rem` resolves against the document root, an `em` or `ch`
+against the Root's inherited type, a `px` as written. A percentage is not a length the contract
+accepts: a minimum is a readable width, which the holder's width cannot define. A missing or
+invalid token is not a responsive configuration: the switch has nothing to compare and the
+columns size from their content instead. Anything placed beside the columns that is not a
+`Column` is rendered as given but takes no weight, no gap and no part in the threshold, so it
+breaks the proportions; content belongs inside a `Column`.
+
+**What the content owns.** A column never widens for its content and adds no truncation or
+scrolling. Running text wraps inside its track; content that cannot wrap needs its own overflow
+contract, as `Table.Root` has. Resizing the holder never remounts a column, so focus and
+state survive the switch, and reading and keyboard order are the order the columns are written.
+
 ## Theming
 
 Colour is addressed by **role**, never by shade - `bg-primary`, `text-muted`,
@@ -431,7 +497,7 @@ src/<Category>/<Component>/<Component>.tsx
                            <Component>.spec.tsx
 ```
 
-`Category` is `Interaction`, `Display` or `Layout`. Imports inside `src` are written
+`Category` is `Arrangement`, `Interaction`, `Display` or `Layout`. Imports inside `src` are written
 from the source root (`Interaction/Button/Button`), not relatively.
 
 ## Releasing

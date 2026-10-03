@@ -1,6 +1,7 @@
 import './styles.css';
 
 export { Cluster } from 'Arrangement/Cluster/Cluster';
+export { ColumnLayout } from 'Arrangement/ColumnLayout/ColumnLayout';
 export { Stack } from 'Arrangement/Stack/Stack';
 export { Box } from 'Display/Box/Box';
 export { Brandmark } from 'Display/Brandmark/Brandmark';
