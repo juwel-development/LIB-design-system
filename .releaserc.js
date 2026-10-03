@@ -78,9 +78,11 @@ export default {
       '@semantic-release/git',
       {
         assets: ['CHANGELOG.md', 'package.json', 'package-lock.json'],
+        // Full notes belong in CHANGELOG.md and the GitHub release. Keeping them out of the
+        // commit body avoids line-length failures in the commit-msg hook.
         message:
           // biome-ignore lint/suspicious/noTemplateCurlyInString: semantic-release interpolates these itself, so they must survive as literal text.
-          'chore(release): set `package.json` version to ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
+          'chore(release): set `package.json` version to ${nextRelease.version} [skip ci]',
       },
     ],
   ],
