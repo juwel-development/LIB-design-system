@@ -26,14 +26,10 @@ const scrollContainer = cva(
   },
 );
 
-// With a horizontal axis enabled the content box is `fit-content` floored at the container's width:
-// as wide as the container while the content fits, as wide as the content's minimum when it does
-// not. So text wraps normally, and content that cannot wrap grows the box - which is what a
-// ResizeObserver on it can see, since growth inside an overflow box never changes the container's
-// own size. With only the vertical axis enabled the box takes the container's width instead, so a
-// child that scrolls horizontally on its own - a Table - keeps its own scroll surface rather than
-// being widened into the clipped axis. The padding is the focus ring's room: an overflow box clips
-// at its padding edge, so a focusable child flush with the container would lose its ring there.
+// The content box is `fit-content` floored at the container's width where horizontal scrolling is
+// on, so unwrappable content grows it - which a ResizeObserver can see, since growth inside an
+// overflow box never changes the container's size - and the container's width where only vertical
+// is on, so a Table keeps its own horizontal scroll region. The padding is the focus ring's room.
 const scrollContent = cva(
   'p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
   {
@@ -59,10 +55,10 @@ const isOverflowing = (element: HTMLElement, axis: Axis): boolean => {
   );
 };
 
-// Reachable until measured, so server markup is keyboard-operable before hydration; after it, a tab
-// stop only while an enabled axis actually overflows (WCAG 2.1.1 wants the scroll container itself
-// focusable when nothing inside is). Measuring sets state on this element only, so focus elsewhere
-// stays where it is.
+// A tab stop only while an enabled axis overflows (WCAG 2.1.1 wants the scroll container itself
+// focusable when nothing inside is): reachable until measured, so server markup is operable before
+// hydration, and kept reachable while it holds focus itself, since dropping tabindex from the
+// focused element would let the browser relocate focus - the one thing a re-measure must not do.
 const useOverflow = (
   container: { current: HTMLElement | null },
   content: { current: HTMLElement | null },
@@ -72,7 +68,10 @@ const useOverflow = (
   useLayoutEffect(() => {
     const element = container.current;
     if (element === null) return;
-    const measure = () => setIsScrollable(isOverflowing(element, axis));
+    const measure = () =>
+      setIsScrollable(
+        isOverflowing(element, axis) || element === document.activeElement,
+      );
     measure();
     const observer =
       typeof ResizeObserver === 'undefined'
@@ -81,9 +80,11 @@ const useOverflow = (
     observer?.observe(element);
     if (content.current !== null) observer?.observe(content.current);
     window.addEventListener('resize', measure);
+    element.addEventListener('blur', measure);
     return () => {
       observer?.disconnect();
       window.removeEventListener('resize', measure);
+      element.removeEventListener('blur', measure);
     };
   }, [container, content, axis]);
   return isScrollable;

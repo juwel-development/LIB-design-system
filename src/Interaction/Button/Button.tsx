@@ -5,13 +5,10 @@ import type { Subject } from 'rxjs';
 
 // No `dark:` classes here by design: every colour below is a semantic token whose value is
 // re-pointed by the `.dark` class in tokens.css, so one set of classes serves both themes.
-// The base holds only what every variant shares: the colour transition on the motion token
-// (docs/adr/0001) and the one focus ring, drawn with outline, colour at rest so it never fades in
-// (docs/adr/0002). The button face - the content face and body size (docs/adr/0004, #90, #92),
-// the control radius (docs/adr/0003), the padding whose height the font-size drives, the disabled
-// fill - is one string the three faced variants share verbatim, so none of them can disagree.
-// `plain` is the accepted exception recorded in the amendments to ADR 0003 and 0004 (#114): it
-// inherits face, size, tracking and colour from its surroundings and draws no face at all.
+// The base holds only what every variant shares: the colour transition (docs/adr/0001) and the
+// one focus ring, drawn with outline, colour at rest (docs/adr/0002). The face - content face and
+// body size (docs/adr/0004), control radius (docs/adr/0003), padding, disabled fill - is one string
+// the three faced variants share verbatim; `plain` is the exception both ADRs' amendments record.
 const face =
   'font-primary text-body rounded-[var(--radius-control)] py-2 sm:py-2 disabled:bg-disabled disabled:hover:bg-disabled-hover select-none text-nowrap inline-flex flex-row items-center justify-center gap-2';
 const button = cva(

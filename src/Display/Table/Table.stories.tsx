@@ -312,20 +312,31 @@ export const SortableHeadersDelayedResponse: Story = {
   render: () => <SortableParts responseDelay={1500} />,
 };
 
+const wideColumns = [
+  'Height',
+  'Width',
+  'Depth',
+  'Mass',
+  'Material',
+  'Finish',
+  'Supplier',
+];
+const wideValues = [
+  44,
+  320,
+  210,
+  2400,
+  'Aluminium 6061',
+  'Anodised black',
+  'Nordwerk GmbH',
+];
+
 const wideRows = (
   <>
     <Table.Head>
       <Table.Row>
         <Table.HeaderCell scope={'col'}>Part</Table.HeaderCell>
-        {[
-          'Height',
-          'Width',
-          'Depth',
-          'Mass',
-          'Material',
-          'Finish',
-          'Supplier',
-        ].map((label) => (
+        {wideColumns.map((label) => (
           <Table.HeaderCell key={label} scope={'col'} align={'right'}>
             {label}
           </Table.HeaderCell>
@@ -337,15 +348,7 @@ const wideRows = (
       {['Enclosure', 'Bracket', 'Lid', 'Foot'].map((name) => (
         <Table.Row key={name}>
           <Table.HeaderCell scope={'row'}>{name}</Table.HeaderCell>
-          {[
-            44,
-            320,
-            210,
-            2400,
-            'Aluminium 6061',
-            'Anodised black',
-            'Nordwerk GmbH',
-          ].map((value) => (
+          {wideValues.map((value) => (
             <Table.Cell key={String(value)} align={'right'}>
               {value}
             </Table.Cell>
@@ -376,13 +379,14 @@ const manyParts = Array.from({ length: 24 }, (_, index) => `Part ${index + 1}`);
  * A long, wide table inside a vertically bounded ScrollContainer. The outer container owns the
  * vertical axis; the Table owns residual horizontal overflow. Tab reaches the container (when it
  * overflows), then the Table's region, then the header buttons; arrow keys scroll whichever holds
- * focus, and the focus ring stays visible on each.
+ * focus, and the focus ring stays visible on each. The container is named for what it holds, not
+ * with the caption: two stops announced by one name in a row read as one thing.
  */
 export const InsideVerticalScrollContainer: Story = {
   args: { caption: 'Parts' },
   render: () => (
     <div style={{ height: '14rem' }}>
-      <ScrollContainer axis={'vertical'} ariaLabel={'Parts'}>
+      <ScrollContainer axis={'vertical'} ariaLabel={'Parts catalogue'}>
         <Table.Root caption={'Parts'}>
           <Table.Head>
             <Table.Row>
@@ -391,15 +395,7 @@ export const InsideVerticalScrollContainer: Story = {
                   Part <Icon name={'sort-ascending'} />
                 </Button>
               </Table.HeaderCell>
-              {[
-                'Height',
-                'Width',
-                'Depth',
-                'Mass',
-                'Material',
-                'Finish',
-                'Supplier',
-              ].map((label) => (
+              {wideColumns.map((label) => (
                 <Table.HeaderCell key={label} scope={'col'} align={'right'}>
                   <Button variant={'plain'}>
                     {label} <Icon name={'sort'} />
@@ -412,15 +408,7 @@ export const InsideVerticalScrollContainer: Story = {
             {manyParts.map((name) => (
               <Table.Row key={name}>
                 <Table.HeaderCell scope={'row'}>{name}</Table.HeaderCell>
-                {[
-                  44,
-                  320,
-                  210,
-                  2400,
-                  'Aluminium 6061',
-                  'Anodised black',
-                  'Nordwerk GmbH',
-                ].map((value) => (
+                {wideValues.map((value) => (
                   <Table.Cell key={String(value)} align={'right'}>
                     {value}
                   </Table.Cell>

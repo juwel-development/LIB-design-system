@@ -298,15 +298,20 @@ and never bounds its own height. For a long table, put it inside a `ScrollContai
 
 ```tsx
 <div style={{ height: '20rem' }}>
-  <ScrollContainer axis={'vertical'} ariaLabel={'Parts'}>
+  <ScrollContainer axis={'vertical'} ariaLabel={'Parts catalogue'}>
     <Table.Root caption={'Parts'}>…</Table.Root>
   </ScrollContainer>
 </div>
 ```
 
+Name the container for what it holds rather than repeating the caption: the container and the
+table's own scroll region are two consecutive tab stops, and two stops announced by one name read
+as one thing.
+
 `ScrollContainer` makes overflowing content reachable along `axis` (`'both'`, the default,
 `'horizontal'` or `'vertical'`) within the space its parent allocates - it takes no size of its
-own and invents no viewport bound. Content wraps normally; what still overflows an enabled axis
+own, invents no viewport bound, and adds only the focus ring's room around its content so a
+focusable child flush with its edge keeps a visible ring. Content wraps normally; what still overflows an enabled axis
 scrolls, and what overflows a disabled axis is clipped, so give the content a layout that fits
 that axis - clipping is not a way to hide essential content or controls. While an enabled axis
 overflows the container is a keyboard-reachable group named by the required `ariaLabel`; while

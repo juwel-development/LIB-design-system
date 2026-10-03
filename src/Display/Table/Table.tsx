@@ -97,11 +97,10 @@ interface ITableHeaderCellProps extends VariantProps<typeof tableHeaderCell> {
   children?: ReactNode;
 }
 
-// With a note column the wrapper is a plain grouping element until the table overflows it; from
-// then on it is a named group with a tab stop, so the scroll is keyboard-operable (WCAG 2.1.1)
-// without adding a stop while nothing scrolls. Reachable until measured, so server markup is
-// operable before hydration. The table is observed as well as the wrapper because content growing
-// inside an overflow box changes the table's size, never the wrapper's.
+// With a note column the wrapper is a named group with a tab stop only while the table overflows it
+// (WCAG 2.1.1): reachable until measured so server markup is operable before hydration, and kept
+// reachable while it holds focus itself, since dropping tabindex from the focused element relocates
+// focus. The table is observed too: growth inside an overflow box never changes the wrapper's size.
 const useHorizontalOverflow = (
   wrapper: { current: HTMLElement | null },
   table: { current: HTMLElement | null },
@@ -111,7 +110,10 @@ const useHorizontalOverflow = (
     const element = wrapper.current;
     if (element === null) return;
     const measure = () =>
-      setIsOverflowing(element.scrollWidth > element.clientWidth);
+      setIsOverflowing(
+        element.scrollWidth > element.clientWidth ||
+          element === document.activeElement,
+      );
     measure();
     const observer =
       typeof ResizeObserver === 'undefined'
@@ -120,9 +122,11 @@ const useHorizontalOverflow = (
     observer?.observe(element);
     if (table.current !== null) observer?.observe(table.current);
     window.addEventListener('resize', measure);
+    element.addEventListener('blur', measure);
     return () => {
       observer?.disconnect();
       window.removeEventListener('resize', measure);
+      element.removeEventListener('blur', measure);
     };
   }, [wrapper, table]);
   return isOverflowing;

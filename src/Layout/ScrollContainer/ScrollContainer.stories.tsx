@@ -79,6 +79,30 @@ export const HorizontalWideContent: Story = {
   ),
 };
 
+/**
+ * One container inside another, each owning one axis: the outer scrolls vertically within its
+ * parent's height, the inner scrolls a line that cannot wrap horizontally within the outer's width.
+ * Neither duplicates the other's axis, so Tab meets two stops with two names and the arrow keys
+ * scroll whichever holds focus. The outer is `vertical`, so its content box takes the outer's width
+ * and the inner's overflow stays the inner's - the same shape as a Table inside it.
+ */
+export const NestedHorizontalInsideVertical: Story = {
+  args: { axis: 'vertical', ariaLabel: 'Specification' },
+  render: (args) => (
+    <div style={{ height: '14rem', maxWidth: '28rem' }}>
+      <ScrollContainer {...args}>
+        <div className={'flex flex-col gap-3'}>
+          {paragraphs.slice(0, 2)}
+          <ScrollContainer axis={'horizontal'} ariaLabel={'Column list'}>
+            {wideLine}
+          </ScrollContainer>
+          {paragraphs.slice(2)}
+        </div>
+      </ScrollContainer>
+    </div>
+  ),
+};
+
 /** Both axes, the default: a bounded box with content overflowing in both directions. */
 export const BothAxes: Story = {
   args: { ariaLabel: 'Specification' },

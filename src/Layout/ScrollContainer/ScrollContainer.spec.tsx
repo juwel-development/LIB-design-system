@@ -1,8 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ScrollContainer } from './ScrollContainer';
 
-const sizes = (
+const measureAs = (
   overrides: Partial<{
     scrollWidth: number;
     clientWidth: number;
@@ -35,7 +35,7 @@ describe('ScrollContainer', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('renders its children, so a consumer owns the content and the container owns only the scrolling', () => {
-    sizes();
+    measureAs();
     render(
       <ScrollContainer ariaLabel={'Specification'}>
         <p>Weight 2.4 kg</p>
@@ -45,7 +45,7 @@ describe('ScrollContainer', () => {
   });
 
   it('adds no tab stop and no group while nothing overflows, so a fitting container is invisible to the keyboard', () => {
-    sizes();
+    measureAs();
     render(
       <ScrollContainer ariaLabel={'Specification'} testId={'scroll'}>
         <p>fits</p>
@@ -59,7 +59,7 @@ describe('ScrollContainer', () => {
   });
 
   it('becomes a keyboard-reachable group named by ariaLabel once content overflows, even when the content is entirely static', () => {
-    sizes({ scrollHeight: 800 });
+    measureAs({ scrollHeight: 800 });
     render(
       <ScrollContainer ariaLabel={'Specification'} testId={'scroll'}>
         <p>tall</p>
@@ -82,7 +82,7 @@ describe('ScrollContainer', () => {
   ] as const)(
     'with axis %s and overflow %o is keyboard-reachable: %s - overflow on a disabled axis is clipped, not scrolled',
     (axis, overflow, isReachable) => {
-      sizes(overflow);
+      measureAs(overflow);
       render(
         <ScrollContainer
           ariaLabel={'Specification'}
@@ -102,7 +102,7 @@ describe('ScrollContainer', () => {
   );
 
   it('scrolls both axes by default and clips the axis a consumer disables', () => {
-    sizes();
+    measureAs();
     const { rerender } = render(
       <ScrollContainer ariaLabel={'Specification'} testId={'scroll'}>
         <p>content</p>
@@ -137,7 +137,7 @@ describe('ScrollContainer', () => {
   });
 
   it('invents no bound of its own: no height, width or viewport unit, so the parent layout is the only thing that sizes it', () => {
-    sizes();
+    measureAs();
     render(
       <ScrollContainer ariaLabel={'Specification'} testId={'scroll'}>
         <p>content</p>
@@ -150,7 +150,7 @@ describe('ScrollContainer', () => {
   });
 
   it('re-evaluates after resizing or content changes without moving focus, and drops the stop again when the overflow goes', () => {
-    sizes();
+    measureAs();
     render(
       <ScrollContainer ariaLabel={'Specification'} testId={'scroll'}>
         <button type={'button'}>Sort</button>
@@ -161,19 +161,42 @@ describe('ScrollContainer', () => {
     const container = screen.getByTestId('scroll');
     expect(container).not.toHaveAttribute('tabindex');
 
-    sizes({ scrollHeight: 900 });
+    measureAs({ scrollHeight: 900 });
     fireEvent(window, new Event('resize'));
     expect(container).toHaveAttribute('tabindex', '0');
     expect(control).toHaveFocus();
 
-    sizes();
+    measureAs();
     fireEvent(window, new Event('resize'));
     expect(container).not.toHaveAttribute('tabindex');
     expect(control).toHaveFocus();
   });
 
+  it('keeps its tab stop while it holds focus itself, even once the overflow goes, and drops it only after focus has left', () => {
+    // Removing tabindex from the focused element would let the browser fix focus up to the body -
+    // the relocation the contract forbids - so the stop outlives the overflow until focus moves on.
+    measureAs({ scrollHeight: 900 });
+    render(
+      <ScrollContainer ariaLabel={'Specification'} testId={'scroll'}>
+        <p>content</p>
+      </ScrollContainer>,
+    );
+    const container = screen.getByTestId('scroll');
+    container.focus();
+    expect(container).toHaveFocus();
+
+    measureAs();
+    fireEvent(window, new Event('resize'));
+    expect(container).toHaveAttribute('tabindex', '0');
+    expect(container).toHaveFocus();
+
+    act(() => container.blur());
+    expect(container).not.toHaveAttribute('tabindex');
+    expect(container).not.toHaveAttribute('role');
+  });
+
   it('neither traps focus nor intercepts the keys of controls inside it, so native scrolling and native controls both work', () => {
-    sizes({ scrollHeight: 900 });
+    measureAs({ scrollHeight: 900 });
     render(
       <ScrollContainer ariaLabel={'Specification'} testId={'scroll'}>
         <button type={'button'}>Sort</button>
@@ -195,7 +218,7 @@ describe('ScrollContainer', () => {
   });
 
   it('exposes the one sanctioned host hook through testId', () => {
-    sizes();
+    measureAs();
     render(
       <ScrollContainer ariaLabel={'Specification'} testId={'scroll'}>
         <p>content</p>
@@ -208,7 +231,7 @@ describe('ScrollContainer', () => {
     // A Table inside a vertical ScrollContainer must still scroll horizontally in its own region.
     // Were the content box allowed to grow to the table's minimum width, the table would never
     // overflow its region and the outer container - which clips its disabled axis - would hide it.
-    sizes();
+    measureAs();
     const { rerender } = render(
       <ScrollContainer ariaLabel={'Parts'} axis={'vertical'} testId={'scroll'}>
         <p>content</p>
@@ -235,7 +258,7 @@ describe('ScrollContainer', () => {
     // An overflow box clips at its padding edge. A Table region or a button sitting flush with the
     // container would draw its outline outside that edge, where it is clipped - so the content box
     // leaves exactly the ring's width plus offset free on every side, in the ring's own tokens.
-    sizes();
+    measureAs();
     render(
       <ScrollContainer ariaLabel={'Parts'} testId={'scroll'}>
         <p>content</p>
