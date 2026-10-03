@@ -280,7 +280,7 @@ const toKebabCase = (name: string): string =>
   name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 
 const declarations = (
-  tokens: PaletteTokens,
+  tokens: Required<PaletteTokens>,
   value: (name: string) => string,
 ): string =>
   Object.keys(tokens)
@@ -290,7 +290,7 @@ const declarations = (
 // The library no longer declares --color-ring but still reads it as a fallback, so a consumer's
 // existing value keeps working; the plain hex in the palette is the default and what the contrast
 // test checks. See docs/adr/0002-focus-ring-token-contract.md.
-const raw = (tokens: PaletteTokens) => (name: string) => {
+const raw = (tokens: Required<PaletteTokens>) => (name: string) => {
   const value = tokens[name as keyof PaletteTokens];
   return name === 'focusRing' ? `var(--color-ring, ${value})` : value;
 };
@@ -403,7 +403,7 @@ ${colourMapAndTail()}`;
    differ only in header and which palette set lands in `:root`, so both render through here. */
 const renderSingleTheme = (
   header: string,
-  tokens: PaletteTokens,
+  tokens: Required<PaletteTokens>,
 ): string => `${header}
 
 :root {

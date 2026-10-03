@@ -241,17 +241,58 @@ describe('Palette', () => {
     ['light', light],
     ['dark', dark],
   ] as const)(
-    "carries surface as the ink on the %s theme's `error` fill at 4.5:1 and keeps the fill 3:1 against surface, so Button's destructive hover reads (#119)",
+    "keeps the %s theme's `secondary` at least 4.5:1 against surface and against backing, so the outlined Button's text and edge read at rest and on hover (#119)",
     (_theme, tokens) => {
-      // Button's destructive variant fills with `error` on hover and sets its text to `surface`.
-      // Contrast is symmetric, so the status-tone floor (docs/adr/0011) already carries the ink;
-      // this pins that reading so a palette edit that drops it fails here and not in a browser.
+      // #119 makes `secondary` an ink as well as a fill: the outlined Button draws its text and its
+      // identifying edge in it on an unfilled surface, and tints with `backing` on hover. The text
+      // floor (4.5:1) covers the edge's 3:1 floor (SC 1.4.11) in the same measurement. The dark
+      // `secondary` moved from sky-600 (4.36:1) to sky-500 to clear this - see the palette's dark comment.
       expect(
-        contrastRatio(tokens.error, tokens.surface),
+        contrastRatio(tokens.secondary, tokens.surface),
       ).toBeGreaterThanOrEqual(4.5);
       expect(
-        contrastRatio(tokens.error, tokens.surface),
+        contrastRatio(tokens.secondary, tokens.backing),
+      ).toBeGreaterThanOrEqual(4.5);
+    },
+  );
+
+  it.each(
+    (
+      [
+        ['light', light],
+        ['dark', dark],
+      ] as const
+    ).flatMap(([theme, tokens]) =>
+      (['error', 'errorHover'] as const).map(
+        (role) => [theme, role, tokens] as const,
+      ),
+    ),
+  )(
+    "keeps the %s theme's `%s` fill at least 3:1 against surface, so the destructive Button is identified by its fill at rest and on hover (WCAG 2.2 SC 1.4.11, #119)",
+    (_theme, role, tokens) => {
+      expect(
+        contrastRatio(tokens[role], tokens.surface),
       ).toBeGreaterThanOrEqual(3);
+    },
+  );
+
+  it.each(
+    (
+      [
+        ['light', light],
+        ['dark', dark],
+      ] as const
+    ).flatMap(([theme, tokens]) =>
+      (['error', 'errorHover'] as const).map(
+        (fill) => [theme, fill, tokens] as const,
+      ),
+    ),
+  )(
+    "keeps the %s theme's `%s` fill at least 4.5:1 against `errorForeground`, so the destructive label reads at rest and on hover (WCAG 2.2 SC 1.4.3, #119)",
+    (_theme, fill, tokens) => {
+      expect(
+        contrastRatio(tokens[fill], tokens.errorForeground),
+      ).toBeGreaterThanOrEqual(4.5);
     },
   );
 
@@ -262,9 +303,21 @@ describe('Palette', () => {
     for (const [rest, hover] of [
       [light.primary, light.primaryHover],
       [light.secondary, light.secondaryHover],
+      [light.error, light.errorHover],
     ] as const) {
       expect(rest).not.toBe(hover);
       expect(relativeLuminance(hover)).toBeLessThan(relativeLuminance(rest));
+    }
+  });
+
+  it('keeps each dark fill distinct from the hover it steps into, with hover the lighter of the two', () => {
+    for (const [rest, hover] of [
+      [dark.primary, dark.primaryHover],
+      [dark.secondary, dark.secondaryHover],
+      [dark.error, dark.errorHover],
+    ] as const) {
+      expect(rest).not.toBe(hover);
+      expect(relativeLuminance(hover)).toBeGreaterThan(relativeLuminance(rest));
     }
   });
 

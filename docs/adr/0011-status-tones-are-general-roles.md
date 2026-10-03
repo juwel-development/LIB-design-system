@@ -68,17 +68,29 @@ caller or a component that owns a status event remains responsible for announcem
 
 ## Amendments
 
-**`error` gains a control carrier: Button's destructive variant
-([#119](https://github.com/juwel-development/LIB-design-system/issues/119)).** The variant draws
-its boundary and text in `error` at rest and fills with `error` on hover, taking `surface` as its
-ink. Both positions are discharged by the constraint this ADR already states: a text tone at 4.5:1
-against `surface` clears the 3:1 a boundary needs, and contrast is symmetric, so `surface` drawn on
-an `error` fill reads at the same 4.5:1. No role was added for it - a `destructiveHover` or an
-`errorForeground` would anticipate a job the symmetric reading already serves, which is the ground
-`warningForeground` was refused on above. The hover inverts to the tone rather than tinting with
-`backing` because `error` text on `backing` measures 4.11:1 in the shipped light theme, under the
-text floor; `Palette.spec.ts` pins the reading so a palette edit that drops it fails there.
+**`error` gains a fill carrier, and two companion roles, for Button's destructive variant
+([#119](https://github.com/juwel-development/LIB-design-system/issues/119)).** The approved brief
+asks for one filled destructive variant using `error` as its fill with a dedicated contrasting ink.
+That makes `error` a fill in the sense `primary` is, so it takes the fill's positional constraints
+on top of the text floor stated above: at least 3:1 against `surface` at rest and on hover, which
+the 4.5:1 text floor already clears, and at least 4.5:1 against the ink drawn on it. The ink is a
+new role, `errorForeground`, and the hover step a second, `errorHover` - the shape `primary` and
+`secondary` already have. Reading `surface` backwards as the ink was considered and rejected: in
+light it holds only because the shipped `error` sits on the floor against white (4.501:1), and a
+theme that darkens its surface at all would lose it with no role to re-point. Both new roles are
+optional in `PaletteTokens` so an existing palette object keeps compiling; the stylesheet declares
+their defaults, which pair with the shipped `error`.
 
-The general rule holds: using the tone changes colour only. The destructive variant adds no ARIA
-role, no confirmation and no wording, and its label - or the accessible name of a symbol-only
-button - is what states the consequence.
+This does not re-open the `warningForeground` rejection above. That role was refused because no
+warning *fill* existed; an error fill now does, and the ink follows the fill. `success`, `warning`
+and `info` gain no companion roles, and the general rule holds: using the tone changes colour only.
+The destructive variant adds no ARIA role, no confirmation and no wording, and its label - or the
+accessible name of a symbol-only button - is what states the consequence.
+
+**`secondary` becomes an ink as well as a fill, and the dark value moves (#119).** The outlined
+variant draws its text and edge in `secondary` on an unfilled surface, which puts the text floor on
+a role that only carried a fill's 3:1. The light value clears it (5.93:1); the dark `secondary`
+measured 4.36:1 and moves one step up its ramp, from sky-600 to sky-500, with `secondaryHover`
+following to sky-400 so the pair still steps lighter on hover. Like the light status-tone moves
+above, this ships as a palette value change, not a contract change: the role names are the
+contract, and a consumer theme that re-points them is unaffected.
