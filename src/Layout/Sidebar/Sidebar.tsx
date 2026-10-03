@@ -62,12 +62,12 @@ const observeScrollport: RefCallback<HTMLElement> = (navigation) => {
 };
 
 // An entry at the label role, told apart by colour and underline alone - the agreed treatment carries
-// no active-background role. Active keeps a persistent underline at the at-rest thickness; usable
-// raises one on hover, instantly (underlines are off the motion allowlist, docs/adr/0001); inert is
-// muted with no interactive response. The focus ring is the library's one contract (docs/adr/0002).
+// no active-background role. Active keeps a persistent underline; usable raises one on hover, instantly
+// (docs/adr/0001); inert is muted. The focus ring is the one contract (docs/adr/0002). Labels wrap with
+// `overflow-wrap: anywhere`: unlike `break-word` it folds an unbroken word into min-content (#122).
 const sidebarEntry = cva(
   [
-    'w-full text-left font-secondary text-label tracking-label',
+    'w-full text-left font-secondary text-label tracking-label wrap-anywhere',
     'underline-offset-[var(--underline-offset)]',
     'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   ].join(' '),
@@ -196,6 +196,10 @@ const SidebarRoot: FunctionComponent<ISidebarRootProps> = ({
  * - Activating the active entry or an inert one emits nothing; no render emits anything. Entries are
  *   non-submitting `type="button"` buttons with native Tab/Enter/Space behaviour - no tabs/menu model.
  * - An inert entry stays visible but muted and disabled, so Tab skips it and activation is inert too.
+ * - A label is rendered in full inside its entry, in either arrangement: a phrase wraps at its spaces
+ *   and a word wider than the track breaks within itself. Nothing is truncated, renamed or hidden
+ *   behind a tooltip, no horizontal scrolling is introduced, and a translated label neither widens
+ *   the 12rem track nor displaces the content.
  * - At and above 64rem the nav is a fixed 12rem track, sticky at the top of the scrolling area with no
  *   assumed top-bar offset, capped to the screen/scrolling-area height with independent entry scrolling.
  *   Content sits beside it in `minmax(0,1fr)`, so wide content cannot displace the track.
