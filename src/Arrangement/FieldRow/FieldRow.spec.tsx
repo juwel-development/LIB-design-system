@@ -7,17 +7,21 @@ import { FieldRow } from './FieldRow';
 import { FieldRowCompositionError } from './FieldRowCompositionError';
 import { FieldRowConfigurationError } from './FieldRowConfigurationError';
 
-// A geometry the test states and the component measures: for every item (by its test id) the
-// row it sits on, where its labelled control's bottom edge falls below the item's content and,
-// where it differs, where the whole box ends. jsdom lays nothing out, so the stub is the
-// browser's line layout, stated rather than computed. An element that is neither the item, its
-// content nor an actions group is the field's control.
+// A geometry the test states and the component measures, per item by test id: its row's top,
+// its labelled control's bottom edge below the content top, where the whole box ends when that
+// differs, and where a `data-box` positioned ancestor ends. jsdom lays nothing out, so the stub
+// is the browser's line layout, stated rather than computed.
 type Geometry = Record<
   string,
-  { top: number; controlBottom: number; boxBottom?: number }
+  {
+    top: number;
+    controlBottom: number;
+    boxBottom?: number;
+    positionedBoxBottom?: number;
+  }
 >;
 
-const rect = (top: number, bottom: number): DOMRect =>
+const bounds = (top: number, bottom: number): DOMRect =>
   ({
     top,
     bottom,
@@ -37,17 +41,15 @@ const stubGeometry = (geometry: Geometry) =>
       const item = this.closest('[data-field-row-item]');
       const entry = item && geometry[item.getAttribute('data-testid') ?? ''];
       if (!item || !entry) {
-        return rect(0, 0);
+        return bounds(0, 0);
       }
-      const isBox =
-        this === item || this.hasAttribute('data-field-row-content');
-      return rect(
-        entry.top,
-        entry.top +
-          (isBox
-            ? (entry.boxBottom ?? entry.controlBottom)
-            : entry.controlBottom),
-      );
+      const isBox = this === item || this.parentElement === item;
+      const bottom = isBox
+        ? (entry.boxBottom ?? entry.controlBottom)
+        : this.hasAttribute('data-box')
+          ? (entry.positionedBoxBottom ?? entry.controlBottom)
+          : entry.controlBottom;
+      return bounds(entry.top, entry.top + bottom);
     });
 
 const installResizeObserver = () => {
@@ -187,7 +189,10 @@ describe('FieldRow', () => {
 
   it('shares a row from nothing rather than from a base width, so the proportion is of the whole row', () => {
     renderFilter({ weight: 2 });
-    expect(screen.getByTestId('search').style.flexBasis).toBe('0%');
+    const utilities = screen.getByTestId('search').className.split(/\s+/);
+    expect(utilities).toContain('basis-0');
+    expect(utilities).toContain('shrink');
+    expect(screen.getByTestId('search').style.flexBasis).toBe('');
   });
 
   it.each([
@@ -331,29 +336,15 @@ describe('FieldRow', () => {
   it('measures an absolutely positioned control by the box it fills, so a trigger spanning its field aligns on the field border', () => {
     // MultiSelect's labelled trigger spans the field box inside its border; the border is the
     // edge a viewer sees. The stub hands the positioned box a deeper bottom than the trigger.
-    const geometry: Geometry = {
-      tags: { top: 0, controlBottom: 58, boxBottom: 60 },
-      region: { top: 0, controlBottom: 58 },
-    };
-    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
-      function (this: Element) {
-        const item = this.closest('[data-field-row-item]');
-        const entry = item && geometry[item.getAttribute('data-testid') ?? ''];
-        if (!item || !entry) {
-          return rect(0, 0);
-        }
-        if (this === item || this.hasAttribute('data-field-row-content')) {
-          return rect(entry.top, entry.top + 100);
-        }
-        return rect(
-          entry.top,
-          entry.top +
-            (this.hasAttribute('data-box')
-              ? (entry.boxBottom ?? entry.controlBottom)
-              : entry.controlBottom),
-        );
+    stubGeometry({
+      tags: {
+        top: 0,
+        controlBottom: 58,
+        boxBottom: 100,
+        positionedBoxBottom: 60,
       },
-    );
+      region: { top: 0, controlBottom: 58, boxBottom: 100 },
+    });
     render(
       <FieldRow.Root>
         <FieldRow.Field minWidth={'--tags-min-width'} testId={'tags'}>
@@ -396,6 +387,19 @@ describe('FieldRow', () => {
     );
     expect(paddingOf('note')).toBe(28);
     expect(paddingOf('region')).toBe(0);
+  });
+
+  it('observes the label as well as the content, so a label that grows while a message goes still moves the control', () => {
+    const { observed } = installResizeObserver();
+    stubGeometry({ search: { top: 0, controlBottom: 58 } });
+    render(
+      <FieldRow.Root>
+        <FieldRow.Field minWidth={'--search-min-width'} testId={'search'}>
+          <Input name={'search'} label={'Name'} hint={'Partial names match'} />
+        </FieldRow.Field>
+      </FieldRow.Root>,
+    );
+    expect(observed).toContain(screen.getByText('Name').closest('label'));
   });
 
   it('re-aligns when the holder resizes, observing the items rather than remeasuring on a timer', () => {

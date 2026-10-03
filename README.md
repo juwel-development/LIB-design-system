@@ -329,13 +329,15 @@ CSS custom property such as `--search-field-min-width`. `Actions` holds the cons
 buttons and takes their content width. Every member accepts `testId`.
 
 Each row shares its width among its fields in proportion to their weights, after the gaps
-and the actions' content width are reserved. Items wrap progressively at the width available
-to the row, not the viewport: a field moves to the next row when its minimum no longer fits,
-each row aligns its own controls, and a field alone on a row narrower than its minimum fits
-the row rather than overflowing it. The actions move to the next row as one group and wrap
-their buttons inside the group only once the group cannot fit a row by itself. Reading and
-keyboard order are the content's, and a resize, a message appearing or a field taken in or
-out keeps every retained control mounted with its value, selection and focus.
+and the actions' content width are reserved; a field whose share would fall below its
+minimum keeps the minimum, and the others share the rest by weight. Items wrap progressively
+at the width available to the row, not the viewport: a field moves to the next row when its
+minimum no longer fits, each row aligns its own controls, and a field alone on a row narrower
+than its minimum fits the row rather than overflowing it. The actions move to the next row as
+one group and wrap their buttons inside the group only once the group cannot fit a row by
+itself. Reading and keyboard order are the content's, and a resize, a message appearing or a
+field taken in or out keeps every retained control mounted with its value, selection and
+focus.
 
 The control is whatever a field's own label labels, so a field keeps its label, hint,
 optional marker and error and FieldRow reads none of their wording. `Field` and `Actions` are

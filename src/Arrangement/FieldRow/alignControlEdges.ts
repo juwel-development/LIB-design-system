@@ -1,9 +1,4 @@
-export interface IControlEdge {
-  /** Where the item's box starts; items sharing a top sit on one row. */
-  top: number;
-  /** How far below the item's content top its control's bottom edge sits, before any padding. */
-  controlEdge: number;
-}
+import type { IControlEdge } from './IControlEdge';
 
 // Half a pixel: items on one flex line share a top exactly, and the tolerance only has to absorb
 // the fractional positions a zoomed or sub-pixel layout reports for the same line.

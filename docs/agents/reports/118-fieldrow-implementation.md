@@ -104,6 +104,10 @@ installed Chrome headless against `storybook dev` on port 6006, in its own isola
 
 ## Limitations and compatibility
 
+*Amended in review (2026-10-03, `118-review.md`): the label-growth limitation below was closed by
+observing each field's label, and the `Button` wrapping limitation is pending verification once
+#119 integrates rather than accepted.*
+
 - `Button` carries `text-nowrap`, so an action's text never wraps; the brief's "buttons with
   wrapping text" is honoured by the arrangement (any taller action group aligns its bottom) but
   cannot be demonstrated with the library's own `Button`. A holder narrower than one button's

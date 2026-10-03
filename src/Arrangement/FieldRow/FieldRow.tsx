@@ -8,9 +8,10 @@ import {
   useLayoutEffect,
   useRef,
 } from 'react';
-import { alignControlEdges, type IControlEdge } from './alignControlEdges';
+import { alignControlEdges } from './alignControlEdges';
 import { FieldRowCompositionError } from './FieldRowCompositionError';
 import { FieldRowConfigurationError } from './FieldRowConfigurationError';
+import type { IControlEdge } from './IControlEdge';
 
 // Root's one recipe: a wrapping flex row whose items sit on their line's top edge, so the padding
 // the alignment pass writes on an item is the only thing that moves its control. The row gap is
@@ -27,6 +28,11 @@ const fieldRowRoot = cva(
     defaultVariants: { gap: 'stack' },
   },
 );
+
+// Field's one recipe: a share of its row from nothing, so growth is proportional to weight alone.
+// The weight and the token-named minimum are the two values ADR 0008 lets a caller choose, and
+// they are written on the item's style because a recipe cannot hold a caller's number or name.
+const fieldRowField = cva('shrink basis-0');
 
 // Actions' one recipe, keyed by part: the item takes its content width and never a share of the
 // row, capped at the row so the group inside it wraps its buttons only once it cannot fit alone.
@@ -80,8 +86,11 @@ const assertTokenName = (minWidth: string): void => {
 // field inside the border, and the border is the edge a viewer aligns.
 const labelledControl = (content: Element): Element | undefined => {
   const id = content.querySelector('label[for]')?.getAttribute('for');
-  const control = id ? content.ownerDocument.getElementById(id) : null;
-  return control && content.contains(control) ? control : undefined;
+  if (!id) {
+    return undefined;
+  }
+  const control = content.ownerDocument.getElementById(id);
+  return control !== null && content.contains(control) ? control : undefined;
 };
 
 const isPositioned = (element: Element): boolean =>
@@ -104,13 +113,13 @@ const measure = (item: Element): IControlEdge => {
   if (content === null) {
     return { top, controlEdge: 0 };
   }
-  const contentRect = content.getBoundingClientRect();
+  const contentBounds = content.getBoundingClientRect();
   const control = labelledControl(content);
   const edge =
     control === undefined
-      ? contentRect.bottom
+      ? contentBounds.bottom
       : controlBox(control, content).getBoundingClientRect().bottom;
-  return { top, controlEdge: edge - contentRect.top };
+  return { top, controlEdge: edge - contentBounds.top };
 };
 
 // Reads every item's line and control edge in one pass, then writes only the paddings that
@@ -148,9 +157,17 @@ const FieldRowRoot: FunctionComponent<IFieldRowRootProps> = ({
     }
   };
 
-  // Every render re-measures before paint, and every item's content is observed from then on:
-  // a label wrapping under a narrower holder or a message appearing changes the content's size,
-  // never the padded item's, so the observer never sees its own write and the loop settles.
+  const observe = (element: Element | undefined): void => {
+    if (element && observerRef.current && !observedRef.current.has(element)) {
+      observedRef.current.add(element);
+      observerRef.current.observe(element);
+    }
+  };
+
+  // Every render re-measures before paint, and every item's content and label are observed from
+  // then on: a label wrapping under a narrower holder or a message appearing changes their size,
+  // never the padded item's, so the observer never sees its own write and the loop settles. The
+  // label is watched on its own because it can grow exactly as a message below the control goes.
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (root === null) {
@@ -162,11 +179,9 @@ const FieldRowRoot: FunctionComponent<IFieldRowRootProps> = ({
     }
     observerRef.current ??= new ResizeObserver(() => alignItems(root));
     for (const item of root.querySelectorAll(ROOT_ITEMS)) {
-      const content = item.firstElementChild;
-      if (content !== null && !observedRef.current.has(content)) {
-        observedRef.current.add(content);
-        observerRef.current.observe(content);
-      }
+      const content = item.firstElementChild ?? undefined;
+      observe(content);
+      observe(content?.querySelector('label[for]') ?? undefined);
     }
   });
 
@@ -200,19 +215,19 @@ const FieldRowField: FunctionComponent<IFieldRowFieldProps> = ({
   const { align } = useFieldRowContract('Field');
   assertWeight(weight);
   assertTokenName(minWidth);
+  // A member re-rendered on its own - from a consumer's state - re-measures as Root's render does.
   useLayoutEffect(() => align());
   return (
     <div
       data-field-row-item
+      className={fieldRowField()}
       data-testid={testId}
       style={{
         flexGrow: weight,
-        flexShrink: 1,
-        flexBasis: '0%',
         minWidth: `min(var(${minWidth}), 100%)`,
       }}
     >
-      <div data-field-row-content>{children}</div>
+      <div>{children}</div>
     </div>
   );
 };
@@ -231,12 +246,7 @@ const FieldRowActions: FunctionComponent<IFieldRowActionsProps> = ({
   useLayoutEffect(() => align());
   return (
     <div data-field-row-item className={fieldRowActions()} data-testid={testId}>
-      <div
-        data-field-row-content
-        className={fieldRowActions({ part: 'group' })}
-      >
-        {children}
-      </div>
+      <div className={fieldRowActions({ part: 'group' })}>{children}</div>
     </div>
   );
 };
@@ -261,7 +271,9 @@ const FieldRowActions: FunctionComponent<IFieldRowActionsProps> = ({
  *   on a row narrower than its minimum fits that row rather than overflowing it.
  * - Each row's width is shared among its fields in proportion to their `weight`s - equal by
  *   default - after the gaps and the actions' content width are reserved. Minimums come from the
- *   consumer's theme tokens named by `minWidth`, resolved live, so a theme change re-wraps.
+ *   consumer's theme tokens named by `minWidth`, resolved live, so a theme change re-wraps. A
+ *   field whose share would fall below its minimum keeps the minimum, and the others share the
+ *   rest by weight.
  * - The actions stay one trailing group: they move to the next row together, and their buttons
  *   wrap inside the group only once the group cannot fit on a row by itself, still in order.
  * - `gap` selects which space role separates items along a row: `stack` (the default), the
@@ -292,8 +304,7 @@ const FieldRowActions: FunctionComponent<IFieldRowActionsProps> = ({
  *   fields that are not one set.
  * - Weight a search field higher than a threshold or a select; give every field a minimum its
  *   label and placeholder can be read at, and expect the row to wrap at that width.
- * - Keep action wording short: a `Button` does not wrap its text, so a long label widens the
- *   group and wraps the row sooner.
+ * - Keep action wording short: a long label widens the group and wraps the row sooner.
  */
 export const FieldRow = {
   Root: FieldRowRoot,
