@@ -11,10 +11,10 @@ import {
 import type { Subject } from 'rxjs';
 import { TabsCompositionError } from './TabsCompositionError';
 
-// The row is a single scrolling line, never a wrap: overflow is an accommodation, not a strip. The
-// ring room is written from the two focus-ring tokens so it cannot drift from the ring it exists
-// for: padding holds the scroll clip off the outline, the negative margin hands the room back to
-// the page, and scroll-padding makes a nearest scrollIntoView stop with the ring inside the clip.
+// The row is one scrolling line of controls, never a second row. The ring room is written from the
+// two focus-ring tokens so it cannot drift from the ring it exists for: padding holds the scroll
+// clip off the outline, the negative margin hands the room back to the page, and scroll-padding
+// makes a nearest scrollIntoView stop with the ring inside the clip.
 const tabsList = cva(
   [
     'flex flex-row overflow-x-auto',
@@ -28,12 +28,14 @@ const tabsList = cva(
 // keyed on aria-selected, so the attribute the device reads is the one the paint follows. The
 // marker keeps one thickness and flips only colour on the shared motion token, so selection
 // shifts no geometry. The focus ring sits in the base with its colour at rest, as on Button.
+// The tab sets no flex-shrink and no white-space of its own (#121): as a flex item it shrinks
+// no further than its longest word, so a label wraps inside its tab before the row scrolls.
 const tabsTab = cva(
   [
     'font-secondary text-label tracking-label',
     'text-muted hover:text-foreground aria-selected:text-foreground',
     'border-b-[length:var(--tab-marker-thickness)] border-solid border-transparent aria-selected:border-foreground',
-    'shrink-0 cursor-pointer select-none text-nowrap px-[var(--tab-inset-inline)] py-[var(--tab-inset-block)]',
+    'cursor-pointer select-none px-[var(--tab-inset-inline)] py-[var(--tab-inset-block)]',
     'transition-colors duration-[var(--motion-duration-color)]',
     'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   ].join(' '),
@@ -117,8 +119,10 @@ export interface ITabsTabProps {
   /** The stable identity connecting this tab to its panel and emitted by selection requests.
    *  Not React's `key`, and never inferred from the label or the position. */
   value: string;
-  /** The visible text label. Text only - no icons, no per-tab markup. */
-  children: string;
+  /** The label: visible text naming the view - a plain string still works - optionally with an
+   *  icon, a count or inline emphasis beside it. Decorative parts carry the consumer's own
+   *  `aria-hidden`; nothing in it is interactive, as the tab is the control. Rendered whole. */
+  children: ReactNode;
   testId?: string;
 }
 
@@ -252,15 +256,31 @@ const TabsPanel: FunctionComponent<ITabsPanelProps> = ({
  *   immediately; focus stays on the operated tab. Up/Down are left to the browser.
  * - Roving tabindex: Tab enters the list at the active tab, then the active panel - a consistent
  *   Tab stop whether or not its content is focusable. Inactive panels add no stop.
- * - The row scrolls horizontally on overflow - one line, no wrap, no shrink - and holds its own
- *   ring room, so the focused tab's ring survives the scroll clip.
+ * - A label is rendered whole, text and markup alike, however long its translation runs: never
+ *   clipped, shortened, elided or replaced by a hint. The tab's accessible name is computed from
+ *   its content, so what the device reads is what the viewer sees, less what the consumer marked
+ *   `aria-hidden`. A rich label and a plain string are one and the same control.
+ * - The row is one line of controls. As it narrows, a label's text wraps inside its tab, down to
+ *   the tab's longest word; only when the controls still cannot fit does the row scroll
+ *   horizontally - the row, never the page. The row holds its own ring room so the focused tab's
+ *   ring survives the scroll clip, and focus reveals a scrolled-off tab, so every tab is reachable
+ *   by keyboard without scrolling first.
+ * - The tabs on the row share one height, so every marker sits on one line whether or not a
+ *   neighbour's label wrapped.
  * - Selection is marked by a persistent line under the active tab: `--tab-marker-thickness` in
  *   `foreground`, constant thickness in both states, so switching shifts no widths and no weights.
  *   Keyboard focus is the separate shared focus ring. Colour moves on the one motion token.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - One List with Tab elements as direct DOM children (arrays and fragments are supported),
- *   and sibling Panels under Root. Do not wrap tabs in host elements.
+ *   and the Panels under the same Root - as siblings of the List, or with it inside one
+ *   arrangement such as a `Stack` (see the separation guidance below). Do not wrap tabs in host
+ *   elements.
+ * - A label is a meaningful visible text name, with non-interactive decoration at most: no link,
+ *   button, input or other focusable descendant, since the tab is the one control and a nested
+ *   control inside a `button` is invalid. Decorative parts - an icon that repeats the text - carry
+ *   `aria-hidden` so they stay out of the name; the library does not guess which parts those are.
+ *   A count or an emphasis is meaning and stays in the name.
  * - At least two tabs, each `value` unique and stable, each with exactly one matching `Panel`
  *   under the same `Root`, and `active` naming a declared pair. Invalid input is a contract
  *   violation, not a request for a fallback.
@@ -271,10 +291,17 @@ const TabsPanel: FunctionComponent<ITabsPanelProps> = ({
  *
  * @UXGuidelines
  * - Labels are short names for views, not actions; the consuming app words and translates them.
+ *   A long translation wraps inside its tab and the row scrolls only when even the longest words
+ *   do not fit, so a label is never the reason to shorten a name.
  * - This is not a router: no location, no history, no deep links. Wire `onSelect$` to whatever
  *   owns the active key and pass that key back in.
+ * - Tabs sets no spacing between the row and the panel; the separation is a `Stack` between Root
+ *   and its members - `<Tabs.Root><Stack gap="region"><Tabs.List/>…<Tabs.Panel/>…</Stack>
+ *   </Tabs.Root>`. `gap="stack"` holds the row and its view together as one block; `gap="region"`
+ *   sets the view apart as a region of its own. Inactive panels are hidden, so the gap is exactly
+ *   one whichever panel is active, from the token the consumer's other groups already use.
  * - The panel is an opaque slot: compose the view's own rhythm inside it - a `Stack`, a `Prose` -
- *   as the view owns it; Tabs sets no spacing between the row and the panel.
+ *   as the view owns it.
  */
 export const Tabs = {
   Root: TabsRoot,

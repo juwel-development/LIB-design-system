@@ -1,11 +1,16 @@
 # Control boundary independent of the fill — an edge on a filled Button
 
+> **Narrowed by the maintainer in the #119 triage — see [Amendments](#amendments).** The rejection
+> now covers exactly what its title says: an edge on a *filled* Button. An opt-in unfilled variant
+> that trades the fill for an edge is accepted and shipped as `variant="outlined"`.
+
 A filled `Button` draws no boundary. Its fill is the only thing separating it from the surface, and
 that fill answers to [SC 1.4.11](https://www.w3.org/TR/WCAG22/#non-text-contrast) directly — at least
-3:1 against `surface`, hover included, as `primary` and `secondary` publish. The library ships no
-`controlBorder` edge on a filled control, no `bordered` prop, and no variant that trades the fill for
-an outline. `controlBorder` remains what its name says: the boundary of a control with **no fill of
-its own**, which today means `Input` and `TextArea`.
+3:1 against `surface`, hover included, as `primary`, `secondary` and now `error` publish. The library
+ships no `controlBorder` edge on a filled control and no `bordered` prop. `controlBorder` remains
+what its name says: the boundary of a control with **no fill of its own**, which means `Input` and
+`TextArea`; the outlined Button's edge is `secondary`, not `controlBorder`, because it identifies the
+action's role and not merely a control's extent.
 
 ## Why this is out of scope
 
@@ -109,3 +114,28 @@ its border, and that half is a separate complaint that has never been triaged.
   boundary independent of the fill — route (b), deferred from #78"
 - [#78](https://github.com/juwel-development/LIB-design-system/issues/78) — route (b) was the option
   that ticket deferred; triage scoped it to route (a) and it shipped as the fill constraint
+
+## Amendments
+
+**The rejection is narrowed to filled Buttons
+([#119](https://github.com/juwel-development/LIB-design-system/issues/119), triage).** The original
+text refused three things in one breath: an always-on edge on the filled Button, a `bordered` prop,
+and "any variant that trades the fill for an outline". The maintainer kept the first two and
+released the third. The reasoning above never reached it — every argument here is about what *every
+consumer's* filled buttons would have to look like, and an opt-in variant imposes nothing on a
+button that does not ask for it. *What would change this* already named the shape: "an unfilled
+control that a low-contrast brand reaches for *instead* imposes nothing on anyone else". The brief
+made it a `Button` variant rather than a separate primitive, because it is the same action in a
+quieter register and shares the faced variants' inset, height and minimum width.
+
+What stands, unchanged: a filled `Button` draws no edge, `controlBorder` is drawn only by controls
+with no fill, and there is no `bordered` prop. The outlined variant's edge is drawn in `secondary`
+and pairs with `secondary` text, so it reads as the quiet form of the filled secondary; it is not
+the neutral `controlBorder` ring on a saturated fill that this file refuses. The focus contract is
+untouched — [`focus-boundary-reinforcement.md`](./focus-boundary-reinforcement.md) still holds, and
+the outlined edge does not change on focus.
+
+The consumer override recorded under *What the consumer does instead* also set `min-width: 0`, and
+that half is now triaged too: #119 keeps the shared floor on the four faced variants and lets it
+yield to a holder narrower than it, so a button in a tight cell shrinks and wraps instead of
+overflowing. No content-sizing prop was added for it.

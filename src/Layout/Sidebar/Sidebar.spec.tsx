@@ -196,6 +196,24 @@ describe('Sidebar', () => {
     expect(closed).toBeDefined();
   });
 
+  it('renders an unbroken translated label in full and never renames or truncates it - the wrapping itself is measured in the browser by the stories', () => {
+    const label = 'Vertragsverhandlungsübersicht';
+    render(
+      <Sidebar.Root
+        active="contracts"
+        label="Bereiche"
+        onSelect$={new Subject()}
+      >
+        <Sidebar.Item entryKey="contracts">{label}</Sidebar.Item>
+        <Sidebar.Content>Inhalt</Sidebar.Content>
+      </Sidebar.Root>,
+    );
+    const entry = screen.getByRole('button', { name: label });
+    expect(entry).toHaveTextContent(label);
+    expect(entry).not.toHaveAttribute('title');
+    expect(entry).not.toHaveAttribute('aria-label');
+  });
+
   it('is one namespace object carrying exactly its three members', () => {
     expect(Object.keys(Sidebar).sort()).toEqual(
       ['Content', 'Item', 'Root'].sort(),

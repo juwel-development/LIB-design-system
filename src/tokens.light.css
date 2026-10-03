@@ -28,6 +28,8 @@
   --color-success: #047857;
   --color-warning: #b45309;
   --color-error: #d63384;
+  --color-error-hover: #be185d;
+  --color-error-foreground: #ffffff;
   --color-info: #0e7490;
 }
 
@@ -55,6 +57,8 @@
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
+  --color-error-hover: var(--color-error-hover);
+  --color-error-foreground: var(--color-error-foreground);
   --color-info: var(--color-info);
 }
 
@@ -105,8 +109,9 @@
    utilities, so it is not carried in @theme inline with the palette. */
 @theme {
   /* Both faces default to inherit, so the library ships no @font-face and no face and a one-face
-     consumer renders as today. --font-primary is carried by content, --font-secondary by labels; a
-     component sets font-variant-numeric: tabular-nums only on a --font-primary carrying tnum and
+     consumer renders as today. --font-primary is the default face of headings, body and controls
+     (the three roles below, #120), --font-secondary the face of labels; a component sets
+     font-variant-numeric: tabular-nums only on an effective body face carrying tnum and
      font-variant-caps: small-caps only on a --font-secondary carrying smcp - both fail silently otherwise. */
   --font-primary: inherit;
   --font-secondary: inherit;
@@ -152,6 +157,20 @@
   --tracking-optical: -0.02em;
 }
 
+/* The heading, body and control family roles are utilities with a fallback to the primary face, not
+   @theme variables, so a theme re-pointing either name at any scope reaches the text beneath it. */
+@utility font-heading {
+  font-family: var(--font-heading, var(--font-primary));
+}
+
+@utility font-body {
+  font-family: var(--font-body, var(--font-primary));
+}
+
+@utility font-control {
+  font-family: var(--font-control, var(--font-primary));
+}
+
 /* The aspect roles are Tailwind theme namespaces like typography, so they take their own @theme block
    after it and are not carried in @theme inline with the palette. */
 @theme {
@@ -184,6 +203,11 @@
   --space-collection-item: 1em;
 }
 
+/* Box's inner padding, measured against inherited type, beside Collection's. */
+:root {
+  --space-box-inset: 1em;
+}
+
 /* The gutter has no Tailwind namespace either, so it sits in :root beside the space roles. */
 :root {
   --gutter: clamp(1.5rem, 5vw, 4rem);
@@ -208,6 +232,11 @@
 /* The tab marker's thickness is not a colour either, and sits in :root beside the tick block. */
 :root {
   --tab-marker-thickness: 2px;
+}
+
+/* The table selection marker's thickness is not a colour either, and sits in :root beside the tab marker. */
+:root {
+  --table-selection-marker-thickness: 2px;
 }
 
 :root {

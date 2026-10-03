@@ -51,6 +51,16 @@ describe('H1', () => {
     }
   });
 
+  it('reads the heading family role, so a theme giving headings their own face reaches this level (#120)', () => {
+    // docs/adr/0004, the amendment: a heading is the one text that departs from the content face on
+    // demand, and every level departs together. Asserted on the element, so a face moved to a wrapper
+    // or left on the content role fails here.
+    render(<H1>Welcome</H1>);
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading.className).toContain('font-heading');
+    expect(heading.className).not.toContain('font-primary');
+  });
+
   it.each(statusTones)(
     'leaves the rendered heading semantics unchanged when the %s status tone is selected',
     (color) => {

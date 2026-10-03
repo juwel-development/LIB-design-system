@@ -10,7 +10,7 @@ const selectRoot = cva(
     '[&>span]:font-secondary [&>span]:text-muted [&>span]:text-small',
     '[&>p]:font-secondary [&>p]:text-small [&>p]:text-muted [&>p[data-error]]:text-error',
     '[&>select]:block [&>select]:w-full [&>select]:rounded-[var(--radius-control)] [&>select]:border [&>select]:border-solid [&>select]:border-control-border [&>select]:bg-transparent [&>select]:px-3 [&>select]:py-2',
-    '[&>select]:font-primary [&>select]:text-body [&>select]:text-foreground [&>select]:transition-colors [&>select]:duration-[var(--motion-duration-color)]',
+    '[&>select]:font-control [&>select]:text-body [&>select]:text-foreground [&>select]:transition-colors [&>select]:duration-[var(--motion-duration-color)]',
     '[&>select]:outline-focus-ring [&>select]:outline-offset-[var(--focus-ring-offset)] [&>select]:focus-visible:outline [&>select]:focus-visible:outline-[length:var(--focus-ring-width)]',
     '[&>select:user-invalid]:border-error [&>select]:aria-[invalid=true]:border-error [&>select]:disabled:cursor-not-allowed [&>select]:disabled:border-disabled [&>select]:disabled:text-muted',
   ].join(' '),

@@ -43,7 +43,7 @@ const multiSelectRoot = cva('', {
       field: [
         'group/field relative flex items-center gap-1',
         'rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent px-3 py-2',
-        'font-primary text-body text-foreground transition-colors duration-[var(--motion-duration-color)]',
+        'font-control text-body text-foreground transition-colors duration-[var(--motion-duration-color)]',
         'data-[disabled]:border-disabled data-[disabled]:text-muted',
       ].join(' '),
       trigger: `absolute inset-0 flex cursor-pointer items-center justify-end rounded-[var(--radius-control)] bg-transparent px-3 text-muted disabled:cursor-not-allowed ${FOCUS_RING}`,

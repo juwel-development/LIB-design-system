@@ -10,7 +10,15 @@ import { Collection } from './Collection';
 const meta: Meta<typeof Collection.Root> = {
   title: 'Display/Collection',
   component: Collection.Root,
-  parameters: { layout: 'padded' },
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "`Collection` is a vertical group of freely composed items with internal hairlines and\nopen outer edges. The library owns spacing and separation; the consumer owns content,\narrangement and interaction.\n\n```tsx\nimport { Collection, Link, Note, Stack } from '@juwel-development/design-system';\n\n<Collection.Root>\n  <Collection.Item>\n    <Stack>\n      <Link href={'/guide'}>Read the guide</Link>\n      <Note color={'muted'}>Supporting information</Note>\n    </Stack>\n  </Collection.Item>\n  <Collection.Item><Note>Freely composed content</Note></Collection.Item>\n</Collection.Root>;\n```\n\nBoth members accept only `children?: ReactNode` and `testId?: string`. Supply\n`Collection.Item` children directly, through maps, or with conditional omissions.\nThe semantic list has no markers, horizontal indent, added focus stops or behavior.\nAn empty root renders no placeholder; a single item has no rule.\n\n`--space-collection-item` names the vertical padding inside each item, defaulting to\n`1em` above and below so it follows inherited type. This is a separate role from a\nStack's sibling gap or a Section's band: re-pointing it changes only Collection item\npadding. It is declared in all three token stylesheets and accepts a nonnegative CSS\nlength. Hairlines use the existing `--color-border` role. There are no density,\npadding or arrangement props; child components own their typography and wrapping.",
+      },
+    },
+    layout: 'padded',
+  },
   decorators: [
     (Story) => (
       <div
