@@ -1,5 +1,12 @@
 # Header status and action slots: implementation evidence (#125)
 
+> **Superseded in part by the review.** This is the first pass's record, written before the approved
+> Agent Brief existed on the issue. The review at [125-review.md](./125-review.md) found it did not
+> meet the brief - one flat prop surface instead of two compiler-separated modes, a reserved standing
+> floor in the status bar, a combined four-slot layout the brief rules out, and class-string tests in
+> place of Storybook geometry - and `77cef9b` corrected it. Read the review for the shipped contract
+> and evidence; what follows stands as history.
+
 Date: 2026-10-03. Implemented by an Orca worker (Claude) on branch `feature/ticket-125`, cut from
 local `main` at `3739997` (package 3.9.1). Source of truth: issue #125 as filed (it carries no
 comments and no agent brief), read against the consumer specification
