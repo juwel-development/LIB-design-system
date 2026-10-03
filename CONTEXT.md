@@ -252,6 +252,11 @@ The amount of space around cell content, chosen per table as comfortable or comp
 It does not change the typography or the dimensions of controls within cells.
 _Avoid_: Font size, control size
 
+**Definition list density**:
+The amount of space around terms and descriptions, chosen per definition list as comfortable or
+compact. It does not change typography or the dimensions of controls within descriptions.
+_Avoid_: Font size, control size
+
 **Table row selection**:
 The consumer-owned state identifying a chosen table row, communicated independently of keyboard
 focus and whether the row can be activated. Selection may remain while its row is unavailable for

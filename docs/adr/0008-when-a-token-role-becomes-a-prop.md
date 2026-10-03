@@ -271,6 +271,16 @@ This is a narrow exception to the distinct-job rule: these choices vary cell pad
 comparison densities, with each treatment supplied by theme tokens. They do not select typography,
 resize descendant controls, or authorize density/size scales on other components.
 
+**DefinitionList density ([#123](https://github.com/juwel-development/LIB-design-system/issues/123)).**
+During triage the maintainer explicitly extended the same density contract to DefinitionList:
+`density?: 'comfortable' | 'compact'` on Root, with `comfortable` as the default. Compact reduces
+spacing through semantic theme tokens; density does not change typography or descendant control
+dimensions. This is an additional component-specific exception for compact facts in summaries and
+dialogs, not authorization for a general size scale. The maintainer also accepted consumer-chosen
+term/value proportions shared across every item, consistent with ColumnLayout, and automatic
+term-above-value stacking when the container cannot accommodate those proportions, in both density
+modes. This records an accepted direction, not shipped behavior.
+
 Future interactive column resizing is a separate capability. Its agreed direction is consumer-owned
 runtime widths: resizing a proportional column makes it fixed while the other proportional columns
 share remaining space. Those runtime values represent a user's choice rather than a theme default.
