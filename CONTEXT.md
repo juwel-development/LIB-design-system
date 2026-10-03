@@ -272,6 +272,13 @@ The amount of space around terms and descriptions, chosen per definition list as
 compact. It does not change typography or the dimensions of controls within descriptions.
 _Avoid_: Font size, control size
 
+**Definition list allocation**:
+The consumer's one assignment of a definition list's two columns - a relative weight and a minimum
+readable width for the terms and for the descriptions - shared by every item regardless of its
+content. The list divides its own width, never the viewport's, in those proportions, and puts every
+term above its description when that width cannot satisfy both minimums at once.
+_Avoid_: Column widths, term width, per-item sizing
+
 **Table row selection**:
 The consumer-owned state identifying a chosen table row, communicated independently of keyboard
 focus and whether the row can be activated. Selection may remain while its row is unavailable for

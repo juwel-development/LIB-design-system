@@ -321,19 +321,20 @@ describe('renderTokens spacing contract', () => {
     }
   });
 
-  it('declares the DefinitionList item air for both densities in every stylesheet, in rem like Table cell padding (#123)', () => {
-    // Comfortable keeps the value py-6 resolved to; compact matches a Table cell's py-2, so a compact
-    // fact row and a compact table row carry the same air. Two treatments named for a job, not a ladder.
+  it('declares the DefinitionList item air for both densities and the two column minimums in every stylesheet, in rem (#123)', () => {
+    // Comfortable keeps the value py-6 resolved to; compact matches a Table cell's py-2. The minimums
+    // are the defaults a list reads when the caller names no token of its own.
     for (const css of [
       renderTokens(),
       renderLightTokens(),
       renderDarkTokens(),
     ]) {
       expect(css).toMatch(
-        /:root\s*\{[^}]*--space-definition-item:\s*1\.5rem;[^}]*--space-definition-item-compact:\s*0\.5rem;/,
+        /:root\s*\{[^}]*--space-definition-item:\s*1\.5rem;[^}]*--space-definition-item-compact:\s*0\.5rem;[^}]*--definition-term-min-width:\s*9rem;[^}]*--definition-description-min-width:\s*10rem;/,
       );
       for (const block of css.matchAll(/@theme(?: inline)?\s*\{([^}]*)\}/g)) {
         expect(block[1]).not.toContain('--space-definition-item');
+        expect(block[1]).not.toContain('--definition-');
       }
     }
   });

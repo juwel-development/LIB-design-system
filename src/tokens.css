@@ -237,10 +237,12 @@
   --space-collection-item: 1em;
 }
 
-/* DefinitionList item air sits in :root beside the collection role, one value per density (#123). */
+/* DefinitionList's item air and column minimums sit in :root beside the collection role (#123). */
 :root {
   --space-definition-item: 1.5rem;
   --space-definition-item-compact: 0.5rem;
+  --definition-term-min-width: 9rem;
+  --definition-description-min-width: 10rem;
 }
 
 /* Box's inner padding, measured against inherited type, beside Collection's. */

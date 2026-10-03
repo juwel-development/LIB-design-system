@@ -7,3 +7,12 @@
    anchored to the consumer and skips node_modules, so a host pulling the components
    in through a package would otherwise render them unstyled. */
 @source ".";
+
+/* DefinitionList's fit switch (#123). The row-mode pin is a container style query on this property,
+   and a style query compares a computed value, so it is registered as a length: unregistered, the
+   `clamp()` the item writes would stay a token stream and never equal `0px`. */
+@property --definition-fit {
+	syntax: "<length>";
+	inherits: false;
+	initial-value: 1px;
+}

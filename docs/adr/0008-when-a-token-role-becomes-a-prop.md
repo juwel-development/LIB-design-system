@@ -271,7 +271,7 @@ This is a narrow exception to the distinct-job rule: these choices vary cell pad
 comparison densities, with each treatment supplied by theme tokens. They do not select typography,
 resize descendant controls, or authorize density/size scales on other components.
 
-**DefinitionList density ([#123](https://github.com/juwel-development/LIB-design-system/issues/123)).**
+**DefinitionList density and allocation ([#123](https://github.com/juwel-development/LIB-design-system/issues/123)).**
 During triage the maintainer explicitly extended the same density contract to DefinitionList:
 `density?: 'comfortable' | 'compact'` on Root, with `comfortable` as the default. Compact reduces
 spacing through semantic theme tokens; density does not change typography or descendant control
@@ -279,32 +279,18 @@ dimensions. This is an additional component-specific exception for compact facts
 dialogs, not authorization for a general size scale. The maintainer also accepted consumer-chosen
 term/value proportions shared across every item, consistent with ColumnLayout, and automatic
 term-above-value stacking when the container cannot accommodate those proportions, in both density
-modes. This records an accepted direction, not shipped behavior.
+modes.
 
-Future interactive column resizing is a separate capability. Its agreed direction is consumer-owned
-runtime widths: resizing a proportional column makes it fixed while the other proportional columns
-share remaining space. Those runtime values represent a user's choice rather than a theme default.
-This decision preserves that extension direction; #115 does not ship resize handles, persistence or
-a speculative numeric-width override API.
-
-**DefinitionList compact density ([#123](https://github.com/juwel-development/LIB-design-system/issues/123)).**
-The maintainer's specification accepted a per-list `comfortable` (default) and `compact` density on
-DefinitionList, for compact facts inside a one-third summary panel and a content Dialog. It is the
-second narrow exception beside Table's and is argued on its own evidence, not inherited from it: the
-consumer's reference found the comfortable term's subtitle role reading as a section heading beside a
-one-word value, so here density *does* re-seat the type roles - a compact term takes the label role in
-the secondary family, as Table's header cells do, and a compact description the small role with tabular
-figures, as Table's value cells do. Both are roles the library already names; no size prop, no new type
-role and no rung is introduced. Item air comes from two tokens named for the treatments,
-`--space-definition-item` and `--space-definition-item-compact`, the way Table's density is supplied.
-
-Compact also changes what the column switch answers to. Comfortable keys its fixed term track on a
-64rem viewport and is left exactly as it was; compact makes the list an inline-size container and
-switches its proportional 1:2 columns on that container at 24rem. Under the structural test both
-alternatives are right - a glossary on a page reads from the viewport, facts in a panel from the panel -
-and the breakpoint stays an implementation detail outside the vocabulary, as `Stack`'s does. This
-decision authorizes nothing beyond DefinitionList: it does not open a density on any other component,
-and it does not reopen the Figure or Brandmark width APIs.
+As shipped: the item air is `--space-definition-item` and `--space-definition-item-compact`, two
+roles named for the treatments the way Table's density is supplied. The allocation is `termColumn`
+and `descriptionColumn` on Root, each a positive relative `weight` and a `minWidth` custom-property
+name under the same narrow token-reference authorization as ColumnLayout's columns, with library
+defaults `--definition-term-min-width` and `--definition-description-min-width` so an existing
+composition needs no new prop. Both densities measure the list's own width and stack all or nothing
+at ColumnLayout's threshold; the comfortable list's former 64rem viewport switch and fixed 16rem
+term track are replaced by that behaviour, as the brief intended. This decision authorizes nothing
+beyond DefinitionList: no density on another component, and no reopening of the Figure or Brandmark
+width APIs.
 
 **Two claims about [#83](https://github.com/juwel-development/LIB-design-system/issues/83) were wrong
 and are corrected above.** Both assumed `Section` was missing a `bleed` value that keeps content inset

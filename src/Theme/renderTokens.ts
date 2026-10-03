@@ -188,14 +188,15 @@ const COLLECTION_SPACING = `:root {
   --space-collection-item: 1em;
 }`;
 
-/* DefinitionList item air, one role per density (#123): comfortable keeps the value py-6 resolved to,
-   compact matches a Table cell's py-2 so a compact fact row and a compact table row carry the same air.
-   In rem like Table's padding, not em like Collection's: the term and description set their own type
-   roles, so there is no inherited size for the item's air to follow. Two treatments named for a job the
-   way Table's density is (docs/adr/0008, Amendments), not a ladder a component picks a rung from. */
+/* DefinitionList's four roles (#123): item air per density, in rem like Table's cell padding since
+   the members set their own type roles, and the two columns' minimum readable widths, in rem like
+   --control-min-width since a column is counted against the root. Theme-overridable; the item air
+   accepts any nonnegative length, a minimum any nonnegative length a `calc()` can read. */
 const DEFINITION_SPACING = `:root {
   --space-definition-item: 1.5rem;
   --space-definition-item-compact: 0.5rem;
+  --definition-term-min-width: 9rem;
+  --definition-description-min-width: 10rem;
 }`;
 
 /* Box's inner padding (#117): one role on all four sides, distinct from a sibling gap, a region's
@@ -395,7 +396,7 @@ ${SPACING}
 /* Collection's vertical item padding, measured against inherited type. */
 ${COLLECTION_SPACING}
 
-/* DefinitionList item air sits in :root beside the collection role, one value per density (#123). */
+/* DefinitionList's item air and column minimums sit in :root beside the collection role (#123). */
 ${DEFINITION_SPACING}
 
 /* Box's inner padding, measured against inherited type, beside Collection's. */
