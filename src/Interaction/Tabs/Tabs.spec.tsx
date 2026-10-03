@@ -1,3 +1,4 @@
+import { Stack } from 'Arrangement/Stack/Stack';
 import { fireEvent, render, screen } from '@testing-library/react';
 import {
   type FunctionComponent,
@@ -430,5 +431,151 @@ describe('Tabs Component', () => {
       // The spy would otherwise leak into every later-run test - a shared mutable fixture.
       window.HTMLElement.prototype.scrollIntoView = environmentStub;
     }
+  });
+
+  // Long translated labels are the case the row exists to survive (#121): whatever the row does with
+  // its space, the label itself is never shortened, hidden or replaced by a hint, in either mode.
+  const translatedViews = [
+    { value: 'market', label: 'Marktforschungsberichte der laufenden Saison' },
+    {
+      value: 'candidates',
+      label: 'Kandidatinnen und Kandidaten für offene Stellen',
+    },
+    {
+      value: 'staff',
+      label: 'Festangestellte Mitarbeiterinnen und Mitarbeiter',
+    },
+  ];
+
+  const translatedTabs = (
+    overflow: 'scroll' | 'wrap' | undefined,
+    onSelect$: Subject<string>,
+  ) => (
+    <Tabs.Root active={'market'} onSelect$={onSelect$} label={'Personal'}>
+      <Tabs.List overflow={overflow}>
+        {translatedViews.map((view) => (
+          <Tabs.Tab key={view.value} value={view.value}>
+            {view.label}
+          </Tabs.Tab>
+        ))}
+      </Tabs.List>
+      {translatedViews.map((view) => (
+        <Tabs.Panel key={view.value} value={view.value}>
+          {view.label}
+        </Tabs.Panel>
+      ))}
+    </Tabs.Root>
+  );
+
+  for (const overflow of ['scroll', 'wrap', undefined] as const) {
+    it(`keeps every long label whole as the tab's name and text with overflow ${String(overflow)}`, () => {
+      render(translatedTabs(overflow, new Subject<string>()));
+      for (const view of translatedViews) {
+        const tab = screen.getByRole('tab', { name: view.label });
+        expect(tab).toHaveTextContent(view.label);
+        expect(tab).not.toHaveAttribute('title');
+        expect(tab).not.toHaveAttribute('aria-hidden');
+        expect(tab.querySelector('[aria-hidden]')).toBeNull();
+      }
+    });
+  }
+
+  it('keeps the tab list, selection and panel association intact when the row wraps', () => {
+    render(translatedTabs('wrap', new Subject<string>()));
+    const list = screen.getByRole('tablist', { name: 'Personal' });
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs).toHaveLength(3);
+    for (const tab of tabs) {
+      expect(tab.parentElement).toBe(list);
+    }
+    const market = screen.getByRole('tab', { name: translatedViews[0]?.label });
+    expect(market).toHaveAttribute('aria-selected', 'true');
+    expect(market).toHaveAttribute('tabindex', '0');
+    const panel = screen.getByRole('tabpanel');
+    expect(market).toHaveAttribute('aria-controls', panel.id);
+    expect(panel).toHaveAttribute('aria-labelledby', market.id);
+  });
+
+  it('moves focus and requests selection with the arrow keys, wrapping, when the row wraps', () => {
+    const onSelect$ = new Subject<string>();
+    const selected = vi.fn();
+    onSelect$.subscribe(selected);
+    render(translatedTabs('wrap', onSelect$));
+    const market = screen.getByRole('tab', { name: translatedViews[0]?.label });
+    market.focus();
+
+    fireEvent.keyDown(market, { key: 'ArrowLeft' });
+
+    const staff = screen.getByRole('tab', { name: translatedViews[2]?.label });
+    expect(selected).toHaveBeenLastCalledWith('staff');
+    expect(staff).toHaveFocus();
+
+    fireEvent.keyDown(staff, { key: 'ArrowRight' });
+
+    expect(selected).toHaveBeenLastCalledWith('market');
+    expect(market).toHaveFocus();
+  });
+
+  // The separation contract (#121): the consumer puts a Stack between Root and its members, so the
+  // region gap is the one space between the row and the view. Root must not require its members as
+  // direct children for any association, stop or key to work.
+  const separatedTabs = (active: string, onSelect$: Subject<string>) => (
+    <Tabs.Root active={active} onSelect$={onSelect$} label={'Staff'}>
+      <Stack gap={'region'}>
+        <Tabs.List>
+          <Tabs.Tab value={'staff'}>Staff</Tabs.Tab>
+          <Tabs.Tab value={'candidates'}>Candidates</Tabs.Tab>
+          <Tabs.Tab value={'alumni'}>Alumni</Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value={'staff'}>Staff list</Tabs.Panel>
+        <Tabs.Panel value={'candidates'}>Candidate list</Tabs.Panel>
+        <Tabs.Panel value={'alumni'}>Alumni list</Tabs.Panel>
+      </Stack>
+    </Tabs.Root>
+  );
+
+  it('keeps every association when a Stack separates the row from the panels', () => {
+    render(separatedTabs('candidates', new Subject<string>()));
+    expect(screen.getByRole('tablist', { name: 'Staff' })).toBeInTheDocument();
+    const tab = screen.getByRole('tab', { name: 'Candidates' });
+    const panel = screen.getByRole('tabpanel', { name: 'Candidates' });
+    expect(tab).toHaveAttribute('aria-selected', 'true');
+    expect(tab).toHaveAttribute('aria-controls', panel.id);
+    expect(panel).toHaveAttribute('aria-labelledby', tab.id);
+    expect(panel).toHaveTextContent('Candidate list');
+    expect(panel).toHaveAttribute('tabindex', '0');
+  });
+
+  it('keeps inactive panels hidden and empty inside the separating Stack, so the gap stays one', () => {
+    render(separatedTabs('staff', new Subject<string>()));
+    const list = screen.getByRole('tablist');
+    const panels = screen.getAllByRole('tabpanel', { hidden: true });
+    expect(panels).toHaveLength(3);
+    for (const panel of panels) {
+      expect(panel.parentElement).toBe(list.parentElement);
+    }
+    const hiddenPanels = panels.filter((panel) => panel.hidden);
+    expect(hiddenPanels).toHaveLength(2);
+    for (const panel of hiddenPanels) {
+      expect(panel).toBeEmptyDOMElement();
+    }
+  });
+
+  it('navigates with the arrow keys and requests selection through the separating Stack', () => {
+    const onSelect$ = new Subject<string>();
+    const selected = vi.fn();
+    onSelect$.subscribe(selected);
+    render(separatedTabs('staff', onSelect$));
+    const staff = screen.getByRole('tab', { name: 'Staff' });
+    staff.focus();
+
+    fireEvent.keyDown(staff, { key: 'ArrowRight' });
+
+    expect(selected).toHaveBeenLastCalledWith('candidates');
+    expect(screen.getByRole('tab', { name: 'Candidates' })).toHaveFocus();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Alumni' }));
+
+    expect(selected).toHaveBeenLastCalledWith('alumni');
   });
 });

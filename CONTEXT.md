@@ -313,6 +313,13 @@ panel. The consumer owns which view is active and all of its content, including 
 preservation across views; Tabs owns the controls and the panels that present it.
 _Avoid_: Router, panel manager, tab strip
 
+**Tab row overflow**:
+How a tab row accommodates labels wider than its space: `scroll` keeps one line and scrolls it,
+`wrap` breaks the row onto further lines. Neither clips, shortens or hides a label - the label is
+the tab's whole text and whole name in both. The separation between the row and the view is not the
+row's: a `Stack` at the region gap between `Tabs.Root` and its members owns it.
+_Avoid_: Truncation, ellipsis, responsive tabs, collapsing tabs, tab spacing
+
 **Slider**:
 A control that sets one numeric value by moving one thumb along a fixed, visible operating range.
 It is neither a bounded pair nor a field for freely entered content.

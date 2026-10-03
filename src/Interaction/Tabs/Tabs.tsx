@@ -1,4 +1,4 @@
-import { cva } from 'class-variance-authority';
+import { cva, type VariantProps } from 'class-variance-authority';
 import {
   createContext,
   type FocusEvent,
@@ -11,18 +11,24 @@ import {
 import type { Subject } from 'rxjs';
 import { TabsCompositionError } from './TabsCompositionError';
 
-// The row is a single scrolling line, never a wrap: overflow is an accommodation, not a strip. The
-// ring room is written from the two focus-ring tokens so it cannot drift from the ring it exists
-// for: padding holds the scroll clip off the outline, the negative margin hands the room back to
-// the page, and scroll-padding makes a nearest scrollIntoView stop with the ring inside the clip.
-const tabsList = cva(
-  [
-    'flex flex-row overflow-x-auto',
-    'p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
-    'm-[calc(-1*(var(--focus-ring-width)+var(--focus-ring-offset)))]',
-    'scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
-  ].join(' '),
-);
+// Two accommodations for a row wider than its space, neither of which clips or elides a label
+// (#121): `scroll` keeps one line and scrolls it; `wrap` breaks the row onto further lines. The
+// scroll clip needs ring room written from the focus-ring tokens: padding holds the clip off the
+// outline, the negative margin hands it back, scroll-padding keeps a nearest scrollIntoView inside.
+const tabsList = cva('flex flex-row', {
+  variants: {
+    overflow: {
+      scroll: [
+        'overflow-x-auto',
+        'p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
+        'm-[calc(-1*(var(--focus-ring-width)+var(--focus-ring-offset)))]',
+        'scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
+      ].join(' '),
+      wrap: 'flex-wrap',
+    },
+  },
+  defaultVariants: { overflow: 'scroll' },
+});
 
 // Navigation typography - the tracked grotesk label, muted at rest, foreground when current -
 // keyed on aria-selected, so the attribute the device reads is the one the paint follows. The
@@ -33,10 +39,21 @@ const tabsTab = cva(
     'font-secondary text-label tracking-label',
     'text-muted hover:text-foreground aria-selected:text-foreground',
     'border-b-[length:var(--tab-marker-thickness)] border-solid border-transparent aria-selected:border-foreground',
-    'shrink-0 cursor-pointer select-none text-nowrap px-[var(--tab-inset-inline)] py-[var(--tab-inset-block)]',
+    'cursor-pointer select-none px-[var(--tab-inset-inline)] py-[var(--tab-inset-block)]',
     'transition-colors duration-[var(--motion-duration-color)]',
     'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   ].join(' '),
+  {
+    // The tab follows its row's accommodation: on one scrolling line it never shrinks or breaks;
+    // in a wrapping row a label wider than the row takes a line of its own and breaks across lines.
+    variants: {
+      overflow: {
+        scroll: 'shrink-0 text-nowrap',
+        wrap: 'text-wrap',
+      },
+    },
+    defaultVariants: { overflow: 'scroll' },
+  },
 );
 
 // The panel paints nothing of its own; the recipe carries only the focus ring its Tab stop needs -
@@ -53,6 +70,14 @@ type TabsContract = {
 };
 
 const TabsContext = createContext<TabsContract | undefined>(undefined);
+
+// The row's accommodation reaches each tab through the List, not the Root: it is the List's prop,
+// and a Tab reads it as any other variant. Outside a List the recipe default applies.
+type TabsListContract = { overflow: VariantProps<typeof tabsList>['overflow'] };
+
+const TabsListContext = createContext<TabsListContract>({
+  overflow: undefined,
+});
 
 const useTabsContract = (member: string): TabsContract => {
   const contract = useContext(TabsContext);
@@ -108,7 +133,9 @@ export interface ITabsRootProps {
   testId?: string;
 }
 
-export interface ITabsListProps {
+/** `overflow` is the row's accommodation for labels wider than its space - `scroll` (the default)
+ *  keeps one line and scrolls it; `wrap` breaks the row onto further lines. Neither shortens a label. */
+export interface ITabsListProps extends VariantProps<typeof tabsList> {
   children: ReactNode;
   testId?: string;
 }
@@ -148,17 +175,23 @@ const TabsRoot: FunctionComponent<ITabsRootProps> = ({
   );
 };
 
-const TabsList: FunctionComponent<ITabsListProps> = ({ children, testId }) => {
+const TabsList: FunctionComponent<ITabsListProps> = ({
+  overflow,
+  children,
+  testId,
+}) => {
   const { label } = useTabsContract('List');
   return (
-    <div
-      role="tablist"
-      aria-label={label}
-      className={tabsList()}
-      data-testid={testId}
-    >
-      {children}
-    </div>
+    <TabsListContext.Provider value={{ overflow }}>
+      <div
+        role="tablist"
+        aria-label={label}
+        className={tabsList({ overflow })}
+        data-testid={testId}
+      >
+        {children}
+      </div>
+    </TabsListContext.Provider>
   );
 };
 
@@ -168,6 +201,7 @@ const TabsTab: FunctionComponent<ITabsTabProps> = ({
   testId,
 }) => {
   const { active, onSelect$, baseId } = useTabsContract('Tab');
+  const { overflow } = useContext(TabsListContext);
   const isActive = active === value;
 
   // Left/Right move focus to the neighbouring tab and request its selection immediately -
@@ -202,7 +236,7 @@ const TabsTab: FunctionComponent<ITabsTabProps> = ({
       tabIndex={isActive ? 0 : -1}
       data-value={value}
       data-testid={testId}
-      className={tabsTab()}
+      className={tabsTab({ overflow })}
       onClick={() => onSelect$.next(value)}
       onKeyDown={requestNeighbour}
       onFocus={keepFocusedTabVisible}
@@ -252,15 +286,23 @@ const TabsPanel: FunctionComponent<ITabsPanelProps> = ({
  *   immediately; focus stays on the operated tab. Up/Down are left to the browser.
  * - Roving tabindex: Tab enters the list at the active tab, then the active panel - a consistent
  *   Tab stop whether or not its content is focusable. Inactive panels add no stop.
- * - The row scrolls horizontally on overflow - one line, no wrap, no shrink - and holds its own
- *   ring room, so the focused tab's ring survives the scroll clip.
+ * - A label is never clipped, shortened or hidden, however long its translation runs: it is the
+ *   tab's whole text and whole accessible name in both accommodations below.
+ * - `List`'s `overflow="scroll"` (the default) keeps the row one line - no wrap, no shrink - and
+ *   scrolls it horizontally on overflow, holding its own ring room so the focused tab's ring
+ *   survives the scroll clip. Focus reveals a scrolled-off tab, so every tab is reachable.
+ * - `List`'s `overflow="wrap"` breaks the row onto further lines instead, with nothing to scroll:
+ *   every tab is in view at once, a label wider than the row takes a line of its own and breaks
+ *   across lines, and the tabs on one line share a height so their markers sit on one baseline.
+ *   Roving tabindex, arrow order and the panel associations are identical in both accommodations.
  * - Selection is marked by a persistent line under the active tab: `--tab-marker-thickness` in
  *   `foreground`, constant thickness in both states, so switching shifts no widths and no weights.
  *   Keyboard focus is the separate shared focus ring. Colour moves on the one motion token.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - One List with Tab elements as direct DOM children (arrays and fragments are supported),
- *   and sibling Panels under Root. Do not wrap tabs in host elements.
+ *   and the Panels under the same Root - as siblings of the List, or with it inside one
+ *   arrangement (see the separation contract below). Do not wrap tabs in host elements.
  * - At least two tabs, each `value` unique and stable, each with exactly one matching `Panel`
  *   under the same `Root`, and `active` naming a declared pair. Invalid input is a contract
  *   violation, not a request for a fallback.
@@ -273,8 +315,15 @@ const TabsPanel: FunctionComponent<ITabsPanelProps> = ({
  * - Labels are short names for views, not actions; the consuming app words and translates them.
  * - This is not a router: no location, no history, no deep links. Wire `onSelect$` to whatever
  *   owns the active key and pass that key back in.
+ * - Tabs sets no spacing between the row and the panel; the separation contract is a `Stack`
+ *   between Root and its members - `<Tabs.Root><Stack gap="region"><Tabs.List/>…<Tabs.Panel/>…
+ *   </Stack></Tabs.Root>` - so the row and the view sit one region gap apart, from the token the
+ *   consumer's other groups already use. Inactive panels are hidden, so the gap stays exactly one.
  * - The panel is an opaque slot: compose the view's own rhythm inside it - a `Stack`, a `Prose` -
- *   as the view owns it; Tabs sets no spacing between the row and the panel.
+ *   as the view owns it.
+ * - Reach for `overflow="wrap"` where labels are translated and the width is a window rather than
+ *   a column: a wrapped row keeps every view in sight at a narrow desktop width, where a scrolled
+ *   row keeps the line and asks the viewer to scroll it.
  */
 export const Tabs = {
   Root: TabsRoot,
