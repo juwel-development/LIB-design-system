@@ -196,3 +196,11 @@ version has been released for this feature and none is named here. The human pub
 lands the branch, lets semantic-release derive the version, and records that version in
 [g-label-manager #195](https://github.com/juwel-dev/g-label-manager/issues/195). The board
 transition this review owns is **In Review**; **Done** belongs to whoever lands the work.
+
+## Final integration with #119
+
+The pending wrapped-Button acceptance is now verified on combined main. Headless Chrome exercised
+`AllFieldTypes` and `Narrow` at 1440, 800 and 360px with a long translated action label. The action
+actually grew to four text lines (118px including preserved padding), without button or FieldRow
+horizontal overflow. Controls sharing a row retained equal bottom edges; the entered input value
+and its focus survived every resize. This resolves the pending checks in Spec items 3–4 above.

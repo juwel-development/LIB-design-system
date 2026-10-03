@@ -237,6 +237,21 @@ An action presented in the typography of its surrounding content, without a sepa
 spacing of its own. It remains an operable button with a visible keyboard focus mark.
 _Avoid_: Ghost button, clickable text
 
+**Destructive action**:
+An action that removes or ends something - a contract, an employment, an entry - filled with the
+`error` status tone and inked with `errorForeground`, so the consequence reads before the press. The
+tone reinforces words and never replaces them: the label, or the accessible name of a symbol-only
+button, says what the action does. A `Button` variant, not a tone prop and not a status event: it
+combines with no other variant, announces nothing and carries no confirmation of its own.
+_Avoid_: Danger button, red button, delete button, error button
+
+**Outlined action**:
+The quiet secondary: an unfilled `Button` whose text and edge are drawn in `secondary`, so it reads
+as the quiet form of the filled secondary beside a primary one. It shares the faced variants' inset,
+height and minimum width, so it aligns with them in a row. The one opt-in edge a `Button` draws: a
+filled button still draws none.
+_Avoid_: Outline button, bordered button, tertiary button, secondary outline
+
 **ScrollContainer**:
 A library component that makes overflowing content reachable along chosen axes within space supplied
 by its parent layout. It owns scrolling, while the consumer owns the content and the allocation of space.
@@ -332,8 +347,18 @@ _Avoid_: Close, cancel, abort
 **Tabs**:
 A few named views sharing one surface, with exactly one view active and each tab naming its own
 panel. The consumer owns which view is active and all of its content, including any sharing or
-preservation across views; Tabs owns the controls and the panels that present it.
-_Avoid_: Router, panel manager, tab strip
+preservation across views; Tabs owns the controls and the panels that present it. A tab's label is
+the consumer's content — a text name first, with decoration at most, never a control — and is the
+tab's whole name. The separation between the row and the view is not the row's: a `Stack` between
+`Tabs.Root` and its members owns it, at the stack or the region gap.
+_Avoid_: Router, panel manager, tab strip, tab spacing
+
+**Tab row overflow**:
+How a tab row accommodates labels wider than its space: the controls stay on one line, each label's
+text wraps inside its tab down to its longest word, and only when the controls still cannot fit does
+the row scroll — the row, never the page. No label is shortened, elided or hidden, and a tab carried
+past the edge is out of view, not gone: scrolling or focus brings it back.
+_Avoid_: Truncation, ellipsis, responsive tabs, collapsing tabs, multi-row tabs
 
 **Slider**:
 A control that sets one numeric value by moving one thumb along a fixed, visible operating range.
@@ -470,9 +495,9 @@ _Avoid_: Variant, version, size, mark variant
 
 **Shell**:
 The neutral frame around a page's content — its top and bottom edges. It carries none of the page's
-own matter: a standing link, a short nav, and whatever a footer files are the product speaking, not
-the page. Deliberately small, because a shell that scales with the page competes with whatever the
-page is actually for.
+own matter: standing identity and navigation, application status and actions, and whatever a footer
+files are the product speaking, not the page. Deliberately small, because a shell that scales with
+the page competes with whatever the page is actually for.
 _Avoid_: Chrome, frame, layout, wrapper, masthead
 
 **Standing link**:
