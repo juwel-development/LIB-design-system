@@ -338,6 +338,36 @@ ladder, and no component or prop chooses between it and `subtitle`. The title se
 leading, so the pair follows the existing heading-role contract rather than inheriting a line box
 from its placement.
 
+## Accepted direction: separate family roles while preserving existing themes (#120)
+
+During [#120](https://github.com/juwel-development/LIB-design-system/issues/120) triage,
+the maintainer accepted theme-owned heading, body and control family roles, assigned by
+the components. A consumer needs serif headings alongside sans-serif body text and controls;
+the current primary family couples all three and cannot express that split.
+
+The existing secondary-family assignments remain intact: labels, navigation, captions and
+annotations are not redistributed into the new roles. Existing primary and secondary theme
+overrides must continue to work when a consumer has not opted into the new roles. The new
+roles preserve the current family assignments by default; they do not select a typeface on
+the consumer's behalf. Per-instance font props remain rejected.
+
+The heading family belongs to H1–H6, PageHead's title and Dialog.Title. DefinitionList terms
+remain reading content and belong to the body family even though their size matches H3.
+Family follows the text's job, not its size.
+
+The accepted public names are `--font-heading`, `--font-body` and `--font-control`, each
+defaulting to the existing primary family and independently overridable. Body covers reading
+content and values; control covers Button treatments that own typography and the currently
+primary-family entry/value text in fields. Existing secondary assignments inside controls
+remain secondary. Deliberately inherited typography, including plain actions and Link
+treatments, remains inherited.
+
+The maintainer confirmed the complete agent brief in #120. This contract is pending
+implementation, not a claim that the new roles already ship. Existing size, leading and
+heading-level contracts are independent of this family split. Font-feature requirements
+follow the effective family where a feature is used, including tabular figures, rather than
+only the legacy primary token.
+
 ## Constraints published on the tokens
 
 In the shape [ADR 0002](./0002-focus-ring-token-contract.md) established: stated numerically on the

@@ -79,6 +79,12 @@ text fills rather than picking a step on a ramp. There is exactly one role per j
 leaves a component nothing to choose between.
 _Avoid_: Text size, type scale step, heading size
 
+**Family role**:
+The job that determines a text's typeface, independently of its size: heading, body or control,
+alongside the existing secondary family for supporting text. A heading family belongs to actual
+headings; reading content does not become a heading because it shares a heading's size.
+_Avoid_: Font size, type scale step
+
 **Heading level**:
 A heading's position in the document outline, `h1` through `h6`. The level *fixes* the type role
 rather than defaulting it: a level-2 heading is the title role and cannot be asked to render as

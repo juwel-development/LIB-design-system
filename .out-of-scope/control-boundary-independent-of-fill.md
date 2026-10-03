@@ -3,9 +3,23 @@
 A filled `Button` draws no boundary. Its fill is the only thing separating it from the surface, and
 that fill answers to [SC 1.4.11](https://www.w3.org/TR/WCAG22/#non-text-contrast) directly — at least
 3:1 against `surface`, hover included, as `primary` and `secondary` publish. The library ships no
-`controlBorder` edge on a filled control, no `bordered` prop, and no variant that trades the fill for
-an outline. `controlBorder` remains what its name says: the boundary of a control with **no fill of
-its own**, which today means `Input` and `TextArea`.
+`controlBorder` edge on a filled control and no `bordered` prop. The earlier refusal of an
+opt-in outlined variant was narrowed during #119 triage; see the amendment below.
+`controlBorder` remains the boundary of a control with **no fill of its own**; the accepted
+outlined Button instead uses the secondary colour role for its text and border.
+
+## Amendment: opt-in outlined Button accepted (#119)
+
+The maintainer accepted `Button.variant="outlined"` during
+[#119](https://github.com/juwel-development/LIB-design-system/issues/119) triage. It has an unfilled
+surface with secondary-coloured text and border, and retains the shared focus ring. Existing filled
+variants gain no border. This provides a visible secondary action without imposing an edge on every
+consumer's filled buttons, so the cost argument below does not apply to this opt-in treatment.
+The historical suggestion that an unfilled treatment must be a separate primitive is superseded.
+
+This is an accepted contract pending implementation, not a claim that the variant already ships.
+The issue's agent brief records sizing, wrapping and the separate destructive variant. The rejection
+of an independent boundary on filled Buttons remains in force.
 
 ## Why this is out of scope
 
