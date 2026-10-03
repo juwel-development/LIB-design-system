@@ -237,6 +237,21 @@ An action presented in the typography of its surrounding content, without a sepa
 spacing of its own. It remains an operable button with a visible keyboard focus mark.
 _Avoid_: Ghost button, clickable text
 
+**Destructive action**:
+An action that removes or ends something - a contract, an employment, an entry - filled with the
+`error` status tone and inked with `errorForeground`, so the consequence reads before the press. The
+tone reinforces words and never replaces them: the label, or the accessible name of a symbol-only
+button, says what the action does. A `Button` variant, not a tone prop and not a status event: it
+combines with no other variant, announces nothing and carries no confirmation of its own.
+_Avoid_: Danger button, red button, delete button, error button
+
+**Outlined action**:
+The quiet secondary: an unfilled `Button` whose text and edge are drawn in `secondary`, so it reads
+as the quiet form of the filled secondary beside a primary one. It shares the faced variants' inset,
+height and minimum width, so it aligns with them in a row. The one opt-in edge a `Button` draws: a
+filled button still draws none.
+_Avoid_: Outline button, bordered button, tertiary button, secondary outline
+
 **ScrollContainer**:
 A library component that makes overflowing content reachable along chosen axes within space supplied
 by its parent layout. It owns scrolling, while the consumer owns the content and the allocation of space.
