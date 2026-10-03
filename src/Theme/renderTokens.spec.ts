@@ -334,7 +334,7 @@ describe('renderTokens spacing contract', () => {
       );
       expect(css).toMatch(/--space-definition-column:\s*3rem;/);
       expect(css).toMatch(
-        /@property --definition-shortfall\s*\{\s*syntax: "<length>";\s*inherits: false;\s*initial-value: 1px;/,
+        /@property --definition-shortfall\s*\{\s*syntax: "<length>";\s*inherits: true;\s*initial-value: 1px;/,
       );
       for (const block of css.matchAll(/@theme(?: inline)?\s*\{([^}]*)\}/g)) {
         expect(block[1]).not.toContain('--space-definition-item');

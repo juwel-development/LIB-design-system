@@ -207,9 +207,7 @@ at any scope moves the threshold. Long phrases and unbroken values wrap inside t
 is truncated and the list never widens past its holder.
 
 **Holders.** Give the list a definite width - a block, a grid track, a \`Box\`, a Dialog's content
-region. Inside a shrink-to-fit frame an inline-size container contributes no width of its own. The
-two-column pin is a container style query (Chrome 111, Safari 18, Firefox 151); in a browser without
-them every description sits below its terms at the full width, the terms in the term column's width.
+region. Inside a shrink-to-fit frame an inline-size container contributes no width of its own.
 
 **Tokens.** \`--space-definition-item\`, \`--space-definition-item-compact\`,
 \`--definition-term-min-width\` and \`--definition-description-min-width\` are declared in all three
@@ -676,8 +674,8 @@ export const Keyboard: Story = {
 const comparison: HolderStyle = {
   '--main-column-min-width': '28rem',
   '--support-column-min-width': '18rem',
-  '--summary-term-min-width': '8rem',
-  '--summary-description-min-width': '8rem',
+  '--summary-term-min-width': '7rem',
+  '--summary-description-min-width': '7rem',
 };
 
 /**

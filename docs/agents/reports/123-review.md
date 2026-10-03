@@ -209,3 +209,13 @@ fit at 30rem. The CSS property registration now ships in every generated token
 entrypoint, including light and dark variants. Browser geometry checks passed
 for all six stylesheet/token entrypoints at 479, 480, 481 and 600px, including
 stacking, proportions, the 48px gap and overflow. The full 1,205-test suite passed.
+
+The final dialog integration exposed a stale style-query result after a closed
+dialog opened at a narrower width. Column placement now derives directly from the
+computed 0px/1px shortfall, using `tan(atan2(length, 1px))` to obtain a grid line
+number and dense grid placement to align descriptions beside multiple terms.
+The registered length inherits from each item into its description. Container
+style queries are no longer required; the earlier support limitation is superseded.
+All fourteen Storybook plays, real Escape/focus return, narrow-screen wrapping and
+missing-token fallback passed in Chrome. All six stylesheet entrypoint geometry
+checks passed in both Chrome and WebKit. The combined suite passes 1,242 tests.

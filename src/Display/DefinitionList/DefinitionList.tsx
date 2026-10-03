@@ -17,20 +17,20 @@ const definitionList = cva('@container', {
   defaultVariants: { density: 'comfortable' },
 });
 
-// Rules are the layout; each Item owns its grid and hairlines, and the grids line up because every
-// item resolves the same tracks. The all-or-one switch is ColumnLayout's "Holy Albatross": below the
-// threshold `--definition-stack` is 100% (term track full, gap none) and `--definition-shortfall`
-// 1px; at it both are 0, and the style query on the latter pins the dd beside the column-one dts.
+// Each item shares the list's tracks. Below the fit threshold the term track is full width.
+// The registered shortfall resolves on the item and inherits as a length into its description.
+// tan(atan2(length, 1px)) converts the 0px/1px switch to a number for grid-column-start (2/1).
+// Dense placement fills column two beside the first term, or the next full row when stacked;
+// it preserves DOM reading order and supports several terms without counting them in JavaScript.
 const item = cva(
   [
-    'grid gap-[var(--space-stack)] border-b border-solid border-border first:border-t',
+    'grid grid-flow-row-dense gap-[var(--space-stack)] border-b border-solid border-border first:border-t',
     '[--definition-stack:clamp(0px,(var(--definition-threshold)-100%)*1000000,100%)]',
     '[--definition-shortfall:clamp(0px,(var(--definition-threshold)-100cqi)*1000000,1px)]',
     'grid-cols-[max(calc((100%-var(--space-definition-column))*var(--definition-term-share)),var(--definition-stack))_minmax(0,1fr)]',
     'gap-x-[max(0px,var(--space-definition-column)-var(--definition-stack))]',
     '[&>dt]:col-start-1 [&>dt]:self-baseline [&>dd]:col-span-full [&>dd]:self-baseline',
-    '[@container_style(--definition-shortfall:0px)]:[&>dd]:col-start-2',
-    '[@container_style(--definition-shortfall:0px)]:[&>dd]:row-start-1',
+    '[&>dd]:col-start-[calc(2-tan(atan2(var(--definition-shortfall),1px)))]',
   ].join(' '),
 );
 
@@ -214,8 +214,6 @@ const DefinitionListDescription: FunctionComponent<
  *   compare and the list stays stacked at every width.
  * - The holder gives the list a definite width, as any block, grid track or Dialog content region
  *   does. Inside a shrink-to-fit frame an inline-size container contributes no width of its own.
- * - The two-column pin is a container style query. Where a browser lacks them every description
- *   sits below its terms at the full width, the terms in the term column's width.
  *
  * @UXGuidelines
  * - Choose `compact` for a fact list - short values beside their labels in a panel or a content

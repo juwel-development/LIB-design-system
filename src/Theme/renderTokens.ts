@@ -211,10 +211,10 @@ const DEFINITION_SPACING = `:root {
   --definition-description-min-width: 10rem;
 }
 
-/* Register the fit value in every token entry point so style queries compare a computed length. */
+/* Register the fit value in every token entry point so descriptions inherit a computed fit length. */
 @property --definition-shortfall {
   syntax: "<length>";
-  inherits: false;
+  inherits: true;
   initial-value: 1px;
 }`;
 
