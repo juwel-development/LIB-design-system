@@ -4,6 +4,16 @@ import { Subject } from 'rxjs';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Button } from './Button';
 
+const variants = [
+  'primary',
+  'secondary',
+  'ghost',
+  'outlined',
+  'destructive',
+] as const;
+/** The four that carry a face and the shared control minimum width; ghost has neither. */
+const faced = ['primary', 'secondary', 'outlined', 'destructive'] as const;
+
 describe('Button Component', () => {
   it('renders correctly', () => {
     render(<Button>Click Me</Button>);
@@ -75,7 +85,7 @@ describe('Button Component', () => {
     );
   });
 
-  it.each(['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const)(
+  it.each(variants)(
     'carries no elevation on the %s variant, so press has no geometry',
     (variant) => {
       render(<Button variant={variant}>Click Me</Button>);
@@ -88,7 +98,7 @@ describe('Button Component', () => {
     },
   );
 
-  it.each(['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const)(
+  it.each(variants)(
     'transitions colour through the motion token on the %s variant, never transition-all or a hard-coded duration',
     (variant) => {
       render(<Button variant={variant}>Click Me</Button>);
@@ -103,7 +113,7 @@ describe('Button Component', () => {
     },
   );
 
-  it.each(['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const)(
+  it.each(variants)(
     'styles its corner from the radius token on the %s variant, never a rounded-* literal',
     (variant) => {
       render(<Button variant={variant}>Click Me</Button>);
@@ -118,17 +128,20 @@ describe('Button Component', () => {
     },
   );
 
-  it.each(['primary', 'secondary', 'outline', 'destructive'] as const)(
+  it.each(faced)(
     'floors its width from the control-min-width token on the %s variant, never a raw min-w-* literal',
     (variant) => {
       render(<Button variant={variant}>Click Me</Button>);
       const className = screen.getByRole('button').className;
 
-      // The minimum width is one named token primary and secondary share, so a consumer theme can
-      // re-point --control-min-width to lower or zero the floor under a compact actions row. 10.5rem
-      // is what it defaults to, so nothing changes visually. ghost keeps its own explicit zero.
-      expect(className).toContain('min-w-[var(--control-min-width)]');
-      expect(className).not.toMatch(/min-w-(?!\[var\(--control-min-width)/);
+      // The minimum width is one named token the four faced variants share, so a consumer theme can
+      // re-point --control-min-width to lower or zero the floor under a compact actions row. The floor
+      // yields to a holder narrower than it (#119), so it is min() against the holder, never the bare
+      // token: a button in an 8rem cell shrinks to 8rem and wraps instead of overflowing the cell.
+      expect(className).toContain('min-w-[min(var(--control-min-width),100%)]');
+      expect(className).not.toMatch(
+        /min-w-(?!\[min\(var\(--control-min-width)/,
+      );
     },
   );
 
@@ -142,7 +155,7 @@ describe('Button Component', () => {
     expect(className).not.toContain('--control-min-width');
   });
 
-  it.each(['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const)(
+  it.each(variants)(
     'draws one focus ring as an outline on the %s variant, identical across variants and never a box-shadow ring',
     (variant) => {
       render(<Button variant={variant}>Click Me</Button>);
@@ -161,7 +174,7 @@ describe('Button Component', () => {
     },
   );
 
-  it.each(['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const)(
+  it.each(variants)(
     'sets the focus-ring colour at rest on the %s variant, so it cannot fade in on focus',
     (variant) => {
       render(<Button variant={variant}>Click Me</Button>);
@@ -197,7 +210,7 @@ describe('Button Component', () => {
     expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
   });
 
-  it.each(['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const)(
+  it.each(variants)(
     'sets the content face for the %s variant, so an action reads in the face the theme gave actions (#90)',
     (variant) => {
       render(<Button variant={variant}>Send</Button>);
@@ -208,7 +221,7 @@ describe('Button Component', () => {
     },
   );
 
-  it.each(['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const)(
+  it.each(variants)(
     'sizes the %s variant at the body role, carried by the base so no variant can disagree (#92)',
     (variant) => {
       render(<Button variant={variant}>Send</Button>);
@@ -240,7 +253,7 @@ describe('Button Component', () => {
     expect(inHeader?.className).toBe(inFooter?.className);
   });
 
-  it('keeps a closed prop surface: the two game action variants and the inline fit arrive as named props, not an attribute bag (#119)', () => {
+  it('keeps a closed prop surface: the two game action variants arrive as values of `variant`, with no size, tone or style escape hatch (#119)', () => {
     expectTypeOf<keyof ComponentProps<typeof Button>>().toEqualTypeOf<
       | 'children'
       | 'onClick$'
@@ -249,23 +262,19 @@ describe('Button Component', () => {
       | 'ariaLabel'
       | 'type'
       | 'variant'
-      | 'inline'
     >();
     expectTypeOf<ComponentProps<typeof Button>['variant']>().toEqualTypeOf<
       | 'primary'
       | 'secondary'
       | 'ghost'
-      | 'outline'
+      | 'outlined'
       | 'destructive'
       | null
       | undefined
     >();
-    expectTypeOf<ComponentProps<typeof Button>['inline']>().toEqualTypeOf<
-      boolean | null | undefined
-    >();
   });
 
-  it.each(['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const)(
+  it.each(variants)(
     'keeps its accessible name from its label on the %s variant, so a tone never replaces the words (#119)',
     (variant) => {
       render(<Button variant={variant}>Vertrag beenden</Button>);
@@ -275,7 +284,7 @@ describe('Button Component', () => {
     },
   );
 
-  it.each(['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const)(
+  it.each(variants)(
     'names an icon-only %s button through ariaLabel, so a symbol-only destructive action still says what it does (#119)',
     (variant) => {
       render(<Button variant={variant} ariaLabel={'Delete contract'} />);
@@ -285,7 +294,21 @@ describe('Button Component', () => {
     },
   );
 
-  it.each(['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const)(
+  it.each(variants)(
+    'composes an icon with its label on the %s variant and is named by the words alone (#119)',
+    (variant) => {
+      render(
+        <Button variant={variant}>
+          <svg aria-hidden={'true'} data-testid={'icon'} />
+          Vertrag beenden
+        </Button>,
+      );
+      const button = screen.getByRole('button', { name: 'Vertrag beenden' });
+      expect(button).toContainElement(screen.getByTestId('icon'));
+    },
+  );
+
+  it.each(variants)(
     'is natively disabled and emits nothing on the %s variant when disabled (#119)',
     (variant) => {
       const onClick$ = new Subject<void>();
@@ -303,67 +326,84 @@ describe('Button Component', () => {
     },
   );
 
-  it('draws the outline variant as an unfilled control: boundary from controlBorder, no fill, foreground text (#119)', () => {
-    render(<Button variant={'outline'}>Filter zurücksetzen</Button>);
+  it.each(variants)(
+    'stays a plain button by default on the %s variant, so no game action submits a form by accident (#119)',
+    (variant) => {
+      render(<Button variant={variant}>Entfernen</Button>);
+      expect(screen.getByRole('button')).toHaveAttribute('type', 'button');
+    },
+  );
+
+  it('draws the outlined variant unfilled, with text and edge in `secondary`, so it reads as the quiet form of the filled secondary (#119)', () => {
+    render(<Button variant={'outlined'}>Filter zurücksetzen</Button>);
     const className = screen.getByRole('button').className;
 
-    // The quiet secondary is identified by its edge, the way Input and TextArea are: the one
-    // boundary role an unfilled control reads (>=3:1 against surface), never a fill and never a
-    // shade. It keeps the control inset and the control minimum width, so it aligns beside primary.
-    expect(className).toContain('border-control-border');
+    // The brief's contract: secondary-coloured text and border on an unfilled surface. The edge is a
+    // real border, never a shadow, so it survives forced colours (docs/adr/0002 on box-shadow).
+    expect(className).toContain('border-secondary');
+    expect(className).toContain('text-secondary');
     expect(className).toContain('bg-transparent');
-    expect(className).toContain('text-foreground');
-    expect(className).not.toContain('bg-secondary');
+    expect(className).not.toMatch(/(?:^|\s)bg-secondary(?:\s|$)/);
+    expect(className).not.toContain('shadow');
     expect(className).not.toContain('dark:');
     expect(className).not.toMatch(
       /(?:bg|text|ring|border|from|via|to)-[a-z]+-(?:50|[1-9]00)\b/,
     );
   });
 
-  it('tints the outline variant with backing on hover, the plate already constrained to carry foreground text (#119)', () => {
-    render(<Button variant={'outline'}>Filter zurücksetzen</Button>);
+  it('tints the outlined variant with backing on hover and keeps its edge, so hover never fills it (#119)', () => {
+    render(<Button variant={'outlined'}>Filter zurücksetzen</Button>);
     const className = screen.getByRole('button').className;
 
     expect(className).toContain('hover:bg-backing');
+    expect(className).not.toContain('hover:bg-secondary');
     expect(className).not.toContain('hover:underline');
+    expect(className).not.toContain('hover:border-');
   });
 
-  it('draws the destructive variant in the error tone on boundary and text, and fills with it on hover carrying surface as ink (#119)', () => {
+  it("gives the outlined edge its pixel back from the inset, so an outlined button is exactly a filled one's height (#119)", () => {
+    render(<Button variant={'outlined'}>Filter zurücksetzen</Button>);
+    const className = screen.getByRole('button').className;
+
+    expect(className).toContain('py-[calc(0.5rem_-_1px)]');
+    expect(className).toContain('px-[calc(1rem_-_1px)]');
+    expect(className).toContain('sm:px-[calc(1.5rem_-_1px)]');
+    expect(className).not.toMatch(/(?:^|\s)py-2(?:\s|$)/);
+    expect(className).not.toMatch(/(?:^|\s)px-4(?:\s|$)/);
+  });
+
+  it('fills the destructive variant with the error tone at rest and inks it with errorForeground, stepping to errorHover on hover (#119)', () => {
     render(<Button variant={'destructive'}>Vertrag beenden</Button>);
     const className = screen.getByRole('button').className;
 
-    // error is a general status tone (docs/adr/0011) at >=4.5:1 against surface. Contrast is
-    // symmetric, so that one constraint also carries surface as the ink on an error fill - which
-    // is why the hover inverts to the tone rather than tinting with backing, where error text
-    // falls below 4.5:1 in the shipped light theme (4.11:1).
-    expect(className).toContain('border-error');
-    expect(className).toContain('text-error');
-    expect(className).toContain('bg-transparent');
-    expect(className).toContain('hover:bg-error');
-    expect(className).toContain('hover:text-surface');
-    expect(className).not.toContain('hover:bg-backing');
+    // Filled like primary, identified by the fill alone (docs/adr/0011, Amendments): no edge at rest,
+    // no inversion on hover, and the ink is its own role rather than surface read backwards.
+    expect(className).toContain('bg-error');
+    expect(className).toContain('text-error-foreground');
+    expect(className).toContain('hover:bg-error-hover');
+    expect(className).not.toContain('border-error');
+    expect(className).not.toMatch(/(?:^|\s)text-error(?:\s|$)/);
+    expect(className).not.toContain('hover:text-');
+    expect(className).not.toContain('bg-transparent');
     expect(className).not.toContain('dark:');
   });
 
-  it.each(['outline', 'destructive'] as const)(
-    'disables the %s variant the way an unfilled control does: boundary and text go to the disabled tones, no grey fill appears (#119)',
-    (variant) => {
-      render(
-        <Button variant={variant} disabled={true}>
-          Entfernen
-        </Button>,
-      );
-      const className = screen.getByRole('button').className;
+  it('disables the outlined variant the way an unfilled control does: edge and text go to the disabled tones and no fill appears (#119)', () => {
+    render(
+      <Button variant={'outlined'} disabled={true}>
+        Entfernen
+      </Button>,
+    );
+    const className = screen.getByRole('button').className;
 
-      expect(className).toContain('disabled:border-disabled');
-      expect(className).toContain('disabled:text-muted');
-      expect(className).not.toContain('disabled:bg-disabled');
-      expect(className).not.toContain('disabled:hover:bg-disabled-hover');
-    },
-  );
+    expect(className).toContain('disabled:border-disabled');
+    expect(className).toContain('disabled:text-muted');
+    expect(className).toContain('disabled:hover:bg-transparent');
+    expect(className).not.toContain('disabled:bg-disabled');
+  });
 
-  it.each(['primary', 'secondary', 'ghost'] as const)(
-    'keeps the %s variant disabled appearance it shipped with, so nothing already on a page moves (#119)',
+  it.each(['primary', 'secondary', 'ghost', 'destructive'] as const)(
+    'takes the disabled fill on the %s variant, as every filled action does, so a disabled one still stands apart from an enabled one (#119)',
     (variant) => {
       render(
         <Button variant={variant} disabled={true}>
@@ -377,53 +417,29 @@ describe('Button Component', () => {
     },
   );
 
-  it.each(['primary', 'secondary', 'outline', 'destructive'] as const)(
-    'sizes an inline %s button to its content: the control minimum width is dropped and the inset is the field inset (#119)',
+  it.each(['primary', 'secondary', 'destructive'] as const)(
+    'draws a boundary on the filled %s variant only under forced colours, where the fill is forced to ButtonFace and may vanish into the canvas (#119)',
     (variant) => {
-      render(
-        <Button variant={variant} inline={true}>
-          Öffnen
-        </Button>,
+      render(<Button variant={variant}>Entfernen</Button>);
+      const className = screen.getByRole('button').className;
+
+      expect(className).toContain('forced-colors:border');
+      expect(className).not.toMatch(/(?:^|\s)border(?:\s|$)/);
+    },
+  );
+
+  it.each(['outlined', 'ghost'] as const)(
+    'adds no forced-colours boundary to the %s variant, which already has its edge or is a text action (#119)',
+    (variant) => {
+      render(<Button variant={variant}>Entfernen</Button>);
+      expect(screen.getByRole('button').className).not.toContain(
+        'forced-colors:',
       );
-      const className = screen.getByRole('button').className;
-
-      // Structural, not a token choice (docs/adr/0008): whether the floor applies at all. A faced
-      // action in a table cell or beside a field takes its content's width and the px-3 inset
-      // every field control already renders, so the two sit flush.
-      expect(className).toContain('min-w-0');
-      expect(className).not.toContain('--control-min-width');
-      expect(className).toContain('px-3');
-      expect(className).not.toMatch(/(?:^|\s)px-4(?:\s|$)/);
-      expect(className).not.toContain('sm:px-6');
     },
   );
 
-  it.each(['primary', 'secondary', 'outline', 'destructive'] as const)(
-    'keeps the control minimum width on the %s variant unless asked to be inline (#119)',
-    (variant) => {
-      render(<Button variant={variant}>Öffnen</Button>);
-      const className = screen.getByRole('button').className;
-
-      expect(className).toContain('min-w-[var(--control-min-width)]');
-      expect(className).not.toMatch(/(?:^|\s)min-w-0(?:\s|$)/);
-    },
-  );
-
-  it('renders a ghost button identically with and without inline, since it never had a floor to drop (#119)', () => {
-    render(
-      <>
-        <Button variant={'ghost'}>Öffnen</Button>
-        <Button variant={'ghost'} inline={true}>
-          Öffnen
-        </Button>
-      </>,
-    );
-    const [plain, inline] = screen.getAllByRole('button');
-    expect(inline?.className).toBe(plain?.className);
-  });
-
-  it.each(['primary', 'secondary', 'ghost', 'outline', 'destructive'] as const)(
-    'lets a long label wrap on the %s variant where the layout constrains it, in balanced lines, instead of forcing one line (#119)',
+  it.each(variants)(
+    'lets a long label wrap on the %s variant where the layout constrains it, in balanced lines, with no forced single line and no clipping (#119)',
     (variant) => {
       render(
         <Button variant={variant}>
@@ -432,17 +448,17 @@ describe('Button Component', () => {
       );
       const className = screen.getByRole('button').className;
 
-      // jsdom lays nothing out; what is checkable is that no rule forbids the break. The line is
-      // only ever broken where the holder is narrower than the words, which is the case that used
-      // to overflow - a short label in a wide row renders exactly as before.
+      // jsdom lays nothing out; what is checkable is that no rule forbids the break and nothing hides
+      // the overflow. Geometry is verified in the browser - see docs/agents/reports/119-review.md.
       expect(className).not.toContain('text-nowrap');
       expect(className).not.toContain('whitespace-nowrap');
+      expect(className).not.toContain('truncate');
+      expect(className).not.toContain('overflow-hidden');
       expect(className).toContain('text-balance');
-      // No forced break inside a word, as nowhere else in the library: a word wider than the
-      // holder is wording to shorten, and a soft break would let a row squeeze a button to letters.
-      expect(className).not.toMatch(
-        /wrap-anywhere|wrap-break-word|break-all|break-words/,
-      );
+      // A word wider than its holder breaks rather than running past the edge: `wrap-anywhere` is the
+      // one value that also lowers the min-content width, which is what lets the holder constrain it.
+      expect(className).toContain('wrap-anywhere');
+      expect(className).not.toContain('break-all');
     },
   );
 });

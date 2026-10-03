@@ -5,65 +5,41 @@ import type { Subject } from 'rxjs';
 
 // No `dark:` classes here by design: every colour below is a semantic token whose value is
 // re-pointed by the `.dark` class in tokens.css, so one set of classes serves both themes.
-// The colour transition is stated once in the base, on the motion token, so no variant can
-// disagree with it - see docs/adr/0001-motion-token-contract.md. The one focus ring is in the
-// base too: identical across variants, drawn with outline, colour at rest so it never fades in -
-// see docs/adr/0002-focus-ring-token-contract.md. The corner is in the base as well, one radius
-// token every variant shares, so none can disagree - see docs/adr/0003-radius-token-contract.md.
-// The face is in the base for the same reason - see docs/adr/0004-typography-token-contract.md (#90).
-// The size is in the base for the same reason, and here it is load-bearing: the recipe fixes
-// vertical padding and sets no height, so the font-size is what drives it (docs/adr/0004, #92).
-// No `text-nowrap` (#119): the line is broken only where the holder is narrower than the words,
-// which is the case that used to overflow, and `text-balance` keeps the two lines it then makes
-// of a translated label even rather than leaving one word on the second. No break inside a word:
-// `overflow-wrap: break-word` never engages here (the inline-flex text item is sized to its longest
-// word) and `anywhere` would let a row squeeze the button to letters, so one word wider than the
-// holder stays the consumer's wording to shorten, as it is for every other text in the library.
+// Motion (docs/adr/0001), the focus ring (docs/adr/0002), the corner (docs/adr/0003) and the face
+// and body size (docs/adr/0004, #90, #92) are each stated once in the base so no variant disagrees.
+// The size is load-bearing: each variant fixes vertical padding and sets no height, so the font-size
+// drives it. The label wraps and never clips (#119): `wrap-anywhere` lets a word wider than its
+// holder break rather than run past the edge, which `break-word` cannot do inside an inline-flex
+// button (the text item is sized to its longest word), and `text-balance` evens the lines it makes.
 const button = cva(
-  'font-primary text-body text-balance transition-colors duration-[var(--motion-duration-color)] rounded-[var(--radius-control)] py-2 sm:py-2 cursor-pointer disabled:cursor-not-allowed select-none inline-flex flex-row items-center justify-center gap-2 outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
+  'font-primary text-body text-balance wrap-anywhere transition-colors duration-[var(--motion-duration-color)] rounded-[var(--radius-control)] cursor-pointer disabled:cursor-not-allowed select-none inline-flex flex-row items-center justify-center gap-2 outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   {
     variants: {
       variant: {
+        // The four faced variants share one floor, `--control-min-width`, so a row of them aligns,
+        // and the floor yields to a holder narrower than it (#119): `min()` against the holder's
+        // width lets the button shrink and its label wrap instead of forcing the holder to overflow.
+        // A holder sized to its content (an auto track, a table cell) has no width to yield to, so
+        // there the button takes its content width. Measured: a filled button in forced colours has
+        // no boundary at all - the UA forces the fill to ButtonFace, which can equal Canvas, and
+        // preflight zeroes the border - so the filled variants draw one there and nowhere else.
         primary:
-          'bg-primary text-primary-foreground hover:bg-primary-hover disabled:bg-disabled disabled:hover:bg-disabled-hover',
+          'px-4 sm:px-6 py-2 min-w-[min(var(--control-min-width),100%)] bg-primary text-primary-foreground hover:bg-primary-hover disabled:bg-disabled disabled:hover:bg-disabled-hover forced-colors:border',
         secondary:
-          'bg-secondary text-secondary-foreground hover:bg-secondary-hover disabled:bg-disabled disabled:hover:bg-disabled-hover',
+          'px-4 sm:px-6 py-2 min-w-[min(var(--control-min-width),100%)] bg-secondary text-secondary-foreground hover:bg-secondary-hover disabled:bg-disabled disabled:hover:bg-disabled-hover forced-colors:border',
         ghost:
-          'px-2 min-w-0 bg-transparent text-foreground hover:underline hover:decoration-[length:var(--underline-thickness)] hover:underline-offset-[var(--underline-offset)] disabled:bg-disabled disabled:hover:bg-disabled-hover',
-        // The two unfilled variants (#119) are identified by their edge, as Input is: the boundary
-        // sits outside the inset, so they share Input's height exactly rather than primary's.
-        // Disabled follows Input too - edge and ink go to the disabled tones, no fill appears.
-        outline:
-          'border border-solid border-control-border bg-transparent text-foreground hover:bg-backing disabled:border-disabled disabled:text-muted disabled:hover:bg-transparent',
-        // The hover inverts to the tone instead of tinting with backing: error text on backing
-        // measures 4.11:1 in the shipped light theme, under the 4.5:1 text floor, while surface
-        // ink on an error fill is the published error-against-surface constraint read backwards.
+          'px-2 py-2 min-w-0 bg-transparent text-foreground hover:underline hover:decoration-[length:var(--underline-thickness)] hover:underline-offset-[var(--underline-offset)] disabled:bg-disabled disabled:hover:bg-disabled-hover',
+        // Unfilled and identified by its edge (#119). The edge sits outside the inset, so each inset
+        // gives back the edge's pixel and the outlined button is exactly a filled one's height.
+        // Disabled follows Input: edge and ink go to the disabled tones and no fill appears.
+        outlined:
+          'px-[calc(1rem_-_1px)] sm:px-[calc(1.5rem_-_1px)] py-[calc(0.5rem_-_1px)] min-w-[min(var(--control-min-width),100%)] border border-solid border-secondary bg-transparent text-secondary hover:bg-backing disabled:border-disabled disabled:text-muted disabled:hover:bg-transparent',
         destructive:
-          'border border-solid border-error bg-transparent text-error hover:bg-error hover:text-surface disabled:border-disabled disabled:text-muted disabled:hover:bg-transparent disabled:hover:text-muted',
-      },
-      inline: {
-        true: '',
-        false: '',
+          'px-4 sm:px-6 py-2 min-w-[min(var(--control-min-width),100%)] bg-error text-error-foreground hover:bg-error-hover disabled:bg-disabled disabled:hover:bg-disabled-hover forced-colors:border',
       },
     },
-    // Whether the width floor applies at all is structural (docs/adr/0008): a faced action in a
-    // table cell or beside a field takes its content's width and the px-3 inset every field
-    // control renders, so the two sit flush. ghost never had a floor, so `inline` leaves it alone.
-    compoundVariants: [
-      {
-        variant: ['primary', 'secondary', 'outline', 'destructive'],
-        inline: false,
-        class: 'px-4 sm:px-6 min-w-[var(--control-min-width)]',
-      },
-      {
-        variant: ['primary', 'secondary', 'outline', 'destructive'],
-        inline: true,
-        class: 'px-3 min-w-0',
-      },
-    ],
     defaultVariants: {
       variant: 'primary',
-      inline: false,
     },
   },
 );
@@ -88,16 +64,16 @@ interface IButtonProps extends VariantProps<typeof button> {
  * @component
  *
  * @Variants
- * - `primary` and `secondary`: the filled actions, floored at the control minimum width so a row
- *   of them aligns
- * - `outline`: the quiet secondary - an unfilled control identified by its `controlBorder` edge,
- *   for actions that should not compete with the primary one
- * - `destructive`: an action that removes or ends something, outlined in the `error` status tone
- *   and filled with it on hover. The tone reinforces words it never replaces: the label, or the
- *   `ariaLabel` of a symbol-only button, must say what the action does
+ * - `primary` and `secondary`: the filled actions
+ * - `outlined`: the quiet secondary - `secondary` text and edge on an unfilled surface, for an
+ *   action beside a primary one that must not compete with it
+ * - `destructive`: an action that removes or ends something, filled with the `error` status tone
+ *   and inked with `errorForeground`. The tone reinforces words it never replaces: the label, or
+ *   the `ariaLabel` of a symbol-only button, must say what the action does
  * - `ghost`: the padded text action with a hover underline and no floor
- * - `inline`: a faced button sized to its content with the field inset, for an action in a table
- *   cell or beside a field. An action set in its surrounding text is a plain action, not this
+ *
+ * The four faced variants share the control minimum width and inset, so a row of them aligns, and
+ * every one of them shrinks and wraps its label where its holder is narrower than that.
  *
  * @UXGuidelines
  * - Use clear, action-oriented text (e.g., "Save" instead of "OK")
@@ -122,7 +98,6 @@ export const Button: FunctionComponent<IButtonProps> = ({
   disabled,
   testId,
   variant,
-  inline,
   onClick$,
   ariaLabel,
   type = 'button',
@@ -131,7 +106,7 @@ export const Button: FunctionComponent<IButtonProps> = ({
     <button
       type={type}
       data-testid={testId}
-      className={button({ variant, inline })}
+      className={button({ variant })}
       onClick={() => onClick$?.next()}
       disabled={disabled}
       aria-label={ariaLabel}
