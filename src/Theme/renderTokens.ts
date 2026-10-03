@@ -89,8 +89,9 @@ const UNDERLINE = `:root {
    Tailwind built-in is re-pointed; only new role names. See docs/adr/0004-typography-token-contract.md. */
 const TYPOGRAPHY = `@theme {
   /* Both faces default to inherit, so the library ships no @font-face and no face and a one-face
-     consumer renders as today. --font-primary is carried by content, --font-secondary by labels; a
-     component sets font-variant-numeric: tabular-nums only on a --font-primary carrying tnum and
+     consumer renders as today. --font-primary is the default face of headings, body and controls
+     (the three roles below, #120), --font-secondary the face of labels; a component sets
+     font-variant-numeric: tabular-nums only on an effective body face carrying tnum and
      font-variant-caps: small-caps only on a --font-secondary carrying smcp - both fail silently otherwise. */
   --font-primary: inherit;
   --font-secondary: inherit;
@@ -134,6 +135,24 @@ const TYPOGRAPHY = `@theme {
      head's h1 - and never below it, where the correction would read as damage. See the ADR. */
   --tracking-label: 0.14em;
   --tracking-optical: -0.02em;
+}`;
+
+/* Three family roles that depart from the primary face on demand (#120): heading for every heading,
+   body for reading matter, control for the box a viewer operates. Utilities rather than @theme
+   variables, because the fallback has to resolve on the element reading it: a value at :root would
+   substitute var(--font-primary) there, so a theme re-pointing primary on a wrapper would move its
+   paragraphs and strand its headings. Read this way, a theme re-points a role or primary at any scope
+   and the text underneath follows. No value is declared for the three, so the fallback stays live. */
+const FAMILY_ROLES = `@utility font-heading {
+  font-family: var(--font-heading, var(--font-primary));
+}
+
+@utility font-body {
+  font-family: var(--font-body, var(--font-primary));
+}
+
+@utility font-control {
+  font-family: var(--font-control, var(--font-primary));
 }`;
 
 /* The reading measures are in ch so the character count holds when the body size moves under them:
@@ -337,6 +356,10 @@ ${UNDERLINE}
 /* Typography is a set of Tailwind theme namespaces, not colours: its own @theme block generates the
    utilities, so it is not carried in @theme inline with the palette. */
 ${TYPOGRAPHY}
+
+/* The heading, body and control family roles are utilities with a fallback to the primary face, not
+   @theme variables, so a theme re-pointing either name at any scope reaches the text beneath it. */
+${FAMILY_ROLES}
 
 /* The aspect roles are Tailwind theme namespaces like typography, so they take their own @theme block
    after it and are not carried in @theme inline with the palette. */

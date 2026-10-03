@@ -41,12 +41,12 @@ const table = cva(
 // row takes no bottom rule, so the block stays open at the foot - the difference from a closed list.
 const tableRow = cva('border-t border-solid border-border');
 
-// A value is serif with real tabular figures; a note is the muted grotesk. Both sit at the small role,
-// which carries the enforced 15px floor below which figures stop comparing column to column.
+// A value is the body face with real tabular figures; a note is the muted secondary face. Both sit
+// at the small role, which carries the enforced 15px floor below which figures stop comparing.
 const tableCell = cva('px-4 py-2 text-small first:pl-0 last:pr-0', {
   variants: {
     variant: {
-      value: 'font-primary text-foreground tabular-nums',
+      value: 'font-body text-foreground tabular-nums',
       note: 'font-secondary text-muted',
     },
     align: { left: 'text-left', right: 'text-right', center: 'text-center' },

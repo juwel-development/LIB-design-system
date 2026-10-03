@@ -10,7 +10,7 @@ import type { Subject } from 'rxjs';
 // body size (docs/adr/0004), control radius (docs/adr/0003), padding, disabled fill - is one string
 // the three faced variants share verbatim; `plain` is the exception both ADRs' amendments record.
 const face =
-  'font-primary text-body rounded-[var(--radius-control)] py-2 sm:py-2 disabled:bg-disabled disabled:hover:bg-disabled-hover select-none text-nowrap inline-flex flex-row items-center justify-center gap-2';
+  'font-control text-body rounded-[var(--radius-control)] py-2 sm:py-2 disabled:bg-disabled disabled:hover:bg-disabled-hover select-none text-nowrap inline-flex flex-row items-center justify-center gap-2';
 const button = cva(
   'transition-colors duration-[var(--motion-duration-color)] cursor-pointer disabled:cursor-not-allowed outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
   {

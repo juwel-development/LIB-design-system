@@ -347,11 +347,12 @@ const DialogTitle: FunctionComponent<IDialogTitleProps> = ({
       data-testid={testId}
     >
       {/* The independent Dialog h1 at its own type role - not the page's display role, and not a
-          generic heading primitive (docs/adr/0004 and 0005, Amendments). */}
+          generic heading primitive - in the heading face every heading reads (docs/adr/0004 and
+          0005, Amendments; #120). */}
       <h1
         id={titleId}
         className={
-          'font-primary text-dialog-title leading-dialog-title text-foreground'
+          'font-heading text-dialog-title leading-dialog-title text-foreground'
         }
       >
         {children}
@@ -374,7 +375,7 @@ const DialogDescription: FunctionComponent<IDialogDescriptionProps> = ({
     >
       <p
         id={descriptionId}
-        className={'font-primary text-body leading-body text-foreground'}
+        className={'font-body text-body leading-body text-foreground'}
       >
         {children}
       </p>

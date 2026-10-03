@@ -70,6 +70,21 @@ describe('Prose', () => {
     expect(lede.className).toContain('leading-lede');
   });
 
+  it('sets the lede, body and tail in the body family role, so the whole reading block moves with one name (#120)', () => {
+    // docs/adr/0004, the amendment: everything in the reading column is what was come for and reads
+    // --font-body, which follows the primary face until a theme re-points it.
+    render(
+      <Prose.Root>
+        <Prose.Lede>Lede.</Prose.Lede>
+        <Prose.Body>Body.</Prose.Body>
+        <Prose.Tail>Tail.</Prose.Tail>
+      </Prose.Root>,
+    );
+    for (const text of ['Lede.', 'Body.', 'Tail.']) {
+      expect(screen.getByText(text).className).toContain('font-body');
+    }
+  });
+
   it('renders a body paragraph identical to the P primitive', () => {
     // Two recipes for one job (issue #21): pin them equal so they cannot drift silently apart.
     render(

@@ -172,6 +172,15 @@ describe('MultiSelect', () => {
     >().toEqualTypeOf<string>();
   });
 
+  it('sets the field box in the control face (#120)', () => {
+    // The box the viewer operates is the field around the trigger, which has no role of its own;
+    // the label above it keeps the secondary face, unchanged and left to the story.
+    setup();
+    const field = trigger().parentElement;
+    expect(field?.className).toContain('font-control');
+    expect(field?.className).not.toContain('font-primary');
+  });
+
   it('renders a labelled, collapsed trigger with the empty wording and no chips, clear control or options', () => {
     setup({ hint: 'Combine as many as you like', testId: 'topics' });
     const control = trigger();

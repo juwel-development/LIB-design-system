@@ -102,6 +102,18 @@ describe('Table', () => {
     expect(note).not.toHaveClass('tabular-nums');
   });
 
+  it('sets a value cell in the body family and a note cell in the secondary family (#120)', () => {
+    // docs/adr/0004, the amendment: the figures are what was come for and read --font-body, which
+    // is why the tnum constraint is stated on the effective body face; the note is apparatus.
+    renderSpecTable();
+    expect(screen.getByRole('cell', { name: '2.4 kg' }).className).toContain(
+      'font-body',
+    );
+    expect(
+      screen.getByRole('cell', { name: 'dry, no cable' }).className,
+    ).toContain('font-secondary');
+  });
+
   it('never boxes a cell: no td or th carries a border of its own', () => {
     // "Rules are the layout" - the block reads as a table from the row rules alone, so a cell
     // border would be the striping this component must not draw.

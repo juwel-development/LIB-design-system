@@ -197,13 +197,14 @@ describe('Button Component', () => {
   });
 
   it.each(['primary', 'secondary', 'ghost'] as const)(
-    'sets the content face for the %s variant, so an action reads in the face the theme gave actions (#90)',
+    'sets the control face for the %s variant, so an action reads in the face the theme gave controls (#90, #120)',
     (variant) => {
       render(<Button variant={variant}>Send</Button>);
 
-      // docs/adr/0004, the amendment: actions are `primary`. It sits in the base, so no variant
-      // can disagree - the move the radius, the ring and the colour transition already make.
-      expect(screen.getByRole('button').className).toContain('font-primary');
+      // docs/adr/0004, the amendments: actions are controls, and the control face follows the
+      // content face by default (#120). It sits in the base, so no variant can disagree - the move
+      // the radius, the ring and the colour transition already make.
+      expect(screen.getByRole('button').className).toContain('font-control');
     },
   );
 
@@ -310,12 +311,12 @@ describe('Button Component', () => {
   });
 
   it.each(['primary', 'secondary', 'ghost'] as const)(
-    'keeps the %s face exactly as it was, so adding plain changes nothing a consumer already renders',
+    'keeps the %s control face separate from the plain treatment',
     (variant) => {
       render(<Button variant={variant}>Send</Button>);
       const className = screen.getByRole('button').className;
 
-      expect(className).toContain('font-primary');
+      expect(className).toContain('font-control');
       expect(className).toContain('text-body');
       expect(className).toContain('rounded-[var(--radius-control)]');
       expect(className).toContain('py-2');

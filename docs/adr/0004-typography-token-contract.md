@@ -365,35 +365,83 @@ ladder, and no component or prop chooses between it and `subtitle`. The title se
 leading, so the pair follows the existing heading-role contract rather than inheriting a line box
 from its placement.
 
-## Accepted direction: separate family roles while preserving existing themes (#120)
+## Amended: heading, body and control family roles, resolved where the text is
 
-During [#120](https://github.com/juwel-development/LIB-design-system/issues/120) triage,
-the maintainer accepted theme-owned heading, body and control family roles, assigned by
-the components. A consumer needs serif headings alongside sans-serif body text and controls;
-the current primary family couples all three and cannot express that split.
+[ADR 0005](./0005-heading-level-fixes-type-role.md) closed with *"Headings and body copy share a face
+… A consumer wanting a grotesk display face over a serif reading face cannot express it without a
+third family role, which was declined for want of a demonstrated need."* The need arrived as
+[#120](https://github.com/juwel-development/LIB-design-system/issues/120): a product whose headings
+are serif and whose body and controls are sans-serif, with the theme keeping ownership of which face is
+which. Under two roles that product has one move — re-point `primary` to the serif — and it moves every
+paragraph, every entered value and every action with the headings, because all of them read `primary`.
 
-The existing secondary-family assignments remain intact: labels, navigation, captions and
-annotations are not redistributed into the new roles. Existing primary and secondary theme
-overrides must continue to work when a consumer has not opted into the new roles. The new
-roles preserve the current family assignments by default; they do not select a typeface on
-the consumer's behalf. Per-instance font props remain rejected.
+So three roles are added, and the two that exist are untouched:
 
-The heading family belongs to H1–H6, PageHead's title and Dialog.Title. DefinitionList terms
-remain reading content and belong to the body family even though their size matches H3.
-Family follows the text's job, not its size.
+> **`--font-heading`** — the face every heading is set in: `H1` to `H6`, `PageHead`'s `h1` and
+> `Dialog.Title`'s `h1`, the whole of the heading ladder and the two `h1` treatments outside it.
+> **`--font-body`** — the face reading matter is set in: `P`, every member of `Prose`, `Checklist`'s
+> items, `DefinitionList`'s term and description, `Table`'s value cells, `PageHead`'s lede and intro
+> and `Dialog.Description`. The term reads it whatever its size: it is sized like a heading and is
+> the reading matter, not a heading.
+> **`--font-control`** — the face the box a viewer operates is set in: `Button`, and the control
+> element of `Input`, `TextArea`, `NumberInput`, `Select` and `MultiSelect`, placeholder included.
 
-The accepted public names are `--font-heading`, `--font-body` and `--font-control`, each
-defaulting to the existing primary family and independently overridable. Body covers reading
-content and values; control covers Button treatments that own typography and the currently
-primary-family entry/value text in fields. Existing secondary assignments inside controls
-remain secondary. Deliberately inherited typography, including plain actions and Link
-treatments, remains inherited.
+**Each falls back to `--font-primary`, which no element now reads directly.** The operative rule
+above sorts a heading, a paragraph and a control as `primary` — what the visitor came for — and that
+sorting is kept as each role's default rather than discarded, so the roles are additive: a one-face
+consumer renders as today, and a two-face consumer who re-pointed `primary` keeps the headings,
+paragraphs and controls that re-pointing gave them. `inherit` was rejected for exactly that consumer,
+whose headings would have moved from the primary face to the page's behind their back. The library
+still ships no face: `primary` is `inherit`, as it was, and the three roles resolve through it.
+`--font-primary` is kept declared and re-pointable — it is the one name a theme sets to move all
+three — rather than retired, so nothing a consumer wrote stops working.
 
-The maintainer confirmed the complete agent brief in #120. This contract is pending
-implementation, not a claim that the new roles already ship. Existing size, leading and
-heading-level contracts are independent of this family split. Font-feature requirements
-follow the effective family where a feature is used, including tabular figures, rather than
-only the legacy primary token.
+**Where the fallback resolves, which is the load-bearing decision.** The three roles are *not* theme
+variables with a value at `:root`. A custom property's `var()` substitutes on the element declaring it,
+so `--font-heading: var(--font-primary)` on `:root` would resolve against the root's `primary` and
+never against a wrapper's: a theme that re-points `--font-primary` on a wrapper element — a supported
+scope, since `.dark` on an ancestor is how the colour tokens are already scoped — would move its
+paragraphs and strand its headings and controls on the page's face. That is a regression for an
+existing theme, and the first draft of this amendment shipped it as a documented limitation; it was
+reviewed out. Instead each role is a utility carrying the fallback, read where the text is:
+
+```css
+@utility font-heading { font-family: var(--font-heading, var(--font-primary)); }
+```
+
+Nothing declares a value for `--font-heading`, `--font-body` or `--font-control`, so the fallback stays
+live until a theme sets one, at any scope. The cost is that the three names appear in the stylesheet
+only where they are read, not in a `:root` block beside `primary` and `secondary`; `renderTokens.spec.ts`
+pins both halves — the utilities with their fallback, and the absence of any declared value — because
+a well-meant `--font-heading: var(--font-primary)` added later would silently reintroduce the regression.
+
+**The labelling half of a control is unchanged.** A field's label, hint, error and optional marker
+keep `secondary`; only the box takes `control`, declared on that element, so the three faces of a
+field sit on three elements and no wrapper carries one. `MultiSelect`'s chips and count stay
+`secondary` — they name the selected set, they are not the box. `Choices` reads no control role: it is
+a row of named options with a marker, apparatus the viewer reads before choosing, and the one
+primitive the amendment leaves where it was. `Link` declares a face in `quiet` alone and no size in
+any treatment, and a plain action inside a heading or paragraph follows that context; none of that
+moves.
+
+**Considered and rejected: a heading role only.** The consumer's shape — serif headings over a
+sans body *and* sans controls — needs just the heading role, and two more names were not free. Body
+is added because without a name of its own the reading matter can only move by moving `primary`,
+which moves the two roles that fall back to it; control is added because the box a viewer operates is
+already a named role in the domain model (`Control`), its face is set by the library on an element a
+consumer cannot reach (this ADR's own test), and a product keeping a grotesk on its controls while its
+body reads in a serif is the stranding case the two-role section above refused to leave open. A role a
+theme can leave at its default costs nothing.
+
+**Considered and rejected: a `font` prop, again.** The argument the two-role section makes holds a
+step up: which face a heading takes is a property of the design system, not of the heading, and a
+prop would let two `H2`s on one page disagree. The roles give the theme the same control
+system-wide. `H1`–`H6` still expose no face, no size and no role.
+
+`family-role-assignment.spec.ts` pins which component sources read each role, that none reads
+`primary` directly, the way `label-leading-optin.spec.ts` pins the leading, and bans a face literal in
+any component — the family half of the type-scale ban — so the library's "no face" stays checkable as
+the roster grows.
 
 ## Constraints published on the tokens
 
@@ -412,11 +460,15 @@ token, enforced against the library's own values, never against a consumer's.
   decides whether a visitor's viewport actually jumps is the **consumer's** re-pointed one, and that
   half is beyond reach — a `token constraint the library can only state`, published here so a theme
   dropping the body role below 16px is breaking a stated rule rather than making an unlucky choice.
-- **`--font-primary` must carry `tnum`, `--font-secondary` must carry `smcp`**, before any component
-  sets `tabular-nums` or `small-caps`. `font-variant-numeric` and `font-variant-caps` are inert on a
-  face without the feature and fail *silently* — figures do not line up, capitals are synthesised. The
-  library ships no face, so these are constraints on the consumer's binary, stated on the token and not
-  checkable here — a `token constraint the library can only state` in the domain model's terms.
+- **The effective body face must carry `tnum`, `--font-secondary` must carry `smcp`**, before any
+  component sets `tabular-nums` or `small-caps`. `Table`'s value cells set `tabular-nums` and read
+  `--font-body`, so the face that has to carry the feature is whichever one that role resolves to:
+  `--font-body` where a theme sets it, `--font-primary` otherwise. The constraint follows the role,
+  not the legacy name, because a theme re-pointing `--font-body` bypasses `primary` entirely.
+  `font-variant-numeric` and `font-variant-caps` are inert on a face without the feature and fail
+  *silently* — figures do not line up, capitals are synthesised. The library ships no face, so these
+  are constraints on the consumer's binary, stated on the token and not checkable here — a `token
+  constraint the library can only state` in the domain model's terms.
 
 ## Consequences
 
