@@ -1,6 +1,6 @@
 import { Link } from 'Interaction/Link/Link';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { Header } from './Header';
 
 describe('Header', () => {
@@ -185,9 +185,249 @@ describe('Header', () => {
     );
   });
 
+  it('renders exactly the standing slot and the nav when neither status nor action is given, as before #125', () => {
+    const { container } = render(
+      <Header standing={<a href={'/'}>JuweL</a>}>
+        <a href={'/work'}>Work</a>
+      </Header>,
+    );
+    const banner = screen.getByRole('banner');
+    expect(banner.children).toHaveLength(2);
+    expect(banner.lastElementChild).toBe(screen.getByRole('navigation'));
+    expect(container.querySelectorAll('nav')).toHaveLength(1);
+  });
+
+  it('places status matter in the banner and outside any navigation landmark', () => {
+    // The consumer's Top bar had put its Balance line inside the nav slot, because that was the only
+    // slot after the standing one - a readout presented as navigation (#125).
+    render(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        status={<p>{'Balance: $1,250'}</p>}
+      >
+        <a href={'/work'}>Work</a>
+      </Header>,
+    );
+    const status = screen.getByText('Balance: $1,250');
+    expect(screen.getByRole('banner')).toContainElement(status);
+    expect(screen.getByRole('navigation')).not.toContainElement(status);
+  });
+
+  it('places the action in the banner, outside any navigation landmark, and leaves it operable', () => {
+    const onClick = vi.fn();
+    render(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        action={
+          <button type={'button'} onClick={onClick}>
+            Continue
+          </button>
+        }
+      >
+        <a href={'/work'}>Work</a>
+      </Header>,
+    );
+    const action = screen.getByRole('button', { name: 'Continue' });
+    expect(screen.getByRole('banner')).toContainElement(action);
+    expect(screen.getByRole('navigation')).not.toContainElement(action);
+    fireEvent.click(action);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    action.focus();
+    expect(action).toHaveFocus();
+  });
+
+  it('declares no navigation landmark at all when there are no nav children, so a status-and-action bar carries no empty nav', () => {
+    // An empty landmark is what a screen reader lists and finds nothing in - the same reason an
+    // unnamed nav gets no empty aria-label.
+    const { container } = render(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        status={<p>{'Balance: $1,250'}</p>}
+        action={<button type={'button'}>Continue</button>}
+      />,
+    );
+    expect(screen.getByRole('banner')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+    expect(container.querySelector('nav')).toBeNull();
+    expect(screen.getByText('Balance: $1,250')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Continue' }),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps the navigation landmark whenever nav children are given, beside both new slots', () => {
+    render(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        navName={'Primary'}
+        status={<p>{'Balance: $1,250'}</p>}
+        action={<button type={'button'}>Continue</button>}
+      >
+        <a href={'/work'}>Work</a>
+      </Header>,
+    );
+    const nav = screen.getByRole('navigation', { name: 'Primary' });
+    expect(nav).toContainElement(screen.getByRole('link', { name: 'Work' }));
+    expect(nav).not.toContainElement(screen.getByText('Balance: $1,250'));
+    expect(nav).not.toContainElement(
+      screen.getByRole('button', { name: 'Continue' }),
+    );
+  });
+
+  it('gives the status and action slots no landmark, no role and no live region of their own', () => {
+    // The matter carries its own semantics - a paragraph reads as text, a button as a button - and
+    // whether a changing readout is announced is the consumer's call, made by wrapping its own live
+    // region. The library must not decide that a Balance line interrupts.
+    render(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        status={<p>{'Balance: $1,250'}</p>}
+        action={<button type={'button'}>Continue</button>}
+      />,
+    );
+    const statusSlot = screen.getByText('Balance: $1,250')
+      .parentElement as HTMLElement;
+    const actionSlot = screen.getByRole('button', { name: 'Continue' })
+      .parentElement as HTMLElement;
+    for (const slot of [statusSlot, actionSlot]) {
+      expect(slot.tagName).toBe('DIV');
+      expect(slot).not.toHaveAttribute('role');
+      expect(slot).not.toHaveAttribute('aria-live');
+      expect(slot).not.toHaveAttribute('aria-label');
+      expect(slot.parentElement).toBe(screen.getByRole('banner'));
+    }
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('group')).not.toBeInTheDocument();
+  });
+
+  it('orders the slots standing, status, nav, action in the DOM so reading and keyboard order run left to right', () => {
+    render(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        status={<a href={'/balance'}>Balance</a>}
+        action={<button type={'button'}>Continue</button>}
+      >
+        <a href={'/work'}>Work</a>
+      </Header>,
+    );
+    const order = [
+      screen.getByRole('link', { name: 'JuweL' }),
+      screen.getByRole('link', { name: 'Balance' }),
+      screen.getByRole('link', { name: 'Work' }),
+      screen.getByRole('button', { name: 'Continue' }),
+    ];
+    for (let index = 1; index < order.length; index += 1) {
+      const earlier = order[index - 1] as HTMLElement;
+      const later = order[index] as HTMLElement;
+      expect(
+        earlier.compareDocumentPosition(later) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+    const focusables = Array.from(
+      screen.getByRole('banner').querySelectorAll('a, button'),
+    );
+    expect(focusables).toEqual(order);
+  });
+
+  it('renders no wrapper for an omitted slot, so a status-only or action-only bar carries no empty box', () => {
+    const { rerender } = render(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        status={<p>{'Balance: $1,250'}</p>}
+      />,
+    );
+    expect(screen.getByRole('banner').children).toHaveLength(2);
+
+    rerender(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        action={<button type={'button'}>Continue</button>}
+      />,
+    );
+    expect(screen.getByRole('banner').children).toHaveLength(2);
+  });
+
+  it('separates the slots with the region space role and sends the end group to the end edge by one auto margin', () => {
+    // jsdom lays nothing out, so what is pinned is that the gap between slots names the same role the
+    // nav already gaps its items with, and that the end-edge push is a single auto margin rather than a
+    // between-distribution - a between-distribution would float a lone status slot into the middle of
+    // the bar, and two auto margins on one line would float the nav between status and action. Geometry
+    // is Storybook's surface (WithNav, StatusAndAction, NarrowDesktop).
+    const { rerender } = render(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        status={<p>{'Balance: $1,250'}</p>}
+        action={<button type={'button'}>Continue</button>}
+      >
+        <a href={'/work'}>Work</a>
+      </Header>,
+    );
+    const banner = screen.getByRole('banner');
+    const statusSlot = screen.getByText('Balance: $1,250')
+      .parentElement as HTMLElement;
+    const actionSlot = screen.getByRole('button', { name: 'Continue' })
+      .parentElement as HTMLElement;
+    expect(banner.className).toContain('gap-x-[var(--space-region)]');
+    expect(banner.className).not.toContain('justify-between');
+    expect(actionSlot.className).toContain('ms-auto');
+    expect(actionSlot.className).toContain('shrink-0');
+    expect(screen.getByRole('navigation').className).not.toContain('ms-auto');
+    expect(statusSlot.className).not.toContain('ms-auto');
+    expect(statusSlot.className).not.toMatch(/(^|\s)[wh]-\[/);
+
+    // Without an action the nav is the end group, and takes the margin itself.
+    rerender(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        status={<p>{'Balance: $1,250'}</p>}
+      >
+        <a href={'/work'}>Work</a>
+      </Header>,
+    );
+    expect(screen.getByRole('navigation').className).toContain('ms-auto');
+  });
+
+  it('keeps a bar of standing and nav on one line as before, and lets a bar with a status or action slot break into lines gapped with the stack role', () => {
+    // The two-slot bar absorbs narrowing inside the nav, which wraps its links, and that is what it did
+    // before #125 - so it must not gain a wrap. A bar holding an action has an unshrinkable control at
+    // its end and so breaks into lines instead of overflowing the page, with the wrapped-line gap at
+    // the stack role, which is Cluster's rule for a wrapped row.
+    const { rerender } = render(
+      <Header standing={<a href={'/'}>JuweL</a>}>
+        <a href={'/work'}>Work</a>
+      </Header>,
+    );
+    expect(screen.getByRole('banner').className).not.toContain('flex-wrap');
+    expect(screen.getByRole('banner').className).not.toContain('gap-y-');
+
+    rerender(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        action={<button type={'button'}>Continue</button>}
+      />,
+    );
+    expect(screen.getByRole('banner').className).toContain('flex-wrap');
+    expect(screen.getByRole('banner').className).toContain(
+      'gap-y-[var(--space-stack)]',
+    );
+
+    rerender(
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        status={<p>{'Balance: $1,250'}</p>}
+      />,
+    );
+    expect(screen.getByRole('banner').className).toContain('flex-wrap');
+  });
+
   it('is never sticky and needs no JavaScript, so it renders identically server-side', () => {
     const { container } = render(
-      <Header testId={'h'}>
+      <Header
+        testId={'h'}
+        status={<p>{'Balance'}</p>}
+        action={<button type={'button'}>Continue</button>}
+      >
         <a href={'/work'}>Work</a>
       </Header>,
     );
@@ -198,7 +438,11 @@ describe('Header', () => {
 
   it('carries no dark: class anywhere - the theme re-points the tokens underneath', () => {
     const { container } = render(
-      <Header standing={<a href={'/'}>JuweL</a>}>
+      <Header
+        standing={<a href={'/'}>JuweL</a>}
+        status={<p>{'Balance'}</p>}
+        action={<button type={'button'}>Continue</button>}
+      >
         <a href={'/work'}>Work</a>
       </Header>,
     );

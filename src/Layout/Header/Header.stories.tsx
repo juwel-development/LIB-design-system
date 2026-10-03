@@ -1,4 +1,8 @@
+import { Cluster } from 'Arrangement/Cluster/Cluster';
 import { Brandmark } from 'Display/Brandmark/Brandmark';
+import { Note } from 'Display/Typography/Note/Note';
+import { P } from 'Display/Typography/P/P';
+import { Button } from 'Interaction/Button/Button';
 import { Link } from 'Interaction/Link/Link';
 import { Section } from 'Layout/Section/Section';
 import type { Meta, StoryObj } from '@storybook/react-vite';
@@ -186,5 +190,112 @@ export const AboveSections: Story = {
         </p>
       </Section>
     </>
+  ),
+};
+
+const date = (
+  <Cluster gap={'stack'}>
+    <P>Monday, 3 October 2026</P>
+    <Note color={'muted'}>09:00</Note>
+  </Cluster>
+);
+
+const balance = <P testId={'balance'}>{'Balance: $1,250,000'}</P>;
+
+const continueAction = (
+  <Button variant={'primary'} testId={'continue'}>
+    Continue
+  </Button>
+);
+
+/** A bar that reports and does not navigate: a date in the standing slot, a Balance in `status` beside
+ *  it, and no `children`, so no `<nav>` renders at all. The status slot is a plain box - no landmark, no
+ *  live region - and the matter inside it wears its own type roles. */
+export const StatusOnly: Story = {
+  render: () => <Header standing={date} status={balance} />,
+};
+
+/** A lone action: nothing between the standing slot and the far edge, where the action's own auto
+ *  margin puts it. Not inside a nav - a button is not navigation - and with no `children` there is no
+ *  nav to be inside. */
+export const ActionOnly: Story = {
+  render: () => <Header standing={date} action={continueAction} />,
+};
+
+/** The consumer's Top bar (#125): status on the left beside the standing date, Continue at the far right,
+ *  no navigation landmark anywhere. Reading and keyboard order run left to right - date, Balance, Continue -
+ *  and the Continue button keeps its own focus ring; tab into the story to see it. */
+export const StatusAndAction: Story = {
+  render: () => (
+    <Header standing={date} status={balance} action={continueAction} />
+  ),
+};
+
+/** All four slots at once, for a page that both navigates and acts. The status slot stays beside the
+ *  standing one, the nav sits with the matter before it, and the action alone takes the far edge - one
+ *  auto margin, because two on a line would float the nav halfway across. Reading order is standing,
+ *  status, nav, action. */
+export const WithNav: Story = {
+  render: () => (
+    <Header
+      navName={'Primary'}
+      standing={standing}
+      status={<P>{'Signed in as Alex'}</P>}
+      action={<Button variant={'secondary'}>Sign out</Button>}
+    >
+      {nav}
+    </Header>
+  ),
+};
+
+/** Several readouts and a note in one status slot, composed by the caller in a `Cluster` - the library
+ *  arranges nothing inside a slot. Long translated wording: the Cluster wraps inside its slot while
+ *  room remains, and once the line is spent the bar breaks - whole slots drop in reading order - while
+ *  the action keeps its edge and its label, which never wraps. */
+export const LongLabels: Story = {
+  render: () => (
+    <Header
+      standing={
+        <Cluster gap={'stack'}>
+          <P>Montag, 3. Oktober 2026</P>
+          <Note color={'muted'}>09:00 Uhr</Note>
+        </Cluster>
+      }
+      status={
+        <Cluster gap={'stack'}>
+          <P>{'Kontostand: 1.250.000 $'}</P>
+          <Note>
+            {'Eine Antwort wird erwartet, bevor die Woche weitergeht'}
+          </Note>
+        </Cluster>
+      }
+      action={
+        <Button variant={'primary'} disabled={true}>
+          {'Weiter zur nächsten Woche'}
+        </Button>
+      }
+    />
+  ),
+};
+
+/** The same bar held at a narrow desktop width. The standing slot and the action keep their width;
+ *  what no longer fits on the first line drops to the next, gapped with `--space-stack`, and Continue
+ *  stays flush with the bar's content edge on whichever line it lands - its right edge is the header's
+ *  right edge minus the gutter. Nothing overflows and the page gains no horizontal scroll. The frame is
+ *  story furniture; a product never fixes the width. */
+export const NarrowDesktop: Story = {
+  render: () => (
+    <div style={{ width: '48rem', maxWidth: '100%' }}>
+      <Header
+        standing={date}
+        status={
+          <Cluster gap={'stack'}>
+            <P>{'Kontostand: 1.250.000 $'}</P>
+            <Note>{'Eine Antwort wird erwartet'}</Note>
+          </Cluster>
+        }
+        action={continueAction}
+      />
+    </div>
   ),
 };
