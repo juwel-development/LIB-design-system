@@ -6,9 +6,9 @@ import type { FunctionComponent } from 'react';
 // text it sits in and needs no size prop. Baseline at -0.125em is what seats a 1em square beside
 // lowercase letters; the inline-box exists so an icon reads as a word in its line. `color` has no
 // default on purpose (docs/adr/0011, the #126 amendment): absent, no class competes with the text.
-// Measured in Chrome: an svg root that sets its own colour keeps it under forced colours, so a toned
-// glyph stayed amber on the user's canvas; `forced-color-adjust-auto` hands it back to CanvasText.
 const icon = cva(
+  // Measured in Chrome: an svg root that sets its own colour keeps it under forced colours, so a
+  // toned glyph stayed amber on the user's canvas; `auto` hands it back to CanvasText.
   'inline-block shrink-0 align-[-0.125em] forced-color-adjust-auto',
   {
     variants: {
