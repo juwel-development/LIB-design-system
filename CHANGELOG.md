@@ -1,3 +1,10 @@
+# [3.11.0](https://github.com/juwel-development/LIB-design-system/compare/v3.10.0...v3.11.0) (2026-10-05)
+
+
+### Features
+
+* **icon:** add bin and bubble drawings, a named status mark and tones ([#126](https://github.com/juwel-development/LIB-design-system/issues/126)) ([6e6f78a](https://github.com/juwel-development/LIB-design-system/commit/6e6f78a345c1cf17d21410cc35f3df5bbe976b7b))
+
 # [3.10.0](https://github.com/juwel-development/LIB-design-system/compare/v3.9.1...v3.10.0) (2026-10-03)
 
 
