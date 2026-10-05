@@ -175,6 +175,12 @@ export const Tones: Story = {
       ))}
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    // An svg root defaults to `preserve-parent-color`, which keeps a tone under forced colours.
+    for (const glyph of canvasElement.querySelectorAll('svg')) {
+      await expect(getComputedStyle(glyph).forcedColorAdjust).toBe('auto');
+    }
+  },
 };
 
 /**
