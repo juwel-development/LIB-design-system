@@ -66,7 +66,9 @@ interface IButtonProps extends VariantProps<typeof button> {
  * - `destructive`: an action that removes or ends something, filled with the `error` status tone
  *   and inked with `errorForeground`. The tone reinforces words it never replaces: the label, or
  *   the `ariaLabel` of a symbol-only button, must say what the action does
- * - `ghost`: the padded text action with a hover underline and no floor
+ * - `ghost`: the padded text action with a hover underline and no floor. With an `ariaLabel` and
+ *   the bin `Icon` as its only child it is the quiet delete: the unfilled form of a secondary
+ *   destructive action at the corner of a block of content, where `destructive` is the filled form
  *
  * The four faced variants share the control minimum width and inset, so a row of them aligns, and
  * every one of them shrinks and wraps its label where its holder is narrower than that.

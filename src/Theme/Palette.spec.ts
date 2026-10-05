@@ -173,6 +173,28 @@ describe('Palette', () => {
   });
 
   it.each([
+    ['light', 'muted', light, 4.759],
+    ['light', 'success', light, 5.484],
+    ['light', 'warning', light, 5.022],
+    ['light', 'error', light, 4.501],
+    ['light', 'info', light, 5.358],
+    ['dark', 'muted', dark, 6.963],
+    ['dark', 'success', dark, 9.286],
+    ['dark', 'warning', dark, 10.694],
+    ['dark', 'error', dark, 8.0],
+    ['dark', 'info', dark, 9.879],
+  ] as const)(
+    "keeps the %s theme's `%s` at least 3:1 against surface, so an Icon drawn in it reads as a graphical object (WCAG 2.2 SC 1.4.11, #126): measured %f:1",
+    (_theme, role, tokens, measured) => {
+      // docs/adr/0011, the #126 amendment: Icon carries `muted` and the four status tones. The last
+      // column is the ratio as measured when the selector shipped, so a palette move shows here.
+      const ratio = contrastRatio(tokens[role], tokens.surface);
+      expect(ratio).toBeGreaterThanOrEqual(3);
+      expect(ratio).toBeCloseTo(measured, 2);
+    },
+  );
+
+  it.each([
     ['light', light],
     ['dark', dark],
   ] as const)(

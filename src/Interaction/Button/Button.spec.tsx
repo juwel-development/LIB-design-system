@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { Icon } from 'Display/Icon/Icon';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { Subject } from 'rxjs';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -529,4 +530,35 @@ describe('Button Component', () => {
       expect(className).toContain('disabled:bg-disabled');
     },
   );
+
+  it('names the quiet icon-only delete - ghost, an ariaLabel and the bin Icon - by its ariaLabel alone, with no image inside it (#126)', () => {
+    render(
+      <Button variant={'ghost'} ariaLabel={'Eintrag löschen'}>
+        <Icon name={'bin'} />
+      </Button>,
+    );
+    const button = screen.getByRole('button', { name: 'Eintrag löschen' });
+    expect(within(button).queryByRole('img')).not.toBeInTheDocument();
+    expect(button.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    expect(button).toHaveTextContent('');
+  });
+
+  it('keeps the quiet icon-only delete one tab stop that emits on click, so the bin adds no stop and takes no click of its own (#126)', () => {
+    const onClick$ = new Subject<void>();
+    const clicked = vi.fn();
+    onClick$.subscribe(clicked);
+    render(
+      <Button
+        variant={'ghost'}
+        ariaLabel={'Eintrag löschen'}
+        onClick$={onClick$}
+      >
+        <Icon name={'bin'} testId={'bin'} />
+      </Button>,
+    );
+    fireEvent.click(screen.getByTestId('bin'));
+    expect(clicked).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('bin')).not.toHaveAttribute('tabindex');
+    expect(screen.getByTestId('bin')).toHaveAttribute('focusable', 'false');
+  });
 });

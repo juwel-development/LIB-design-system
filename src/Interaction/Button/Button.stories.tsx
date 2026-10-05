@@ -69,7 +69,27 @@ running past the edge, so nothing is clipped and no horizontal scroll appears. H
 wrapped lines and the inset holds, so the hit area never shrinks. Content-sized actions in running
 text are \`ghost\`, or \`plain\`; \`Button\` adds no size or inline prop for them.` +
           '\n\n' +
-          '`plain` is an operable button in the typography and colour of the surrounding text, with no fill, border, corner, padding, minimum width, or hover underline. It preserves native semantics, disabled behaviour, `type`, `ariaLabel`, `onClick$`, and the shared focus ring. Use it for actions within content, such as a sortable table header composed with Icon. Long labels wrap within the available space. Use `ghost` for a padded text action instead.',
+          '`plain` is an operable button in the typography and colour of the surrounding text, with no fill, border, corner, padding, minimum width, or hover underline. It preserves native semantics, disabled behaviour, `type`, `ariaLabel`, `onClick$`, and the shared focus ring. Use it for actions within content, such as a sortable table header composed with Icon. Long labels wrap within the available space. Use `ghost` for a padded text action instead.' +
+          '\n\n' +
+          `### The quiet icon-only delete
+
+A secondary destructive action at the corner of a block of content - removing one row, one card, one
+attachment - is \`variant="ghost"\` with an \`ariaLabel\` and the bin \`Icon\` as its only child
+([#126](https://github.com/juwel-development/LIB-design-system/issues/126)):
+
+\`\`\`tsx
+<Button variant="ghost" ariaLabel={t('deleteEntry')} onClick$={delete$}>
+  <Icon name="bin" />
+</Button>
+\`\`\`
+
+\`ghost\` is the quiet treatment: no fill, no edge and no minimum width, so the button is the glyph
+plus the ghost inset and does not compete with the content it belongs to. \`destructive\` stays the
+filled form, for the one destructive action a view is about. There is no third variant. The
+\`ariaLabel\` is the button's whole name and says what is deleted; the \`Icon\` takes no \`label\`
+here, because a labelled icon inside a named control would be a second image saying the same thing.
+The button draws the shared focus ring and keeps native \`disabled\`; the consumer owns the act and
+any confirmation.`,
       },
     },
   },
@@ -130,22 +150,6 @@ const everyVariant = (args: Story['args'], label?: string) =>
       {label ?? variant}
     </Button>
   ));
-
-/** A decorative icon a consumer composes with the label; it inherits the ink and scales with it. */
-const TrashIcon = () => (
-  <svg
-    aria-hidden={'true'}
-    width={'1em'}
-    height={'1em'}
-    viewBox={'0 0 16 16'}
-    fill={'none'}
-    stroke={'currentColor'}
-    strokeWidth={'1.5'}
-    style={{ flexShrink: 0 }}
-  >
-    <path d={'M2 4h12M6 4V2h4v2M4 4l1 10h6l1-10M6.5 7v4M9.5 7v4'} />
-  </svg>
-);
 
 const holder = (width: string, display: 'grid' | 'flex' = 'grid') => ({
   width,
@@ -224,9 +228,54 @@ export const DestructiveSymbolOnly: Story = {
   },
   render: (args) => (
     <Button {...args}>
-      <TrashIcon />
+      <Icon name={'bin'} />
     </Button>
   ),
+};
+
+/** The quiet icon-only delete (#126): `ghost`, an `ariaLabel` and the bin `Icon` as the only child,
+ *  at the corner of the block it removes. The `ariaLabel` is the whole name and the icon stays
+ *  unlabelled; the play function tabs onto the button and reads the shared focus ring. */
+export const QuietIconOnlyDelete: Story = {
+  args: {
+    variant: 'ghost',
+    ariaLabel: 'Notiz löschen',
+    onClick$: clickSubject,
+  },
+  render: (args) => (
+    <div
+      className={'font-primary text-body text-foreground'}
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        gap: '0.5rem',
+        maxWidth: '22rem',
+        padding: '0.5rem 0.5rem 0.5rem 1rem',
+        outline: '1px dashed var(--color-rule)',
+      }}
+    >
+      <p style={{ paddingBlock: '0.5rem' }}>
+        Lieferung für Donnerstag bestätigt; die Rechnung folgt mit der Ware.
+      </p>
+      <Button {...args}>
+        <Icon name={'bin'} />
+      </Button>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Notiz löschen' });
+    await expect(within(button).queryByRole('img')).toBeNull();
+    await userEvent.tab();
+    await expect(button).toHaveFocus();
+    const ring = getComputedStyle(button);
+    await expect(ring.outlineStyle).toBe('solid');
+    await expect(Number.parseFloat(ring.outlineWidth)).toBeGreaterThan(0);
+    const glyph = button.querySelector('svg')?.getBoundingClientRect();
+    await expect(glyph?.width).toBeGreaterThan(0);
+    await expect(glyph?.width).toBe(glyph?.height);
+  },
 };
 
 /** Text composed with an icon (#119): the consumer places the icon beside the label; it takes the
@@ -236,15 +285,15 @@ export const WithIcon: Story = {
   render: (args) => (
     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
       <Button {...args} variant={'destructive'}>
-        <TrashIcon />
+        <Icon name={'bin'} />
         Vertrag beenden
       </Button>
       <Button {...args} variant={'outlined'}>
-        <TrashIcon />
+        <Icon name={'bin'} />
         Entwurf verwerfen
       </Button>
       <Button {...args} variant={'ghost'}>
-        <TrashIcon />
+        <Icon name={'bin'} />
         Entfernen
       </Button>
     </div>
@@ -296,7 +345,7 @@ export const NarrowGrid: Story = {
         Alle Bedingungen bestätigen
       </Button>
       <Button {...args} variant={'destructive'}>
-        <TrashIcon />
+        <Icon name={'bin'} />
         Vertrag beenden
       </Button>
       <Button {...args} variant={'secondary'}>
