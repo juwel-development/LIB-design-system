@@ -94,3 +94,16 @@ measured 4.36:1 and moves one step up its ramp, from sky-600 to sky-500, with `s
 following to sky-400 so the pair still steps lighter on hover. Like the light status-tone moves
 above, this ships as a palette value change, not a contract change: the role names are the
 contract, and a consumer theme that re-points them is unaffected.
+
+**`Icon` becomes a tone carrier, with the selector the typography surfaces have
+([#126](https://github.com/juwel-development/LIB-design-system/issues/126)).** A status mark - an
+`Icon` named by the consumer and standing alone in a compact row - attests two roles in one position,
+`warning` and `muted`, which is what ADR 0008 asks of a token-selecting prop. ADR 0011's own rule then
+decides the shape: the tones are one family, so the selector exposes all four alongside `muted`, as
+`P` and its peers do, rather than the two evidenced roles alone. The selector is optional and its
+absence means what it means today: the glyph takes the colour of the text it sits in, so a sort
+indicator in a muted header cell is unchanged. An icon is a graphical object, so the positional
+constraint is [SC 1.4.11](https://www.w3.org/TR/WCAG22/#non-text-contrast)'s 3:1 against `surface`,
+which the 4.5:1 text floor above already clears in both themes. The general rule holds: the tone
+changes colour only. The mark's name states the status, its shape tells the two forms apart, and
+nothing is announced when the tone or the drawing changes.

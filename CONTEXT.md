@@ -252,6 +252,15 @@ height and minimum width, so it aligns with them in a row. The one opt-in edge a
 filled button still draws none.
 _Avoid_: Outline button, bordered button, tertiary button, secondary outline
 
+**Status mark**:
+An `Icon` that stands for an item's state where no text has room beside it - a compact list or table
+row. It is the one icon that carries meaning on its own: the consumer gives it an accessible name in
+the reader's language, and with that name the mark becomes a labelled image rather than a hidden
+glyph. The name is the status; a status tone may reinforce it and never replaces it, and the two
+forms of one state are told apart by shape. It adds no tab stop and announces nothing when it changes.
+Without a name an icon is decorative, as every icon has been.
+_Avoid_: Status icon, badge, indicator, state glyph, named icon
+
 **ScrollContainer**:
 A library component that makes overflowing content reachable along chosen axes within space supplied
 by its parent layout. It owns scrolling, while the consumer owns the content and the allocation of space.
