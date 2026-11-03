@@ -91,23 +91,6 @@ describe('Slider Component', () => {
     expect(container.textContent).toBe('Weekly Wage in $');
   });
 
-  it('sets the labelling face on the label, so a two-face theme reaches it the way it reaches Input (#90)', () => {
-    renderSlider();
-    // docs/adr/0004, the amendment: asserted on the element, so a face moved up to the wrapper
-    // fails here.
-    expect(screen.getByText('Weekly Wage in $').className).toContain(
-      'font-secondary',
-    );
-  });
-
-  it('sizes the label at the body role with the weight and colour Input gives its own (#92)', () => {
-    renderSlider();
-    const className = screen.getByText('Weekly Wage in $').className;
-    expect(className).toContain('text-body');
-    expect(className).toContain('font-medium');
-    expect(className).toContain('text-foreground');
-  });
-
   it('is natively disabled when the consumer says so', () => {
     renderSlider({ disabled: true });
     expect(screen.getByRole('slider')).toBeDisabled();

@@ -31,6 +31,12 @@ const meterFill = cva('h-full w-[calc(var(--meter-level)*100%)]', {
 // is declared here so the style object stays typed without an assertion.
 type MeterLevelStyle = CSSProperties & { '--meter-level': number };
 
+const filledShare = (value: number, min: number, max: number): number => {
+  if (value <= min) return 0;
+  if (value >= max) return 1;
+  return (value - min) / (max - min);
+};
+
 export interface IMeterProps extends VariantProps<typeof meterFill> {
   /** The current level. Off-range values clamp the visual fill to the nearest bound;
    *  `aria-valuenow` retains the raw value. */
@@ -107,7 +113,7 @@ export const Meter: FunctionComponent<IMeterProps> = ({
     );
   }
   const style: MeterLevelStyle = {
-    '--meter-level': Math.min(1, Math.max(0, (value - min) / (max - min))),
+    '--meter-level': filledShare(value, min, max),
   };
 
   return (

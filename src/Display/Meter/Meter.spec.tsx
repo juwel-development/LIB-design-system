@@ -133,15 +133,18 @@ describe('Meter', () => {
   });
 
   it.each([
-    [100.0001, '1'],
-    [-1, '0'],
+    [100.0001, 0, 100, '1'],
+    [-1, 0, 100, '0'],
+    [Number.MAX_VALUE, -Number.MAX_VALUE, Number.MAX_VALUE / 2, '1'],
+    [-Number.MAX_VALUE, -Number.MAX_VALUE / 2, Number.MAX_VALUE, '0'],
   ])(
     'clamps the filled share for off-range value %s while preserving the raw announcement',
-    (value, share) => {
+    (value, min, max, share) => {
       render(
         <Meter
           value={value}
-          max={100}
+          min={min}
+          max={max}
           label={'Capacity'}
           valueText={'Consumer wording'}
         />,
