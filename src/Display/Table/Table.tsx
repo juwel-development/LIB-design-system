@@ -31,7 +31,7 @@ const table = cva(
     // The table: full width, collapsed borders so adjacent row rules meet as one line, text flush left.
     '[&>table]:w-full [&>table]:border-collapse [&>table]:text-left',
     // The required caption, rendered first, as the table's label in the tracked grotesk device.
-    '[&_caption]:pb-3 [&_caption]:text-left [&_caption]:font-secondary [&_caption]:text-label [&_caption]:tracking-label [&_caption]:text-muted',
+    '[&_caption]:text-left [&_caption]:font-secondary [&_caption]:text-label [&_caption]:tracking-label [&_caption]:text-muted',
     // Every row carries a hairline top (Row); the first row - the first row group after the caption -
     // is promoted to the heavier `rule` colour, and that heavier line is what reads as a table not a list.
     '[&>table>*:nth-child(2)>tr:first-child]:border-rule',
@@ -69,6 +69,10 @@ const table = cva(
   ].join(' '),
   {
     variants: {
+      captionVisibility: {
+        visible: '[&>table>caption]:pb-3',
+        hidden: '[&>table>caption]:sr-only',
+      },
       // Density publishes the two cell insets the cells read, so head and body move together and the
       // theme's comfortable or compact pair is the only source (docs/adr/0008, Amendments, #115).
       density: {
@@ -78,7 +82,7 @@ const table = cva(
           '[--table-cell-padding-inline:var(--table-cell-inset-inline-compact)] [--table-cell-padding-block:var(--table-cell-inset-block-compact)]',
       },
     },
-    defaultVariants: { density: DEFAULT_DENSITY },
+    defaultVariants: { density: DEFAULT_DENSITY, captionVisibility: 'visible' },
   },
 );
 
@@ -319,6 +323,7 @@ const useHorizontalOverflow = (
 
 const TableRoot: FunctionComponent<ITableRootProps> = ({
   caption,
+  captionVisibility,
   notes,
   columns,
   density,
@@ -350,7 +355,7 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
   if (notes === undefined) {
     return (
       <section
-        className={table({ density })}
+        className={table({ density, captionVisibility })}
         style={style}
         data-columns={columnCount}
         data-density={density ?? DEFAULT_DENSITY}
@@ -367,7 +372,7 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: the name and the `group` role are set together; biome cannot see the pair
     <div
       ref={wrapper}
-      className={table({ density })}
+      className={table({ density, captionVisibility })}
       style={style}
       data-notes={notes}
       data-columns={columnCount}
@@ -494,6 +499,10 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  * @Guarantees — enforced on every render
  * - Renders semantic `table`/`thead`/`tbody`/`tfoot`/`tr`/`th`/`td`, and works with JavaScript off.
  * - `Root` renders its required `caption` as the table's first child, so every table is named.
+ *   `captionVisibility` defaults to `visible`; `hidden` visually clips the caption out of flow,
+ *   including its spacing, while preserving its native accessible name and the scroll wrapper's name.
+ *   Hide it only when visible text directly above the table already names what it lists; the
+ *   enclosing arrangement owns the gap above the table. The consumer still supplies the caption.
  * - The block reads as a table from two rule weights alone: the heavier `rule` above the first row,
  *   `border` hairlines between rows, and no bottom rule on the last. No cell borders, fill, zebra or hover.
  * - `Cell variant="value"` sets tabular figures; `variant="note"` does not. Both at the 15px small role.

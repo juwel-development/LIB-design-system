@@ -46,6 +46,26 @@ const renderSpecTable = (
   );
 
 describe('Table', () => {
+  it('keeps caption required and offers only visible or hidden caption treatments', () => {
+    expectTypeOf<
+      ComponentProps<typeof Table.Root>['caption']
+    >().toEqualTypeOf<string>();
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof Table.Root>['captionVisibility']>
+    >().toEqualTypeOf<'visible' | 'hidden'>();
+    expectTypeOf<
+      Extract<
+        keyof ComponentProps<typeof Table.Root>,
+        | 'ariaLabel'
+        | 'ariaLabelledBy'
+        | 'aria-label'
+        | 'aria-labelledby'
+        | 'className'
+        | 'style'
+      >
+    >().toEqualTypeOf<never>();
+  });
+
   it('renders the semantic table structure a server can render with no JavaScript', () => {
     renderSpecTable();
     const table = screen.getByRole('table');
@@ -67,6 +87,46 @@ describe('Table', () => {
     // <caption> is only valid, and only announced, as the table's first child.
     expect(table.firstElementChild).toBe(caption);
   });
+
+  it.each([undefined, 'supplementary', 'content'] as const)(
+    'keeps the native caption and scroll name when visibility changes in %s notes mode',
+    (notes) => {
+      overflowBy(600, 300);
+      const content = (captionVisibility: 'visible' | 'hidden') => (
+        <Table.Root
+          caption={'Parts'}
+          captionVisibility={captionVisibility}
+          notes={notes}
+        >
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>Bracket</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table.Root>
+      );
+      const { rerender } = render(content('visible'));
+      const table = screen.getByRole('table', { name: 'Parts' });
+      const caption = table.querySelector('caption');
+      const scroller = screen.getByRole(
+        notes === undefined ? 'region' : 'group',
+        { name: 'Parts' },
+      );
+      rerender(content('hidden'));
+      expect(screen.getByRole('table', { name: 'Parts' })).toBe(table);
+      expect(table.firstElementChild).toBe(caption);
+      expect(caption).toHaveTextContent('Parts');
+      expect(caption).not.toHaveAttribute('hidden');
+      expect(caption).not.toHaveAttribute('aria-hidden');
+      expect(table).not.toHaveAttribute('aria-label');
+      expect(table).not.toHaveAttribute('aria-labelledby');
+      expect(scroller).toHaveAccessibleName('Parts');
+      expect(scroller).toHaveAttribute('tabindex', '0');
+      rerender(content('visible'));
+      expect(table).toHaveAccessibleName('Parts');
+      expect(table.firstElementChild).toBe(caption);
+    },
+  );
 
   it('emits the scope it is given, so the header announces the axis it labels', () => {
     renderSpecTable();
