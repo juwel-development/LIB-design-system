@@ -20,6 +20,71 @@ const weightOf = (element: HTMLElement): string =>
   element.style.getPropertyValue('--column-layout-weight');
 
 describe('ColumnLayout', () => {
+  it.each(['--', '--bad name', '--bad;', '--bad)', '24rem', 'var(--cap)'])(
+    'rejects malformed maximum token %s at the public composition boundary',
+    (maxWidth) => {
+      expect(() =>
+        render(
+          <ColumnLayout.Root>
+            <ColumnLayout.Column
+              weight={1}
+              minWidth="--minimum"
+              maxWidth={maxWidth as `--${string}`}
+            >
+              Content
+            </ColumnLayout.Column>
+          </ColumnLayout.Root>,
+        ),
+      ).toThrow(ColumnLayoutConfigurationError);
+    },
+  );
+
+  it('accepts optional maximum token names without opening the prop surface', () => {
+    expectTypeOf<
+      ComponentProps<typeof ColumnLayout.Column>['maxWidth']
+    >().toEqualTypeOf<`--${string}` | undefined>();
+    // @ts-expect-error a maximum is a token name, never a length
+    const length: ComponentProps<typeof ColumnLayout.Column>['maxWidth'] =
+      '24rem';
+    expect(length).toBe('24rem');
+  });
+
+  it('retains focused content when caps, weights and columns change', () => {
+    const example = (maxWidth?: `--${string}`, extra = false) => (
+      <ColumnLayout.Root gap={extra ? 'stack' : 'region'}>
+        <ColumnLayout.Column
+          key="draft"
+          weight={extra ? 2 : 1}
+          minWidth="--minimum"
+          maxWidth={maxWidth}
+        >
+          <input aria-label="Capped draft" defaultValue="Kept" />
+        </ColumnLayout.Column>
+        {extra && (
+          <ColumnLayout.Column
+            key="extra"
+            weight={1}
+            minWidth="--minimum"
+            maxWidth="--other-cap"
+          >
+            Extra
+          </ColumnLayout.Column>
+        )}
+      </ColumnLayout.Root>
+    );
+    const { rerender } = render(example());
+    const input = screen.getByRole('textbox', { name: 'Capped draft' });
+    input.focus();
+    fireEvent.change(input, { target: { value: 'Edited' } });
+    rerender(example('--cap', true));
+    expect(screen.getByRole('textbox', { name: 'Capped draft' })).toBe(input);
+    expect(input).toHaveFocus();
+    expect(input).toHaveValue('Edited');
+    rerender(example('--other-cap'));
+    expect(input).toHaveFocus();
+    expect(input).toHaveValue('Edited');
+  });
+
   it('offers an opt-in fill mode without accepting a height measurement', () => {
     expectTypeOf<
       NonNullable<ComponentProps<typeof ColumnLayout.Root>['fill']>
