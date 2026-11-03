@@ -319,6 +319,13 @@ named plain Buttons and their decorative Icon parts. The allocation accommodates
 on one line; a narrow table scrolls horizontally instead of wrapping those actions. Reuse the
 existing spacing and focus-ring tokens; no RowAct or button-group component is introduced.
 
+The implemented allocation is `{ width: 'icon-action' }`, a max-content track rather than a new
+numeric width token or a minimum-width role. Header content participates in that track too. Outer
+cells reserve at least the focus width plus offset, including where overflowing grid tracks extend
+past the table's border box. Themes must keep the stack gap and twice the cell block inset at least
+that ring extent, and line height at least one em. These constraints preserve the single-line row
+height while keeping neighbouring controls clear of the focused control's ring.
+
 **Stepper — triage decisions for #143.**
 Current selection is independent of the consumer-supplied `done`, `open` or `blocked` status.
 Blocked steps remain focusable and selectable so their panel can explain missing prerequisites;

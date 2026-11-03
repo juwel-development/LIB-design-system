@@ -27,6 +27,15 @@ const table = cva(
     // the table keeps its table formatting context and the figures stay column-aligned. No vertical
     // bound: a long table is bounded by the ScrollContainer a consumer puts around it.
     'overflow-x-auto',
+    // Content-sized actions need room at both scroll edges, including static rows. The outer
+    // inset also protects rings above/below compact cells without changing the row height.
+    '[&[data-icon-actions]]:p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
+    '[&[data-icon-actions]]:m-[calc(-1*(var(--focus-ring-width)+var(--focus-ring-offset)))]',
+    '[&[data-icon-actions]]:scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
+    // Overflowing grid tracks extend beyond the table border box; wrapper padding alone does not
+    // survive at that trailing scroll edge. Keep ring room inside the outer cells as well.
+    '[&[data-icon-actions]>table>*>tr>*:first-child]:pl-[max(var(--table-cell-padding-inline),calc(var(--focus-ring-width)+var(--focus-ring-offset)))]',
+    '[&[data-icon-actions]>table>*>tr>*:last-child]:pr-[max(var(--table-cell-padding-inline),calc(var(--focus-ring-width)+var(--focus-ring-offset)))]',
     // The wrapper takes the one focus ring when it is keyboard-reachable - docs/adr/0002.
     'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
     // The table: full width, collapsed borders so adjacent row rules meet as one line, text flush left.
@@ -200,6 +209,12 @@ type TableColumnWidthRole = 'name' | 'fact' | 'figure' | 'action';
  */
 export type TableColumnAllocation =
   | {
+      /** Fits the widest rendered action group, without sharing surplus width. */
+      readonly width: 'icon-action';
+      readonly weight?: never;
+      readonly minWidth?: never;
+    }
+  | {
       /** The role whose width this column takes exactly, at any available width. */
       readonly width: TableColumnWidthRole;
       readonly weight?: never;
@@ -226,6 +241,7 @@ const widthOf = (role: TableColumnWidthRole): string =>
 // One grid track per definition: a fixed role, floored by max() when it has a minimum so it holds at
 // any width; a share as minmax(floor, weight fr), which is the browser's own floor-and-redistribute.
 const trackOf = (column: TableColumnAllocation, index: number): string => {
+  if (column.width === 'icon-action') return 'max-content';
   const minimum =
     column.minWidth === undefined ? undefined : widthOf(column.minWidth);
   if (column.width !== undefined) {
@@ -254,7 +270,7 @@ export interface ITableRootProps extends VariantProps<typeof table> {
   notes?: 'supplementary' | 'content';
   /** The columns' allocations, in the order the cells of every row are written. Omit it and widths
    *  follow content as before; declare it and every row shares one allocation the rows' content
-   *  cannot move, and the narrow-viewport `notes` behaviour is replaced by residual scrolling. */
+   *  cannot move (except content-sized `icon-action` tracks), and the narrow-viewport `notes` behaviour is replaced by residual scrolling. */
   columns?: readonly TableColumnAllocation[];
   children?: ReactNode;
   testId?: string;
@@ -369,6 +385,9 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
         className={table({ density, captionVisibility, selectionTreatment })}
         style={style}
         data-columns={columnCount}
+        data-icon-actions={
+          columns?.some((column) => column.width === 'icon-action') || undefined
+        }
         data-density={density ?? DEFAULT_DENSITY}
         data-selection-treatment={
           selectionTreatment ?? DEFAULT_SELECTION_TREATMENT
@@ -390,6 +409,9 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
       style={style}
       data-notes={notes}
       data-columns={columnCount}
+      data-icon-actions={
+        columns?.some((column) => column.width === 'icon-action') || undefined
+      }
       data-density={density ?? DEFAULT_DENSITY}
       data-selection-treatment={
         selectionTreatment ?? DEFAULT_SELECTION_TREATMENT
@@ -533,9 +555,12 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *   a fixed column takes its named width role at any available width; proportional columns share
  *   the width the fixed ones leave by their weights, each floored at its named minimum, and while a
  *   minimum holds one column the others share what is left. A fixed width below its minimum is the
- *   minimum. Nothing a row holds moves a boundary: filtering, sorting, paging, long or short content,
+ *   minimum. Except for `icon-action`, nothing a row holds moves a boundary: filtering, sorting, paging, long or short content,
  *   an empty body and its repopulation all leave the allocation as it was. Only the definitions, the
  *   theme's `--table-column-*` values and the available width can. All-fixed columns do not stretch.
+ * - `{ width: 'icon-action' }` fits the widest rendered cell (including its header and insets),
+ *   takes no surplus width, and may shrink after filtering. Compose multiple plain icon buttons
+ *   in `Cluster gap="stack"`; max-content track sizing keeps the group on one line.
  * - With `columns` declared, no narrow-viewport rule applies whatever `notes` says: the note column
  *   stays, rows stay tabular, and what does not fit scrolls in the wrapper as above. Text wraps inside
  *   its allocation, an unbroken run included; the table does not itself truncate, hide or resize content.
@@ -581,7 +606,14 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  * - A cell whose content cannot wrap - a `Button`, an `Input`, an image - sits in a column whose
  *   fixed width or minimum holds it: the `action` role holds one standard control at comfortable
  *   density. The allocation never widens for content, so an under-allocated control overflows its
- *   cell rather than moving its neighbours.
+ *   cell rather than moving its neighbours. The content-sized icon-action allocation is the exception.
+ * - Every icon-only Button needs an action-specific `ariaLabel`; leave its nested Icon decorative.
+ *   Prefer labelled buttons wherever there is room. No tooltip is required. Only plain buttons
+ *   inherit cell typography without increasing a single-line row's height; ghost keeps its padding.
+ * - For icon actions, theme `--space-stack` must be at least the focus width plus offset, so a ring
+ *   cannot reach its neighbour. Twice the cell block inset must hold that same ring extent
+ *   between adjacent rows. Keep line height at least one em. The wrapper
+ *   reserves ring room at scroll boundaries without changing row height.
  * - For truncated text, provide an operable path to the full wording (for example row activation
  *   opening the item). Truncation must not hide essential content or interactive descendants.
  * - A cell's `align` and `variant` are the consumer's as before; an allocation sets neither.

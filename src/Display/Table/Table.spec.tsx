@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { Button, Cluster, Icon } from 'index';
 import type { ComponentProps, ReactNode } from 'react';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -46,6 +47,48 @@ const renderSpecTable = (
   );
 
 describe('Table', () => {
+  it('keeps grouped icon actions named and independent of row activation (#144)', () => {
+    const row$ = new Subject<void>();
+    const action$ = new Subject<void>();
+    const activated = vi.fn();
+    const acted = vi.fn();
+    row$.subscribe(activated);
+    action$.subscribe(acted);
+    render(
+      <Table.Root
+        caption={'Tracks'}
+        columns={[{ weight: 1 }, { width: 'icon-action' }]}
+      >
+        <Table.Body>
+          <Table.Row onClick$={row$}>
+            <Table.Cell>Song</Table.Cell>
+            <Table.Cell>
+              <Cluster gap={'stack'}>
+                <Button
+                  variant={'plain'}
+                  ariaLabel={'Add Song'}
+                  onClick$={action$}
+                >
+                  <Icon.Plus />
+                </Button>
+                <Button variant={'plain'} ariaLabel={'Remove Song'}>
+                  <Icon.Remove />
+                </Button>
+              </Cluster>
+            </Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table.Root>,
+    );
+    const add = screen.getByRole('button', { name: 'Add Song' });
+    fireEvent.click(add.querySelector('path') as SVGPathElement);
+    fireEvent.keyDown(add, { key: 'Enter' });
+    expect(acted).toHaveBeenCalledTimes(1);
+    expect(activated).not.toHaveBeenCalled();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('cell')).toHaveLength(2);
+  });
+
   it('keeps caption required and offers only visible or hidden caption treatments', () => {
     expectTypeOf<
       ComponentProps<typeof Table.Root>['caption']

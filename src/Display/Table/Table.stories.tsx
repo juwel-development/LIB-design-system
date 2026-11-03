@@ -4,7 +4,7 @@ import { Input } from 'Interaction/Input/Input';
 import { Link } from 'Interaction/Link/Link';
 import { ScrollContainer } from 'Layout/ScrollContainer/ScrollContainer';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { H2, Note, P, Stack } from 'index';
+import { Cluster, H2, Note, P, Stack } from 'index';
 import {
   type ComponentProps,
   type CSSProperties,
@@ -1990,4 +1990,199 @@ export const HighlightedStatusText: Story = {
       </Table.Body>
     </Table.Root>
   ),
+};
+
+const IconActionsExample = () => {
+  const [showWidest, setShowWidest] = useState(true);
+  const [lastAction, setLastAction] = useState('None');
+  const filter$ = useMemo(() => new Subject<void>(), []);
+  const action$ = useMemo(() => new Subject<void>(), []);
+  const row$ = useMemo(() => new Subject<void>(), []);
+  const selected$ = useMemo(() => new BehaviorSubject(true), []);
+  useEffect(() => {
+    const filter = filter$.subscribe(() => setShowWidest((value) => !value));
+    const action = action$.subscribe(() => setLastAction('Icon action'));
+    const row = row$.subscribe(() => setLastAction('Row action'));
+    return () => {
+      filter.unsubscribe();
+      action.unsubscribe();
+      row.unsubscribe();
+    };
+  }, [filter$, action$, row$]);
+  const parts = [Icon.Plus, Icon.Up, Icon.Down, Icon.Right, Icon.Remove];
+  return (
+    <Stack>
+      <Button onClick$={filter$}>
+        {showWidest ? 'Hide widest group' : 'Show widest group'}
+      </Button>
+      <Note>Last request: {lastAction}</Note>
+      {(['comfortable', 'compact'] as const).map((density) => (
+        <Stack key={density}>
+          {([0, 1, 2] as const).map((position) => (
+            <Table.Root
+              key={position}
+              caption={`${density} actions at ${position}`}
+              density={density}
+              notes={
+                ([undefined, 'supplementary', 'content'] as const)[position]
+              }
+              selectionTreatment={'highlight'}
+              columns={[0, 1, 2].map((index) =>
+                index === position
+                  ? { width: 'icon-action' }
+                  : { weight: 1, minWidth: 'fact' },
+              )}
+            >
+              <Table.Head>
+                <Table.Row>
+                  {[0, 1, 2].map((index) => (
+                    <Table.HeaderCell key={index} scope={'col'}>
+                      {index === position ? 'Act' : 'Track'}
+                    </Table.HeaderCell>
+                  ))}
+                </Table.Row>
+              </Table.Head>
+              <Table.Body>
+                {[0, 1, 2, ...(showWidest ? [5] : [])].map((count) => (
+                  <Table.Row
+                    key={count}
+                    onClick$={count === 2 ? row$ : undefined}
+                    isSelected$={count === 2 ? selected$ : undefined}
+                  >
+                    {[0, 1, 2].map((index) => (
+                      <Table.Cell key={index}>
+                        {index !== position ? (
+                          `Song ${count}`
+                        ) : count === 0 ? (
+                          'Text'
+                        ) : count === 1 ? (
+                          <Button
+                            variant={'plain'}
+                            ariaLabel={'Add song'}
+                            onClick$={action$}
+                          >
+                            <Icon.Plus />
+                          </Button>
+                        ) : (
+                          <Cluster gap={'stack'}>
+                            {parts.slice(0, count).map((Drawing, part) => (
+                              <Button
+                                key={
+                                  ['add', 'up', 'down', 'right', 'remove'][part]
+                                }
+                                variant={'plain'}
+                                ariaLabel={`${['Add', 'Move up', 'Move down', 'Move right', 'Remove'][part]} song`}
+                                onClick$={action$}
+                              >
+                                <Drawing />
+                              </Button>
+                            ))}
+                          </Cluster>
+                        )}
+                      </Table.Cell>
+                    ))}
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Root>
+          ))}
+        </Stack>
+      ))}
+    </Stack>
+  );
+};
+
+export const IconActions: Story = {
+  render: () => <IconActionsExample />,
+  parameters: {
+    viewport: {
+      options: {
+        dense: {
+          name: 'Dense 1280',
+          styles: { width: '1280px', height: '720px' },
+        },
+      },
+    },
+    docs: {
+      description: {
+        story: `Use columns={[{ weight: 1 }, { width: 'icon-action' }]} for dense actions. The content-sized track includes its header, widest rendered group, semantic spacing and cell insets; it takes no surplus width and can shrink after filtering. Compose multiple actions with Cluster gap="stack" and Button variant="plain". Every icon-only Button requires an action-specific ariaLabel, with a decorative Icon child. Prefer labelled Buttons wherever space permits; no tooltip is required. Ghost keeps its padding and is outside the unchanged-height guarantee.
+
+This example covers both densities and first/interior/last action columns, single and grouped actions, selected interactive rows, and filtering. Resize to 1280px or narrower: declared columns remain tabular in every notes mode and scroll rather than wrapping the action group. Tab to actions and use Enter/Space; the selected row must not activate. Inspect in forced colours too.
+
+Theme constraints: --space-stack must be at least --focus-ring-width + --focus-ring-offset. Twice the cell block inset must hold the same extent between adjacent rows; line-height must be at least one em. These constraints keep a plain glyph's ring clear while preserving an equivalent text row's height. The table reserves outer ring room at scroll boundaries.`,
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const tables = canvas.getAllByRole('table');
+    const widths = tables.map((table, position) => {
+      const rows = within(table).getAllByRole('row');
+      const text = rows[1];
+      if (!text) throw new Error('Missing reference row');
+      for (const row of rows.slice(2)) {
+        expect(
+          Math.abs(
+            row.getBoundingClientRect().height -
+              text.getBoundingClientRect().height,
+          ),
+        ).toBeLessThan(1);
+      }
+      const wrapper = table.parentElement;
+      if (!wrapper) throw new Error('Missing scroll wrapper');
+      const buttons = within(table).getAllByRole('button');
+      for (const button of buttons) {
+        const ring =
+          Number.parseFloat(getComputedStyle(button).outlineWidth) +
+          Number.parseFloat(getComputedStyle(button).outlineOffset);
+        wrapper.scrollLeft = 0;
+        if (position % 3 === 0)
+          expect(
+            button.getBoundingClientRect().left -
+              wrapper.getBoundingClientRect().left,
+          ).toBeGreaterThanOrEqual(ring);
+        wrapper.scrollLeft = wrapper.scrollWidth;
+        if (position % 3 === 2)
+          expect(
+            wrapper.getBoundingClientRect().right -
+              button.getBoundingClientRect().right,
+          ).toBeGreaterThanOrEqual(ring);
+      }
+      wrapper.scrollLeft = 0;
+      const group = within(table)
+        .getAllByRole('row')
+        .at(-1)
+        ?.querySelectorAll('button');
+      if (group?.length !== 5) throw new Error('Missing five-action group');
+      const first = group[0];
+      for (const button of group)
+        expect(button.getBoundingClientRect().top).toBe(
+          first?.getBoundingClientRect().top,
+        );
+      const cells = within(text).getAllByRole('cell');
+      return cells[position % 3]?.getBoundingClientRect().width ?? 0;
+    });
+    const action = canvas.getAllByRole('button', { name: 'Add song' })[1];
+    if (!action) throw new Error('Missing grouped action');
+    action.focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(
+      canvas.getByText('Last request: Icon action'),
+    ).toBeInTheDocument();
+    await userEvent.keyboard(' ');
+    await expect(
+      canvas.getByText('Last request: Icon action'),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Hide widest group' }),
+    );
+    tables.forEach((table, position) => {
+      const row = within(table).getAllByRole('row')[1];
+      if (!row) throw new Error('Missing reference row');
+      const width =
+        within(row).getAllByRole('cell')[position % 3]?.getBoundingClientRect()
+          .width ?? 0;
+      expect(width).toBeLessThan(widths[position] ?? 0);
+    });
+  },
 };

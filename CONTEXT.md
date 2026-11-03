@@ -313,7 +313,9 @@ _Avoid_: Content width, automatic sizing
 **Icon-action column**:
 A table column that fits the widest currently rendered group of icon-only plain actions on one
 line, including their spacing and focus-ring room. Its width can change when the visible action
-groups change, and it takes no proportional share of remaining width.
+groups change, and it takes no proportional share of remaining width. Declared as
+`width: 'icon-action'`, it holds a `Cluster gap="stack"` of named plain Buttons with decorative
+Icon parts; its header and cell insets also contribute to the content width.
 _Avoid_: Single-icon column, fixed action width
 
 **Table density**:

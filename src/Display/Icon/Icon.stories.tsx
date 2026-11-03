@@ -11,6 +11,10 @@ const meta: Meta<typeof Icon> = {
       description: {
         component: `Draws one of seven shapes, each named for what is drawn and never for a state or an action: \`sort\` (up and down arrows), \`sort-ascending\` (up), \`sort-descending\` (down), \`bin\`, \`bubble-exclamation\` (a speech bubble holding an exclamation mark) \`bubble-tick\` (the same bubble holding a tick), and \`dot\` (a small filled circle). The consumer picks the drawing that matches what it shows and owns what it means. Every drawing is sized in \`em\`, drawn in the colour of the text it sits in (filled for the dot, outlined for the others), and out of the tab order.
 
+### Action drawings
+
+Use \`Icon.Plus\`, \`Icon.Up\`, \`Icon.Down\`, \`Icon.Right\` and \`Icon.Remove\` without a name prop. They share the optional color, label and testId contract below. Plus and Remove are paired signs; Remove is a minus, distinct from bin. In dense tables compose decorative parts inside plain Buttons, each with a meaningful action-specific ariaLabel, and use the content-sized icon-action column (Display/Table → Icon Actions). Prefer labelled Buttons where space permits. A tooltip is not required.
+
 ### Decorative by default
 
 Without a \`label\` the icon is hidden from assistive technology, and the control or text beside it carries the meaning - a \`Button\` label or \`ariaLabel\`, a header cell's \`ariaSort\`. **An icon inside a named control stays unlabelled**: the quiet delete is a \`ghost\` \`Button\` with an \`ariaLabel\` and an unlabelled \`bin\` (see Interaction/Button), and a labelled icon there would be a second image saying the name again. The composed sortable header is shown under Display/Table.
@@ -295,5 +299,26 @@ export const BesideText: Story = {
         <Icon name={'bubble-exclamation'} /> <Icon name={'bubble-tick'} />
       </p>
     </div>
+  ),
+};
+
+/** Compound drawings retain the same label, tone and em sizing contract as the legacy selector. */
+export const ActionDrawings: Story = {
+  render: () => (
+    <Stack>
+      <Note>
+        Plus and Remove are paired signs; Remove is distinct from the bin.
+      </Note>
+      {(['Plus', 'Up', 'Down', 'Right', 'Remove'] as const).map((name) => {
+        const Drawing = Icon[name];
+        return (
+          <div key={name}>
+            {name}: <Drawing label={name} /> <Drawing color={'muted'} />{' '}
+            <Drawing color={'success'} /> <Drawing color={'warning'} />{' '}
+            <Drawing color={'error'} /> <Drawing color={'info'} />
+          </div>
+        );
+      })}
+    </Stack>
   ),
 };

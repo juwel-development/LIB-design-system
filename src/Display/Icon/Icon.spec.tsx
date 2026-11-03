@@ -18,6 +18,50 @@ const drawingOf = (testId: string): string =>
     .join(' ');
 
 describe('Icon', () => {
+  it.each(['Plus', 'Up', 'Down', 'Right', 'Remove'] as const)(
+    'exposes %s as a named or decorative drawing without a selector (#144)',
+    (part) => {
+      const Drawing = Icon[part];
+      const { rerender } = render(
+        <Drawing label={'Action mark'} color={'warning'} />,
+      );
+      const mark = screen.getByRole('img', { name: 'Action mark' });
+      expect(mark).toHaveAttribute('width', '1em');
+      expect(mark).toHaveAttribute('focusable', 'false');
+      for (const path of mark.querySelectorAll('path')) {
+        expect(path).toHaveAttribute('stroke', 'currentColor');
+        expect(path).toHaveAttribute('fill', 'none');
+      }
+      rerender(<Drawing testId={'decorative'} />);
+      expect(screen.queryByRole('img')).not.toBeInTheDocument();
+      expect(screen.getByTestId('decorative')).toHaveAttribute(
+        'aria-hidden',
+        'true',
+      );
+    },
+  );
+  it('pairs plus with minus and preserves the existing directional geometry (#144)', () => {
+    render(
+      <>
+        <Icon.Plus testId={'plus'} />
+        <Icon.Remove testId={'minus'} />
+        <Icon.Up testId={'up'} />
+        <Icon.Down testId={'down'} />
+        <Icon.Right testId={'right'} />
+        <Icon name={'sort-ascending'} testId={'ascending'} />
+        <Icon name={'sort-descending'} testId={'descending'} />
+      </>,
+    );
+    expect(drawingOf('plus')).toContain(drawingOf('minus'));
+    expect(drawingOf('plus')).not.toBe(drawingOf('minus'));
+    expect(drawingOf('up')).toBe(drawingOf('ascending'));
+    expect(drawingOf('down')).toBe(drawingOf('descending'));
+    expect(
+      new Set(['plus', 'minus', 'up', 'down', 'right'].map(drawingOf)).size,
+    ).toBe(5);
+    expectTypeOf<ComponentProps<typeof Icon.Plus>>().not.toHaveProperty('name');
+  });
+
   it.each([undefined, ''])(
     'keeps a dot with label %s decorative, so adjacent wording carries its meaning (#134)',
     (label) => {

@@ -30,6 +30,9 @@ const bubble =
 // Each name selects a drawing and nothing else: drawings are told apart by their shapes, not by
 // colour or size, so they survive forced-colors mode and a monochrome print.
 const drawings = {
+  plus: ['M3 8h10', 'M8 3v10'],
+  right: ['M3 8h10', 'M9 4l4 4-4 4'],
+  remove: ['M3 8h10'],
   dot: ['M8 5a3 3 0 1 0 0 6a3 3 0 1 0 0-6z'],
   sort: [
     'M5.5 13V3',
@@ -50,15 +53,22 @@ const drawings = {
   'bubble-tick': [bubble, 'M5.75 6.75l1.5 1.5 3-3.5'],
 } as const;
 
-export interface IIconProps extends VariantProps<typeof icon> {
-  /** Which drawing. A name selects a shape, never a state or a behaviour. */
-  name: keyof typeof drawings;
+export interface IIconPartProps extends VariantProps<typeof icon> {
   /**
    * The accessible name that makes the icon a status mark (CONTEXT.md). Give it only where the icon
    * stands alone for a state; absent or empty, the icon stays hidden from assistive technology.
    */
   label?: string;
   testId?: string;
+}
+
+export interface IIconProps extends IIconPartProps {
+  /** Legacy selector, retained alongside the compound drawing components. */
+  name: Exclude<keyof typeof drawings, 'plus' | 'right' | 'remove'>;
+}
+
+interface IIconDrawingProps extends IIconPartProps {
+  name: keyof typeof drawings;
 }
 
 /**
@@ -84,7 +94,7 @@ export interface IIconProps extends VariantProps<typeof icon> {
  *   is the other form of a dot, the dot must not be the only carrier: give the state a name or
  *   a second cue, such as stronger text weight. A standalone dot still requires a label.
  */
-export const Icon: FunctionComponent<IIconProps> = ({
+const IconDrawing: FunctionComponent<IIconDrawingProps> = ({
   name,
   label,
   color,
@@ -115,3 +125,29 @@ export const Icon: FunctionComponent<IIconProps> = ({
     ))}
   </svg>
 );
+
+// All parts share the same SVG renderer and recipe; only their drawing is fixed.
+const partOf =
+  (name: keyof typeof drawings): FunctionComponent<IIconPartProps> =>
+  ({ label, color, testId }) => (
+    <IconDrawing name={name} label={label} color={color} testId={testId} />
+  );
+
+const LegacyIcon: FunctionComponent<IIconProps> = ({
+  name,
+  label,
+  color,
+  testId,
+}) => <IconDrawing name={name} label={label} color={color} testId={testId} />;
+
+/** Legacy named drawings and five compound action drawings, all sharing em sizing, currentColor,
+ * optional status tones, label and testId. Parts take no name. Leave parts decorative inside
+ * Buttons and supply the action-specific ariaLabel on the Button itself. Remove is a minus, not bin.
+ */
+export const Icon = Object.assign(LegacyIcon, {
+  Plus: partOf('plus'),
+  Up: partOf('sort-ascending'),
+  Down: partOf('sort-descending'),
+  Right: partOf('right'),
+  Remove: partOf('remove'),
+});
