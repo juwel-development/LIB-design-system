@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Button,
+  ColumnLayout,
   H2,
   Header,
   P,
@@ -8,8 +9,12 @@ import {
   ScrollContainer,
   Shell,
   Stack,
+  Stepper,
+  Table,
 } from 'index';
-import { expect, waitFor, within } from 'storybook/test';
+import { type CSSProperties, useState } from 'react';
+import { BehaviorSubject } from 'rxjs';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 const meta: Meta<typeof Pane.Root> = {
   title: 'Layout/Pane',
@@ -25,7 +30,7 @@ The root paints the Box surface, foreground, border and inset roles. An optional
 
 Body defaults to scrollOwner="body". Set scrollOwner="child" for one child that accepts an allocated height and owns scrolling: Body then contributes no overflow, group, tab stop or content wrapper. The child supplies its own accessible name and focus treatment; Body's ariaLabel is unused in that mode. No child identity is inspected. Do not put a bounded Table inside the default scrolling body: use child ownership so the Table's own wrapper scrolls both axes and retains its header.
 
-Pending integrations: bounded Table #142 is not available, so its example and sticky-header verification remain outstanding. The ColumnLayout FillingPanes and StackedFillingColumns stories demonstrate two panes sharing an allocated height and releasing it when stacked (#145). ChildOwnedScroll demonstrates the existing ScrollContainer contract only; it does not stand in for the pending Table acceptance example. Release publication is deferred to the human release workflow.`,
+BoundedTable demonstrates the Table as the sole scroll owner with pinned Pane head/foot and Table header. SteppedBoundedTable passes the same allocation through a Stepper panel inside filled, capped columns. The ColumnLayout FillingPanes and StackedFillingColumns stories demonstrate two panes sharing an allocated height and releasing it when stacked (#145). ChildOwnedScroll demonstrates delegation to ScrollContainer for ordinary content. Release publication is deferred to the human release workflow.`,
       },
     },
   },
@@ -218,5 +223,202 @@ export const DynamicContent: Story = {
     await expect(
       canvasElement.ownerDocument.scrollingElement?.scrollWidth,
     ).toBe(window.innerWidth);
+  },
+};
+
+const RosterPane = () => (
+  <Pane.Root name="Roster pane">
+    <Pane.Head>
+      <H2>Available artists</H2>
+    </Pane.Head>
+    <Pane.Body
+      scrollOwner="child"
+      ariaLabel="Unused body name"
+      testId="table-body"
+    >
+      <Table.Root
+        bounded
+        caption="Artist roster"
+        columns={[{ weight: 2 }, { weight: 1 }]}
+      >
+        <Table.Head>
+          <Table.Row>
+            <Table.HeaderCell scope="col">Artist</Table.HeaderCell>
+            <Table.HeaderCell scope="col">Action</Table.HeaderCell>
+          </Table.Row>
+        </Table.Head>
+        <Table.Body>
+          {entries.map((entry) => (
+            <Table.Row key={entry}>
+              <Table.HeaderCell scope="row">Artist {entry}</Table.HeaderCell>
+              <Table.Cell>
+                <Button variant="plain">Open artist {entry}</Button>
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>
+    </Pane.Body>
+    <Pane.Foot>
+      <Button>Confirm roster</Button>
+    </Pane.Foot>
+  </Pane.Root>
+);
+
+const checkBoundedTable = async ({
+  canvasElement,
+}: {
+  canvasElement: HTMLElement;
+}) => {
+  const canvas = within(canvasElement);
+  const wrapper = await canvas.findByRole('group', { name: 'Artist roster' });
+  const head = canvas.getByRole('heading', { name: 'Available artists' });
+  const foot = canvas.getByRole('button', { name: 'Confirm roster' });
+  const header = canvas.getByRole('columnheader', { name: 'Artist' });
+  const headTop = head.getBoundingClientRect().top;
+  const footTop = foot.getBoundingClientRect().top;
+  const last = canvas.getByRole('button', { name: 'Open artist 60' });
+  last.focus();
+  await waitFor(() => expect(wrapper.scrollTop).toBeGreaterThan(0));
+  await userEvent.tab({ shift: true });
+  await userEvent.tab();
+  await expect(last).toHaveFocus();
+  await expect(last.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    header.getBoundingClientRect().bottom,
+  );
+  await expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+    wrapper.getBoundingClientRect().bottom,
+  );
+  const pinnedTop =
+    wrapper.getBoundingClientRect().top +
+    wrapper.clientTop +
+    Number.parseFloat(getComputedStyle(wrapper).paddingTop);
+  await expect(header.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    pinnedTop,
+  );
+  await expect(header.getBoundingClientRect().top).toBeLessThanOrEqual(
+    pinnedTop + 1,
+  );
+  await expect(head.getBoundingClientRect().top).toBe(headTop);
+  await expect(foot.getBoundingClientRect().top).toBe(footTop);
+  await expect(foot.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+    window.innerHeight,
+  );
+  await expect(
+    canvas.queryByRole('group', { name: 'Unused body name' }),
+  ).toBeNull();
+  await expect(
+    canvas.queryByRole('group', { name: 'Workspace body' }),
+  ).toBeNull();
+  await expect(canvas.getByTestId('table-body')).not.toHaveAttribute(
+    'tabindex',
+  );
+  await expect(canvasElement.ownerDocument.scrollingElement?.scrollTop).toBe(0);
+  await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBe(
+    window.innerWidth,
+  );
+  const ancestors = [];
+  for (
+    let element = wrapper.parentElement;
+    element;
+    element = element.parentElement
+  )
+    ancestors.push(element);
+  for (const element of ancestors)
+    await expect(element.scrollHeight).toBeLessThanOrEqual(
+      element.clientHeight + 1,
+    );
+};
+
+export const BoundedTable: Story = {
+  render: () => (
+    <Shell bar={bar} ariaLabel="Workspace body">
+      <RosterPane />
+    </Shell>
+  ),
+  play: checkBoundedTable,
+};
+
+const SteppedRoster = () => {
+  const [active$] = useState(() => new BehaviorSubject('artists'));
+  return (
+    <div
+      style={
+        {
+          '--roster-minimum': '24rem',
+          '--roster-maximum': '60rem',
+          '--summary-minimum': '12rem',
+          '--summary-maximum': '20rem',
+          height: '100dvh',
+        } as CSSProperties
+      }
+    >
+      <Shell bar={bar} ariaLabel="Workspace body">
+        <ColumnLayout.Root fill gap="stack">
+          <ColumnLayout.Column
+            weight={3}
+            minWidth="--roster-minimum"
+            maxWidth="--roster-maximum"
+            testId="roster-column"
+          >
+            <Stepper.Root
+              label="Roster planning"
+              active$={active$}
+              onSelect$={active$}
+            >
+              <Stepper.List>
+                <Stepper.Step
+                  value="artists"
+                  label="Artists"
+                  status="open"
+                  valueText="60 available"
+                />
+                <Stepper.Step
+                  value="review"
+                  label="Review"
+                  status="blocked"
+                  valueText="Confirm artists first"
+                />
+              </Stepper.List>
+              <Stepper.Panel value="artists">
+                <RosterPane />
+              </Stepper.Panel>
+              <Stepper.Panel value="review">
+                <P>Choose the artists before confirming this plan.</P>
+              </Stepper.Panel>
+            </Stepper.Root>
+          </ColumnLayout.Column>
+          <ColumnLayout.Column
+            weight={1}
+            minWidth="--summary-minimum"
+            maxWidth="--summary-maximum"
+          >
+            <Pane.Root name="Summary">
+              <Pane.Body ariaLabel="Plan summary">
+                <P>Review the available artists and confirm your roster.</P>
+              </Pane.Body>
+            </Pane.Root>
+          </ColumnLayout.Column>
+        </ColumnLayout.Root>
+      </Shell>
+    </div>
+  );
+};
+
+export const SteppedBoundedTable: Story = {
+  render: () => <SteppedRoster />,
+  play: async (context) => {
+    await checkBoundedTable(context);
+    const canvas = within(context.canvasElement);
+    await expect(
+      canvas.getByTestId('roster-column').getBoundingClientRect().width,
+    ).toBeLessThanOrEqual(960);
+    await userEvent.click(
+      canvas.getByRole('tab', { name: 'Review Confirm artists first' }),
+    );
+    await expect(canvas.queryByRole('table')).toBeNull();
+    await userEvent.keyboard('{ArrowLeft}');
+    await canvas.findByRole('table', { name: 'Artist roster' });
+    await checkBoundedTable(context);
   },
 };

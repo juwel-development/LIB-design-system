@@ -153,6 +153,7 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  *   At smaller sizes use an unsized stacked arrangement in a scrolling page or Shell body.
  * - In child mode supply one child that accepts its parent's allocated height and handles its
  *   own overflow and focus ring. Intermediate wrappers must preserve that allocation.
- * - Bounded Table integration requires #142; full-height ColumnLayout integration requires #145.
+ * - Filled ColumnLayout columns and active Stepper panels can pass the bound to Root. Keep
+ *   those holders and Pane directly composed so no intermediate wrapper loses the allocation.
  */
 export const Pane = { Root, Head, Body, Foot } as const;
