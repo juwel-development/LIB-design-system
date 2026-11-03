@@ -104,7 +104,8 @@ describe('renderTokens typography contract', () => {
   it('keeps the @theme family roles at exactly primary and secondary, so the theme contract a consumer re-points is unchanged (#120)', () => {
     // The three content-side roles are deliberately not theme variables: a value at :root would
     // resolve var(--font-primary) there and strand a theme scoped to a wrapper (docs/adr/0004).
-    const families = themeBlock().match(/--font-[a-z-]+:[^;]+;/g) ?? [];
+    const families =
+      themeBlock().match(/--font-(?!weight-)[a-z-]+:[^;]+;/g) ?? [];
     expect(families).toEqual([
       '--font-primary: inherit;',
       '--font-secondary: inherit;',
@@ -751,4 +752,13 @@ describe('renderTokens table density contract', () => {
     expect(themeBlock).not.toContain('--table-cell-inset');
     expect(themeInline).not.toContain('--table-cell-inset');
   });
+});
+
+describe('strong weight token contract', () => {
+  it.each([renderTokens, renderLightTokens, renderDarkTokens])(
+    'declares the theme-owned strong weight in every stylesheet form',
+    (render) => {
+      expect(render()).toContain('--font-weight-strong: 700;');
+    },
+  );
 });

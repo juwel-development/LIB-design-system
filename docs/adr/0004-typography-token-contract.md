@@ -488,3 +488,21 @@ tokens take role names rather than reusing `sans` and `serif`.
 
 **No component consumes it in this ticket.** `Button`, `Input` and `TextArea` are unchanged; this is
 the foundation the six blocked proposals are written against, laid before they are built.
+
+
+## Amended: visual strong weight for body copy and annotations (#135)
+
+`--font-weight-strong: 700` names the theme's strong weight, independently of family, size and
+leading. `P` and `Note` expose `emphasis="regular" | "strong"`; strong reads that token, while
+regular (the default) emits no weight and preserves the existing inherited value. This deliberately
+does not reset inherited weight to 400. Themes may re-point the token at any scope, using a valid
+CSS font weight supported by their chosen face that is distinguishable from surrounding regular text.
+
+The option is visual only: both components remain paragraphs, with no `strong` element, importance
+semantics or announcement. The consumer decides what deserves emphasis and communicates state in
+words or an accessible name as well; weight alone must never carry unread state. A whole-text option
+meets that need without introducing a new inline component or widening the heading ladder.
+
+Emphasis changes only weight. Size, face and line height remain those of the existing role, so
+single-line regular and strong rows retain the same line box. A different weight may change glyph
+widths and therefore wrapping; equal total height for arbitrarily wrapped content is not promised.

@@ -10,6 +10,12 @@ const meta: Meta<typeof Note> = {
   },
   tags: ['autodocs'],
   argTypes: {
+    emphasis: {
+      control: { type: 'radio' },
+      options: ['regular', 'strong'],
+      description:
+        'Visual weight only: strong reads --font-weight-strong (default 700), preserving family, size and line height. Regular or omitted inherits the existing weight. Adds no importance semantics or announcement; state must also be communicated in words or an accessible name.',
+    },
     truncate: {
       control: 'boolean',
       description:
@@ -79,5 +85,29 @@ export const Truncated: Story = {
     <div style={{ width: '18rem' }}>
       <Note {...args} />
     </div>
+  ),
+};
+
+export const Strong: Story = {
+  args: {
+    emphasis: 'strong',
+    children: 'Unread: Alex Morgan',
+  },
+};
+
+export const ReadAndUnread: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The consumer chooses emphasis and supplies the state wording. Weight changes alone; single-line text keeps the same line height. Wider glyphs can change wrapping in a constrained width.',
+      },
+    },
+  },
+  render: () => (
+    <>
+      <Note emphasis="regular">Read: Alex Morgan</Note>
+      <Note emphasis="strong">Unread: Alex Morgan</Note>
+    </>
   ),
 };

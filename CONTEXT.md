@@ -106,7 +106,7 @@ _Avoid_: Label, kicker, overline, Caption, small-caps
 A short annotation at the *small* type role in the secondary family — a routing line above a submit
 button, a privacy line at the point of submission, a line beside a control. It is not reading
 matter: it takes no measure and sits in no reading column, which is what separates it from
-`Prose.Tail` at the same size, and it carries neither the tracking nor the weight that make an
+`Prose.Tail` at the same size, and by default it carries neither the tracking nor the weight that make an
 Eyebrow. The device has three carriers and the primitive is only one: a form's own message belongs
 to `Form`'s note and a table's to the note cell, each painted by the component that owns it, so the
 primitive is for an annotation no other component owns.

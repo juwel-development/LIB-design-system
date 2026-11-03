@@ -10,6 +10,22 @@ const statusTones = ['success', 'warning', 'error', 'info'] as const;
 const everyColour = [undefined, 'foreground', 'muted', ...statusTones] as const;
 
 describe('Note', () => {
+  it('offers closed visual emphasis while preserving paragraph semantics and caller wording', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof Note>['emphasis']>
+    >().toEqualTypeOf<'regular' | 'strong'>();
+    render(
+      <Note emphasis="strong" color="muted" truncate>
+        Unread: Alex Morgan
+      </Note>,
+    );
+    const paragraph = screen.getByRole('paragraph');
+    expect(paragraph).toHaveTextContent('Unread: Alex Morgan');
+    expect(paragraph.childElementCount).toBe(0);
+    expect(paragraph).not.toHaveAttribute('role');
+    expect(paragraph).not.toHaveAttribute('aria-live');
+  });
+
   it('offers opt-in truncation without removing the full text from the paragraph', () => {
     expectTypeOf<
       NonNullable<ComponentProps<typeof Note>['truncate']>

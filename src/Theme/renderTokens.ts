@@ -96,6 +96,9 @@ const TYPOGRAPHY = `@theme {
   --font-primary: inherit;
   --font-secondary: inherit;
 
+  /* Visual emphasis for body copy and annotations (#135), independent of family and size. */
+  --font-weight-strong: 700;
+
   /* Type roles, not a scale: one role per job, so a component asks for what its text is, never a rung.
      display > title > subtitle are the three heading steps H1-H3 bind to; H4-H6 share body and split
      by weight, so there is no fourth role. display is the hero and must out-scale every subpage head. */

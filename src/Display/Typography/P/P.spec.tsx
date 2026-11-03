@@ -6,6 +6,22 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 const statusTones = ['success', 'warning', 'error', 'info'] as const;
 
 describe('P', () => {
+  it('offers closed visual emphasis while preserving paragraph semantics and caller wording', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof P>['emphasis']>
+    >().toEqualTypeOf<'regular' | 'strong'>();
+    render(
+      <P emphasis="strong" color="muted" truncate>
+        Unread: Alex Morgan
+      </P>,
+    );
+    const paragraph = screen.getByRole('paragraph');
+    expect(paragraph).toHaveTextContent('Unread: Alex Morgan');
+    expect(paragraph.childElementCount).toBe(0);
+    expect(paragraph).not.toHaveAttribute('role');
+    expect(paragraph).not.toHaveAttribute('aria-live');
+  });
+
   it('offers opt-in truncation without removing the full text from the paragraph', () => {
     expectTypeOf<
       NonNullable<ComponentProps<typeof P>['truncate']>
