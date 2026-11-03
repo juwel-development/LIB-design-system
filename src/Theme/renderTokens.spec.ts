@@ -143,11 +143,17 @@ describe('renderTokens typography contract', () => {
 
   it('declares the type roles, leading and tracking so the utilities exist', () => {
     const theme = themeBlock();
-    expect(theme).toContain('--text-display: clamp(3rem, 7vw, 6rem);');
+    expect(theme).toContain(
+      '--text-display: clamp(3rem, 3rem + 3.125vw, 6rem);',
+    );
     expect(theme).toContain('--leading-display: 1.05;');
-    expect(theme).toContain('--text-title: clamp(2.25rem, 5vw, 4.25rem);');
+    expect(theme).toContain(
+      '--text-title: clamp(2.25rem, 2.25rem + 2.25vw, 4.25rem);',
+    );
     expect(theme).toContain('--leading-title: 1.1;');
-    expect(theme).toContain('--text-subtitle: clamp(1.5rem, 3vw, 2.25rem);');
+    expect(theme).toContain(
+      '--text-subtitle: clamp(1.5rem, 1.5rem + 1vw, 2.25rem);',
+    );
     expect(theme).toContain('--leading-subtitle: 1.2;');
     expect(theme).toContain('--text-lede: 1.25rem;');
     expect(theme).toContain('--leading-lede: 1.4;');
@@ -583,7 +589,9 @@ describe('single-theme token variants (issue #62)', () => {
     for (const css of [renderLightTokens(), renderDarkTokens()]) {
       expect(css).toContain('--radius-control: 0.5rem;');
       expect(css).toContain('--motion-duration-color: 150ms;');
-      expect(css).toContain('--text-display: clamp(3rem, 7vw, 6rem);');
+      expect(css).toContain(
+        '--text-display: clamp(3rem, 3rem + 3.125vw, 6rem);',
+      );
     }
   });
 });
@@ -629,7 +637,7 @@ describe('renderTokens dialog contract', () => {
     // top heading of an independent task, not a level-three subsection (docs/adr/0004, Amendments).
     const themeBlock = renderTokens().match(/@theme \{([^}]*)\}/)?.[1] ?? '';
     expect(themeBlock).toContain(
-      '--text-dialog-title: clamp(1.5rem, 3vw, 2.25rem);',
+      '--text-dialog-title: clamp(1.5rem, 1.5rem + 1vw, 2.25rem);',
     );
     expect(themeBlock).toContain('--leading-dialog-title: 1.2;');
     const themeInline =
