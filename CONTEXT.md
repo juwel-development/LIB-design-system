@@ -207,6 +207,12 @@ A bounded content group with a semantic surface, border and inner padding. The c
 content, headings and internal arrangement.
 _Avoid_: Panel, card, generic styling container
 
+**Callout**:
+A block marked along its leading edge with a status tone, without a surrounding box. The consumer
+owns its content, arrangement, controls and the words or named icon that state the status; the mark
+adds neither focus nor announcement.
+_Avoid_: Alert, toast, banner, toned Box
+
 **Stack**:
 A vertical arrangement: children in a column, separated by one named space role and optionally bounded
 by the reading measure. One axis and one gap. It takes no outer space, so whatever holds it owns the

@@ -218,6 +218,13 @@ const DEFINITION_SPACING = `:root {
   initial-value: 1px;
 }`;
 
+/* Callout's leading mark and separation from its content (#131). The mark stays visible at a
+   positive CSS length; its inset accepts a nonnegative CSS length and follows inherited type. */
+const CALLOUT_MARK = `:root {
+  --callout-mark-width: 0.25rem;
+  --space-callout-inset: 1em;
+}`;
+
 /* Box's inner padding (#117): one role on all four sides, distinct from a sibling gap, a region's
    air or a page band, so a brand tunes every Box at once and no Box gains a padding prop (ADR 0008,
    the token-role test). In em like --space-collection-item, so it tracks the inherited type.
@@ -435,6 +442,9 @@ ${DEFINITION_SPACING}
 
 /* Box's inner padding, measured against inherited type, beside Collection's. */
 ${BOX_INSET}
+
+/* Callout marks an edge without enclosing or arranging its content. */
+${CALLOUT_MARK}
 
 /* Table's cell insets, one pair per density, beside Box's. */
 ${TABLE_CELL_INSET}

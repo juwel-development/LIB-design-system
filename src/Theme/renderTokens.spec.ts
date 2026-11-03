@@ -343,6 +343,17 @@ describe('renderTokens spacing contract', () => {
     }
   });
 
+  it('declares re-pointable callout mark and inset roles in every stylesheet (#131)', () => {
+    for (const css of [
+      renderTokens(),
+      renderLightTokens(),
+      renderDarkTokens(),
+    ]) {
+      expect(css).toMatch(/--callout-mark-width:\s*0.25rem;/);
+      expect(css).toMatch(/--space-callout-inset:\s*1em;/);
+    }
+  });
+
   it('declares the box inset in every stylesheet as an em role a consumer can re-point (#117)', () => {
     // Box reads its one inner-padding role from here and offers no padding prop: the theme chooses.
     for (const css of [
