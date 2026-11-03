@@ -1,4 +1,4 @@
-import { cva } from 'class-variance-authority';
+import { cva, type VariantProps } from 'class-variance-authority';
 import {
   createContext,
   type FocusEvent,
@@ -11,6 +11,16 @@ import {
 import type { Subject } from 'rxjs';
 import { TabsCompositionError } from './TabsCompositionError';
 
+const tabsRoot = cva('', {
+  variants: {
+    fill: {
+      true: 'flex h-full min-h-0 min-w-0 flex-col',
+      false: '',
+    },
+  },
+  defaultVariants: { fill: false },
+});
+
 // The row is one scrolling line of controls, never a second row. The ring room is written from the
 // two focus-ring tokens so it cannot drift from the ring it exists for: padding holds the scroll
 // clip off the outline, the negative margin hands the room back to the page, and scroll-padding
@@ -22,6 +32,7 @@ const tabsList = cva(
     'm-[calc(-1*(var(--focus-ring-width)+var(--focus-ring-offset)))]',
     'scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
   ].join(' '),
+  { variants: { fill: { true: 'shrink-0', false: '' } } },
 );
 
 // Navigation typography - the tracked grotesk label, muted at rest, foreground when current -
@@ -45,6 +56,7 @@ const tabsTab = cva(
 // the ring follows focusability, not control-ness.
 const tabsPanel = cva(
   'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
+  { variants: { fill: { true: 'min-h-0 min-w-0 flex-auto', false: '' } } },
 );
 
 type TabsContract = {
@@ -52,6 +64,7 @@ type TabsContract = {
   onSelect$: Subject<string>;
   label: string;
   baseId: string;
+  fill: boolean;
 };
 
 const TabsContext = createContext<TabsContract | undefined>(undefined);
@@ -99,7 +112,11 @@ const neighbourTab = (
   return tabs[(index + step + tabs.length) % tabs.length];
 };
 
-export interface ITabsRootProps {
+export interface ITabsRootProps extends VariantProps<typeof tabsRoot> {
+  /** Fill the allocated parent height, keeping List at content height and giving Panel the rest.
+   * In an unsized parent, panels retain content height. Compose List and Panels directly in Root;
+   * an unsized spacing wrapper does not pass the bound. No spacing is added. */
+  fill?: VariantProps<typeof tabsRoot>['fill'];
   /** The key of the active tab. Must name a declared tab/panel pair; the consumer owns it. */
   active: string;
   /** Emits the selected key on click and on arrow navigation. Tabs never selects on its own. */
@@ -141,24 +158,29 @@ const TabsRoot: FunctionComponent<ITabsRootProps> = ({
   active,
   onSelect$,
   label,
+  fill,
   children,
   testId,
 }) => {
   const baseId = useId();
   return (
-    <TabsContext.Provider value={{ active, onSelect$, label, baseId }}>
-      <div data-testid={testId}>{children}</div>
+    <TabsContext.Provider
+      value={{ active, onSelect$, label, baseId, fill: fill === true }}
+    >
+      <div className={tabsRoot({ fill })} data-testid={testId}>
+        {children}
+      </div>
     </TabsContext.Provider>
   );
 };
 
 const TabsList: FunctionComponent<ITabsListProps> = ({ children, testId }) => {
-  const { label } = useTabsContract('List');
+  const { label, fill } = useTabsContract('List');
   return (
     <div
       role="tablist"
       aria-label={label}
-      className={tabsList()}
+      className={tabsList({ fill })}
       data-testid={testId}
     >
       {children}
@@ -221,7 +243,7 @@ const TabsPanel: FunctionComponent<ITabsPanelProps> = ({
   children,
   testId,
 }) => {
-  const { active, baseId } = useTabsContract('Panel');
+  const { active, baseId, fill } = useTabsContract('Panel');
   const isActive = active === value;
   return (
     <div
@@ -230,7 +252,7 @@ const TabsPanel: FunctionComponent<ITabsPanelProps> = ({
       aria-labelledby={tabId(baseId, value)}
       hidden={!isActive}
       tabIndex={isActive ? 0 : undefined}
-      className={tabsPanel()}
+      className={tabsPanel({ fill })}
       data-testid={testId}
     >
       {isActive ? children : undefined}
@@ -271,11 +293,23 @@ const TabsPanel: FunctionComponent<ITabsPanelProps> = ({
  *   `foreground`, constant thickness in both states, so switching shifts no widths and no weights.
  *   Keyboard focus is the separate shared focus ring. Colour moves on the one motion token.
  *
+ * - With `fill`, Root takes the allocated parent height; List keeps its content height and the
+ *   active Panel takes the remainder. Its definite height bounds a direct Pane or bounded Table.
+ *   Switching views changes neither Root height nor List position. No scrolling or spacing is added.
+ *   In an unsized parent the panel retains content height; no bound is invented.
+ * - Without `fill` (including false or null), the existing content-height composition is unchanged.
+ *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - One List with Tab elements as direct DOM children (arrays and fragments are supported),
  *   and the Panels under the same Root - as siblings of the List, or with it inside one
  *   arrangement such as a `Stack` (see the separation guidance below). Do not wrap tabs in host
  *   elements.
+ * - For `fill`, List and Panels must be direct DOM children of Root (fragments are fine), with
+ *   one height-accepting child directly inside the active Panel. Supply a definite parent height
+ *   and enough room for List and the child's fixed content. An unsized Stack between Root and
+ *   members, or between Panel and its child, breaks that height chain. Compose content spacing
+ *   inside the Pane's slots instead; Tabs adds no gap. In an unsized parent the enclosing page
+ *   owns overflow. A bounded Table requires the separate #142 API.
  * - A label is a meaningful visible text name, with non-interactive decoration at most: no link,
  *   button, input or other focusable descendant, since the tab is the one control and a nested
  *   control inside a `button` is invalid. Decorative parts - an icon that repeats the text - carry
@@ -295,8 +329,8 @@ const TabsPanel: FunctionComponent<ITabsPanelProps> = ({
  *   do not fit, so a label is never the reason to shorten a name.
  * - This is not a router: no location, no history, no deep links. Wire `onSelect$` to whatever
  *   owns the active key and pass that key back in.
- * - Tabs sets no spacing between the row and the panel; the separation is a `Stack` between Root
- *   and its members - `<Tabs.Root><Stack gap="region"><Tabs.List/>…<Tabs.Panel/>…</Stack>
+ * - In the default content-height mode, Tabs sets no spacing between the row and the panel;
+ *   the separation is a `Stack` between Root and its members - `<Tabs.Root><Stack gap="region"><Tabs.List/>…<Tabs.Panel/>…</Stack>
  *   </Tabs.Root>`. `gap="stack"` holds the row and its view together as one block; `gap="region"`
  *   sets the view apart as a region of its own. Inactive panels are hidden, so the gap is exactly
  *   one whichever panel is active, from the token the consumer's other groups already use.

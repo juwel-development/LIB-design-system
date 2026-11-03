@@ -1,5 +1,6 @@
 import { Stack } from 'Arrangement/Stack/Stack';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { Tabs } from 'index';
 import {
   type ComponentProps,
   type FunctionComponent,
@@ -9,7 +10,6 @@ import {
 } from 'react';
 import { Subject } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
-import { Tabs } from './Tabs';
 import { TabsCompositionError } from './TabsCompositionError';
 
 // jsdom lays nothing out and ships no scrollIntoView, which the arrow handler calls; give the
@@ -36,14 +36,20 @@ const staffTabs = (active: string, onSelect$: Subject<string>) => (
 const ControlledStaff: FunctionComponent<{
   onSelect$: Subject<string>;
   children?: ReactNode;
-}> = ({ onSelect$, children }) => {
+  fill?: boolean;
+}> = ({ onSelect$, children, fill }) => {
   const [active, setActive] = useState('staff');
   useEffect(() => {
     const subscription = onSelect$.subscribe(setActive);
     return () => subscription.unsubscribe();
   }, [onSelect$]);
   return (
-    <Tabs.Root active={active} onSelect$={onSelect$} label={'Staff'}>
+    <Tabs.Root
+      active={active}
+      onSelect$={onSelect$}
+      label={'Staff'}
+      fill={fill}
+    >
       <Tabs.List>
         <Tabs.Tab value={'staff'}>Staff</Tabs.Tab>
         <Tabs.Tab value={'candidates'}>Candidates</Tabs.Tab>
@@ -67,6 +73,38 @@ const Counter: FunctionComponent = () => {
 };
 
 describe('Tabs Component', () => {
+  it('keeps automatic activation, panel associations and fresh mounts in fill mode', () => {
+    render(
+      <ControlledStaff fill onSelect$={new Subject<string>()}>
+        <Counter />
+      </ControlledStaff>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'count is 0' }));
+    const staff = screen.getByRole('tab', { name: 'Staff' });
+    const panelId = screen.getByRole('tabpanel').id;
+    staff.focus();
+    fireEvent.keyDown(staff, { key: 'ArrowRight' });
+    expect(screen.getByRole('tab', { name: 'Candidates' })).toHaveFocus();
+    expect(
+      screen.getByRole('tabpanel', { name: 'Candidates' }),
+    ).toHaveTextContent('Candidate list');
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Candidates' }), {
+      key: 'ArrowLeft',
+    });
+    expect(screen.getByRole('tabpanel', { name: 'Staff' }).id).toBe(panelId);
+    expect(staff).toHaveAttribute('aria-controls', panelId);
+    expect(
+      screen.getByRole('button', { name: 'count is 0' }),
+    ).toBeInTheDocument();
+    for (const panel of screen
+      .getAllByRole('tabpanel', { hidden: true })
+      .filter((panel) => panel.hidden)) {
+      expect(panel).toBeEmptyDOMElement();
+      expect(panel).not.toHaveAttribute('tabindex');
+    }
+  });
+
   it('renders a tab list named by the label prop', () => {
     render(staffTabs('staff', new Subject<string>()));
     expect(screen.getByRole('tablist', { name: 'Staff' })).toBeInTheDocument();
