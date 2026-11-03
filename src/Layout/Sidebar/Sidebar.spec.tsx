@@ -30,6 +30,32 @@ const renderSidebar = (options?: {
   );
 
 describe('Sidebar', () => {
+  it('accepts a fill bound without measuring an ancestor scrollport and keeps selection and content semantics', () => {
+    const measure = vi.spyOn(window, 'getComputedStyle');
+    const select = new Subject<string>();
+    const selected: string[] = [];
+    select.subscribe((key) => selected.push(key));
+    render(
+      <Sidebar.Root fill active="hub" label="Sections" onSelect$={select}>
+        <Sidebar.Item entryKey="hub">Hub</Sidebar.Item>
+        <Sidebar.Item entryKey="staff">Staff</Sidebar.Item>
+        <Sidebar.Content>
+          <main>
+            <input aria-label="Draft" defaultValue="Retained" />
+          </main>
+        </Sidebar.Content>
+      </Sidebar.Root>,
+    );
+    expect(measure).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Staff' }));
+    expect(selected).toEqual(['staff']);
+    expect(screen.getAllByRole('main')).toHaveLength(1);
+    expect(screen.getByRole('textbox', { name: 'Draft' })).toHaveValue(
+      'Retained',
+    );
+    measure.mockRestore();
+  });
+
   it('renders a nav landmark named by label, listing the entries in Item order', () => {
     renderSidebar();
     const nav = screen.getByRole('navigation', { name: 'Sections' });

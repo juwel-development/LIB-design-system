@@ -1,4 +1,4 @@
-import { cva } from 'class-variance-authority';
+import { cva, type VariantProps } from 'class-variance-authority';
 import type { FunctionComponent, ReactNode, RefCallback } from 'react';
 import { Children, createContext, isValidElement, useContext } from 'react';
 import type { Subject } from 'rxjs';
@@ -12,10 +12,20 @@ const sidebarRoot = cva(
     'grid gap-[var(--space-region)] lg:grid-cols-[12rem_minmax(0,1fr)]',
     '[&>div:first-child]:border-solid [&>div:first-child]:border-border [&>div:first-child]:border-b [&>div:first-child]:pb-[var(--space-stack)]',
     'lg:[&>div:first-child]:border-b-0 lg:[&>div:first-child]:border-r lg:[&>div:first-child]:pb-0 lg:[&>div:first-child]:pr-[var(--space-stack)]',
-    'lg:[&>div:first-child>nav]:sticky lg:[&>div:first-child>nav]:top-0 lg:[&>div:first-child>nav]:max-h-[min(100dvh,var(--sidebar-scrollport-height,100dvh))] lg:[&>div:first-child>nav]:overflow-y-auto',
+    'lg:[&>div:first-child>nav]:sticky lg:[&>div:first-child>nav]:top-0 lg:[&>div:first-child>nav]:overflow-y-auto',
     '[&>div:first-child>nav]:p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] lg:[&>div:first-child>nav]:scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
     '[&>div:first-child>nav>ul]:flex [&>div:first-child>nav>ul]:flex-col [&>div:first-child>nav>ul]:gap-[var(--space-stack)]',
   ].join(' '),
+  {
+    variants: {
+      fill: {
+        false:
+          'lg:[&>div:first-child>nav]:max-h-[min(100dvh,var(--sidebar-scrollport-height,100dvh))]',
+        true: 'min-h-full lg:h-full lg:min-h-0 lg:grid-rows-[minmax(0,1fr)] lg:[&>div]:min-h-0 lg:[&>div]:h-full lg:[&>div:first-child>nav]:max-h-full',
+      },
+    },
+    defaultVariants: { fill: false },
+  },
 );
 
 // A percentage max-height resolves against the content-driven grid cell, not its scrollport;
@@ -38,9 +48,13 @@ const observeScrollport: RefCallback<HTMLElement> = (navigation) => {
       ),
     );
     if (scrollport) {
+      const scrollportStyle = getComputedStyle(scrollport);
+      const padding =
+        (Number.parseFloat(scrollportStyle.paddingTop) || 0) +
+        (Number.parseFloat(scrollportStyle.paddingBottom) || 0);
       navigation.style.setProperty(
         '--sidebar-scrollport-height',
-        `${scrollport.clientHeight}px`,
+        `${Math.max(0, scrollport.clientHeight - padding)}px`,
       );
     } else {
       navigation.style.removeProperty('--sidebar-scrollport-height');
@@ -96,7 +110,10 @@ const SidebarSelectionContext = createContext<SidebarSelection | undefined>(
   undefined,
 );
 
-export interface ISidebarRootProps {
+export interface ISidebarRootProps extends VariantProps<typeof sidebarRoot> {
+  /** Pass a finite parent height through to Content at 64rem and above, using CSS alone.
+   * Below 64rem the enclosing scrollable body owns the stacked list and content. */
+  fill?: VariantProps<typeof sidebarRoot>['fill'];
   /** The key of the active entry. The caller supplies a key identifying one non-inert entry;
    *  Sidebar renders what it is given and never selects a fallback for an invalid key. */
   active: string;
@@ -166,12 +183,13 @@ const SidebarRoot: FunctionComponent<ISidebarRootProps> = ({
   onSelect$,
   children,
   testId,
+  fill,
 }) => {
   const parts = Children.toArray(children).filter(isValidElement);
   return (
-    <div className={sidebarRoot()} data-testid={testId}>
+    <div className={sidebarRoot({ fill })} data-testid={testId}>
       <div>
-        <nav ref={observeScrollport} aria-label={label}>
+        <nav ref={fill ? undefined : observeScrollport} aria-label={label}>
           <SidebarSelectionContext value={{ active, onSelect$ }}>
             <ul>{parts.filter((part) => part.type === SidebarItem)}</ul>
           </SidebarSelectionContext>
@@ -204,11 +222,17 @@ const SidebarRoot: FunctionComponent<ISidebarRootProps> = ({
  *   assumed top-bar offset, capped to the screen/scrolling-area height with independent entry scrolling.
  *   Content sits beside it in `minmax(0,1fr)`, so wide content cannot displace the track.
  * - Below 64rem the whole list lies above the content in normal flow - no stickiness, no cap, no
- *   drawer. Sidebar sets no viewport-height minimum and grows with its content.
+ *   drawer. Without fill, Sidebar grows with its content.
+ * - With fill, a finite parent height passes through Root and Content at 64rem and above;
+ *   navigation is capped to that allocated height by CSS, with no scrollport measurement.
+ *   Below 64rem the list stacks and the enclosing body scrolls. The DOM never switches.
  * - It separates the tracks itself (the region space role and a `border` hairline) but gives the
  *   content track no padding and no landmark - the consumer owns everything inside `Content`.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - Fill requires a parent with a finite height and a scrollable enclosing body for narrow
+ *   viewports or oversized fixed content. Consumer wrappers inside Content preserve that bound.
+ *   It works with any bounded parent; no Shell identity, context or offset is required.
  * - Entry keys are unique and `active` names one non-inert entry. Sidebar corrects nothing.
  * - Items and the one Content are direct children of `Root` - Root assembles only what it can see,
  *   and an Item rendered outside a Root has no selection to derive its treatment from.
