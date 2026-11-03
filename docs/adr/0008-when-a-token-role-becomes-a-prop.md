@@ -347,6 +347,15 @@ List owns the connected row; each Step supplies its identity, label, status, val
 status slot. Numbering follows rendered step order, and Panels match Steps by identity. Do not
 replace these parts with a monolithic steps-array rendering API.
 
+Implementation of #143 uses `active$`, `onSelect$`, `label`, `value`, `status`, `valueText` and
+optional `statusContent` at these composition boundaries. Before the current source first emits,
+no active panel is invented; replacement clears the previous selection. The visible marker is an
+ordinal for open, a check for done and a blocked mark for blocked; selection is a separate underline.
+The step marker size, two insets, connector thickness and selection thickness are semantic theme
+tokens, not props. Root always accepts a parent height, with natural height in an unsized parent;
+List and Panels must be direct DOM children to preserve that allocation. Pane is the verified
+scroll owner. A direct bounded Table composition is separate cross-ticket integration with #142.
+
 **Bounded tables — triage decisions for #142.**
 Narrow comparison tables use the existing weighted column allocation with minimums omitted. Text
 wraps within those shares; content such as controls that genuinely cannot fit retains residual

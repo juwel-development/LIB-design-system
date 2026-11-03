@@ -43,6 +43,8 @@ export { NumberInput } from 'Interaction/NumberInput/NumberInput';
 export { Select } from 'Interaction/Select/Select';
 export { Slider } from 'Interaction/Slider/Slider';
 export { SliderConfigurationError } from 'Interaction/Slider/SliderConfigurationError';
+export { Stepper } from 'Interaction/Stepper/Stepper';
+export { StepperCompositionError } from 'Interaction/Stepper/StepperCompositionError';
 export { Switch } from 'Interaction/Switch/Switch';
 export { Tabs } from 'Interaction/Tabs/Tabs';
 export { TabsCompositionError } from 'Interaction/Tabs/TabsCompositionError';
