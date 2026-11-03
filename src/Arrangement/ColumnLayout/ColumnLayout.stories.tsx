@@ -864,6 +864,9 @@ export const FillResize: Story = {
     const canvas = within(canvasElement);
     const holder = canvas.getByTestId('fill-holder');
     const row = canvas.getByTestId('fill-row');
+    // Keep the row's threshold independent of the platform's scrollbar width.
+    holder.style.scrollbarGutter = 'stable';
+    const gutter = holder.offsetWidth - holder.clientWidth;
     const columns = columnsOf(row);
     const button = canvas.getByRole('button', { name: 'Lane 1 entry 1' });
     button.focus();
@@ -878,9 +881,9 @@ export const FillResize: Story = {
     await expect(isOneColumn(row)).toBe(true);
     await expect(columnsOf(row)).toEqual(columns);
     holder.style.setProperty('--lane-min-width', '12rem');
-    holder.style.width = 'calc(24rem + var(--space-stack))';
+    holder.style.width = `calc(24rem + var(--space-stack) + ${gutter}px)`;
     await checkFilledColumns(canvasElement, 2);
-    holder.style.width = 'calc(24rem + var(--space-stack) - 1px)';
+    holder.style.width = `calc(24rem + var(--space-stack) + ${gutter}px - 1px)`;
     await expect(isOneColumn(row)).toBe(true);
     holder.style.width = '100%';
     await checkFilledColumns(canvasElement, 2);
