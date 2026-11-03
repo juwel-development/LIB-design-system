@@ -330,6 +330,13 @@ const SLIDER = `:root {
   --slider-thumb-size: 1.5rem;
 }`;
 
+/* Switch geometry is independent of choice markers: its track holds two thumb positions.
+   Both lengths must be positive; track width derives from the thumb so positions stay distinct. */
+const SWITCH = `:root {
+  --switch-thumb-size: 1rem;
+  --switch-track-inset: 0.125rem;
+}`;
+
 /* The choice marker's two dimensions are not colours: like the tick they live in :root only,
    never @theme inline, so a brand re-points the marker without Choices gaining a prop. Sized in
    rem like the tick and the slider thumb. Constraints: both > 0 (a zero dot erases the one cue
@@ -476,6 +483,8 @@ ${SLIDER}
 
 /* The choice marker's dimensions are not colours either, and sit in :root beside the slider block. */
 ${CHOICE_MARKER}
+
+${SWITCH}
 
 /* The meter track's thickness is not a colour either, and sits in :root beside the tab blocks. */
 ${METER_TRACK}
