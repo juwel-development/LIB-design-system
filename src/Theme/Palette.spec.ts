@@ -466,11 +466,25 @@ describe('selected table surface (#136)', () => {
     (_scheme, tokens) => {
       expect(tokens.selectedSurface).not.toBe(tokens.surface);
       expect(tokens.selectedSurface).not.toBe(tokens.backing);
-      for (const ink of [tokens.foreground, tokens.muted, tokens.link]) {
+      for (const ink of [
+        tokens.foreground,
+        tokens.muted,
+        tokens.link,
+        tokens.success,
+        tokens.warning,
+        tokens.selectedError,
+        tokens.info,
+      ]) {
         expect(
           contrastRatio(ink, tokens.selectedSurface),
         ).toBeGreaterThanOrEqual(4.5);
       }
+      expect(
+        contrastRatio(tokens.selectedError, tokens.errorForeground),
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrastRatio(tokens.rule, tokens.selectedSurface),
+      ).toBeGreaterThanOrEqual(3);
       expect(
         contrastRatio(tokens.focusRing, tokens.selectedSurface),
       ).toBeGreaterThanOrEqual(3);

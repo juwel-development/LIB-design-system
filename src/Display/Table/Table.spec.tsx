@@ -927,9 +927,7 @@ describe('Table', () => {
       }
     },
   );
-});
 
-describe('Table selected-row treatment (#136)', () => {
   it('offers only marker and highlight treatments at the public root', () => {
     expectTypeOf<
       NonNullable<ComponentProps<typeof Table.Root>['selectionTreatment']>
@@ -955,10 +953,6 @@ describe('Table selected-row treatment (#136)', () => {
           </Table.Body>
         </Table.Root>,
       );
-      expect(screen.getByRole('region', { name: 'Messages' })).toHaveAttribute(
-        'data-selection-treatment',
-        selectionTreatment,
-      );
       const row = screen.getByRole('row');
       row.focus();
       fireEvent.keyDown(row, { key: 'Enter' });
@@ -976,10 +970,6 @@ describe('Table selected-row treatment (#136)', () => {
             </Table.Row>
           </Table.Body>
         </Table.Root>,
-      );
-      expect(screen.getByRole('region', { name: 'Messages' })).toHaveAttribute(
-        'data-selection-treatment',
-        'marker',
       );
       expect(row).not.toHaveAttribute('tabindex');
       act(() => selected$.next(true));

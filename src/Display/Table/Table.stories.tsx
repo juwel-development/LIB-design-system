@@ -57,7 +57,7 @@ Until the consumer's data arrives, the icon and \`ariaSort\` keep stating the ol
             "Table holds no row identity, selection registry or policy. A reordered or temporarily removed row finds the same streams again through its identity, and removing a row never asks the consumer to clear or replace its selection. An interactive row announces no verb of its own, so word the caption, a row header or a nested link to make the row's purpose plain.",
             "Accessibility, an accepted limitation (#113): the row stays a `tr` in a `table` - no grid role, no arrow-key navigation. `aria-selected` is a WAI-ARIA 1.2 state of `row` and valid here, but Chromium exposes a row's selected state only inside a `grid`, so Chrome and Edge screen readers do not announce selection on these rows. The marker bar is the one guaranteed selection cue; a consumer that needs the selection spoken words it in the row's content or in a live region of its own.",
             '**Selected background (#136).** Set `selectionTreatment="highlight"` on `Table.Root` to add `--color-selected-surface` behind selected rows. Omit it (or use `marker`) to retain the 3.11.0 marker-only default. The marker stays in both treatments; it is a border that remains visible in forced colours even when backgrounds are suppressed. Hover never adds or removes the highlight, and focus remains the separate outline. Each nested table chooses its own treatment.',
-            '**Theme constraint.** `selectedSurface` must differ from the resting and hover surfaces. Keep foreground, muted and link text at least 4.5:1 against it, and the foreground marker and focus ring at least 3:1, in each scheme. The shipped light and dark palettes satisfy these constraints. Other composed inks (including status tones) and controls need their own contrast checked on this surface; the theme owns those combinations. `selectedSurface` is optional in `PaletteTokens` for compatibility with existing objects; CSS themes inherit the shipped value until they override it.',
+            '**Theme constraint.** `selectedSurface` must differ from the resting and hover surfaces. Keep foreground, muted, link and status text at least 4.5:1 against it, and the foreground marker, table rule and focus ring at least 3:1, in each scheme. The shipped light and dark palettes satisfy these constraints. Highlighted rows re-point the error role to `selectedError` (`--color-selected-error`), preserving error text contrast without changing the resting palette. Keep that role at 4.5:1 against selectedSurface and errorForeground. Other composed inks and controls need their own contrast checked on this surface; the theme owns those combinations. `selectedSurface` is optional in `PaletteTokens` for compatibility with existing objects; CSS themes inherit the shipped value until they override it.',
             "`--table-selection-marker-thickness` names the marker bar's weight, defaulting to `2px`, declared in all three token stylesheets. It must stay above zero: it is the one persistent selection cue.",
           ].join('\n\n'),
           [
@@ -1917,8 +1917,8 @@ const verifyHighlightedRows: NonNullable<Story['play']> = async ({
   canvasElement,
 }) => {
   const canvas = within(canvasElement);
-  const selected = canvas.getByTestId('row-nova');
-  const other = canvas.getByTestId('row-kestrel');
+  const selected = canvas.getByRole('row', { name: /Nova/ });
+  const other = canvas.getByRole('row', { name: /Kestrel/ });
   const fill = getComputedStyle(selected).backgroundColor;
   await expect(fill).not.toBe('rgba(0, 0, 0, 0)');
   await expect(fill).not.toBe(getComputedStyle(other).backgroundColor);
@@ -1967,5 +1967,27 @@ export const HighlightedWithoutActivation: Story = {
   args: { caption: 'Open artist', selectionTreatment: 'highlight' },
   render: (args) => (
     <ArtistRoster {...args} initial="nova" interactive={false} />
+  ),
+};
+
+export const HighlightedStatusText: Story = {
+  play: async ({ canvasElement }) => {
+    const note = within(canvasElement).getByText('Delivery failed');
+    await expect(note).toHaveStyle({
+      color: note.closest('.dark') ? '#f48fb1' : '#cd2d7d',
+    });
+  },
+  args: { caption: 'Message delivery', selectionTreatment: 'highlight' },
+  render: (args) => (
+    <Table.Root {...args}>
+      <Table.Body>
+        <Table.Row isSelected$={new BehaviorSubject(true)}>
+          <Table.Cell>Open message</Table.Cell>
+          <Table.Cell>
+            <Note color="error">Delivery failed</Note>
+          </Table.Cell>
+        </Table.Row>
+      </Table.Body>
+    </Table.Root>
   ),
 };

@@ -19,10 +19,12 @@ export type PaletteTokens = {
   /** Page and panel background. */
   surface: string;
   /** Selected Table row surface, distinct from resting and hover surfaces. Keep foreground, muted
-   *  and link at 4.5:1, and the foreground marker and focusRing at 3:1 against it in each scheme.
+   *  link and status inks at 4.5:1; marker, rule and focusRing at 3:1 in each scheme.
    *  Optional for existing palette objects; CSS overrides inherit the shipped default. Consumers
    *  composing other inks or controls on this surface must ensure their contrast too. */
   selectedSurface?: string;
+  /** Error ink/fill on a selected surface: 4.5:1 against selectedSurface and errorForeground. */
+  selectedError?: string;
   /** Default text colour on `surface`. */
   foreground: string;
   /** De-emphasised text - captions, help text, placeholders. */
@@ -176,6 +178,7 @@ export type PaletteTokens = {
 export const light: Required<PaletteTokens> = {
   surface: '#ffffff',
   selectedSurface: '#f8fafc',
+  selectedError: '#cd2d7d',
   foreground: '#0f172a',
   muted: '#64748b',
   border: '#e2e8f0',
@@ -231,7 +234,8 @@ export const light: Required<PaletteTokens> = {
  */
 export const dark: Required<PaletteTokens> = {
   surface: '#0f172a',
-  selectedSurface: '#172033',
+  selectedSurface: '#151e30',
+  selectedError: '#f48fb1',
   foreground: '#f8fafc',
   muted: '#94a3b8',
   border: '#334155',

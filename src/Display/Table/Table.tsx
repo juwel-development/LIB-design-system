@@ -72,7 +72,8 @@ const table = cva(
     variants: {
       selectionTreatment: {
         marker: '',
-        highlight: '[&>table>*>tr[aria-selected=true]]:bg-selected-surface',
+        highlight:
+          '[&>table>*>tr[aria-selected=true]]:bg-selected-surface [&>table>*>tr[aria-selected=true]]:[--color-error:var(--color-selected-error)]',
       },
       captionVisibility: {
         visible: '[&>table>caption]:pb-3',
@@ -572,7 +573,8 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - A theme's `selectedSurface` differs from resting/hover surfaces and keeps foreground, muted
- *   and link text at 4.5:1, and the marker and focus ring at 3:1. Other consumer-composed inks and
+ *   and link/status text at 4.5:1, and the marker, rule and focus ring at 3:1.
+ *   Highlighted rows use selectedError for their error ink/fill. Other consumer-composed inks and
  *   controls must meet their own contrast constraints against this surface too.
  * - Every row writes exactly as many cells as there are `columns`, in the same order. A row with
  *   fewer leaves tracks empty; one with more breaks onto a second line of its own row.
