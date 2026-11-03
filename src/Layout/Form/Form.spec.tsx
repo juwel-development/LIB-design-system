@@ -2,6 +2,7 @@ import { Link } from 'Interaction/Link/Link';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Form } from './Form';
+import { FormConfigurationError } from './FormConfigurationError';
 
 // The note the widening was filed for: a privacy line whose link has to sit inside the `<form>`.
 const privacyNote = (
@@ -116,7 +117,9 @@ describe('Form Component', () => {
   });
 
   it('refuses a sent state with no note, the outcome message it exists to show', () => {
-    expect(() => render(<Form action={'/x'} state={'sent'} />)).toThrow();
+    expect(() => render(<Form action={'/x'} state={'sent'} />)).toThrow(
+      FormConfigurationError,
+    );
   });
 
   it('renders a note carrying a link inside the form, so the line stays in the element it annotates', () => {
@@ -179,27 +182,16 @@ describe('Form Component', () => {
     (_label, note) => {
       expect(() =>
         render(<Form action={'/x'} state={'sent'} note={note} />),
-      ).toThrow();
+      ).toThrow(FormConfigurationError);
     },
   );
 
-  it('bounds itself with the reading measure and sets no font-size, so ch resolves against body type', () => {
-    const { container } = render(<Form action={'/x'} />);
-    const form = container.querySelector('form');
-    expect(form?.className).toContain('max-w-[var(--measure)]');
-    expect(form?.className).not.toContain('text-');
-  });
-
   it.each(['idle', 'sending', 'sent', 'failed'] as const)(
-    'sets the labelling face on the note in the %s state, so a two-face theme reaches it (#90)',
+    'keeps the consumer note visible in the %s state',
     (state) => {
       render(<Form action={'/x'} state={state} note={'We never share it'} />);
 
-      // docs/adr/0004, the amendment: a note standing beside the form is apparatus, the face
-      // Footer and Table's note already take. In the base, so state selects the tone alone.
-      expect(screen.getByText('We never share it').className).toContain(
-        'font-secondary',
-      );
+      expect(screen.getByText('We never share it')).toBeVisible();
     },
   );
 

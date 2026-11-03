@@ -1,5 +1,6 @@
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent, ReactNode } from 'react';
+import { FormConfigurationError } from './FormConfigurationError';
 
 /** Which of the four states the page has put the form in. Owned by the page, never by Form: the
  *  component renders the state it is given and never decides which one it is in. */
@@ -78,7 +79,7 @@ export const Form: FunctionComponent<IFormProps> = ({
     note !== undefined && note !== null && typeof note !== 'boolean';
 
   if (state === 'sent' && !hasNote) {
-    throw new Error(
+    throw new FormConfigurationError(
       'Form in the `sent` state must be given a `note` - it is the outcome message.',
     );
   }

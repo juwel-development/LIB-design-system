@@ -207,6 +207,8 @@ already the place where per-component noise compounds fastest.
 The non-component types the barrel does carry earn their line by being values a consumer
 **constructs**, not props it passes: the theme contract (`PaletteTokens`) and behavioural unions
 (`FormState`). A props interface is neither.
+Error classes the library throws are exported so a consumer can match them by type in an error
+boundary; they are values a consumer handles, not props.
 
 ## Compound components
 

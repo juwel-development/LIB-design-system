@@ -114,3 +114,26 @@ export const DepletingWithConsumerContext: Story = {
     </Stack>
   ),
 };
+
+/** Off-range values clamp the fill to the nearest bound while ARIA retains the raw figure.
+ *  Non-finite values and invalid bounds still throw MeterConfigurationError. */
+export const OffRange: Story = {
+  render: () => (
+    <Stack gap={'stack'}>
+      <Meter value={100.0001} max={100} label={'Overshoot'} />
+      <Meter value={-1} max={100} label={'Undershoot'} />
+      <Meter
+        value={100.0001}
+        max={100}
+        treatment={'depleting'}
+        label={'Overshoot, depleting'}
+      />
+      <Meter
+        value={-1}
+        max={100}
+        treatment={'depleting'}
+        label={'Undershoot, depleting'}
+      />
+    </Stack>
+  ),
+};

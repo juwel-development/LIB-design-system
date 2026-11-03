@@ -31,10 +31,15 @@ const meterFill = cva('h-full w-[calc(var(--meter-level)*100%)]', {
 // is declared here so the style object stays typed without an assertion.
 type MeterLevelStyle = CSSProperties & { '--meter-level': number };
 
+const filledShare = (value: number, min: number, max: number): number => {
+  if (value <= min) return 0;
+  if (value >= max) return 1;
+  return (value - min) / (max - min);
+};
+
 export interface IMeterProps extends VariantProps<typeof meterFill> {
-  /** The current level. Must lie inside `[min, max]`; an outside value throws
-   *  {@link MeterConfigurationError} rather than clamping - a wrong number must not render as a
-   *  plausible level. */
+  /** The current level. Off-range values clamp the visual fill to the nearest bound;
+   *  `aria-valuenow` retains the raw value. */
   value: number;
   /** The bottom of the scale. Defaults to `0`. */
   min?: number;
@@ -58,8 +63,8 @@ export interface IMeterProps extends VariantProps<typeof meterFill> {
  * - The root carries `role="meter"`, `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, the `label`
  *   as its accessible name, and `aria-valuetext` exactly when `valueText` is supplied. It is not
  *   focusable, and the visual fill is hidden from the accessibility tree.
- * - The filled share is `(value - min) / (max - min)` of the container and begins at logical
- *   inline-start under both LTR and RTL direction.
+ * - The filled share is `(value - min) / (max - min)`, clamped to `[0, 1]`, and begins at logical
+ *   inline-start under both LTR and RTL direction. `aria-valuenow` retains the raw value.
  * - Neutral paints the fill with `meterFill`; `depleting` maps the normalized level linearly
  *   through OKLab from `meterFill` at the maximum to `error` at the minimum - no threshold, no
  *   wording, no icon (docs/adr/0010-meter-depletion-is-a-treatment.md).
@@ -68,7 +73,7 @@ export interface IMeterProps extends VariantProps<typeof meterFill> {
  *   radius token - Meter is not a control), and draws a persistent one-pixel `rule` line that
  *   identifies the whole capacity against the surface.
  * - Invalid numeric configuration throws {@link MeterConfigurationError}: non-finite `value`,
- *   `min` or `max`, `min >= max`, or a value outside the inclusive range. Nothing is clamped.
+ *   `min` or `max`, or `min >= max`.
  * - No visible wording of its own, no numeric readout, no caption slot, no `className`/`style`
  *   passthrough.
  *
@@ -107,14 +112,8 @@ export const Meter: FunctionComponent<IMeterProps> = ({
       `min must be less than max (got min=${min}, max=${max})`,
     );
   }
-  if (value < min || value > max) {
-    throw new MeterConfigurationError(
-      `value must lie within [min, max] (got value=${value}, min=${min}, max=${max})`,
-    );
-  }
-
   const style: MeterLevelStyle = {
-    '--meter-level': (value - min) / (max - min),
+    '--meter-level': filledShare(value, min, max),
   };
 
   return (
