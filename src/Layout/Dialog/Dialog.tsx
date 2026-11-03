@@ -19,7 +19,7 @@ import { DialogNamingError } from './DialogNamingError';
 // The layout classes ride the open: variant - a bare `flex` would defeat the UA's
 // dialog:not([open]) hiding. Tailwind's preflight zeroes the UA's centering margins (m-auto
 // restores them) and strips ::backdrop, so the Scrim colour and blur are declared here.
-// overflow-hidden overrides the UA's `dialog { overflow: auto }` - only Content may scroll.
+// overflow-hidden overrides the UA's `dialog { overflow: auto }` - Content or its delegated child owns scrolling.
 const dialogRoot = cva(
   [
     'open:flex open:flex-col m-auto p-0 overflow-hidden',
@@ -67,10 +67,16 @@ const dialogDescription = cva(
 // this scrolls. Its hairline exists only when a header region stands before it.
 const dialogContent = cva(
   [
-    'grow shrink min-h-0 overflow-y-auto',
+    'grow shrink min-h-0 min-w-0',
     'px-[var(--space-region)] py-[var(--space-region)]',
     '[&:not(:first-child)]:border-t [&:not(:first-child)]:border-border',
   ].join(' '),
+  {
+    variants: {
+      scrollOwner: { body: 'overflow-y-auto', child: 'flex flex-col' },
+    },
+    defaultVariants: { scrollOwner: 'body' },
+  },
 );
 
 // An end-aligned row in consumer DOM order, wrapping on narrow screens without reversing. Its
@@ -173,7 +179,8 @@ export interface IDialogDescriptionProps {
   testId?: string;
 }
 
-export interface IDialogContentProps {
+export interface IDialogContentProps
+  extends VariantProps<typeof dialogContent> {
   /** Arbitrary task content, composed and owned by the consumer. */
   children: ReactNode;
   testId?: string;
@@ -385,13 +392,14 @@ const DialogDescription: FunctionComponent<IDialogDescriptionProps> = ({
 
 const DialogContent: FunctionComponent<IDialogContentProps> = ({
   children,
+  scrollOwner,
   testId,
 }) => {
   useDialogContract('Content');
   return (
     <div
       data-dialog-member={'content'}
-      className={dialogContent()}
+      className={dialogContent({ scrollOwner })}
       data-testid={testId}
     >
       {children}
@@ -420,7 +428,7 @@ const DialogActions: FunctionComponent<IDialogActionsProps> = ({
  * the platform `<dialog>` and `showModal()`: the browser owns the top layer, background inertness
  * and the modal keyboard boundary; the consumer owns all wording, controls, outcomes and
  * replacement. Composed from five members: `Root` carries the contract, `Title` the visible name,
- * `Description` one connected line, `Content` the only scrollable region, `Actions` the controls.
+ * `Description` one connected line, `Content` the scrolling region or holder of one bounded child, `Actions` the controls.
  *
  * @Guarantees — enforced on every render
  * - Presents through `showModal()`/`close()` - no portal, focus trap or polyfill - so background
@@ -443,7 +451,9 @@ const DialogActions: FunctionComponent<IDialogActionsProps> = ({
  * - `extent="screen"` (the default) fills the viewport minus the `--gutter` inline and
  *   `--space-region` block insets, header and Actions fixed, only `Content` scrolling.
  *   `extent="content"` holds a fixed 32rem capped to the viewport with content-driven height;
- *   `Content` scrolls only as the emergency fallback when fitting is physically impossible.
+ *   Default `Content` scrolls as the fallback when its content exceeds available space.
+ * - `Content scrollOwner="child"` passes available height to one bounded child without scrolling.
+ *   A bounded Table then owns both axes and pins its header; title, description and actions stay fixed.
  * - Regions take `--space-region` padding with `--space-stack` between Title and Description and
  *   between Actions controls; hairlines separate header from `Content` and `Content` from
  *   `Actions` only where both neighbours exist. The surface reads `--radius-dialog`,
@@ -451,6 +461,9 @@ const DialogActions: FunctionComponent<IDialogActionsProps> = ({
  *   with the theme's optional `--scrim-blur`.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - In child-scroll mode provide one child that accepts the height allocation and owns overflow.
+ *   Intermediate wrappers must preserve that allocation. Fixed regions must fit the viewport and
+ *   leave usable room for the child; a Table needs room for its header and readable rows.
  * - Direct children in the order `Title`, `Description`, `Content`, `Actions`, at most one of
  *   each; `Actions` is present and holds at least one explicit dismissal control, wired to the
  *   same dismissal and visibility transitions. Cancel-before-Confirm order puts initial focus on

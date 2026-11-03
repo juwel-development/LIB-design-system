@@ -46,6 +46,144 @@ const renderSpecTable = (
   );
 
 describe('Table', () => {
+  it.each(['content', 'supplementary'] as const)(
+    'retains caption naming and all %s note cells in bounded mode',
+    (notes) => {
+      render(
+        <Table.Root
+          caption="Roster"
+          bounded
+          notes={notes}
+          captionVisibility="hidden"
+        >
+          <Table.Head>
+            <Table.Row>
+              <Table.HeaderCell scope="col">Name</Table.HeaderCell>
+              <Table.HeaderCell scope="col">Note</Table.HeaderCell>
+            </Table.Row>
+          </Table.Head>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>Nova</Table.Cell>
+              <Table.Cell variant="note">Available</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table.Root>,
+      );
+      expect(screen.getByRole('table', { name: 'Roster' })).toBeInTheDocument();
+      expect(screen.getAllByRole('columnheader')).toHaveLength(2);
+      expect(
+        screen.getByRole('cell', { name: 'Available' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('group')).not.toBeInTheDocument();
+    },
+  );
+
+  it('keeps the bounded wrapper reachable while focused after overflow ends', () => {
+    const height = vi
+      .spyOn(HTMLElement.prototype, 'scrollHeight', 'get')
+      .mockReturnValue(800);
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(200);
+    render(
+      <Table.Root caption="Roster" bounded>
+        <Table.Body />
+      </Table.Root>,
+    );
+    const wrapper = screen.getByRole('group', { name: 'Roster' });
+    wrapper.focus();
+    height.mockReturnValue(100);
+    fireEvent(window, new Event('resize'));
+    expect(wrapper).toHaveFocus();
+    expect(wrapper).toHaveAttribute('tabindex', '0');
+    act(() => wrapper.blur());
+    expect(wrapper).not.toHaveAttribute('tabindex');
+  });
+
+  it('reveals a focused control below the pinned header without scrolling on selection', () => {
+    const selected$ = new BehaviorSubject(false);
+    render(
+      <Table.Root caption="Roster" bounded>
+        <Table.Head>
+          <Table.Row>
+            <Table.HeaderCell scope="col">Name</Table.HeaderCell>
+          </Table.Row>
+        </Table.Head>
+        <Table.Body>
+          <Table.Row isSelected$={selected$}>
+            <Table.Cell>
+              <button type="button">Nova</button>
+            </Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table.Root>,
+    );
+    const table = screen.getByRole('table', { name: 'Roster' });
+    const wrapper = table.parentElement;
+    if (!wrapper) throw new Error('Missing table wrapper');
+    wrapper.scrollTop = 100;
+    vi.spyOn(wrapper, 'getBoundingClientRect').mockReturnValue({
+      top: 0,
+      bottom: 200,
+      left: 0,
+      right: 300,
+      width: 300,
+      height: 200,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    const head = screen.getAllByRole('rowgroup')[0];
+    if (!head) throw new Error('Missing table header');
+    vi.spyOn(head, 'getBoundingClientRect').mockReturnValue({
+      top: 0,
+      bottom: 40,
+      left: 0,
+      right: 300,
+      width: 300,
+      height: 40,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    const control = screen.getByRole('button', { name: 'Nova' });
+    vi.spyOn(control, 'getBoundingClientRect').mockReturnValue({
+      top: 10,
+      bottom: 30,
+      left: 10,
+      right: 60,
+      width: 50,
+      height: 20,
+      x: 10,
+      y: 10,
+      toJSON: () => ({}),
+    });
+    act(() => selected$.next(true));
+    expect(wrapper.scrollTop).toBe(100);
+    fireEvent.focus(control);
+    expect(wrapper.scrollTop).toBeLessThanOrEqual(70);
+  });
+
+  it('makes a bounded vertical overflow reachable and removes the stop when content fits', () => {
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(800);
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(200);
+    render(
+      <Table.Root caption="Roster" bounded>
+        <Table.Body>
+          <Table.Row>
+            <Table.Cell>Nova</Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table.Root>,
+    );
+    const wrapper = screen.getByRole('group', { name: 'Roster' });
+    expect(wrapper).toHaveAttribute('tabindex', '0');
+    expect(screen.getByRole('table', { name: 'Roster' })).toBeInTheDocument();
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(100);
+    fireEvent(window, new Event('resize'));
+    expect(wrapper).not.toHaveAttribute('tabindex');
+    expect(wrapper).not.toHaveAttribute('role');
+  });
+
   it('keeps caption required and offers only visible or hidden caption treatments', () => {
     expectTypeOf<
       ComponentProps<typeof Table.Root>['caption']
