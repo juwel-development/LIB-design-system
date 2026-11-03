@@ -326,6 +326,7 @@ describe('Palette', () => {
       [light.primary, light.primaryHover],
       [light.secondary, light.secondaryHover],
       [light.error, light.errorHover],
+      [light.disabled, light.disabledHover],
     ] as const) {
       expect(rest).not.toBe(hover);
       expect(relativeLuminance(hover)).toBeLessThan(relativeLuminance(rest));
@@ -337,6 +338,7 @@ describe('Palette', () => {
       [dark.primary, dark.primaryHover],
       [dark.secondary, dark.secondaryHover],
       [dark.error, dark.errorHover],
+      [dark.disabled, dark.disabledHover],
     ] as const) {
       expect(rest).not.toBe(hover);
       expect(relativeLuminance(hover)).toBeGreaterThan(relativeLuminance(rest));

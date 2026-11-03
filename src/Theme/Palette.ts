@@ -257,7 +257,7 @@ export const dark: Required<PaletteTokens> = {
   secondaryForeground: '#020617',
 
   disabled: '#475569',
-  disabledHover: '#334155',
+  disabledHover: '#64748b',
 
   focusRing: '#cbd5e1',
 
