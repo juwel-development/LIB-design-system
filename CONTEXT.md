@@ -516,6 +516,17 @@ files are the product speaking, not the page. Deliberately small, because a shel
 the page competes with whatever the page is actually for.
 _Avoid_: Chrome, frame, layout, wrapper, masthead
 
+**Console mode**:
+A screen arrangement that keeps its top bar visible and its document still while long content scrolls
+within bounded panels. When fixed content cannot fit the available space, body scrolling is a
+reachability fallback rather than the screen's intended arrangement.
+_Avoid_: Clipped screen, fixed-height page
+
+**Page mode**:
+A screen arrangement whose body scrolls as a whole beneath a visible top bar while the document
+stays still. Body scrolling is the intended arrangement rather than a console's reachability fallback.
+_Avoid_: Document scrolling, unbounded page
+
 **Standing link**:
 The link that names where you are — a place name, a mark, or a home link. It sits in the shell and
 never in the nav, which is what *standing* says: it does not change as the visitor moves through the
@@ -586,6 +597,12 @@ The standing application navigation requesting section changes from the applicat
 active section's content and staying visible within its frame when space permits, above the content
 otherwise. The application owns which section is active and any location or history associated with it.
 _Avoid_: Router, index, drawer
+
+**Sidebar fill mode**:
+A Sidebar arrangement that accepts the height allocated by its parent and passes that bound to its
+content while space permits navigation beside it. The bound belongs to the enclosing layout, which
+need not be a Shell; when navigation stacks above the content, the enclosing body scrolls.
+_Avoid_: Shell-specific Sidebar, viewport-sized Sidebar
 
 **Inert entry**:
 A Sidebar entry that retains its place in the navigation but is unavailable for selection. It remains
