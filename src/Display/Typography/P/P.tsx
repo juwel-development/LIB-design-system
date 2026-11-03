@@ -7,6 +7,7 @@ import type { FunctionComponent, ReactNode } from 'react';
 // P owns no reading measure - that belongs to whatever owns the reading column (Prose #21).
 const p = cva('font-body text-body leading-body', {
   variants: {
+    emphasis: { regular: '', strong: 'font-strong' },
     // Inline containment removes this text's intrinsic width from automatic table sizing (#132).
     // The block still fills its allocated width; only its own text is clipped, never its siblings.
     truncate: { true: 'min-w-0 truncate [contain:inline-size]', false: '' },
@@ -19,7 +20,11 @@ const p = cva('font-body text-body leading-body', {
       info: 'text-info',
     },
   },
-  defaultVariants: { color: 'foreground', truncate: false },
+  defaultVariants: {
+    color: 'foreground',
+    truncate: false,
+    emphasis: 'regular',
+  },
 });
 
 export interface IPProps extends VariantProps<typeof p> {
@@ -39,8 +44,12 @@ export interface IPProps extends VariantProps<typeof p> {
  * - `truncate` opts into one line with an ellipsis at the inline end, following inherited writing
  *   direction. The complete text stays in the DOM and accessibility tree. Omitted or false wraps
  *   as before. Marked text can shrink inside ordinary and allocated Table cells.
+ * - `emphasis="strong"` reads `--font-weight-strong` without changing size, family or line height.
+ *   This is visual only: no `strong` element, importance semantics or live announcement is added.
+ *   Omitted or `regular` leaves weight inherited, exactly as before.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - Communicate state in words or an accessible name; weight alone must never carry a state.
  * - Allocate a width through the enclosing layout: truncated text does not size its holder.
  * - Make the full wording reachable to sighted readers, for example by opening the item. Never
  *   truncate essential content without that path, or put links, controls or line breaks inside
@@ -55,10 +64,11 @@ export interface IPProps extends VariantProps<typeof p> {
 export const P: FunctionComponent<IPProps> = ({
   children,
   color,
+  emphasis,
   truncate,
   testId,
 }) => (
-  <p className={p({ color, truncate })} data-testid={testId}>
+  <p className={p({ color, emphasis, truncate })} data-testid={testId}>
     {children}
   </p>
 );

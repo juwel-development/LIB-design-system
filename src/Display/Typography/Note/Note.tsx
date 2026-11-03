@@ -2,15 +2,11 @@ import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
 import type { FunctionComponent, ReactNode } from 'react';
 
-// The annotation device: the secondary family at the small role, because docs/adr/0004 fixes
-// --font-secondary as the face labels are set in and an annotation labels rather than reads. It
-// defaults to `foreground` where Eyebrow defaults to `muted`: Eyebrow inverts the ordinary default
-// because its device is defined as muted, and an annotation is not - it is foreground *or* muted -
-// so Note follows `P` and keeps the ordinary default. No tracking and no weight: those two
-// are what make an Eyebrow. No measure and no margin: the annotation sits in no reading column, and
-// the page owns the rhythm around it. Colour is re-pointed by `.dark`, so no variant carries `dark:`.
+// The annotation uses the secondary family (docs/adr/0004). Its default weight is inherited;
+// strong emphasis changes weight only. The enclosing arrangement owns measure and spacing.
 const note = cva('font-secondary text-small', {
   variants: {
+    emphasis: { regular: '', strong: 'font-strong' },
     // Inline containment removes this text's intrinsic width from automatic table sizing (#132).
     // The block still fills its allocated width; only its own text is clipped, never its siblings.
     truncate: { true: 'min-w-0 truncate [contain:inline-size]', false: '' },
@@ -23,7 +19,11 @@ const note = cva('font-secondary text-small', {
       info: 'text-info',
     },
   },
-  defaultVariants: { color: 'foreground', truncate: false },
+  defaultVariants: {
+    color: 'foreground',
+    truncate: false,
+    emphasis: 'regular',
+  },
 });
 
 export interface INoteProps extends VariantProps<typeof note> {
@@ -36,19 +36,23 @@ export interface INoteProps extends VariantProps<typeof note> {
  * A short annotation at the small type role in the secondary family — a routing line above a submit
  * button, a privacy line at the point of submission, a line beside a control. Not reading matter:
  * it takes no measure and sits in no reading column, which is what separates it from `Prose.Tail`
- * at the same size, and it carries neither the tracking nor the weight that make an `Eyebrow`.
+ * at the same size. It carries no tracking and inherits weight unless emphasis is requested.
  *
  * @Guarantees — enforced on every render
  * - Renders a `p`, reading `--font-secondary` and sized by `--text-small`.
  * - `color` selects `foreground` (default), `muted`, `success`, `warning`, `error` or `info`;
  *   nothing else paints text. A status tone changes colour only.
- * - Emits no tracking, no font-weight, no measure and no margin under any prop.
+ * - Emits no tracking, no measure and no margin under any prop.
  * - Carries no ARIA role and no live region under any prop.
  * - `truncate` opts into one line with an ellipsis at the inline end, following inherited writing
  *   direction. The complete text stays in the DOM and accessibility tree. Omitted or false wraps
  *   as before. Marked text can shrink inside ordinary and allocated Table cells.
+ * - `emphasis="strong"` reads `--font-weight-strong` without changing size, family or line height.
+ *   This is visual only: no `strong` element, importance semantics or live announcement is added.
+ *   Omitted or `regular` leaves weight inherited, exactly as before.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - Communicate state in words or an accessible name; weight alone must never carry a state.
  * - Allocate a width through the enclosing layout: truncated text does not size its holder.
  * - Make the full wording reachable to sighted readers, for example by opening the item. Never
  *   truncate essential content without that path, or put links, controls or line breaks inside
@@ -68,10 +72,11 @@ export interface INoteProps extends VariantProps<typeof note> {
 export const Note: FunctionComponent<INoteProps> = ({
   children,
   color,
+  emphasis,
   truncate,
   testId,
 }) => (
-  <p className={note({ color, truncate })} data-testid={testId}>
+  <p className={note({ color, emphasis, truncate })} data-testid={testId}>
     {children}
   </p>
 );
