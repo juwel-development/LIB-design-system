@@ -21,6 +21,7 @@
 		".storybook",
 		"scripts",
 		"vitest.setup.ts",
-		"release-notes.spec.ts"
+		"release-notes.spec.ts",
+		"package-exports.spec.ts"
 	]
 }

@@ -13,13 +13,20 @@ npm install @juwel-development/design-system
 
 ## Integration
 
-Import the library stylesheet once in the consuming application:
+Import the prebuilt library stylesheet once in the consuming application; this route
+does not require Tailwind in the host:
 
 ```ts
 import '@juwel-development/design-system/styles.css';
 ```
 
-If the host already imports Tailwind and only needs the tokens:
+The JavaScript bundle injects no CSS; consumers that relied on automatic injection
+must add the import above. It starts with `"use client"` for React server-component
+hosts, and `sideEffects: ["**/*.css"]` preserves explicit CSS imports during tree shaking.
+
+For the tokens-only route, the host must provide Tailwind v4 and scan the component
+sources to generate their utilities. `tailwindcss` is an optional peer dependency
+because only this route requires it:
 
 ```css
 @import "@juwel-development/design-system/tokens.css";
@@ -52,7 +59,10 @@ import '@juwel-development/design-system/styles.dark.css';
 ```
 
 The tokens-only equivalents are `tokens.light.css` and `tokens.dark.css`. All three
-variants are generated from the same palette, so they cannot drift.
+stylesheet variants are prebuilt CSS requiring no Tailwind in the host; the tokens-only
+variants retain Tailwind v4 directives (`@theme`, `@utility`, `@custom-variant`,
+`@property`) and require a Tailwind v4 host. All colour sets come from the same
+generated palette.
 
 ### Changing the palette
 

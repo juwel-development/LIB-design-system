@@ -1,9 +1,8 @@
 /* Component-level styles for the design system, dark theme only (issue #62). */
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 @import "./tokens.dark.css";
 
-/* Scan the component sources explicitly so their utilities are generated no matter
-   which host imports this stylesheet. Tailwind's automatic content detection is
-   anchored to the consumer and skips node_modules, so a host pulling the components
-   in through a package would otherwise render them unstyled. */
-@source ".";
+/* Only component code contributes utilities to the published stylesheets. */
+@source "./**/*.tsx";
+@source not "./**/*.spec.tsx";
+@source not "./**/*.stories.tsx";

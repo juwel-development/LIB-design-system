@@ -92,12 +92,22 @@ a component, and not a numeric ramp step.
 |---|---|
 | `npm run build:tokens` | `src/tokens.css` from the palette |
 | `npm run build:components` | `dist/design-system.js` — vite library mode, ESM only |
+| `npm run build:styles` | `dist/styles.css`, `dist/styles.light.css`, `dist/styles.dark.css` — Vite + Tailwind, precompiled |
 | `npm run build:types` | `dist/types/` — `tsc --emitDeclarationOnly` |
-| `npm run build` | components + types (**not** tokens; regenerate those deliberately) |
+| `npm run check:build` | verifies published CSS and JS delivery contracts; also runs in CI through `build` |
+| `npm run build` | components + styles + types + smoke check (**not** tokens; regenerate those deliberately) |
 
-`vite-plugin-lib-inject-css` puts the CSS import in the bundle; peers stay `external` in
-`rollupOptions` so React is never bundled. `package.json#files` ships `dist` **and** `src`, minus
-specs and stories — so a consumer can read the source of what it imports.
+The JavaScript bundle starts with `"use client"` and imports no CSS; hosts explicitly import
+one of the three `styles*.css` exports, all of which resolve to self-contained files in `dist`.
+A separate Vite CSS build preserves each source filename and compiles Tailwind using only
+component sources, excluding specs and stories and disabling automatic content detection.
+Peers stay `external` in `rollupOptions` so React is never bundled, and
+`sideEffects: ["**/*.css"]` preserves CSS imports during tree shaking.
+
+`package.json#files` ships `dist` **and** `src`, minus specs and stories, so consumers can
+read component source and import the uncompiled `tokens*.css` exports. Those tokens require
+Tailwind v4, declared as an optional peer; the prebuilt stylesheet exports do not use `src`
+and require no Tailwind in the host.
 
 ## Release
 

@@ -29,9 +29,9 @@
 			"import": "./dist/design-system.js",
 			"default": "./dist/design-system.js"
 		},
-		"./styles.css": "./src/styles.css",
-		"./styles.light.css": "./src/styles.light.css",
-		"./styles.dark.css": "./src/styles.dark.css",
+		"./styles.css": "./dist/styles.css",
+		"./styles.light.css": "./dist/styles.light.css",
+		"./styles.dark.css": "./dist/styles.dark.css",
 		"./tokens.css": "./src/tokens.css",
 		"./tokens.light.css": "./src/tokens.light.css",
 		"./tokens.dark.css": "./src/tokens.dark.css",
@@ -41,7 +41,7 @@
 		"build:tokens": "tsx scripts/build-tokens.ts",
 		"build:components": "vite build",
 		"build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly --declarationDir dist/types",
-		"build": "npm run build:components && npm run build:types",
+		"build": "npm run build:components && npm run build:styles && npm run build:types && npm run check:build",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:coverage": "vitest run --coverage",
@@ -53,7 +53,9 @@
 		"fallow:human": "fallow dead-code && fallow dupes && fallow health",
 		"fallow:agent": "fallow review --brief",
 		"fallow:map": "fallow viz",
-		"prepare": "husky"
+		"prepare": "husky",
+		"build:styles": "vite build --config vite.styles.config.ts",
+		"check:build": "tsx scripts/check-build.ts"
 	},
 	"dependencies": {
 		"class-variance-authority": "^0.7.1"
@@ -61,7 +63,8 @@
 	"peerDependencies": {
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
-		"rxjs": "^7.8.2"
+		"rxjs": "^7.8.2",
+		"tailwindcss": "^4.0.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.7",
@@ -93,12 +96,19 @@
 		"tsx": "^4.23.11",
 		"typescript": "^5.9.2",
 		"vite": "^8.2.1",
-		"vite-plugin-lib-inject-css": "^2.2.2",
 		"vitest": "^4.1.10"
 	},
 	"overrides": {
 		"fallow-type-aware": {
 			"typescript": "7.0.2"
+		}
+	},
+	"sideEffects": [
+		"**/*.css"
+	],
+	"peerDependenciesMeta": {
+		"tailwindcss": {
+			"optional": true
 		}
 	}
 }
