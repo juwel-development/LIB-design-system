@@ -32,12 +32,27 @@ describe('Callout', () => {
     },
   );
   it.each(['warning', 'info', 'success', 'error'] as const)(
-    'keeps %s content and controls independent of its passive mark',
+    'adds no focus or announcement semantics for the %s tone',
+    (tone) => {
+      render(
+        <Callout tone={tone} name="Response">
+          <P>Response required.</P>
+        </Callout>,
+      );
+      const group = screen.getByRole('group', { name: 'Response' });
+      expect(group).not.toHaveAttribute('tabindex');
+      expect(group).not.toHaveAttribute('aria-live');
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    },
+  );
+  it.each(['warning', 'info', 'success', 'error'] as const)(
+    'preserves the consumer control sequence and operation for the %s tone',
     (tone) => {
       const action = new Subject<void>();
       const events: string[] = [];
       action.subscribe(() => events.push('activated'));
-      const { rerender } = render(
+      render(
         <Callout tone={tone} name="Response">
           <Stack>
             <P>Response required.</P>
@@ -62,19 +77,17 @@ describe('Callout', () => {
       fireEvent.click(accept);
       fireEvent.click(screen.getByRole('button', { name: 'Decline' }));
       expect(events).toHaveLength(1);
-      expect(group).not.toHaveAttribute('tabindex');
-      expect(group).not.toHaveAttribute('aria-live');
-      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
-      rerender(
-        <Callout tone={tone}>
-          <Icon name="bubble-exclamation" label="Response required" />
-        </Callout>,
-      );
-      expect(
-        screen.getByRole('img', { name: 'Response required' }),
-      ).toBeInTheDocument();
       expect(action.closed).toBe(false);
     },
   );
+  it('preserves a consumer-named icon that communicates status without colour', () => {
+    render(
+      <Callout tone="warning">
+        <Icon name="bubble-exclamation" label="Response required" />
+      </Callout>,
+    );
+    expect(
+      screen.getByRole('img', { name: 'Response required' }),
+    ).toBeInTheDocument();
+  });
 });
