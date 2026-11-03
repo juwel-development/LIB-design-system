@@ -333,6 +333,14 @@
 }
 
 :root {
+  --step-marker-size: 2em;
+  --step-inset-inline: 1em;
+  --step-inset-block: 0.5em;
+  --step-connector-thickness: 1px;
+  --step-selection-thickness: 2px;
+}
+
+:root {
   --slider-track-thickness: 0.25rem;
   --slider-thumb-size: 1.5rem;
 }

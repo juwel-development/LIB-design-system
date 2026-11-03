@@ -432,6 +432,12 @@ The consumer's classification of a form step as done, open or blocked, independe
 is currently selected. Visiting a step does not change its status; a current step may be done or blocked.
 _Avoid_: Current status, navigation state, automatic completion
 
+**Step row overflow**:
+The provisional narrow-screen arrangement of Stepper: one connected horizontal row, with whole
+label and value text wrapping within steps and residual overflow scrolling the row. Focus reveals
+an offscreen step. Responsive alternatives remain a future research question.
+_Avoid_: Truncated steps, hidden steps, automatic wizard layout
+
 **Blocked step**:
 A step whose work cannot proceed until consumer-defined prerequisites are met, while remaining
 focusable and selectable so its panel can explain what is needed. The consumer owns validation and

@@ -303,6 +303,16 @@ const TICK = `:root {
   --tick-thickness: 1px;
 }`;
 
+/* Step geometry is independently themeable: positive marker size and line thicknesses,
+   nonnegative insets. The marker size must fit the consumer's font and ordinal count. */
+const STEPPER = `:root {
+  --step-marker-size: 2em;
+  --step-inset-inline: 1em;
+  --step-inset-block: 0.5em;
+  --step-connector-thickness: 1px;
+  --step-selection-thickness: 2px;
+}`;
+
 /* Tab label insets separate adjacent controls and give the label vertical breathing room.
    These are two axis-specific jobs, not a selectable scale; stack/region/band describe other jobs.
    Like those spacing roles, em tracks the label type. Non-negative values preserve the hit area. */
@@ -487,6 +497,8 @@ ${TAB_MARKER}
 ${TABLE_SELECTION_MARKER}
 
 ${TAB_INSETS}
+
+${STEPPER}
 
 ${SLIDER}
 
