@@ -43,7 +43,7 @@ this work adds the missing Table and Stepper composition on the actual merged AP
 ## Remaining work and limits
 
 No missing sibling API or composition remains for #141, #142 or #143 in this assembled example.
-**Visible keyboard-ring verification remains manual:** both Storybook userEvent and Orca's native
+**Original implementation evidence limitation (closed for Chromium by [the review](141-review.md)):** both Storybook userEvent and Orca's native
 keypress commands move keyboard focus in WebKit but leave `:focus-visible` false (outline style
 `none`). The tests establish focus position and reachability, not a visually observed ring. No
 forced pseudo-class or fake replacement component was used to claim that evidence. Chromium,
