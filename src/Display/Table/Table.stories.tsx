@@ -1994,28 +1994,39 @@ export const HighlightedStatusText: Story = {
 
 const IconActionsExample = () => {
   const [showWidest, setShowWidest] = useState(true);
-  const [lastAction, setLastAction] = useState('None');
+  const [actionCount, setActionCount] = useState(0);
+  const [rowCount, setRowCount] = useState(0);
   const filter$ = useMemo(() => new Subject<void>(), []);
   const action$ = useMemo(() => new Subject<void>(), []);
   const row$ = useMemo(() => new Subject<void>(), []);
   const selected$ = useMemo(() => new BehaviorSubject(true), []);
   useEffect(() => {
     const filter = filter$.subscribe(() => setShowWidest((value) => !value));
-    const action = action$.subscribe(() => setLastAction('Icon action'));
-    const row = row$.subscribe(() => setLastAction('Row action'));
+    const action = action$.subscribe(() =>
+      setActionCount((count) => count + 1),
+    );
+    const row = row$.subscribe(() => setRowCount((count) => count + 1));
     return () => {
       filter.unsubscribe();
       action.unsubscribe();
       row.unsubscribe();
     };
   }, [filter$, action$, row$]);
-  const parts = [Icon.Plus, Icon.Up, Icon.Down, Icon.Right, Icon.Remove];
+  const parts = [
+    { Drawing: Icon.Plus, label: 'Add' },
+    { Drawing: Icon.Up, label: 'Move up' },
+    { Drawing: Icon.Down, label: 'Move down' },
+    { Drawing: Icon.Right, label: 'Move right' },
+    { Drawing: Icon.Remove, label: 'Remove' },
+  ];
   return (
     <Stack>
       <Button onClick$={filter$}>
         {showWidest ? 'Hide widest group' : 'Show widest group'}
       </Button>
-      <Note>Last request: {lastAction}</Note>
+      <Note>
+        Icon requests: {actionCount}; row requests: {rowCount}
+      </Note>
       {(['comfortable', 'compact'] as const).map((density) => (
         <Stack key={density}>
           {([0, 1, 2] as const).map((position) => (
@@ -2065,13 +2076,11 @@ const IconActionsExample = () => {
                           </Button>
                         ) : (
                           <Cluster gap={'stack'}>
-                            {parts.slice(0, count).map((Drawing, part) => (
+                            {parts.slice(0, count).map(({ Drawing, label }) => (
                               <Button
-                                key={
-                                  ['add', 'up', 'down', 'right', 'remove'][part]
-                                }
+                                key={label}
                                 variant={'plain'}
-                                ariaLabel={`${['Add', 'Move up', 'Move down', 'Move right', 'Remove'][part]} song`}
+                                ariaLabel={`${label} song`}
                                 onClick$={action$}
                               >
                                 <Drawing />
@@ -2116,6 +2125,7 @@ Theme constraints: --space-stack must be at least --focus-ring-width + --focus-r
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const tables = canvas.getAllByRole('table');
+    await userEvent.tab();
     const widths = tables.map((table, position) => {
       const rows = within(table).getAllByRole('row');
       const text = rows[1];
@@ -2132,9 +2142,25 @@ Theme constraints: --space-stack must be at least --focus-ring-width + --focus-r
       if (!wrapper) throw new Error('Missing scroll wrapper');
       const buttons = within(table).getAllByRole('button');
       for (const button of buttons) {
+        button.focus();
+        expect(button).toHaveFocus();
+        expect(getComputedStyle(button).outlineStyle).toBe('solid');
         const ring =
           Number.parseFloat(getComputedStyle(button).outlineWidth) +
           Number.parseFloat(getComputedStyle(button).outlineOffset);
+        expect(ring).toBeGreaterThan(0);
+        const neighbours = Array.from(
+          button.parentElement?.querySelectorAll('button') ?? [],
+        ).filter((other) => other !== button);
+        for (const other of neighbours) {
+          const focused = button.getBoundingClientRect();
+          const adjacent = other.getBoundingClientRect();
+          const gap =
+            adjacent.left >= focused.right
+              ? adjacent.left - focused.right
+              : focused.left - adjacent.right;
+          expect(gap).toBeGreaterThanOrEqual(ring);
+        }
         wrapper.scrollLeft = 0;
         if (position % 3 === 0)
           expect(
@@ -2167,11 +2193,11 @@ Theme constraints: --space-stack must be at least --focus-ring-width + --focus-r
     action.focus();
     await userEvent.keyboard('{Enter}');
     await expect(
-      canvas.getByText('Last request: Icon action'),
+      canvas.getByText('Icon requests: 1; row requests: 0'),
     ).toBeInTheDocument();
     await userEvent.keyboard(' ');
     await expect(
-      canvas.getByText('Last request: Icon action'),
+      canvas.getByText('Icon requests: 2; row requests: 0'),
     ).toBeInTheDocument();
     await userEvent.click(
       canvas.getByRole('button', { name: 'Hide widest group' }),
