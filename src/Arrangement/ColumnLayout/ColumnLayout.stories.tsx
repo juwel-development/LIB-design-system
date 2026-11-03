@@ -15,7 +15,7 @@ import {
   useState,
 } from 'react';
 import { Subject } from 'rxjs';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { ColumnLayout } from './ColumnLayout';
 
 // The stories stand in for the consumer: they declare the minimum-width tokens on a holder, the
@@ -694,12 +694,21 @@ const FillExample: FunctionComponent<{
   unsized?: boolean;
   fill?: boolean;
   scrollContainer?: boolean;
-}> = ({ columns = 2, narrow, unsized, fill = true, scrollContainer }) => (
+  capped?: boolean;
+}> = ({
+  columns = 2,
+  narrow,
+  unsized,
+  fill = true,
+  scrollContainer,
+  capped,
+}) => (
   <div
     data-testid="fill-holder"
     style={
       {
         '--lane-min-width': '12rem',
+        '--lane-max-width': '16rem',
         width: narrow ? '20rem' : '100%',
         height: unsized ? undefined : '24rem',
         overflow: 'auto',
@@ -708,7 +717,12 @@ const FillExample: FunctionComponent<{
   >
     <ColumnLayout.Root fill={fill} gap="stack" testId="fill-row">
       {Array.from({ length: columns }, (_, index) => index).map((index) => (
-        <ColumnLayout.Column key={index} weight={1} minWidth="--lane-min-width">
+        <ColumnLayout.Column
+          key={index}
+          weight={1}
+          minWidth="--lane-min-width"
+          maxWidth={capped && index === 0 ? '--lane-max-width' : undefined}
+        >
           {scrollContainer ? (
             <ScrollContainer axis="vertical" ariaLabel={`Lane ${index + 1}`}>
               <LaneEntries lane={index + 1} count={index === 0 ? 40 : 2} />
@@ -1159,5 +1173,119 @@ export const CappedResponsiveTheme: Story = {
     await expectWidths(row, [120, 500]);
     canvas.getByTestId('cap-theme').classList.remove('alternate');
     await expectWidths(row, [cap, 620 - cap]);
+  },
+};
+
+const checkCappedOverflow = async (
+  canvasElement: HTMLElement,
+  scrollContainer: boolean,
+) => {
+  const canvas = within(canvasElement);
+  const row = canvas.getByTestId('fill-row');
+  const holder = canvas.getByTestId('fill-holder');
+  const cap =
+    16 * Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const gap = Number.parseFloat(getComputedStyle(row).columnGap);
+  await expectWidths(row, [cap, widthOf(row) - gap - cap]);
+  for (const column of columnsOf(row))
+    await expect(column.getBoundingClientRect().height).toBe(
+      holder.clientHeight,
+    );
+  const scroller = canvas.getByRole('group', {
+    name: scrollContainer ? 'Lane 1' : 'Lane 1 entries',
+  });
+  const last = canvas.getByRole('button', { name: 'Lane 1 entry 40' });
+  const columns = columnsOf(row);
+  last.focus();
+  await expect(scroller.scrollTop).toBeGreaterThan(0);
+  await expect(holder.scrollTop).toBe(0);
+  await expect(holder.scrollHeight).toBe(holder.clientHeight);
+  holder.style.width = '20rem';
+  await expect(isOneColumn(row)).toBe(true);
+  await expect(holder.scrollHeight).toBeGreaterThan(holder.clientHeight);
+  await expect(columnsOf(row)).toEqual(columns);
+  await expect(last).toHaveFocus();
+};
+
+export const CappedFillingPanes: Story = {
+  render: () => <FillExample capped />,
+  play: async ({ canvasElement }) => checkCappedOverflow(canvasElement, false),
+};
+
+export const CappedFillingScrollContainers: Story = {
+  render: () => <FillExample capped scrollContainer />,
+  play: async ({ canvasElement }) => checkCappedOverflow(canvasElement, true),
+};
+
+const ChangingCappedColumns: FunctionComponent = () => {
+  const [changed, setChanged] = useState(false);
+  const [change$] = useState(() => new Subject<void>());
+  useEffect(() => {
+    const subscription = change$.subscribe(() => setChanged((value) => !value));
+    return () => subscription.unsubscribe();
+  }, [change$]);
+  return (
+    <Holder
+      width="640px"
+      style={{
+        '--space-stack': '20px',
+        '--track-minimum': '40px',
+        '--initial-cap': '100px',
+        '--changed-cap': '200px',
+      }}
+    >
+      <Button onClick$={change$}>Change allocation</Button>
+      <ColumnLayout.Root gap="stack" testId="changing-row">
+        <ColumnLayout.Column
+          key="draft"
+          weight={changed ? 2 : 1}
+          minWidth="--track-minimum"
+          maxWidth={changed ? '--changed-cap' : '--initial-cap'}
+        >
+          <Input label="Changing draft" name="changing-draft" />
+        </ColumnLayout.Column>
+        <ColumnLayout.Column
+          key="reading"
+          weight={1}
+          minWidth="--track-minimum"
+        >
+          <P>Reading</P>
+        </ColumnLayout.Column>
+        {changed && (
+          <ColumnLayout.Column
+            key="extra"
+            weight={2}
+            minWidth="--track-minimum"
+          >
+            <P>Extra</P>
+          </ColumnLayout.Column>
+        )}
+      </ColumnLayout.Root>
+    </Holder>
+  );
+};
+
+export const CappedPropChanges: Story = {
+  render: () => <ChangingCappedColumns />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = canvas.getByTestId('changing-row');
+    const input = canvas.getByRole('textbox', { name: 'Changing draft' });
+    await userEvent.type(input, 'Preserved');
+    await expectWidths(row, [100, 520]);
+    // Programmatic activation preserves input focus while React changes the allocation.
+    canvas.getByRole('button', { name: 'Change allocation' }).click();
+    await waitFor(() => expect(columnsOf(row)).toHaveLength(3));
+    await expectWidths(row, [200, 400 / 3, 800 / 3]);
+    await expect(canvas.getByRole('textbox', { name: 'Changing draft' })).toBe(
+      input,
+    );
+    await expect(input).toHaveFocus();
+    await expect(input).toHaveValue('Preserved');
+    canvas.getByRole('button', { name: 'Change allocation' }).click();
+    await waitFor(() => expect(columnsOf(row)).toHaveLength(2));
+    await expectWidths(row, [100, 520]);
+    await expect(input).toHaveFocus();
+    await expect(input).toHaveValue('Preserved');
   },
 };

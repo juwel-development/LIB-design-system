@@ -104,6 +104,12 @@ const thresholdOf = (tracks: readonly Track[]): string => {
   return `calc(${tracks.length - 1} * var(--column-layout-gap) + max(${shares.join(', ')}))`;
 };
 
+// Flex factors below one leave surplus unallocated, even after other columns freeze at caps.
+const growthUnitOf = (tracks: readonly Track[]): number =>
+  tracks.some((track) => track.maxWidth !== undefined)
+    ? Math.min(1, ...tracks.map((track) => track.weight))
+    : 1;
+
 const isFragment = (
   node: ReactNode,
 ): node is ReactElement<{ children?: ReactNode }> =>
@@ -181,13 +187,7 @@ const ColumnLayoutRoot: FunctionComponent<IColumnLayoutRootProps> = ({
       ? undefined
       : {
           '--column-layout-threshold': thresholdOf(tracks),
-          // Flex grow factors below one leave free space unallocated. Capped arrangements must
-          // consume it while any column can grow, including after all other columns freeze.
-          '--column-layout-growth-unit': tracks.some(
-            (track) => track.maxWidth !== undefined,
-          )
-            ? Math.min(1, ...tracks.map((track) => track.weight))
-            : 1,
+          '--column-layout-growth-unit': growthUnitOf(tracks),
         };
   const row = (
     <div
