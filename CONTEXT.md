@@ -401,6 +401,12 @@ A control that sets one numeric value by moving one thumb along a fixed, visible
 It is neither a bounded pair nor a field for freely entered content.
 _Avoid_: Range, range input, range picker
 
+**Switch**:
+One immediate setting with two states, named by one stable visible label. The consumer owns the
+state stream and answers change requests; thumb position distinguishes on from off without colour.
+A submitted selection belongs to a checkbox in a Form, and described alternatives to Choices.
+_Avoid_: Toggle button, checkbox, segmented control
+
 **Choices**:
 A single selection from a small set of described options, presented as vertically arranged choice
 rows with exactly one selected. The consumer owns the selected value and every word - each option

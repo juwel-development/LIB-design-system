@@ -35,6 +35,7 @@ export { MultiSelect } from 'Interaction/MultiSelect/MultiSelect';
 export { NumberInput } from 'Interaction/NumberInput/NumberInput';
 export { Select } from 'Interaction/Select/Select';
 export { Slider } from 'Interaction/Slider/Slider';
+export { Switch } from 'Interaction/Switch/Switch';
 export { Tabs } from 'Interaction/Tabs/Tabs';
 export { TextArea } from 'Interaction/TextArea/TextArea';
 export { Cover } from 'Layout/Cover/Cover';

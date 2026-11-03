@@ -307,6 +307,11 @@
   --choice-marker-dot-size: 0.5rem;
 }
 
+:root {
+  --switch-thumb-size: 1rem;
+  --switch-track-inset: 0.125rem;
+}
+
 /* The meter track's thickness is not a colour either, and sits in :root beside the tab blocks. */
 :root {
   --meter-track-thickness: 0.5rem;

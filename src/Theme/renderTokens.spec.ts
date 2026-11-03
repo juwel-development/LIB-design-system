@@ -762,3 +762,10 @@ describe('strong weight token contract', () => {
     },
   );
 });
+
+it('ships Switch geometry in every theme entry point', () => {
+  for (const css of [renderTokens(), renderLightTokens(), renderDarkTokens()]) {
+    expect(css).toContain('--switch-thumb-size: 1rem;');
+    expect(css).toContain('--switch-track-inset: 0.125rem;');
+  }
+});
