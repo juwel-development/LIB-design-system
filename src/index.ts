@@ -6,6 +6,7 @@ export { FieldRow } from 'Arrangement/FieldRow/FieldRow';
 export { Stack } from 'Arrangement/Stack/Stack';
 export { Box } from 'Display/Box/Box';
 export { Brandmark } from 'Display/Brandmark/Brandmark';
+export { Callout } from 'Display/Callout/Callout';
 export { Checklist } from 'Display/Checklist/Checklist';
 export { Collection } from 'Display/Collection/Collection';
 export { DefinitionList } from 'Display/DefinitionList/DefinitionList';

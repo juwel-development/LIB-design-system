@@ -233,6 +233,12 @@
   --space-box-inset: 1em;
 }
 
+/* Callout marks an edge without enclosing or arranging its content. */
+:root {
+  --callout-mark-width: 0.25rem;
+  --space-callout-inset: 1em;
+}
+
 /* Table's cell insets, one pair per density, beside Box's. */
 :root {
   --table-cell-inset-inline: 1rem;

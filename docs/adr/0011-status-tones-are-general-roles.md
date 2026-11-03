@@ -107,3 +107,16 @@ constraint is [SC 1.4.11](https://www.w3.org/TR/WCAG22/#non-text-contrast)'s 3:1
 which the 4.5:1 text floor above already clears in both themes. The general rule holds: the tone
 changes colour only. The mark's name states the status, its shape tells the two forms apart, and
 nothing is announced when the tone or the drawing changes.
+
+**Callout carries the tone on a leading-edge bar ([#131](https://github.com/juwel-development/LIB-design-system/issues/131)).**
+The consumer needs to mark a block containing both text and controls without enclosing it. A dedicated
+Callout preserves Box's four-sided enclosure contract. Its closed `tone` selector carries the same
+four-role family, defaulting to warning; the tone changes the bar's colour only. Consumer text or a
+named Icon states the status, and optional group naming adds neither focus nor a live announcement.
+The bar has the graphical object's 3:1 contrast constraint against its surrounding surface, already
+cleared on `surface` by the shared text floor. Forced colours use CanvasText.
+
+The leading mark and its separation from the content have their own theme roles:
+`--callout-mark-width` (positive length, default `0.25rem`) and `--space-callout-inset` (nonnegative
+length, default `1em`). These are distinct from Box's all-sided padding and an arrangement's sibling
+gap: Callout arranges nothing and only insets its marked edge. They expose no size or spacing props.
