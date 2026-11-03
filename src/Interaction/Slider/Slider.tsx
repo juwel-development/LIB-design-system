@@ -83,11 +83,6 @@ const assertOperatingRange = (
       `\`step\` (${range.step}) must be positive`,
     );
   }
-  if (range.value < range.min || range.value > range.max) {
-    throw new SliderConfigurationError(
-      `\`value\` (${range.value}) must lie within [${range.min}, ${range.max}]`,
-    );
-  }
 };
 
 /**
@@ -98,6 +93,9 @@ const assertOperatingRange = (
  * `Input` too: visible, associated, and the only text the component renders (#112). It is still
  * a live control and not a form field, so none of Input's annotations - hint, error, optional
  * marker - come with it. `disabled` is the explicit non-operable state.
+ *
+ * An off-range value renders at the nearest bound through the native control. The consumer still
+ * owns the value: the clamped position is not emitted on `onInput$` until the user moves the thumb.
  */
 export const Slider: FunctionComponent<ISliderProps> = ({
   min,

@@ -132,14 +132,27 @@ describe('Meter', () => {
     ).toThrowError(MeterConfigurationError);
   });
 
-  it('throws for a value outside the inclusive range instead of clamping it, so a wrong number cannot render as a plausible level', () => {
-    expect(() =>
-      render(<Meter value={101} max={100} label={'Over'} />),
-    ).toThrowError(MeterConfigurationError);
-    expect(() =>
-      render(<Meter value={-1} max={100} label={'Under'} />),
-    ).toThrowError(MeterConfigurationError);
-  });
+  it.each([
+    [100.0001, '1'],
+    [-1, '0'],
+  ])(
+    'clamps the filled share for off-range value %s while preserving the raw announcement',
+    (value, share) => {
+      render(
+        <Meter
+          value={value}
+          max={100}
+          label={'Capacity'}
+          valueText={'Consumer wording'}
+        />,
+      );
+
+      const meter = screen.getByRole('meter', { name: 'Capacity' });
+      expect(meter.style.getPropertyValue('--meter-level')).toBe(share);
+      expect(meter).toHaveAttribute('aria-valuenow', String(value));
+      expect(meter).toHaveAttribute('aria-valuetext', 'Consumer wording');
+    },
+  );
 
   it('does not judge the label contents - an empty string renders, its wording being the consumer responsibility', () => {
     expect(() =>

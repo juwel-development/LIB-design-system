@@ -139,11 +139,25 @@ describe('Slider Component', () => {
     );
   });
 
-  it('throws when the controlled value escapes the range, rather than clamping it', () => {
-    expect(() => renderSlider({ value: 500 })).toThrowError(
-      SliderConfigurationError,
-    );
-  });
+  it.each([
+    [10, '20'],
+    [500, '300'],
+  ])(
+    'renders off-range value %s at the nearest bound without emitting until movement',
+    (value, position) => {
+      const onInput$ = new Subject<number>();
+      const emitted: number[] = [];
+      onInput$.subscribe((next) => emitted.push(next));
+      renderSlider({ value, onInput$ });
+
+      const slider = screen.getByRole('slider');
+      expect(slider).toHaveValue(position);
+      expect(emitted).toEqual([]);
+      fireEvent.input(slider, { target: { value: '65' } });
+      expect(emitted).toEqual([65]);
+      expect(slider).toHaveValue(position);
+    },
+  );
 
   it('does not judge step-grid alignment: an off-grid value renders untouched', () => {
     // 63 sits inside [20, 300] but off the 5-grid; alignment is the caller's obligation and the

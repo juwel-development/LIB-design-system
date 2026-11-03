@@ -2,6 +2,7 @@ import { Link } from 'Interaction/Link/Link';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Form } from './Form';
+import { FormConfigurationError } from './FormConfigurationError';
 
 // The note the widening was filed for: a privacy line whose link has to sit inside the `<form>`.
 const privacyNote = (
@@ -116,7 +117,9 @@ describe('Form Component', () => {
   });
 
   it('refuses a sent state with no note, the outcome message it exists to show', () => {
-    expect(() => render(<Form action={'/x'} state={'sent'} />)).toThrow();
+    expect(() => render(<Form action={'/x'} state={'sent'} />)).toThrow(
+      FormConfigurationError,
+    );
   });
 
   it('renders a note carrying a link inside the form, so the line stays in the element it annotates', () => {
@@ -179,7 +182,7 @@ describe('Form Component', () => {
     (_label, note) => {
       expect(() =>
         render(<Form action={'/x'} state={'sent'} note={note} />),
-      ).toThrow();
+      ).toThrow(FormConfigurationError);
     },
   );
 

@@ -27,7 +27,7 @@ const meta: Meta<typeof Slider> = {
     value: {
       control: false,
       description:
-        'The current value; the consumer holds it and passes it back in',
+        'The consumer-owned value; off-range values render at the nearest bound without emitting until the thumb moves',
     },
     onInput$: {
       control: false,
