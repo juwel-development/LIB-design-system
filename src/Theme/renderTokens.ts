@@ -102,11 +102,14 @@ const TYPOGRAPHY = `@theme {
   /* Type roles, not a scale: one role per job, so a component asks for what its text is, never a rung.
      display > title > subtitle are the three heading steps H1-H3 bind to; H4-H6 share body and split
      by weight, so there is no fourth role. display is the hero and must out-scale every subpage head. */
-  --text-display: clamp(3rem, 7vw, 6rem);
+  /* At 1280, 1440 and 1920 CSS px (16px root), size(w / 2) / size(w) must be >= 0.75.
+     At 200% zoom the viewport halves, so physical growth is 2 * that ratio: at least 1.5x.
+     The rem terms preserve growth; at 1280px these sizes stay within 2px of the old vw clamps. */
+  --text-display: clamp(3rem, 3rem + 3.125vw, 6rem);
   --leading-display: 1.05;
-  --text-title: clamp(2.25rem, 5vw, 4.25rem);
+  --text-title: clamp(2.25rem, 2.25rem + 2.25vw, 4.25rem);
   --leading-title: 1.1;
-  --text-subtitle: clamp(1.5rem, 3vw, 2.25rem);
+  --text-subtitle: clamp(1.5rem, 1.5rem + 1vw, 2.25rem);
   --leading-subtitle: 1.2;
 
   /* The reading block's opening paragraph (Prose #21): sized above body and below subtitle, led
@@ -115,6 +118,10 @@ const TYPOGRAPHY = `@theme {
      subtitle was rejected in ADR 0004 - it welds the lede's size to H3's and its leading to a head's. */
   --text-lede: 1.25rem;  /* 20px */
   --leading-lede: 1.4;
+
+  /* Whole correspondence blocks, independently of opening ledes (Prose #128). */
+  --text-letter: 1.25rem;
+  --leading-letter: 1.8;
   --text-body: 1.0625rem;  /* 17px, floored at 16px: below it iOS Safari zooms the viewport when a control set at this role takes focus (#92) */
   --leading-body: 1.6;
   --text-small: 0.9375rem;  /* 15px floor: below it tabular figures stop comparing column to column */
@@ -129,7 +136,7 @@ const TYPOGRAPHY = `@theme {
   /* The Dialog title role: the top heading of an independent transitory task, deliberately outside
      the page heading ladder (docs/adr/0005). Ships subtitle's values while staying an independent
      role, so a consumer re-points Dialog titles without moving every H3 (docs/adr/0004, Amendments). */
-  --text-dialog-title: clamp(1.5rem, 3vw, 2.25rem);
+  --text-dialog-title: clamp(1.5rem, 1.5rem + 1vw, 2.25rem);
   --leading-dialog-title: 1.2;
 
   /* Two quantities on one property that must not collapse: --tracking-label is a fixed letter-spaced
@@ -150,6 +157,9 @@ const FAMILY_ROLES = `@utility font-heading {
   font-family: var(--font-heading, var(--font-primary));
 }
 
+@utility font-letter {
+  font-family: var(--font-letter, var(--font-primary));
+}
 @utility font-body {
   font-family: var(--font-body, var(--font-primary));
 }
@@ -164,6 +174,7 @@ const FAMILY_ROLES = `@utility font-heading {
    the action column, in rem (docs/adr/0008, Amendments, #97); 20rem clears --control-min-width. */
 const MEASURE = `:root {
   --measure: 66ch;
+  --measure-letter: 60ch;
   --measure-display: 36ch;
   --measure-wide: 72ch;
   --measure-action: 20rem;
@@ -303,6 +314,16 @@ const TICK = `:root {
   --tick-thickness: 1px;
 }`;
 
+/* Step geometry is independently themeable: positive marker size and line thicknesses,
+   nonnegative insets. The marker size must fit the consumer's font and ordinal count. */
+const STEPPER = `:root {
+  --step-marker-size: 2em;
+  --step-inset-inline: 1em;
+  --step-inset-block: 0.5em;
+  --step-connector-thickness: 1px;
+  --step-selection-thickness: 2px;
+}`;
+
 /* Tab label insets separate adjacent controls and give the label vertical breathing room.
    These are two axis-specific jobs, not a selectable scale; stack/region/band describe other jobs.
    Like those spacing roles, em tracks the label type. Non-negative values preserve the hit area. */
@@ -387,13 +408,8 @@ const declarations = (
     .map((name) => `  --color-${toKebabCase(name)}: ${value(name)};`)
     .join('\n');
 
-// The library no longer declares --color-ring but still reads it as a fallback, so a consumer's
-// existing value keeps working; the plain hex in the palette is the default and what the contrast
-// test checks. See docs/adr/0002-focus-ring-token-contract.md.
-const raw = (tokens: Required<PaletteTokens>) => (name: string) => {
-  const value = tokens[name as keyof PaletteTokens];
-  return name === 'focusRing' ? `var(--color-ring, ${value})` : value;
-};
+const raw = (tokens: Required<PaletteTokens>) => (name: string) =>
+  tokens[name as keyof PaletteTokens];
 const reference = () => (name: string) => `var(--color-${toKebabCase(name)})`;
 
 // Only the combined tokens.css carries the dark set; this gates it behind .dark and defines dark:.
@@ -430,7 +446,7 @@ ${UNDERLINE}
    utilities, so it is not carried in @theme inline with the palette. */
 ${TYPOGRAPHY}
 
-/* The heading, body and control family roles are utilities with a fallback to the primary face, not
+/* The heading, body, letter and control family roles are utilities with a fallback to the primary face, not
    @theme variables, so a theme re-pointing either name at any scope reaches the text beneath it. */
 ${FAMILY_ROLES}
 
@@ -487,6 +503,8 @@ ${TAB_MARKER}
 ${TABLE_SELECTION_MARKER}
 
 ${TAB_INSETS}
+
+${STEPPER}
 
 ${SLIDER}
 

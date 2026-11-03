@@ -15,6 +15,12 @@ const meta: Meta<typeof Dialog.Root> = {
   component: Dialog.Root,
   parameters: {
     layout: 'padded',
+    docs: {
+      description: {
+        component:
+          'Dialog.Content defaults to scrollOwner="body". Use scrollOwner="child" for one bounded child, such as Table.Root bounded, which owns both scroll axes while title, description and actions stay fixed. Intermediate wrappers must preserve height allocation; fixed regions and a usable child viewport must fit the available space. See Display/Table → Bounded Dialog and Bounded Content Dialog for live compositions.',
+      },
+    },
   },
   tags: ['autodocs'],
   argTypes: {

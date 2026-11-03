@@ -236,7 +236,7 @@ defaulting to `region`. Columns align at the top and omitted columns reserve no 
 existing axis-switching behavior remains its own contract. This decision does not reopen the Figure
 or Brandmark width APIs or introduce a general measurement escape hatch.
 
-**Column maximums — triage decisions for #139.**
+**Column maximums — #139.**
 `ColumnLayout.Column` accepts an optional `maxWidth` custom-property name, extending the same narrow
 consumer-defined token-reference contract as `minWidth`. Omitting it leaves the column uncapped.
 
@@ -353,6 +353,15 @@ The interface is compositional: `Stepper.Root`, `Stepper.List`, `Stepper.Step` a
 List owns the connected row; each Step supplies its identity, label, status, value text and optional
 status slot. Numbering follows rendered step order, and Panels match Steps by identity. Do not
 replace these parts with a monolithic steps-array rendering API.
+
+Implementation of #143 uses `active$`, `onSelect$`, `label`, `value`, `status`, `valueText` and
+optional `statusContent` at these composition boundaries. Before the current source first emits,
+no active panel is invented; replacement clears the previous selection. The visible marker is an
+ordinal for open, a check for done and a blocked mark for blocked; selection is a separate underline.
+The step marker size, two insets, connector thickness and selection thickness are semantic theme
+tokens, not props. Root always accepts a parent height, with natural height in an unsized parent;
+List and Panels must be direct DOM children to preserve that allocation. Pane is the verified
+scroll owner. A direct bounded Table composition is separate cross-ticket integration with #142.
 
 **Bounded tables — triage decisions for #142.**
 Narrow comparison tables use the existing weighted column allocation with minimums omitted. Text

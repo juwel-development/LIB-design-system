@@ -134,6 +134,8 @@ _Avoid_: Max width, line length, content width
 A whole block of personal correspondence whose salutation, running paragraphs and signature share
 one typography treatment and a reading measure of its own. Its family role follows the primary face
 unless the theme assigns letters their own face; the consumer owns its words and language.
+`Prose.Root variant="letter"` selects the treatment and measure together, with `Prose.Body`
+for every correspondence paragraph.
 _Avoid_: Large body copy, lede, paper treatment
 
 ### Motion
@@ -241,8 +243,8 @@ _Avoid_: Row, HStack, inline list, nav, toolbar
 
 **ColumnLayout**:
 An arrangement of any number of columns with consumer-chosen relative widths and a minimum readable
-width for each column. When the available space cannot satisfy every column's minimum at those
-proportions, the whole arrangement becomes one column in the same reading order. Its optional fill
+width for each column, with optional theme-named maximums for horizontal allocation. When the available
+space cannot satisfy every column's minimum at those proportions, the whole arrangement becomes one column in the same reading order. Its optional fill
 mode passes an allocated height to every horizontal column; an unsized parent or the stacked
 arrangement leaves columns at content height, with scrolling owned by the holder.
 _Avoid_: Proportional Stack, split Stack, Columns
@@ -433,6 +435,12 @@ _Avoid_: Wizard, progress bar, automatic workflow
 The consumer's classification of a form step as done, open or blocked, independently of which step
 is currently selected. Visiting a step does not change its status; a current step may be done or blocked.
 _Avoid_: Current status, navigation state, automatic completion
+
+**Step row overflow**:
+The provisional narrow-screen arrangement of Stepper: one connected horizontal row, with whole
+label and value text wrapping within steps and residual overflow scrolling the row. Focus reveals
+an offscreen step. Responsive alternatives remain a future research question.
+_Avoid_: Truncated steps, hidden steps, automatic wizard layout
 
 **Blocked step**:
 A step whose work cannot proceed until consumer-defined prerequisites are met, while remaining

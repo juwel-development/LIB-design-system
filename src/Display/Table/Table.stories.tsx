@@ -4,7 +4,7 @@ import { Input } from 'Interaction/Input/Input';
 import { Link } from 'Interaction/Link/Link';
 import { ScrollContainer } from 'Layout/ScrollContainer/ScrollContainer';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Cluster, H2, Note, P, Stack } from 'index';
+import { Cluster, Dialog, H2, Note, P, Pane, Stack } from 'index';
 import {
   type ComponentProps,
   type CSSProperties,
@@ -28,6 +28,8 @@ const meta: Meta<typeof Table.Root> = {
     docs: {
       description: {
         component: [
+          '**Bounded tables (#142).** `Table.Root bounded` takes at most the height its parent allocates, with one wrapper scrolling both axes and an opaque themed sticky header. A short table stays at natural height; an unsized parent allows growth. The caption scrolls but remains the accessible name. All rows and columns remain tabular at every width, including either notes mode. Focus reveals the target below the header; changing selection alone never scrolls. The wrapper is named and keyboard reachable only while overflowing (or still focused). Use weighted columns without minimums for a narrow comparison whose text can wrap; fixed widths, minimums and genuinely unwrappable controls retain residual horizontal overflow.',
+          'Compose the bounded Table directly inside `Pane.Body scrollOwner="child"` or `Dialog.Content scrollOwner="child"`. The holder passes available height without another scroll region; its heading, description and actions remain fixed. Intermediate wrappers must preserve that height allocation. Supply finite usable space with room for the table header and readable rows, and ensure fixed surrounding content fits. Default Dialog.Content continues to own scrolling. Pane integration examples are maintained with Pane (#141).',
           '`captionVisibility="visible"` is the default. Use `captionVisibility="hidden"` only when visible text directly above the table already names what it lists, such as a heading or quantities line. The required `caption` remains the native first child and accessible name; hiding removes its layout space and caption padding without changing the scroll region name. The enclosing arrangement owns the gap above the table. Supply meaningful caption wording in either treatment; there is no alternative table naming prop or consumer CSS workaround.',
           `A sortable table is composed, not configured. The consumer owns every part of the sort - the ordered column, its direction, the ordering of the rows and when a request is answered - and the library supplies three pieces to compose it from: \`Table.HeaderCell\` takes \`ariaSort\` (\`'none' | 'ascending' | 'descending' | 'other'\`), accessibility metadata describing the order *currently displayed* - set it on the one ordered column, omit it on the rest; changing it neither reorders rows nor triggers anything. \`Button variant="plain"\` carries the header's label and action in the header's own typography. \`Icon\` draws \`sort\`, \`sort-ascending\` or \`sort-descending\` to match the displayed order.
 
@@ -2211,4 +2213,489 @@ Theme constraints: --space-stack must be at least --focus-ring-width + --focus-r
       expect(width).toBeLessThan(widths[position] ?? 0);
     });
   },
+};
+
+const boundedRows = (count: number) =>
+  Array.from({ length: count }, (_, index) => index + 1).map((number) => (
+    <Table.Row
+      key={`artist-${number}`}
+      onClick$={new Subject<void>()}
+      isSelected$={new BehaviorSubject(number === count)}
+    >
+      <Table.HeaderCell scope="row">Artist {number}</Table.HeaderCell>
+      <Table.Cell>{number + 19}</Table.Cell>
+      <Table.Cell variant="note">
+        <Button variant="plain">Open artist {number}</Button>
+      </Table.Cell>
+    </Table.Row>
+  ));
+
+const boundedHead = (
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">Artist name</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Score</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Action</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+);
+
+export const Bounded: Story = {
+  args: { caption: 'Artist roster', bounded: true },
+  render: (args) => (
+    <div style={{ height: '18rem', maxWidth: '36rem' }}>
+      <Table.Root {...args}>
+        {boundedHead}
+        <Table.Body>{boundedRows(40)}</Table.Body>
+      </Table.Root>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const wrapper = canvas.getByRole('group', { name: 'Artist roster' });
+    const table = canvas.getByRole('table', { name: 'Artist roster' });
+    const header = within(table).getAllByRole('rowgroup')[0];
+    if (!header) throw new Error('Missing table header');
+    expect(wrapper.scrollHeight).toBeGreaterThan(wrapper.clientHeight);
+    expect(wrapper.getBoundingClientRect().height).toBeLessThanOrEqual(288);
+    const pageTop = window.scrollY;
+    canvas.getByRole('button', { name: 'Open artist 40' }).focus();
+    expect(wrapper.scrollTop).toBeGreaterThan(0);
+    const focused = canvas
+      .getByRole('button', { name: 'Open artist 40' })
+      .getBoundingClientRect();
+    expect(focused.top).toBeGreaterThanOrEqual(
+      header.getBoundingClientRect().bottom,
+    );
+    expect(focused.bottom).toBeLessThanOrEqual(
+      wrapper.getBoundingClientRect().bottom,
+    );
+    expect(window.scrollY).toBe(pageTop);
+  },
+};
+
+export const BoundedShort: Story = {
+  args: { caption: 'Short roster', bounded: true },
+  render: (args) => (
+    <div style={{ height: '18rem' }}>
+      <Table.Root {...args}>
+        {boundedHead}
+        <Table.Body>{boundedRows(2)}</Table.Body>
+      </Table.Root>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const table = within(canvasElement).getByRole('table', {
+      name: 'Short roster',
+    });
+    const wrapper = table.parentElement;
+    if (!wrapper) throw new Error('Missing table wrapper');
+    expect(wrapper.scrollHeight).toBe(wrapper.clientHeight);
+    expect(wrapper.clientHeight).toBeLessThan(288);
+    expect(wrapper).not.toHaveAttribute('tabindex');
+  },
+};
+
+export const BoundedNarrowComparison: Story = {
+  args: {
+    caption: 'Comparison',
+    bounded: true,
+    density: 'compact',
+    notes: 'content',
+    columns: [{ weight: 2 }, { weight: 1 }, { weight: 2 }],
+  },
+  render: (args) => (
+    <div style={{ height: '18rem', width: '20rem' }}>
+      <Table.Root {...args}>
+        <Table.Head>
+          <Table.Row>
+            <Table.HeaderCell scope="col">Studio</Table.HeaderCell>
+            <Table.HeaderCell scope="col">Score</Table.HeaderCell>
+            <Table.HeaderCell scope="col">Notes</Table.HeaderCell>
+          </Table.Row>
+        </Table.Head>
+        <Table.Body>
+          {Array.from({ length: 30 }, (_, index) => index + 1).map((number) => (
+            <Table.Row key={`artist-${number}`}>
+              <Table.HeaderCell scope="row">Studio {number}</Table.HeaderCell>
+              <Table.Cell>75</Table.Cell>
+              <Table.Cell variant="note">Vocal recording and mixing</Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+      </Table.Root>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const wrapper = within(canvasElement).getByRole('group', {
+      name: 'Comparison',
+    });
+    expect(wrapper.scrollWidth).toBe(wrapper.clientWidth);
+    expect(wrapper.scrollHeight).toBeGreaterThan(wrapper.clientHeight);
+  },
+};
+
+export const BoundedBothAxes: Story = {
+  ...Bounded,
+  args: {
+    caption: 'Artist roster',
+    bounded: true,
+    notes: 'supplementary',
+    columns: [{ width: 'name' }, { width: 'figure' }, { width: 'action' }],
+  },
+  render: (args) => (
+    <div style={{ height: '18rem', width: '20rem' }}>
+      <Table.Root {...args}>
+        {boundedHead}
+        <Table.Body>{boundedRows(40)}</Table.Body>
+      </Table.Root>
+    </div>
+  ),
+};
+
+export const BoundedUnsized: Story = {
+  args: { caption: 'Natural height', bounded: true },
+  render: (args) => (
+    <Table.Root {...args}>
+      {boundedHead}
+      <Table.Body>{boundedRows(10)}</Table.Body>
+    </Table.Root>
+  ),
+};
+
+const BoundedDialogExample = ({
+  args,
+  extent,
+}: {
+  args: ComponentProps<typeof Table.Root>;
+  extent: 'content' | 'screen';
+}) => {
+  const shown$ = useMemo(() => new BehaviorSubject(true), []);
+  const dismiss$ = useMemo(() => new Subject<void>(), []);
+  useEffect(() => {
+    const subscription = dismiss$.subscribe(() => shown$.next(false));
+    return () => subscription.unsubscribe();
+  }, [dismiss$, shown$]);
+  return (
+    <Dialog.Root extent={extent} onDismiss$={dismiss$} showDialog$={shown$}>
+      <Dialog.Title>Choose an artist</Dialog.Title>
+      <Dialog.Description>
+        Compare the roster before choosing.
+      </Dialog.Description>
+      <Dialog.Content scrollOwner="child">
+        <Table.Root {...args}>
+          {boundedHead}
+          <Table.Body>{boundedRows(40)}</Table.Body>
+        </Table.Root>
+      </Dialog.Content>
+      <Dialog.Actions>
+        <Button onClick$={dismiss$}>Cancel</Button>
+      </Dialog.Actions>
+    </Dialog.Root>
+  );
+};
+
+export const BoundedDialog: Story = {
+  args: { caption: 'Dialog roster', bounded: true },
+  render: (args) => <BoundedDialogExample args={args} extent="screen" />,
+  play: async () => {
+    const page = within(document.body);
+    const wrapper = page.getByRole('group', { name: 'Dialog roster' });
+    const content = wrapper.parentElement;
+    if (!content) throw new Error('Missing dialog content');
+    expect(wrapper.scrollHeight).toBeGreaterThan(wrapper.clientHeight);
+    expect(content.scrollHeight).toBe(content.clientHeight);
+    expect(getComputedStyle(content).overflowY).toBe('visible');
+    const title = page
+      .getByText('Choose an artist')
+      .getBoundingClientRect().top;
+    page.getByRole('button', { name: 'Open artist 40' }).focus();
+    expect(page.getByText('Choose an artist').getBoundingClientRect().top).toBe(
+      title,
+    );
+  },
+};
+
+const DynamicBoundedExample = () => {
+  const [isShort, setIsShort] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const streams = useMemo(
+    () => ({
+      select$: new Subject<void>(),
+      resize$: new Subject<void>(),
+      filter$: new Subject<void>(),
+      selected$: new BehaviorSubject(false),
+    }),
+    [],
+  );
+  useEffect(() => {
+    const select = streams.select$.subscribe(() =>
+      streams.selected$.next(true),
+    );
+    const resize = streams.resize$.subscribe(() =>
+      setIsExpanded((value) => !value),
+    );
+    const filter = streams.filter$.subscribe(() =>
+      setIsShort((value) => !value),
+    );
+    return () => {
+      select.unsubscribe();
+      resize.unsubscribe();
+      filter.unsubscribe();
+    };
+  }, [streams]);
+  return (
+    <Stack>
+      <Button onClick$={streams.select$}>Select final artist</Button>
+      <Button onClick$={streams.resize$}>Change header wording</Button>
+      <Button onClick$={streams.filter$}>Toggle short roster</Button>
+      <div style={{ height: '18rem', width: '22rem' }}>
+        <Table.Root
+          caption="Changing roster"
+          bounded
+          columns={[{ weight: 1 }, { weight: 1 }]}
+        >
+          <Table.Head>
+            <Table.Row>
+              <Table.HeaderCell scope="col">
+                {isExpanded
+                  ? 'Artist name and the consumer supplied description of their current recording project'
+                  : 'Artist'}
+              </Table.HeaderCell>
+              <Table.HeaderCell scope="col">Action</Table.HeaderCell>
+            </Table.Row>
+          </Table.Head>
+          <Table.Body>
+            {Array.from(
+              { length: isShort ? 1 : 30 },
+              (_, index) => index + 1,
+            ).map((number) => (
+              <Table.Row
+                key={number}
+                isSelected$={number === 30 ? streams.selected$ : undefined}
+              >
+                <Table.HeaderCell scope="row">Artist {number}</Table.HeaderCell>
+                <Table.Cell>
+                  <Button variant="plain">Inspect {number}</Button>
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table.Root>
+      </div>
+    </Stack>
+  );
+};
+
+export const BoundedDynamic: Story = {
+  render: () => <DynamicBoundedExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const wrapper = canvas.getByRole('group', { name: 'Changing roster' });
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Select final artist' }),
+    );
+    expect(wrapper.scrollTop).toBe(0);
+    expect(
+      canvas.getByRole('row', { name: 'Artist 30 Inspect 30' }),
+    ).toHaveAttribute('aria-selected', 'true');
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Change header wording' }),
+    );
+    const control = canvas.getByRole('button', { name: 'Inspect 20' });
+    control.focus();
+    const header = within(wrapper).getAllByRole('rowgroup')[0];
+    if (!header) throw new Error('Missing header');
+    expect(control.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      header.getBoundingClientRect().bottom,
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Toggle short roster' }),
+    );
+    await expect(wrapper).not.toHaveAttribute('tabindex');
+  },
+};
+
+export const BoundedHiddenCaption: Story = {
+  ...Bounded,
+  args: {
+    caption: 'Artist roster',
+    captionVisibility: 'hidden',
+    bounded: true,
+    notes: 'content',
+  },
+};
+
+export const BoundedContentDialog: Story = {
+  ...BoundedDialog,
+  render: (args) => <BoundedDialogExample args={args} extent="content" />,
+};
+
+const BoundedIconTable = ({
+  density,
+}: {
+  density: 'comfortable' | 'compact';
+}) => (
+  <Table.Root
+    caption="Bounded icon actions"
+    bounded
+    density={density}
+    columns={[
+      { width: 'icon-action' },
+      { weight: 1, minWidth: 'name' },
+      { width: 'icon-action' },
+    ]}
+  >
+    <Table.Head>
+      <Table.Row>
+        <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
+        <Table.HeaderCell scope="col">Song</Table.HeaderCell>
+        <Table.HeaderCell scope="col">Actions</Table.HeaderCell>
+      </Table.Row>
+    </Table.Head>
+    <Table.Body>
+      {Array.from({ length: 40 }, (_, index) => index + 1).map((number) => (
+        <Table.Row key={number}>
+          {['start', 'song', 'end'].map((position) => (
+            <Table.Cell key={position}>
+              {position === 'song' ? (
+                `Song ${number}`
+              ) : number === 1 ? (
+                'Reference'
+              ) : (
+                <Cluster gap="stack">
+                  {[
+                    { Drawing: Icon.Plus, label: 'Add' },
+                    { Drawing: Icon.Up, label: 'Move up' },
+                    { Drawing: Icon.Down, label: 'Move down' },
+                    { Drawing: Icon.Right, label: 'Open' },
+                    { Drawing: Icon.Remove, label: 'Remove' },
+                  ].map(({ Drawing, label }) => (
+                    <Button
+                      key={label}
+                      variant="plain"
+                      ariaLabel={`${label} ${number} ${position}`}
+                    >
+                      <Drawing />
+                    </Button>
+                  ))}
+                </Cluster>
+              )}
+            </Table.Cell>
+          ))}
+        </Table.Row>
+      ))}
+    </Table.Body>
+  </Table.Root>
+);
+
+const BoundedIconExample = ({
+  holder,
+  density,
+}: {
+  holder: 'pane' | 'dialog';
+  density: 'comfortable' | 'compact';
+}) => {
+  const shown$ = useMemo(() => new BehaviorSubject(true), []);
+  const dismiss$ = useMemo(() => new Subject<void>(), []);
+  const content = <BoundedIconTable density={density} />;
+  return holder === 'pane' ? (
+    <div style={{ height: 'min(36rem, 90vh)' }}>
+      <Pane.Root>
+        <Pane.Head>
+          <H2>Song actions</H2>
+        </Pane.Head>
+        <Pane.Body scrollOwner="child" ariaLabel="Unused">
+          {content}
+        </Pane.Body>
+        <Pane.Foot>
+          <Button>Confirm songs</Button>
+        </Pane.Foot>
+      </Pane.Root>
+    </div>
+  ) : (
+    <Dialog.Root extent="screen" showDialog$={shown$} onDismiss$={dismiss$}>
+      <Dialog.Title>Song actions</Dialog.Title>
+      <Dialog.Description>Compare and arrange songs.</Dialog.Description>
+      <Dialog.Content scrollOwner="child">{content}</Dialog.Content>
+      <Dialog.Actions>
+        <Button>Confirm songs</Button>
+      </Dialog.Actions>
+    </Dialog.Root>
+  );
+};
+
+const checkBoundedIconActions = async () => {
+  const page = within(document.body);
+  const table = page.getByRole('table', { name: 'Bounded icon actions' });
+  const wrapper = page.getByRole('group', { name: 'Bounded icon actions' });
+  const holder = wrapper.parentElement;
+  if (!holder) throw new Error('Missing child-scroll holder');
+  expect(getComputedStyle(holder).overflowY).toBe('visible');
+  expect(holder.scrollHeight).toBeLessThanOrEqual(holder.clientHeight + 1);
+  expect(wrapper.scrollHeight).toBeGreaterThan(wrapper.clientHeight);
+  const rows = Array.from(table.querySelectorAll('tbody tr'));
+  const reference = rows[0]?.getBoundingClientRect().height;
+  rows.forEach((row) => {
+    expect(row.getBoundingClientRect().height).toBe(reference);
+    Array.from(row.querySelectorAll('td')).forEach((cell) => {
+      const tops = Array.from(cell.querySelectorAll('button')).map(
+        (button) => button.getBoundingClientRect().top,
+      );
+      expect(new Set(tops).size).toBeLessThanOrEqual(1);
+    });
+  });
+  const title = page.getByRole('heading', { name: 'Song actions' });
+  const footer = page.getByRole('button', { name: 'Confirm songs' });
+  const titleTop = title.getBoundingClientRect().top;
+  const footerTop = footer.getBoundingClientRect().top;
+  await userEvent.tab();
+  for (const name of ['Remove 40 end', 'Add 2 start', 'Remove 20 end']) {
+    const control = page.getByRole('button', { name });
+    control.focus();
+    const rectangle = control.getBoundingClientRect();
+    const bounds = wrapper.getBoundingClientRect();
+    const header = table.querySelector('thead');
+    if (!header) throw new Error('Missing sticky header');
+    const style = getComputedStyle(control);
+    expect(control.matches(':focus-visible')).toBe(true);
+    expect(style.outlineStyle).toBe('solid');
+    const ring =
+      Number.parseFloat(style.outlineWidth) +
+      Number.parseFloat(style.outlineOffset);
+    expect(ring).toBeGreaterThan(0);
+    expect(rectangle.top - ring).toBeGreaterThanOrEqual(
+      header.getBoundingClientRect().bottom - 1,
+    );
+    expect(rectangle.bottom + ring).toBeLessThanOrEqual(bounds.bottom + 1);
+    expect(rectangle.left - ring).toBeGreaterThanOrEqual(bounds.left - 1);
+    expect(rectangle.right + ring).toBeLessThanOrEqual(bounds.right + 1);
+    expect(getComputedStyle(header).position).toBe('sticky');
+    if (wrapper.scrollTop > 100) {
+      expect(
+        Math.abs(header.getBoundingClientRect().top - bounds.top),
+      ).toBeLessThanOrEqual(6);
+    }
+    expect(title.getBoundingClientRect().top).toBe(titleTop);
+    expect(footer.getBoundingClientRect().top).toBe(footerTop);
+    expect(holder.scrollTop).toBe(0);
+    expect(document.scrollingElement?.scrollTop).toBe(0);
+  }
+};
+
+export const BoundedIconActionsPane: Story = {
+  render: () => <BoundedIconExample holder="pane" density="comfortable" />,
+  play: checkBoundedIconActions,
+};
+export const BoundedIconActionsPaneCompact: Story = {
+  render: () => <BoundedIconExample holder="pane" density="compact" />,
+  play: checkBoundedIconActions,
+};
+export const BoundedIconActionsDialog: Story = {
+  render: () => <BoundedIconExample holder="dialog" density="comfortable" />,
+  play: checkBoundedIconActions,
+};
+export const BoundedIconActionsDialogCompact: Story = {
+  render: () => <BoundedIconExample holder="dialog" density="compact" />,
+  play: checkBoundedIconActions,
 };

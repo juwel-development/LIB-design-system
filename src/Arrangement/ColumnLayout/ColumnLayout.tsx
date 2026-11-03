@@ -44,22 +44,24 @@ const columnLayoutFrame = cva(
 // and W < T amplifies the shortfall past 100% (a line each). The factor turns a 1/64px shortfall,
 // Chrome's layout grain, into a full switch; `0px` and `100%` are the two states, not measurements.
 const columnLayoutColumn = cva(
-  'min-w-0 grow-[var(--column-layout-weight)] basis-[clamp(0px,(var(--column-layout-threshold)-100%)*1000000,100%)]',
+  'min-w-0 grow-[calc(var(--column-layout-weight)/var(--column-layout-growth-unit))] basis-[clamp(0px,(var(--column-layout-threshold)-100%)*1000000,100%)] max-w-[var(--column-layout-maximum)]',
 );
 
-// React's CSSProperties is closed over known properties; the two custom properties the recipes
+// React's CSSProperties is closed over known properties; the custom properties the recipes
 // read are declared here so the style objects stay typed without an assertion.
 type ColumnLayoutRootStyle = CSSProperties & {
   '--column-layout-threshold': string;
+  '--column-layout-growth-unit': number;
 };
 type ColumnLayoutColumnStyle = CSSProperties & {
   '--column-layout-weight': number;
+  '--column-layout-maximum': string;
 };
 
 /** The name of a CSS custom property, as written in a stylesheet: `--main-column-min-width`. */
-type MinWidthToken = `--${string}`;
+type WidthToken = `--${string}`;
 
-type Track = { weight: number; minWidth: MinWidthToken };
+type Track = { weight: number; minWidth: WidthToken; maxWidth?: WidthToken };
 
 // Granted only to a Column the Root counted: the Root wraps each direct Column child in it, and a
 // Column revokes it for its own descendants. Anything else is outside the composition.
@@ -73,7 +75,7 @@ const toTrack = (
   element: ReactElement<IColumnLayoutColumnProps>,
   index: number,
 ): Track => {
-  const { weight, minWidth } = element.props;
+  const { weight, minWidth, maxWidth } = element.props;
   if (!Number.isFinite(weight) || weight <= 0) {
     throw new ColumnLayoutConfigurationError(
       `column ${index + 1} needs a positive finite weight (got ${weight})`,
@@ -84,7 +86,12 @@ const toTrack = (
       `column ${index + 1} needs a custom-property name such as --main-column-min-width for minWidth (got ${JSON.stringify(minWidth)})`,
     );
   }
-  return { weight, minWidth };
+  if (maxWidth !== undefined && !TOKEN_NAME.test(maxWidth)) {
+    throw new ColumnLayoutConfigurationError(
+      `column ${index + 1} needs a custom-property name such as --support-column-max-width for maxWidth (got ${JSON.stringify(maxWidth)})`,
+    );
+  }
+  return { weight, minWidth, maxWidth };
 };
 
 // The documented threshold, `(n - 1) * g + max(m_i * S / w_i)`, left to the browser to resolve
@@ -96,6 +103,12 @@ const thresholdOf = (tracks: readonly Track[]): string => {
   );
   return `calc(${tracks.length - 1} * var(--column-layout-gap) + max(${shares.join(', ')}))`;
 };
+
+// Flex factors below one leave surplus unallocated, even after other columns freeze at caps.
+const growthUnitOf = (tracks: readonly Track[]): number =>
+  tracks.some((track) => track.maxWidth !== undefined)
+    ? Math.min(1, ...tracks.map((track) => track.weight))
+    : 1;
 
 const isFragment = (
   node: ReactNode,
@@ -120,7 +133,11 @@ export interface IColumnLayoutColumnProps {
   /** The name of the consumer's custom property holding this column's minimum readable width,
    *  such as `--main-column-min-width`. A token name, never a length or a `var()`: the consumer
    *  declares it in the theme with a nonnegative CSS length. */
-  minWidth: MinWidthToken;
+  minWidth: WidthToken;
+  /** Optional horizontal cap, named by a theme custom property. Stacked columns ignore it.
+   * The theme must supply a nonnegative CSS length at least as large as minWidth; resolved
+   * lengths are not read or validated by the component. */
+  maxWidth?: WidthToken;
   /** The column's content. Rendered unmodified: the column imposes no anatomy. */
   children?: ReactNode;
   testId?: string;
@@ -168,7 +185,10 @@ const ColumnLayoutRoot: FunctionComponent<IColumnLayoutRootProps> = ({
   const style: ColumnLayoutRootStyle | undefined =
     tracks.length === 0
       ? undefined
-      : { '--column-layout-threshold': thresholdOf(tracks) };
+      : {
+          '--column-layout-threshold': thresholdOf(tracks),
+          '--column-layout-growth-unit': growthUnitOf(tracks),
+        };
   const row = (
     <div
       className={columnLayout({ gap, fill })}
@@ -183,6 +203,7 @@ const ColumnLayoutRoot: FunctionComponent<IColumnLayoutRootProps> = ({
 
 const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
   weight,
+  maxWidth,
   children,
   testId,
 }) => {
@@ -190,7 +211,13 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
   if (!isCounted) {
     throw new ColumnLayoutCompositionError();
   }
-  const style: ColumnLayoutColumnStyle = { '--column-layout-weight': weight };
+  const style: ColumnLayoutColumnStyle = {
+    '--column-layout-weight': weight,
+    '--column-layout-maximum':
+      maxWidth === undefined
+        ? 'none'
+        : `max(var(${maxWidth}), clamp(0px, (var(--column-layout-threshold) - 100%) * 1000000, 100%))`,
+  };
   return (
     <div className={columnLayoutColumn()} style={style} data-testid={testId}>
       <ColumnLayoutMembership.Provider value={false}>
@@ -214,7 +241,9 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
  *   the arrangement changed: resizing keeps every column's state and focus.
  * - In the horizontal arrangement the gaps are taken off the Root's content width and the rest is
  *   divided in proportion to the weights: `2`, `1`, `1` is one half and two quarters of it. The
- *   columns align at the top and keep their own heights by default (`fill={false}`).
+ *   columns align at the top and keep their own heights by default (`fill={false}`). Optional
+ *   maximums cap each allocation and redistribute surplus by weight among columns still able
+ *   to grow. If all are capped, unused width stays at the trailing edge with unchanged gaps.
  * - With `fill`, Root accepts its parent's allocated height and every horizontal column takes
  *   that height, bounding a filling Pane, Table or ScrollContainer. An internal inline-size
  *   frame supplies the width query; columns remain direct children of the row.
@@ -223,35 +252,38 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
  * - The row holds only while every proportional share is at least its own minimum. The moment one
  *   falls short, every column takes a line of its own and fills the Root's width - a column
  *   narrower than its minimum included: the minimum decides the switch and never floors a width.
- *   There is no in-between: no column wraps alone, no share is clamped, nothing is redistributed to
- *   postpone the switch. For n columns, gap g, total weight S and minimums m_i the row fits at and
- *   above `(n - 1) * g + max(m_i * S / w_i)`.
+ *   There is no in-between: no column wraps alone. Caps and redistribution never postpone
+ *   the switch; stacked columns ignore their maximums. For n columns, gap g, total weight S and
+ *   minimums m_i the row fits at and above `(n - 1) * g + max(m_i * S / w_i)`.
  * - The space measured is the Root's own width, never the viewport, so two instances on one page
  *   switch independently, and a narrow holder on a wide screen stacks.
- * - Every minimum is read from the theme as a CSS length each time layout runs, so re-pointing a
- *   token - in a theme class, a media query, or a scope around the Root - moves the threshold
- *   with it, and a font-relative length moves it as the type does.
+ * - Every bound is read from the theme as a CSS length each time layout runs, so re-pointing a
+ *   token - in a theme class, a media query, or a scope around the Root - updates allocation.
+ *   Minimums move the threshold; maximums change caps. Font-relative bounds follow the type.
  * - `gap` selects which space role separates the columns, across the row and between the stacked
  *   lines alike: `region` (the default), the gap between groups of blocks, or `stack`, the gap
  *   between siblings within one block. Nothing else.
  * - Only rendered columns count: a conditional that renders nothing reserves neither width nor
- *   gap, a single column fills the width, and an empty Root holds no tracks and no gaps.
+ *   gap, a single uncapped column fills the width, and an empty Root holds no tracks and no gaps.
  *   Allocations follow every change of columns, weights, gap, holder width or theme.
  * - A column adds no scrolling, truncation or overflow treatment of its own and does not widen its
  *   track for its content: the content keeps whatever wrapping or scrolling contract it has.
  * - Every value it emits is a role the token layer or the consumer's theme already names; the
  *   only literals are the switch's two states.
- * - A non-positive or non-finite `weight`, or a `minWidth` that is not a custom-property name,
+ * - A non-positive or non-finite `weight`, or a bound that is not a custom-property name,
  *   throws {@link ColumnLayoutConfigurationError}; a `Column` that is not a direct child of a
  *   `Root` - loose, nested in another column, or reached through a wrapping component - throws
  *   {@link ColumnLayoutCompositionError}. Both are programmer errors, raised loud and early.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
- * - Every `minWidth` token is declared, on the Root or an ancestor of it, as a valid nonnegative
- *   CSS length: `24rem`, `20em`, `40ch`, `320px`. A `rem` resolves against the document root, an
- *   `em` or `ch` against the Root's inherited type. A missing or invalid token is not a
- *   responsive configuration: the switch has nothing to compare and the columns size from their
- *   content instead.
+ * - Every `minWidth` and supplied `maxWidth` token is declared, on the Root or an ancestor of it,
+ *   as a valid nonnegative CSS length: `24rem`, `20em`, `40ch`, `320px`. A `rem` resolves against
+ *   the document root, an `em` or `ch` against the Root's inherited type. Missing or invalid
+ *   bounds are outside this contract and can invalidate the switch or cap.
+ * - Maximums must be at least their column's minimum in every scope and responsive state.
+ *   Percentages are outside the contract. Resolved lengths are not read by the component;
+ *   maximum below minimum has no guaranteed runtime exception. A valid maximum below the
+ *   original share at the threshold applies immediately, with its surplus redistributed.
  * - With `fill`, the holder supplies a definite height to bound content and owns overflow for
  *   the stacked fallback. Filling children own their overflow; fixed content must fit the bound.
  * - The holder gives the Root a definite width, as any block does. Inside a shrink-to-fit frame

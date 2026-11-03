@@ -80,6 +80,22 @@ describe('renderTokens standing slot contract', () => {
 });
 
 describe('renderTokens typography contract', () => {
+  it('ships independently themeable letter typography and measure in every token entry point (#128)', () => {
+    for (const css of [
+      renderTokens(),
+      renderLightTokens(),
+      renderDarkTokens(),
+    ]) {
+      expect(css).toContain('--text-letter: 1.25rem;');
+      expect(css).toContain('--leading-letter: 1.8;');
+      expect(css).toContain('--measure-letter: 60ch;');
+      expect(css).toContain(
+        'font-family: var(--font-letter, var(--font-primary));',
+      );
+      expect(css).not.toMatch(/--font-letter:/);
+    }
+  });
+
   // The library ships no face, so it holds no font values to read; the type-role sizes are its
   // own, and the two floors below are checked against them the way the contrast test checks the
   // ring. 1rem is 16px.
@@ -143,11 +159,17 @@ describe('renderTokens typography contract', () => {
 
   it('declares the type roles, leading and tracking so the utilities exist', () => {
     const theme = themeBlock();
-    expect(theme).toContain('--text-display: clamp(3rem, 7vw, 6rem);');
+    expect(theme).toContain(
+      '--text-display: clamp(3rem, 3rem + 3.125vw, 6rem);',
+    );
     expect(theme).toContain('--leading-display: 1.05;');
-    expect(theme).toContain('--text-title: clamp(2.25rem, 5vw, 4.25rem);');
+    expect(theme).toContain(
+      '--text-title: clamp(2.25rem, 2.25rem + 2.25vw, 4.25rem);',
+    );
     expect(theme).toContain('--leading-title: 1.1;');
-    expect(theme).toContain('--text-subtitle: clamp(1.5rem, 3vw, 2.25rem);');
+    expect(theme).toContain(
+      '--text-subtitle: clamp(1.5rem, 1.5rem + 1vw, 2.25rem);',
+    );
     expect(theme).toContain('--leading-subtitle: 1.2;');
     expect(theme).toContain('--text-lede: 1.25rem;');
     expect(theme).toContain('--leading-lede: 1.4;');
@@ -504,17 +526,17 @@ describe('renderTokens focus ring contract', () => {
     const css = renderTokens();
     expect(css).not.toContain('--color-primary-ring');
     expect(css).not.toContain('--color-secondary-ring');
-    // The old general ring is read as a fallback but no longer declared.
-    expect(css).not.toMatch(/--color-ring:/);
+    expect(css).not.toContain('--color-ring');
   });
 
-  it('reads the old general-ring variable as a fallback, defaulting per theme when it is undeclared', () => {
-    const css = renderTokens();
-    // A CSS fallback reaches its default only when the variable is undeclared, so a consumer who
-    // still sets --color-ring keeps their value while an undeclared one falls through to the new
-    // per-theme default.
-    expect(css).toContain('--color-focus-ring: var(--color-ring, #475569);');
-    expect(css).toContain('--color-focus-ring: var(--color-ring, #cbd5e1);');
+  it('emits plain per-theme focus ring values without reading the retired ring token', () => {
+    expect(renderTokens()).toContain('--color-focus-ring: #475569;');
+    expect(renderTokens()).toContain('--color-focus-ring: #cbd5e1;');
+    expect(renderLightTokens()).toContain('--color-focus-ring: #475569;');
+    expect(renderDarkTokens()).toContain('--color-focus-ring: #cbd5e1;');
+    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+      expect(render()).not.toContain('--color-ring');
+    }
   });
 
   it('carries the width and offset as re-pointable non-colour tokens, kept out of the Tailwind colour map', () => {
@@ -562,15 +584,11 @@ describe('single-theme token variants (issue #62)', () => {
 
   it('draws every variant from the one palette, so the three cannot drift', () => {
     // The colour values are never hand-duplicated: each variant renders the same Palette export.
-    for (const [name, value] of Object.entries(light)) {
-      const rendered =
-        name === 'focusRing' ? `var(--color-ring, ${value})` : value;
-      expect(renderLightTokens()).toContain(rendered);
+    for (const value of Object.values(light)) {
+      expect(renderLightTokens()).toContain(value);
     }
-    for (const [name, value] of Object.entries(dark)) {
-      const rendered =
-        name === 'focusRing' ? `var(--color-ring, ${value})` : value;
-      expect(renderDarkTokens()).toContain(rendered);
+    for (const value of Object.values(dark)) {
+      expect(renderDarkTokens()).toContain(value);
     }
   });
 
@@ -583,18 +601,23 @@ describe('single-theme token variants (issue #62)', () => {
     for (const css of [renderLightTokens(), renderDarkTokens()]) {
       expect(css).toContain('--radius-control: 0.5rem;');
       expect(css).toContain('--motion-duration-color: 150ms;');
-      expect(css).toContain('--text-display: clamp(3rem, 7vw, 6rem);');
+      expect(css).toContain(
+        '--text-display: clamp(3rem, 3rem + 3.125vw, 6rem);',
+      );
     }
   });
 });
 
 describe('renderTokens dialog contract', () => {
   it('carries the scrim colour role in every stylesheet, its alpha part of the colour', () => {
-    // The scrim is the themed veil behind a Dialog (CONTEXT.md); both shipped themes carry the same
-    // translucent value, and a consumer re-points --color-scrim like any other role.
-    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+    // A consumer re-points the translucent veil independently in each theme.
+    for (const [render, scrim] of [
+      [renderTokens, light.scrim],
+      [renderLightTokens, light.scrim],
+      [renderDarkTokens, dark.scrim],
+    ] as const) {
       const css = render();
-      expect(css).toContain('--color-scrim: rgb(15 23 42 / 0.5);');
+      expect(css).toContain(`--color-scrim: ${scrim};`);
       const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
       expect(themeInline).toContain('--color-scrim: var(--color-scrim);');
     }
@@ -626,7 +649,7 @@ describe('renderTokens dialog contract', () => {
     // top heading of an independent task, not a level-three subsection (docs/adr/0004, Amendments).
     const themeBlock = renderTokens().match(/@theme \{([^}]*)\}/)?.[1] ?? '';
     expect(themeBlock).toContain(
-      '--text-dialog-title: clamp(1.5rem, 3vw, 2.25rem);',
+      '--text-dialog-title: clamp(1.5rem, 1.5rem + 1vw, 2.25rem);',
     );
     expect(themeBlock).toContain('--leading-dialog-title: 1.2;');
     const themeInline =

@@ -1,3 +1,5 @@
+body,
 .dark {
-	background-color: rgb(48, 48, 50);
+	background-color: var(--color-surface);
+	color: var(--color-foreground);
 }

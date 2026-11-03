@@ -8,8 +8,7 @@ const config: StorybookConfig = {
     '@storybook/addon-docs',
     '@storybook/addon-a11y',
   ],
-  // Storybook inherits the JS library config, which deliberately does not compile CSS.
-  viteFinal: (config) => ({
+  viteFinal: async (config) => ({
     ...config,
     plugins: [...(config.plugins ?? []), tailwindcss()],
   }),

@@ -64,6 +64,9 @@ variants retain Tailwind v4 directives (`@theme`, `@utility`, `@custom-variant`,
 `@property`) and require a Tailwind v4 host. All colour sets come from the same
 generated palette.
 
+In 4.0.0, `--color-ring` is no longer read; themes that set it must set
+`--color-focus-ring` instead.
+
 ### Changing the palette
 
 `src/Theme/Palette.ts` is the single source of truth. `src/tokens.css` and its
