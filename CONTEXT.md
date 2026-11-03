@@ -518,7 +518,9 @@ _Avoid_: Variant, version, size, mark variant
 The neutral frame around a page's content — its top and bottom edges. It carries none of the page's
 own matter: standing identity and navigation, application status and actions, and whatever a footer
 files are the product speaking, not the page. Deliberately small, because a shell that scales with
-the page competes with whatever the page is actually for.
+the page competes with whatever the page is actually for. The `Shell` composable bounds a
+viewport-owning instance: its bar takes its content height and its body takes the remaining height,
+in console or page mode.
 _Avoid_: Chrome, frame, layout, wrapper, masthead
 
 **Console mode**:

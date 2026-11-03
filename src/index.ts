@@ -46,6 +46,7 @@ export { Hero } from 'Layout/Hero/Hero';
 export { PageHead } from 'Layout/PageHead/PageHead';
 export { ScrollContainer } from 'Layout/ScrollContainer/ScrollContainer';
 export { Section } from 'Layout/Section/Section';
+export { Shell } from 'Layout/Shell/Shell';
 export { Sidebar } from 'Layout/Sidebar/Sidebar';
 export type { PaletteTokens } from 'Theme/Palette';
 export { dark, light } from 'Theme/Palette';
