@@ -232,6 +232,11 @@ edges open. The library owns the spacing and separation; the consumer owns each 
 arrangement and any interaction within it.
 _Avoid_: Roster, item group, divided list
 
+**Rule**:
+A decorative horizontal hairline between two blocks of one arrangement. It spans its holder in the
+border role; the arrangement owns the space on either side. It carries no separator or list semantics.
+_Avoid_: Thematic break, semantic separator, vertical divider
+
 **Plain action**:
 An action presented in the typography of its surrounding content, without a separate button face or
 spacing of its own. It remains an operable button with a visible keyboard focus mark.
