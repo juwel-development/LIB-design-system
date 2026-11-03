@@ -33,7 +33,7 @@ content notes; they use existing H2, P, Stack, and Table components with no miss
 
 ## Outstanding
 
-The separate fresh reviewer owns code review and the In Review transition.
+The fresh two-axis Codex review is recorded in [133-review.md](133-review.md).
 The ticket's publish-a-release acceptance criterion remains outstanding by explicit instruction:
 the human push/release must publish this change. Nothing was pushed, merged, published, bumped,
 or set Done.
