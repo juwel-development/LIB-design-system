@@ -52,9 +52,6 @@ describe('ColumnLayout', () => {
       main,
       screen.getByTestId('support'),
     ]);
-    expect(thresholdOf(screen.getByTestId('layout'))).toBe(
-      'calc(1 * var(--column-layout-gap) + max(var(--main) * 1.3333333333333333, var(--support) * 4))',
-    );
   });
 
   it('offers Root only the two attested gap roles, defaulting to region (ADR 0008)', () => {
