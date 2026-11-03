@@ -2,6 +2,7 @@ import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
 import {
   type CSSProperties,
+  type FocusEvent,
   type FunctionComponent,
   type KeyboardEvent,
   type MouseEvent,
@@ -25,7 +26,7 @@ const table = cva(
   [
     // Residual horizontal overflow scrolls in every mode (#114); the scroll sits on the wrapper so
     // the table keeps its table formatting context and the figures stay column-aligned. No vertical
-    // bound: a long table is bounded by the ScrollContainer a consumer puts around it.
+    // bound unless bounded is requested; then this same wrapper owns both axes.
     'overflow-x-auto',
     // The wrapper takes the one focus ring when it is keyboard-reachable - docs/adr/0002.
     'outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
@@ -39,11 +40,11 @@ const table = cva(
     // notes="supplementary": the note column leaves the page for everyone, sighted or not, below 48rem.
     // Every narrow-viewport rule is off once an allocation is declared (#115): a declared comparison
     // keeps all of its columns and tabular rows, and the residual overflow scrolls instead.
-    '[&[data-notes=supplementary]:not([data-columns])_[data-variant=note]]:max-md:hidden',
+    '[&[data-notes=supplementary]:not([data-columns]):not([data-bounded])_[data-variant=note]]:max-md:hidden',
     // notes="content": the note is the content, so each row stacks into a single column below 48rem.
-    '[&[data-notes=content]:not([data-columns])>table]:max-md:block',
-    '[&[data-notes=content]:not([data-columns])_thead]:max-md:block [&[data-notes=content]:not([data-columns])_tbody]:max-md:block [&[data-notes=content]:not([data-columns])_tfoot]:max-md:block',
-    '[&[data-notes=content]:not([data-columns])_tr]:max-md:block [&[data-notes=content]:not([data-columns])_td]:max-md:block [&[data-notes=content]:not([data-columns])_th]:max-md:block',
+    '[&[data-notes=content]:not([data-columns]):not([data-bounded])>table]:max-md:block',
+    '[&[data-notes=content]:not([data-columns]):not([data-bounded])_thead]:max-md:block [&[data-notes=content]:not([data-columns]):not([data-bounded])_tbody]:max-md:block [&[data-notes=content]:not([data-columns]):not([data-bounded])_tfoot]:max-md:block',
+    '[&[data-notes=content]:not([data-columns]):not([data-bounded])_tr]:max-md:block [&[data-notes=content]:not([data-columns]):not([data-bounded])_td]:max-md:block [&[data-notes=content]:not([data-columns]):not([data-bounded])_th]:max-md:block',
     // A declared allocation (#115) lays the table out as a grid whose tracks are the allocation, each
     // row group and row a column subgrid of it, so every cell sits on boundaries no row's content can
     // move and the browser's track algorithm does the floors and the redistribution. Rows stay boxes,
@@ -65,11 +66,15 @@ const table = cva(
     // margin hands the room back to the page, so the ring sits outside the row and never covers the
     // marker at its leading edge. Written from the two ring tokens so it cannot drift from the ring.
     '[&:has(tr[tabindex])]:p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
-    '[&:has(tr[tabindex])]:m-[calc(-1*(var(--focus-ring-width)+var(--focus-ring-offset)))]',
+    '[&:not([data-bounded]):has(tr[tabindex])]:m-[calc(-1*(var(--focus-ring-width)+var(--focus-ring-offset)))]',
     '[&:has(tr[tabindex])]:scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
   ].join(' '),
   {
     variants: {
+      bounded: {
+        true: 'max-h-full min-h-0 min-w-0 overflow-y-auto overscroll-contain p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] [&>table>thead]:sticky [&>table>thead]:top-0 [&>table>thead]:z-10 [&>table>thead]:bg-surface [&>table>thead>tr>*]:bg-surface',
+        false: '',
+      },
       selectionTreatment: {
         marker: '',
         highlight:
@@ -248,6 +253,8 @@ const trackListOf = (
     : columns.map(trackOf).join(' ');
 
 export interface ITableRootProps extends VariantProps<typeof table> {
+  /** Opt into parent-bounded scrolling on both axes with a pinned header; short tables keep natural height. */
+  bounded?: boolean;
   /** The table's accessible name. Rendered as the first child; always present. */
   caption: string;
   /** What the note column is. Governs narrow-viewport behaviour; omit when there is none. */
@@ -297,43 +304,103 @@ export interface ITableHeaderCellProps
 // (WCAG 2.1.1): reachable until measured, so server markup is operable before hydration, and while
 // it holds focus, since dropping tabindex from the focused element relocates it. The table and the
 // caption are observed too: under an allocation the caption, spanning every track, is what grows.
-const useHorizontalOverflow = (
+const useOverflow = (
   wrapper: { current: HTMLElement | null },
   table: { current: HTMLElement | null },
   caption: { current: HTMLElement | null },
+  bounded: boolean,
 ): boolean => {
   const [isOverflowing, setIsOverflowing] = useState(true);
   useLayoutEffect(() => {
     const element = wrapper.current;
     if (element === null) return;
-    const measure = () =>
+    const measure = () => {
+      // WebKit may perform native focus scrolling after focus handlers; scroll padding keeps
+      // that second movement below even a wrapped header, rather than undoing focus reveal.
+      if (bounded) {
+        const headerHeight =
+          table.current?.querySelector('thead')?.getBoundingClientRect()
+            .height ?? 0;
+        const ringRoom =
+          Number.parseFloat(getComputedStyle(element).paddingTop) || 0;
+        element.style.scrollPaddingTop = `${headerHeight + 2 * ringRoom}px`;
+      }
       setIsOverflowing(
         element.scrollWidth > element.clientWidth ||
+          (bounded && element.scrollHeight > element.clientHeight) ||
           element === document.activeElement,
       );
+    };
     measure();
     const observer =
       typeof ResizeObserver === 'undefined'
         ? undefined
         : new ResizeObserver(measure);
     observer?.observe(element);
-    for (const observed of [table.current, caption.current]) {
+    for (const observed of [
+      table.current,
+      caption.current,
+      table.current?.querySelector('thead') ?? null,
+    ]) {
       if (observed !== null) observer?.observe(observed);
     }
+    const mutations = new MutationObserver(measure);
+    mutations.observe(element, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
     window.addEventListener('resize', measure);
     element.addEventListener('blur', measure);
     return () => {
       observer?.disconnect();
+      mutations.disconnect();
+      if (bounded) element.style.removeProperty('scroll-padding-top');
       window.removeEventListener('resize', measure);
       element.removeEventListener('blur', measure);
     };
-  }, [wrapper, table, caption]);
+  }, [wrapper, table, caption, bounded]);
   return isOverflowing;
+};
+
+const revealFocus = (event: FocusEvent<HTMLDivElement>): void => {
+  const wrapper = event.currentTarget;
+  const target = event.target;
+  if (target === wrapper) return;
+  const bounds = wrapper.getBoundingClientRect();
+  const header = wrapper.querySelector(':scope > table > thead');
+  const targetBounds = target.getBoundingClientRect();
+  const ringRoom = Number.parseFloat(getComputedStyle(wrapper).paddingTop) || 0;
+  const top =
+    bounds.top +
+    wrapper.clientTop +
+    (header?.getBoundingClientRect().height ?? 0) +
+    2 * ringRoom;
+  const bottom =
+    bounds.top + wrapper.clientTop + wrapper.clientHeight - ringRoom;
+  if (!header?.contains(target)) {
+    if (targetBounds.top < top) wrapper.scrollTop += targetBounds.top - top;
+    else if (targetBounds.bottom > bottom)
+      wrapper.scrollTop += targetBounds.bottom - bottom;
+  }
+  if (targetBounds.left < bounds.left + ringRoom)
+    wrapper.scrollLeft += targetBounds.left - bounds.left - ringRoom;
+  else if (
+    targetBounds.right >
+    bounds.left + wrapper.clientLeft + wrapper.clientWidth - ringRoom
+  )
+    wrapper.scrollLeft +=
+      targetBounds.right -
+      bounds.left -
+      wrapper.clientLeft -
+      wrapper.clientWidth +
+      ringRoom;
 };
 
 const TableRoot: FunctionComponent<ITableRootProps> = ({
   caption,
   captionVisibility,
+  bounded,
   selectionTreatment,
   notes,
   columns,
@@ -345,10 +412,11 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
   const tableElement = useRef<HTMLTableElement>(null);
   const captionElement = useRef<HTMLTableCaptionElement>(null);
   const trackList = trackListOf(columns);
-  const isOverflowing = useHorizontalOverflow(
+  const isOverflowing = useOverflow(
     wrapper,
     tableElement,
     captionElement,
+    bounded === true,
   );
   const style: TableRootStyle | undefined =
     trackList === undefined ? undefined : { '--table-columns': trackList };
@@ -363,10 +431,15 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
   // scrolled table is keyboard-operable - WCAG 2.1.1 needs the scroll container itself focusable,
   // there being no focusable cell content to carry it. With a note column the wrapper is a plain
   // grouping element that becomes a named, reachable group only while the table overflows it.
-  if (notes === undefined) {
+  if (notes === undefined && !bounded) {
     return (
       <section
-        className={table({ density, captionVisibility, selectionTreatment })}
+        className={table({
+          density,
+          captionVisibility,
+          selectionTreatment,
+          bounded,
+        })}
         style={style}
         data-columns={columnCount}
         data-density={density ?? DEFAULT_DENSITY}
@@ -384,10 +457,18 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
   }
   return (
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: the name and the `group` role are set together; biome cannot see the pair
+    // biome-ignore lint/a11y/noStaticElementInteractions: focus bubbles from descendants; this reveals their focus without adding an interaction
     <div
       ref={wrapper}
-      className={table({ density, captionVisibility, selectionTreatment })}
+      onFocus={bounded ? revealFocus : undefined}
+      className={table({
+        density,
+        captionVisibility,
+        selectionTreatment,
+        bounded,
+      })}
       style={style}
+      data-bounded={bounded || undefined}
       data-notes={notes}
       data-columns={columnCount}
       data-density={density ?? DEFAULT_DENSITY}
@@ -527,8 +608,14 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *   the attribute states the displayed order and the component never orders, cycles or requests one.
  * - Residual horizontal overflow scrolls in every `notes` mode, with no opt-in. The wrapper is
  *   keyboard-reachable while there is something to scroll - always, as a named region, with no note
- *   column; as a named group only once the table overflows, with one. No vertical bound is ever set:
- *   a long table sits inside a `ScrollContainer` with `axis="vertical"`, which owns that axis.
+ *   column; as a named group only once the table overflows, with one. Bounded tables instead expose
+ *   a named group and keyboard stop only while either axis overflows, retained while focused.
+ * - `bounded` makes this same wrapper own both scroll axes within the parent's allocated height.
+ *   Short tables retain natural height; unsized parents allow natural growth. Only the header pins,
+ *   on the themed surface; captions scroll normally and keep naming the table. All columns and rows
+ *   remain tabular at every width, including both notes modes. Unbounded behavior is unchanged.
+ * - Focus reveals rows and controls below the pinned header inside the wrapper. Selection updates
+ *   alone never scroll. The wrapper reserves the shared focus ring's room.
  * - `Root columns` declares every column's allocation once, in cell order, and every row shares it:
  *   a fixed column takes its named width role at any available width; proportional columns share
  *   the width the fixed ones leave by their weights, each floored at its named minimum, and while a
@@ -572,6 +659,12 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *   clipped by the scroll region. A table with neither keeps its static geometry exactly.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - For bounded mode supply finite usable parent height, with room for the header and readable rows.
+ *   Compose directly inside `Pane.Body scrollOwner="child"` or `Dialog.Content scrollOwner="child"`:
+ *   those holders add no scrolling. Intermediate wrappers must preserve the height allocation.
+ *   Fixed surrounding content must fit; no component promises impossible viewport fitting.
+ * - For narrow comparisons use weighted columns without minimums when the content can wrap into
+ *   their shares. Fixed widths and declared minimums retain their meaning; controls may overflow.
  * - A theme's `selectedSurface` differs from resting/hover surfaces and keeps foreground, muted
  *   and link/status text at 4.5:1, and the marker, rule and focus ring at 3:1.
  *   Highlighted rows use selectedError for their error ink/fill. Other consumer-composed inks and
