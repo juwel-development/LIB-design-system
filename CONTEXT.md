@@ -134,6 +134,8 @@ _Avoid_: Max width, line length, content width
 A whole block of personal correspondence whose salutation, running paragraphs and signature share
 one typography treatment and a reading measure of its own. Its family role follows the primary face
 unless the theme assigns letters their own face; the consumer owns its words and language.
+`Prose.Root variant="letter"` selects the treatment and measure together, with `Prose.Body`
+for every correspondence paragraph.
 _Avoid_: Large body copy, lede, paper treatment
 
 ### Motion

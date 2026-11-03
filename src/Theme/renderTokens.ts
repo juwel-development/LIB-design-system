@@ -118,6 +118,10 @@ const TYPOGRAPHY = `@theme {
      subtitle was rejected in ADR 0004 - it welds the lede's size to H3's and its leading to a head's. */
   --text-lede: 1.25rem;  /* 20px */
   --leading-lede: 1.4;
+
+  /* Whole correspondence blocks, independently of opening ledes (Prose #128). */
+  --text-letter: 1.25rem;
+  --leading-letter: 1.8;
   --text-body: 1.0625rem;  /* 17px, floored at 16px: below it iOS Safari zooms the viewport when a control set at this role takes focus (#92) */
   --leading-body: 1.6;
   --text-small: 0.9375rem;  /* 15px floor: below it tabular figures stop comparing column to column */
@@ -153,6 +157,9 @@ const FAMILY_ROLES = `@utility font-heading {
   font-family: var(--font-heading, var(--font-primary));
 }
 
+@utility font-letter {
+  font-family: var(--font-letter, var(--font-primary));
+}
 @utility font-body {
   font-family: var(--font-body, var(--font-primary));
 }
@@ -167,6 +174,7 @@ const FAMILY_ROLES = `@utility font-heading {
    the action column, in rem (docs/adr/0008, Amendments, #97); 20rem clears --control-min-width. */
 const MEASURE = `:root {
   --measure: 66ch;
+  --measure-letter: 60ch;
   --measure-display: 36ch;
   --measure-wide: 72ch;
   --measure-action: 20rem;
@@ -428,7 +436,7 @@ ${UNDERLINE}
    utilities, so it is not carried in @theme inline with the palette. */
 ${TYPOGRAPHY}
 
-/* The heading, body and control family roles are utilities with a fallback to the primary face, not
+/* The heading, body, letter and control family roles are utilities with a fallback to the primary face, not
    @theme variables, so a theme re-pointing either name at any scope reaches the text beneath it. */
 ${FAMILY_ROLES}
 
