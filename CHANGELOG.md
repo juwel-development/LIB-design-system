@@ -1,3 +1,66 @@
+# [4.0.0](https://github.com/juwel-development/LIB-design-system/compare/v3.11.0...v4.0.0) (2026-11-03)
+
+
+* feat(tokens)!: remove the legacy ring fallback ([#149](https://github.com/juwel-development/LIB-design-system/issues/149)) ([2d98967](https://github.com/juwel-development/LIB-design-system/commit/2d989675c0aa628ee10449c04e56104229fd2c39))
+
+
+### Bug Fixes
+
+* **build:** export prebuilt stylesheets without css injection ([#147](https://github.com/juwel-development/LIB-design-system/issues/147)) ([f0082f9](https://github.com/juwel-development/LIB-design-system/commit/f0082f968013779ddd968a1aa7e730ee16273007))
+* clamp extreme off-range meter values ([#148](https://github.com/juwel-development/LIB-design-system/issues/148)) ([9d0be35](https://github.com/juwel-development/LIB-design-system/commit/9d0be35cf0182fe51fb0e066f37709198b35b880))
+* **pane:** preserve dynamic overflow accessibility ([#141](https://github.com/juwel-development/LIB-design-system/issues/141)) ([6d2b30e](https://github.com/juwel-development/LIB-design-system/commit/6d2b30e0f672e991ed840448122c7fa39af51dec))
+* **stepper:** preserve selected shape in forced colours ([7891235](https://github.com/juwel-development/LIB-design-system/commit/7891235b26accb741a86ac421fb1c680b55b3fc3))
+* **storybook:** compile preview utilities for [#144](https://github.com/juwel-development/LIB-design-system/issues/144) verification ([94db04f](https://github.com/juwel-development/LIB-design-system/commit/94db04f666ccd21b2ce1ace1be482d87281be312))
+* **storybook:** deduplicate merged Tailwind configuration ([397936d](https://github.com/juwel-development/LIB-design-system/commit/397936db6fba32e43e633829a1209a3001f5631e))
+* **table:** preserve highlighted row contrast ([#136](https://github.com/juwel-development/LIB-design-system/issues/136)) ([a1fd4a1](https://github.com/juwel-development/LIB-design-system/commit/a1fd4a109bdcb160bbb6eab415b91cadb9967ce3))
+* **tokens:** darken the scrim over each surface ([#149](https://github.com/juwel-development/LIB-design-system/issues/149)) ([d69330b](https://github.com/juwel-development/LIB-design-system/commit/d69330b39640a05ca77c679c8683a0a057e6b412))
+* **tokens:** lighten dark disabled hover ([#149](https://github.com/juwel-development/LIB-design-system/issues/149)) ([e9319e2](https://github.com/juwel-development/LIB-design-system/commit/e9319e26853e64d4a45dbabde424cedfdcacb032))
+* **tokens:** preserve fluid type growth when zooming ([#149](https://github.com/juwel-development/LIB-design-system/issues/149)) ([409a680](https://github.com/juwel-development/LIB-design-system/commit/409a6806a7aac908c57799f05be6827025824a32))
+* tolerate off-range values and export error classes ([#148](https://github.com/juwel-development/LIB-design-system/issues/148)) ([8fb36bc](https://github.com/juwel-development/LIB-design-system/commit/8fb36bc67460c659e490c9ec7463e03331dd3942))
+
+
+### Features
+
+* **button:** add inline link action variant ([#130](https://github.com/juwel-development/LIB-design-system/issues/130)) ([84ca9cb](https://github.com/juwel-development/LIB-design-system/commit/84ca9cb12ef1f9a72ab83a5508a333c4b1e265a6))
+* **callout:** add status-toned content block [#131](https://github.com/juwel-development/LIB-design-system/issues/131) ([c62c225](https://github.com/juwel-development/LIB-design-system/commit/c62c225845c7facac9e2b61dd707a985f37ab76b))
+* **column-layout:** cap themed column allocations ([#139](https://github.com/juwel-development/LIB-design-system/issues/139)) ([369d6ca](https://github.com/juwel-development/LIB-design-system/commit/369d6ca9c734d040551278aa5a57395295221e51))
+* **column-layout:** fill allocated column height ([#145](https://github.com/juwel-development/LIB-design-system/issues/145)) ([76bd471](https://github.com/juwel-development/LIB-design-system/commit/76bd4719f063fae70e74e6d76126d26411d3646f))
+* **icon:** add filled dot drawing ([#134](https://github.com/juwel-development/LIB-design-system/issues/134)) ([13568b0](https://github.com/juwel-development/LIB-design-system/commit/13568b0601771f3323f153a26cbe30bc7031b520))
+* **pane:** add bounded head body and foot layout ([#141](https://github.com/juwel-development/LIB-design-system/issues/141)) ([4a9c92d](https://github.com/juwel-development/LIB-design-system/commit/4a9c92deae729d5b73d37c97794ebd2d61c24237))
+* **prose:** add whole-block letter treatment ([#128](https://github.com/juwel-development/LIB-design-system/issues/128)) ([1d73aae](https://github.com/juwel-development/LIB-design-system/commit/1d73aaed7886ef07112596efe3bfe6c7f560e38e))
+* **rule:** separate content blocks with a decorative hairline ([#129](https://github.com/juwel-development/LIB-design-system/issues/129)) ([96bce14](https://github.com/juwel-development/LIB-design-system/commit/96bce1468852115edd0f330640d3f472e0f7b8ab))
+* **shell:** bound console screens to the viewport ([#140](https://github.com/juwel-development/LIB-design-system/issues/140)) ([f223e8a](https://github.com/juwel-development/LIB-design-system/commit/f223e8a411ab0ecc0793d36c6ed7ad6a70b64432))
+* **stepper:** add controlled connected form steps ([#143](https://github.com/juwel-development/LIB-design-system/issues/143)) ([7c5589b](https://github.com/juwel-development/LIB-design-system/commit/7c5589b177074e91389eb290f5ad622f57695d82))
+* **switch:** add controlled immediate setting for [#137](https://github.com/juwel-development/LIB-design-system/issues/137) ([7054327](https://github.com/juwel-development/LIB-design-system/commit/705432788dbcf5f53f3b24a5f8b6b3e93ed81f1d))
+* **table:** add bounded scrolling and pinned headers ([#142](https://github.com/juwel-development/LIB-design-system/issues/142)) ([5a1b21c](https://github.com/juwel-development/LIB-design-system/commit/5a1b21cfc392ba46f57ebd6e6a36a2af16bd9e2c))
+* **table:** add compound icons and content-sized action columns ([#144](https://github.com/juwel-development/LIB-design-system/issues/144)) ([daa269c](https://github.com/juwel-development/LIB-design-system/commit/daa269c4603f2583a43f11c15a4db38dc6103617))
+* **table:** add opt-in selected row surface ([#136](https://github.com/juwel-development/LIB-design-system/issues/136)) ([447fc33](https://github.com/juwel-development/LIB-design-system/commit/447fc3328fc150478953191d270fdcd60624fac7))
+* **table:** allow visually hidden captions ([#133](https://github.com/juwel-development/LIB-design-system/issues/133)) ([abbac46](https://github.com/juwel-development/LIB-design-system/commit/abbac467d9d5753f7ae5c7acacdf04c6ded9cc3f))
+* **tabs:** fill allocated panel height ([#146](https://github.com/juwel-development/LIB-design-system/issues/146)) ([ea50c4c](https://github.com/juwel-development/LIB-design-system/commit/ea50c4c54962075509c9f9f9ea6cbd35bf6a4a98))
+* **typography:** add visual strong emphasis for body and note text [#135](https://github.com/juwel-development/LIB-design-system/issues/135) ([d96ff47](https://github.com/juwel-development/LIB-design-system/commit/d96ff47f2c53ad02958462c0a0828281af0e687d))
+* **typography:** support opt-in single-line truncation ([#132](https://github.com/juwel-development/LIB-design-system/issues/132)) ([bbce417](https://github.com/juwel-development/LIB-design-system/commit/bbce417a64d7b09f65f9fb08c3afb5b85515380c))
+
+
+### BREAKING CHANGES
+
+* --color-ring is no longer read; a theme that set it must set
+--color-focus-ring instead.
+* **build:** import '@juwel-development/design-system/styles.css' once in the host
+
+### NOTE
+
+* **tokens:** Display, title, subtitle and Dialog title sizes now grow more when zooming.
+Their minimum and maximum sizes stay unchanged; intermediate viewport sizes may differ.
+* **tokens:** Disabled controls now become lighter on hover in the dark theme.
+* **tokens:** The dark Dialog scrim now darkens the page surface beneath it.
+* Meter now renders extreme finite off-range values at the nearest bound even
+when subtracting the configured bounds would overflow.
+* Slider and Meter now render finite off-range values at the nearest bound instead
+of throwing. Slider keeps the consumer-owned value and emits only when the thumb moves;
+Meter retains the raw value in aria-valuenow while clamping its visual fill.
+* **shell:** Sidebar navigation in padded scrollports now uses the available content
+height, keeping its final entries inside the visible body.
+
 # [3.11.0](https://github.com/juwel-development/LIB-design-system/compare/v3.10.0...v3.11.0) (2026-10-05)
 
 
