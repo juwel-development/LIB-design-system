@@ -236,7 +236,9 @@ _Avoid_: Row, HStack, inline list, nav, toolbar
 **ColumnLayout**:
 An arrangement of any number of columns with consumer-chosen relative widths and a minimum readable
 width for each column. When the available space cannot satisfy every column's minimum at those
-proportions, the whole arrangement becomes one column in the same reading order.
+proportions, the whole arrangement becomes one column in the same reading order. Its optional fill
+mode passes an allocated height to every horizontal column; an unsized parent or the stacked
+arrangement leaves columns at content height, with scrolling owned by the holder.
 _Avoid_: Proportional Stack, split Stack, Columns
 
 **Collection**:

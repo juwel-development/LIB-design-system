@@ -25,7 +25,7 @@ The root paints the Box surface, foreground, border and inset roles. An optional
 
 Body defaults to scrollOwner="body". Set scrollOwner="child" for one child that accepts an allocated height and owns scrolling: Body then contributes no overflow, group, tab stop or content wrapper. The child supplies its own accessible name and focus treatment; Body's ariaLabel is unused in that mode. No child identity is inspected. Do not put a bounded Table inside the default scrolling body: use child ownership so the Table's own wrapper scrolls both axes and retains its header.
 
-Pending integrations: bounded Table #142 is not available, so its example and sticky-header verification remain outstanding. Full-height ColumnLayout #145 is not available, so two panes in full-height columns remain outstanding. ChildOwnedScroll demonstrates the existing ScrollContainer contract only; it does not stand in for either pending acceptance example. Release publication is deferred to the human release workflow.`,
+Pending integrations: bounded Table #142 is not available, so its example and sticky-header verification remain outstanding. The ColumnLayout FillingPanes and StackedFillingColumns stories demonstrate two panes sharing an allocated height and releasing it when stacked (#145). ChildOwnedScroll demonstrates the existing ScrollContainer contract only; it does not stand in for the pending Table acceptance example. Release publication is deferred to the human release workflow.`,
       },
     },
   },

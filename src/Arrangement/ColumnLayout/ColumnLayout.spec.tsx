@@ -20,6 +20,43 @@ const weightOf = (element: HTMLElement): string =>
   element.style.getPropertyValue('--column-layout-weight');
 
 describe('ColumnLayout', () => {
+  it('offers an opt-in fill mode without accepting a height measurement', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof ColumnLayout.Root>['fill']>
+    >().toEqualTypeOf<boolean>();
+  });
+
+  it('keeps filling columns mounted in reading order when their allocation changes', () => {
+    const example = (weight: number) => (
+      <ColumnLayout.Root fill testId="layout">
+        <ColumnLayout.Column weight={weight} minWidth="--main" testId="main">
+          <input aria-label="Draft" defaultValue="Kept" />
+        </ColumnLayout.Column>
+        <ColumnLayout.Column weight={1} minWidth="--support" testId="support">
+          <button type="button">Continue</button>
+        </ColumnLayout.Column>
+      </ColumnLayout.Root>
+    );
+    const { rerender } = render(example(2));
+    const input = screen.getByRole('textbox', { name: 'Draft' });
+    const main = screen.getByTestId('main');
+    input.focus();
+    fireEvent.change(input, { target: { value: 'Edited' } });
+
+    rerender(example(3));
+
+    expect(screen.getByRole('textbox', { name: 'Draft' })).toBe(input);
+    expect(input).toHaveValue('Edited');
+    expect(input).toHaveFocus();
+    expect(Array.from(screen.getByTestId('layout').children)).toEqual([
+      main,
+      screen.getByTestId('support'),
+    ]);
+    expect(thresholdOf(screen.getByTestId('layout'))).toBe(
+      'calc(1 * var(--column-layout-gap) + max(var(--main) * 1.3333333333333333, var(--support) * 4))',
+    );
+  });
+
   it('offers Root only the two attested gap roles, defaulting to region (ADR 0008)', () => {
     expectTypeOf<
       NonNullable<ComponentProps<typeof ColumnLayout.Root>['gap']>

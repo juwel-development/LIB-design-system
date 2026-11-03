@@ -6,6 +6,7 @@ import { P } from 'Display/Typography/P/P';
 import { Button } from 'Interaction/Button/Button';
 import { Input } from 'Interaction/Input/Input';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Pane, ScrollContainer, Stack } from 'index';
 import {
   type CSSProperties,
   type FunctionComponent,
@@ -139,7 +140,7 @@ const meta: Meta<typeof ColumnLayout.Root> = {
     docs: {
       description: {
         component:
-          "`ColumnLayout` is an arrangement of weighted columns that becomes one column when the space\nit is given cannot satisfy every column's minimum at the requested proportions. It owns the\narrangement and nothing else: no landmark, no band, no gutter, no fill, no scrolling. `Stack`'s\n`split` keeps its own viewport-keyed contract; `ColumnLayout` answers to the width of whatever\nholds it.\n\n```tsx\nimport { ColumnLayout } from '@juwel-development/design-system';\n\n<ColumnLayout.Root gap={'region'}>\n  <ColumnLayout.Column weight={2} minWidth={'--main-column-min-width'}>\n    <Table.Root caption={'A&R roster'}>…</Table.Root>\n  </ColumnLayout.Column>\n  {selected && (\n    <ColumnLayout.Column weight={1} minWidth={'--support-column-min-width'}>\n      <DefinitionList.Root>…</DefinitionList.Root>\n    </ColumnLayout.Column>\n  )}\n</ColumnLayout.Root>;\n```\n\n`Root` takes `gap?: 'stack' | 'region'` (defaulting to `region`), `children` and `testId`. The\nsame gap separates the columns across the row and between the stacked lines. `Column` takes a\nrequired positive finite `weight`, a required `minWidth`, `children` and `testId`. Supply\ncolumns directly, through maps, in fragments or with conditional omissions; a column rendered\nthrough a wrapping component, loose, or nested inside another column throws\n`ColumnLayoutCompositionError`, and an invalid weight or token name throws\n`ColumnLayoutConfigurationError`.\n\n**Allocation.** In the row the gaps come off the Root's width and the rest is divided by weight:\n`2` beside `1` is two thirds and one third of what is left. Columns align at the top and keep\ntheir own heights. The row holds only while every share is at least its own minimum; the moment\none is not, every column takes a line of its own and fills the Root's width, a column narrower\nthan its minimum included. There is no partial wrap and no clamping. For `n` columns with gap\n`g`, total weight `S` and minimums `mᵢ`, the row fits at and above\n`(n − 1) × g + max(mᵢ × S ⁄ wᵢ)`; the space measured is the Root's, never the viewport's.\n\n**Minimum-width tokens.** `minWidth` names a CSS custom property the consumer declares, never a\nlength or a `var()`. The name is a theme role of the product's own (`--main-column-min-width`),\nnot a library preset: the library ships no column-width ladder. Declare it on `:root`, on a\ntheme class, or on any ancestor of the Root, as a valid nonnegative CSS length:\n\n```css\n:root {\n  --main-column-min-width: 28rem;\n  --support-column-min-width: 12rem;\n}\n.dark { --support-column-min-width: 14rem; }\n```\n\nThe token is read each time layout runs, so re-pointing it in a theme class or a media query\nmoves the threshold with it. A `rem` resolves against the document root, an `em` or `ch`\nagainst the Root's inherited type, a `px` as written. A percentage is not a length the contract\naccepts: a minimum is a readable width, which the holder's width cannot define. A missing or\ninvalid token is not a responsive configuration: the switch has nothing to compare and the\ncolumns size from their content instead. Anything placed beside the columns that is not a\n`Column` is rendered as given but takes no weight, no gap and no part in the threshold, so it\nbreaks the proportions; content belongs inside a `Column`.\n\n**What the content owns.** A column never widens for its content and adds no truncation or\nscrolling. Running text wraps inside its track; content that cannot wrap needs its own overflow\ncontract, as `Table.Root` has. Resizing the holder never remounts a column, so focus and\nstate survive the switch, and reading and keyboard order are the order the columns are written.",
+          "`ColumnLayout` is an arrangement of weighted columns that becomes one column when the space\nit is given cannot satisfy every column's minimum at the requested proportions. It owns the\narrangement and nothing else: no landmark, no band, no gutter, no fill, no scrolling. `Stack`'s\n`split` keeps its own viewport-keyed contract; `ColumnLayout` answers to the width of whatever\nholds it.\n\n```tsx\nimport { ColumnLayout } from '@juwel-development/design-system';\n\n<ColumnLayout.Root gap={'region'}>\n  <ColumnLayout.Column weight={2} minWidth={'--main-column-min-width'}>\n    <Table.Root caption={'A&R roster'}>…</Table.Root>\n  </ColumnLayout.Column>\n  {selected && (\n    <ColumnLayout.Column weight={1} minWidth={'--support-column-min-width'}>\n      <DefinitionList.Root>…</DefinitionList.Root>\n    </ColumnLayout.Column>\n  )}\n</ColumnLayout.Root>;\n```\n\n`Root` takes `fill?: boolean` (default false), `gap?: 'stack' | 'region'` (defaulting to `region`), `children` and `testId`. The\nsame gap separates the columns across the row and between the stacked lines. `Column` takes a\nrequired positive finite `weight`, a required `minWidth`, `children` and `testId`. Supply\ncolumns directly, through maps, in fragments or with conditional omissions; a column rendered\nthrough a wrapping component, loose, or nested inside another column throws\n`ColumnLayoutCompositionError`, and an invalid weight or token name throws\n`ColumnLayoutConfigurationError`.\n\n**Allocation.** In the row the gaps come off the Root's width and the rest is divided by weight:\n`2` beside `1` is two thirds and one third of what is left. Columns align at the top and keep\ntheir own heights by default. With `fill`, Root accepts its allocated height and horizontal columns\nfill it, bounding a Pane or ScrollContainer. An unsized holder leaves columns at content height.\nStacked columns always keep content height; the holder owns scrolling. No fixed height is invented.\nThe caller supplies a definite height and fitting fixed content. The internal fill frame uses\ninline-size containment; widths, minimums, order and mounted content keep their existing contract.\nA vertically bounded Table integration awaits #142, whose API is not available in this checkout. The row holds only while every share is at least its own minimum; the moment\none is not, every column takes a line of its own and fills the Root's width, a column narrower\nthan its minimum included. There is no partial wrap and no clamping. For `n` columns with gap\n`g`, total weight `S` and minimums `mᵢ`, the row fits at and above\n`(n − 1) × g + max(mᵢ × S ⁄ wᵢ)`; the space measured is the Root's, never the viewport's.\n\n**Minimum-width tokens.** `minWidth` names a CSS custom property the consumer declares, never a\nlength or a `var()`. The name is a theme role of the product's own (`--main-column-min-width`),\nnot a library preset: the library ships no column-width ladder. Declare it on `:root`, on a\ntheme class, or on any ancestor of the Root, as a valid nonnegative CSS length:\n\n```css\n:root {\n  --main-column-min-width: 28rem;\n  --support-column-min-width: 12rem;\n}\n.dark { --support-column-min-width: 14rem; }\n```\n\nThe token is read each time layout runs, so re-pointing it in a theme class or a media query\nmoves the threshold with it. A `rem` resolves against the document root, an `em` or `ch`\nagainst the Root's inherited type, a `px` as written. A percentage is not a length the contract\naccepts: a minimum is a readable width, which the holder's width cannot define. A missing or\ninvalid token is not a responsive configuration: the switch has nothing to compare and the\ncolumns size from their content instead. Anything placed beside the columns that is not a\n`Column` is rendered as given but takes no weight, no gap and no part in the threshold, so it\nbreaks the proportions; content belongs inside a `Column`.\n\n**What the content owns.** A column never widens for its content and adds no truncation or\nscrolling. Running text wraps inside its track; content that cannot wrap needs its own overflow\ncontract, as `Table.Root` has. Resizing the holder never remounts a column, so focus and\nstate survive the switch, and reading and keyboard order are the order the columns are written.",
       },
     },
   },
@@ -684,5 +685,206 @@ export const StackGap: Story = {
         Number.parseFloat(getComputedStyle(row).fontSize),
       );
     }
+  },
+};
+
+const FillExample: FunctionComponent<{
+  columns?: number;
+  narrow?: boolean;
+  unsized?: boolean;
+  fill?: boolean;
+  scrollContainer?: boolean;
+}> = ({ columns = 2, narrow, unsized, fill = true, scrollContainer }) => (
+  <div
+    data-testid="fill-holder"
+    style={
+      {
+        '--lane-min-width': '12rem',
+        width: narrow ? '20rem' : '100%',
+        height: unsized ? undefined : '24rem',
+        overflow: 'auto',
+      } as HolderStyle
+    }
+  >
+    <ColumnLayout.Root fill={fill} gap="stack" testId="fill-row">
+      {Array.from({ length: columns }, (_, index) => index).map((index) => (
+        <ColumnLayout.Column key={index} weight={1} minWidth="--lane-min-width">
+          {scrollContainer ? (
+            <ScrollContainer axis="vertical" ariaLabel={`Lane ${index + 1}`}>
+              <LaneEntries lane={index + 1} count={index === 0 ? 40 : 2} />
+            </ScrollContainer>
+          ) : (
+            <Pane.Root name={`Lane ${index + 1}`}>
+              <Pane.Head>
+                <P>Lane {index + 1}</P>
+              </Pane.Head>
+              <Pane.Body ariaLabel={`Lane ${index + 1} entries`}>
+                <LaneEntries lane={index + 1} count={index === 0 ? 40 : 2} />
+              </Pane.Body>
+              <Pane.Foot>
+                <Button>Finish lane {index + 1}</Button>
+              </Pane.Foot>
+            </Pane.Root>
+          )}
+        </ColumnLayout.Column>
+      ))}
+    </ColumnLayout.Root>
+  </div>
+);
+
+const LaneEntries: FunctionComponent<{ lane: number; count: number }> = ({
+  lane,
+  count,
+}) => (
+  <Stack>
+    {Array.from({ length: count }, (_, index) => index).map((index) => (
+      <Button key={index} variant="plain">
+        Lane {lane} entry {index + 1}
+      </Button>
+    ))}
+  </Stack>
+);
+
+const checkFilledColumns = async (
+  canvasElement: HTMLElement,
+  count: number,
+) => {
+  const canvas = within(canvasElement);
+  const row = canvas.getByTestId('fill-row');
+  const holder = canvas.getByTestId('fill-holder');
+  await expectProportions(
+    row,
+    Array.from({ length: count }, () => 1),
+  );
+  await expect(row.getBoundingClientRect().height).toBe(holder.clientHeight);
+  for (const column of columnsOf(row)) {
+    await expect(column.getBoundingClientRect().height).toBe(
+      holder.clientHeight,
+    );
+  }
+  await expect(holder.scrollHeight).toBe(holder.clientHeight);
+};
+
+export const FillingPanes: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Two panes with unequal content share the allocated height. The long body scrolls while its head and foot remain visible; short content keeps its own height inside its Pane.',
+      },
+    },
+  },
+  render: () => <FillExample />,
+  play: async ({ canvasElement }) => {
+    await checkFilledColumns(canvasElement, 2);
+    const canvas = within(canvasElement);
+    const body = canvas.getByRole('group', { name: 'Lane 1 entries' });
+    const foot = canvas.getByRole('button', { name: 'Finish lane 1' });
+    const footTop = foot.getBoundingClientRect().top;
+    canvas.getByRole('button', { name: 'Lane 1 entry 40' }).focus();
+    await expect(body.scrollTop).toBeGreaterThan(0);
+    await expect(foot.getBoundingClientRect().top).toBe(footTop);
+    await expect(canvas.getByTestId('fill-holder').scrollTop).toBe(0);
+    await expect(
+      canvas.queryByRole('group', { name: 'Lane 2 entries' }),
+    ).not.toBeInTheDocument();
+  },
+};
+
+export const FourFillingColumns: Story = {
+  render: () => <FillExample columns={4} />,
+  play: async ({ canvasElement }) => checkFilledColumns(canvasElement, 4),
+};
+
+export const FillingScrollContainers: Story = {
+  render: () => <FillExample scrollContainer />,
+  play: async ({ canvasElement }) => {
+    await checkFilledColumns(canvasElement, 2);
+    const canvas = within(canvasElement);
+    const scroller = canvas.getByRole('group', { name: 'Lane 1' });
+    canvas.getByRole('button', { name: 'Lane 1 entry 40' }).focus();
+    await expect(scroller.scrollTop).toBeGreaterThan(0);
+    await expect(canvas.getByTestId('fill-holder').scrollTop).toBe(0);
+  },
+};
+
+export const StackedFillingColumns: Story = {
+  render: () => <FillExample narrow />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const holder = canvas.getByTestId('fill-holder');
+    const row = canvas.getByTestId('fill-row');
+    await expect(isOneColumn(row)).toBe(true);
+    await expect(holder.scrollHeight).toBeGreaterThan(holder.clientHeight);
+    await expect(
+      canvas.queryByRole('group', { name: 'Lane 1 entries' }),
+    ).not.toBeInTheDocument();
+    const last = canvas.getByRole('button', { name: 'Finish lane 2' });
+    last.focus();
+    await expect(holder.scrollTop).toBeGreaterThan(0);
+    await expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      holder.getBoundingClientRect().bottom,
+    );
+  },
+};
+
+export const UnsizedFillingColumns: Story = {
+  render: () => <FillExample unsized />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = canvas.getByTestId('fill-row');
+    const [long, short] = columnsOf(row);
+    await expect(isOneRow(row)).toBe(true);
+    await expect(long?.getBoundingClientRect().height).toBeGreaterThan(
+      short?.getBoundingClientRect().height ?? 0,
+    );
+    await expect(
+      canvas.queryByRole('group', { name: 'Lane 1 entries' }),
+    ).not.toBeInTheDocument();
+  },
+};
+
+export const FillResize: Story = {
+  render: () => <FillExample />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const holder = canvas.getByTestId('fill-holder');
+    const row = canvas.getByTestId('fill-row');
+    const columns = columnsOf(row);
+    const button = canvas.getByRole('button', { name: 'Lane 1 entry 1' });
+    button.focus();
+    await checkFilledColumns(canvasElement, 2);
+    holder.style.width = '20rem';
+    await expect(isOneColumn(row)).toBe(true);
+    await expect(columnsOf(row)).toEqual(columns);
+    await expect(document.activeElement).toBe(button);
+    holder.style.width = '100%';
+    await checkFilledColumns(canvasElement, 2);
+    holder.style.setProperty('--lane-min-width', '80rem');
+    await expect(isOneColumn(row)).toBe(true);
+    await expect(columnsOf(row)).toEqual(columns);
+    holder.style.setProperty('--lane-min-width', '12rem');
+    holder.style.width = 'calc(24rem + var(--space-stack))';
+    await checkFilledColumns(canvasElement, 2);
+    holder.style.width = 'calc(24rem + var(--space-stack) - 1px)';
+    await expect(isOneColumn(row)).toBe(true);
+    holder.style.width = '100%';
+    await checkFilledColumns(canvasElement, 2);
+    await expect(columnsOf(row)).toEqual(columns);
+    await expect(document.activeElement).toBe(button);
+  },
+};
+
+export const DefaultContentHeight: Story = {
+  render: () => <FillExample fill={false} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [long, short] = columnsOf(canvas.getByTestId('fill-row'));
+    await expect(long?.getBoundingClientRect().height).toBeGreaterThan(
+      short?.getBoundingClientRect().height ?? 0,
+    );
+    await expect(
+      canvas.getByTestId('fill-holder').scrollHeight,
+    ).toBeGreaterThan(canvas.getByTestId('fill-holder').clientHeight);
   },
 };
