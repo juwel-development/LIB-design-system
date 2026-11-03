@@ -271,6 +271,12 @@
   initial-value: 1px;
 }
 
+@property --column-layout-shortfall {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 1px;
+}
+
 /* Box's inner padding, measured against inherited type, beside Collection's. */
 :root {
   --space-box-inset: 1em;

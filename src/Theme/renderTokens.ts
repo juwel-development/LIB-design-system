@@ -221,6 +221,13 @@ const DEFINITION_SPACING = `:root {
   initial-value: 1px;
 }`;
 
+// Resolve the fill row's width shortfall before its columns query the horizontal state.
+const COLUMN_LAYOUT_FIT = `@property --column-layout-shortfall {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 1px;
+}`;
+
 /* Callout's leading mark and separation from its content (#131). The mark stays visible at a
    positive CSS length; its inset accepts a nonnegative CSS length and follows inherited type. */
 const CALLOUT_MARK = `:root {
@@ -442,6 +449,8 @@ ${COLLECTION_SPACING}
 
 /* DefinitionList's item air and column minimums sit in :root beside the collection role (#123). */
 ${DEFINITION_SPACING}
+
+${COLUMN_LAYOUT_FIT}
 
 /* Box's inner padding, measured against inherited type, beside Collection's. */
 ${BOX_INSET}
