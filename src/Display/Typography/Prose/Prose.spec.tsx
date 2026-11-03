@@ -1,5 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { Button, Link } from 'index';
 import type { ComponentProps } from 'react';
+import { Subject } from 'rxjs';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { P } from '../P/P';
 import { Prose } from './Prose';
@@ -7,6 +9,45 @@ import { Prose } from './Prose';
 const statusTones = ['success', 'warning', 'error', 'info'] as const;
 
 describe('Prose', () => {
+  it('offers only ordinary prose or a whole letter on the root (#128)', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof Prose.Root>['variant']>
+    >().toEqualTypeOf<'default' | 'letter'>();
+    expectTypeOf<ComponentProps<typeof Prose.Body>>().not.toHaveProperty(
+      'variant',
+    );
+  });
+
+  it('keeps consumer paragraphs and native inline interactions inside a letter (#128)', () => {
+    const action$ = new Subject<void>();
+    let requests = 0;
+    const subscription = action$.subscribe(() => {
+      requests += 1;
+    });
+    render(
+      <Prose.Root variant="letter">
+        <Prose.Body>Dear reader,</Prose.Body>
+        <Prose.Body>
+          Please <Link href="/letter">read the letter</Link> or{' '}
+          <Button variant="link" onClick$={action$}>
+            reply here
+          </Button>
+          .
+        </Prose.Body>
+        <Prose.Body color="muted">Yours, Alex</Prose.Body>
+      </Prose.Root>,
+    );
+    expect(screen.getAllByRole('paragraph')).toHaveLength(3);
+    expect(screen.getByText('Dear reader,').tagName).toBe('P');
+    expect(screen.getByText('Yours, Alex').tagName).toBe('P');
+    expect(
+      screen.getByRole('link', { name: 'read the letter' }),
+    ).toHaveAttribute('href', '/letter');
+    fireEvent.click(screen.getByRole('button', { name: 'reply here' }));
+    expect(requests).toBe(1);
+    subscription.unsubscribe();
+  });
+
   it('is one namespace object carrying exactly its four members', () => {
     expect(Object.keys(Prose).sort()).toEqual(
       ['Body', 'Lede', 'Root', 'Tail'].sort(),

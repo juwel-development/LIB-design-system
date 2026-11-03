@@ -80,6 +80,22 @@ describe('renderTokens standing slot contract', () => {
 });
 
 describe('renderTokens typography contract', () => {
+  it('ships independently themeable letter typography and measure in every token entry point (#128)', () => {
+    for (const css of [
+      renderTokens(),
+      renderLightTokens(),
+      renderDarkTokens(),
+    ]) {
+      expect(css).toContain('--text-letter: 1.25rem;');
+      expect(css).toContain('--leading-letter: 1.8;');
+      expect(css).toContain('--measure-letter: 60ch;');
+      expect(css).toContain(
+        'font-family: var(--font-letter, var(--font-primary));',
+      );
+      expect(css).not.toMatch(/--font-letter:/);
+    }
+  });
+
   // The library ships no face, so it holds no font values to read; the type-role sizes are its
   // own, and the two floors below are checked against them the way the contrast test checks the
   // ring. 1rem is 16px.
