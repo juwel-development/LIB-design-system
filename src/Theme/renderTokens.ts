@@ -102,11 +102,14 @@ const TYPOGRAPHY = `@theme {
   /* Type roles, not a scale: one role per job, so a component asks for what its text is, never a rung.
      display > title > subtitle are the three heading steps H1-H3 bind to; H4-H6 share body and split
      by weight, so there is no fourth role. display is the hero and must out-scale every subpage head. */
-  --text-display: clamp(3rem, 7vw, 6rem);
+  /* At 1280, 1440 and 1920 CSS px (16px root), size(w / 2) / size(w) must be >= 0.75.
+     At 200% zoom the viewport halves, so physical growth is 2 * that ratio: at least 1.5x.
+     The rem terms preserve growth; at 1280px these sizes stay within 2px of the old vw clamps. */
+  --text-display: clamp(3rem, 3rem + 3.125vw, 6rem);
   --leading-display: 1.05;
-  --text-title: clamp(2.25rem, 5vw, 4.25rem);
+  --text-title: clamp(2.25rem, 2.25rem + 2.25vw, 4.25rem);
   --leading-title: 1.1;
-  --text-subtitle: clamp(1.5rem, 3vw, 2.25rem);
+  --text-subtitle: clamp(1.5rem, 1.5rem + 1vw, 2.25rem);
   --leading-subtitle: 1.2;
 
   /* The reading block's opening paragraph (Prose #21): sized above body and below subtitle, led
@@ -129,7 +132,7 @@ const TYPOGRAPHY = `@theme {
   /* The Dialog title role: the top heading of an independent transitory task, deliberately outside
      the page heading ladder (docs/adr/0005). Ships subtitle's values while staying an independent
      role, so a consumer re-points Dialog titles without moving every H3 (docs/adr/0004, Amendments). */
-  --text-dialog-title: clamp(1.5rem, 3vw, 2.25rem);
+  --text-dialog-title: clamp(1.5rem, 1.5rem + 1vw, 2.25rem);
   --leading-dialog-title: 1.2;
 
   /* Two quantities on one property that must not collapse: --tracking-label is a fixed letter-spaced
@@ -387,13 +390,8 @@ const declarations = (
     .map((name) => `  --color-${toKebabCase(name)}: ${value(name)};`)
     .join('\n');
 
-// The library no longer declares --color-ring but still reads it as a fallback, so a consumer's
-// existing value keeps working; the plain hex in the palette is the default and what the contrast
-// test checks. See docs/adr/0002-focus-ring-token-contract.md.
-const raw = (tokens: Required<PaletteTokens>) => (name: string) => {
-  const value = tokens[name as keyof PaletteTokens];
-  return name === 'focusRing' ? `var(--color-ring, ${value})` : value;
-};
+const raw = (tokens: Required<PaletteTokens>) => (name: string) =>
+  tokens[name as keyof PaletteTokens];
 const reference = () => (name: string) => `var(--color-${toKebabCase(name)})`;
 
 // Only the combined tokens.css carries the dark set; this gates it behind .dark and defines dark:.
