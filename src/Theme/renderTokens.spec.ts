@@ -510,17 +510,17 @@ describe('renderTokens focus ring contract', () => {
     const css = renderTokens();
     expect(css).not.toContain('--color-primary-ring');
     expect(css).not.toContain('--color-secondary-ring');
-    // The old general ring is read as a fallback but no longer declared.
-    expect(css).not.toMatch(/--color-ring:/);
+    expect(css).not.toContain('--color-ring');
   });
 
-  it('reads the old general-ring variable as a fallback, defaulting per theme when it is undeclared', () => {
-    const css = renderTokens();
-    // A CSS fallback reaches its default only when the variable is undeclared, so a consumer who
-    // still sets --color-ring keeps their value while an undeclared one falls through to the new
-    // per-theme default.
-    expect(css).toContain('--color-focus-ring: var(--color-ring, #475569);');
-    expect(css).toContain('--color-focus-ring: var(--color-ring, #cbd5e1);');
+  it('emits plain per-theme focus ring values without reading the retired ring token', () => {
+    expect(renderTokens()).toContain('--color-focus-ring: #475569;');
+    expect(renderTokens()).toContain('--color-focus-ring: #cbd5e1;');
+    expect(renderLightTokens()).toContain('--color-focus-ring: #475569;');
+    expect(renderDarkTokens()).toContain('--color-focus-ring: #cbd5e1;');
+    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+      expect(render()).not.toContain('--color-ring');
+    }
   });
 
   it('carries the width and offset as re-pointable non-colour tokens, kept out of the Tailwind colour map', () => {
@@ -568,15 +568,11 @@ describe('single-theme token variants (issue #62)', () => {
 
   it('draws every variant from the one palette, so the three cannot drift', () => {
     // The colour values are never hand-duplicated: each variant renders the same Palette export.
-    for (const [name, value] of Object.entries(light)) {
-      const rendered =
-        name === 'focusRing' ? `var(--color-ring, ${value})` : value;
-      expect(renderLightTokens()).toContain(rendered);
+    for (const value of Object.values(light)) {
+      expect(renderLightTokens()).toContain(value);
     }
-    for (const [name, value] of Object.entries(dark)) {
-      const rendered =
-        name === 'focusRing' ? `var(--color-ring, ${value})` : value;
-      expect(renderDarkTokens()).toContain(rendered);
+    for (const value of Object.values(dark)) {
+      expect(renderDarkTokens()).toContain(value);
     }
   });
 

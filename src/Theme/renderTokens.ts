@@ -390,13 +390,8 @@ const declarations = (
     .map((name) => `  --color-${toKebabCase(name)}: ${value(name)};`)
     .join('\n');
 
-// The library no longer declares --color-ring but still reads it as a fallback, so a consumer's
-// existing value keeps working; the plain hex in the palette is the default and what the contrast
-// test checks. See docs/adr/0002-focus-ring-token-contract.md.
-const raw = (tokens: Required<PaletteTokens>) => (name: string) => {
-  const value = tokens[name as keyof PaletteTokens];
-  return name === 'focusRing' ? `var(--color-ring, ${value})` : value;
-};
+const raw = (tokens: Required<PaletteTokens>) => (name: string) =>
+  tokens[name as keyof PaletteTokens];
 const reference = () => (name: string) => `var(--color-${toKebabCase(name)})`;
 
 // Only the combined tokens.css carries the dark set; this gates it behind .dark and defines dark:.

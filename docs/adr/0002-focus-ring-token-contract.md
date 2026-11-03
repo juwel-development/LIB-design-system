@@ -90,3 +90,12 @@ question.
 both themes and fails below 3:1, which stops *the library* regressing its own palette. Nothing can
 fail a consumer's build for choosing a bad value — that is why the constraint is published
 numerically in the token's documentation rather than left to the test to imply.
+
+## Amendments
+
+### 4.0.0: remove the general-ring fallback (#149)
+
+3.0.0 missed the promised next-major removal of `--color-ring`. Version 4.0.0 performs it:
+`--color-focus-ring` is now a plain per-theme value, with no fallback to `--color-ring`.
+A theme that set `--color-ring` must set `--color-focus-ring` instead; the contrast constraint
+and the outline width and offset remain unchanged.
