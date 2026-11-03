@@ -1,5 +1,6 @@
 import { Stack } from 'Arrangement/Stack/Stack';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Button, H2, P, Pane, Tabs } from 'index';
 import {
   type ComponentProps,
   type FunctionComponent,
@@ -8,7 +9,7 @@ import {
   useState,
 } from 'react';
 import { Subject } from 'rxjs';
-import { Tabs } from './Tabs';
+import { expect, userEvent, within } from 'storybook/test';
 
 const meta: Meta<typeof Tabs.Root> = {
   title: 'Interaction/Tabs',
@@ -24,13 +25,20 @@ const meta: Meta<typeof Tabs.Root> = {
           '',
           "**Width.** The controls stay on one line. As the space narrows, a label's text wraps inside its tab down to its longest word; only when the controls still cannot fit does the row scroll horizontally - the row, never the page. Focusing a scrolled-off tab reveals it, so every tab is reachable by keyboard, and the focus ring survives the scroll clip. Reach for no truncation or responsive collapsing: a long translation is the row's to accommodate.",
           '',
-          '**Separation.** Tabs sets no spacing between the row and the view. Put a `Stack` between `Tabs.Root` and its members - `<Tabs.Root><Stack gap="region"><Tabs.List/>…<Tabs.Panel/>…</Stack></Tabs.Root>`: `gap="stack"` holds the row and its view together as one block, `gap="region"` sets the view apart as a region of its own. Inactive panels are hidden, so the gap is exactly one whichever panel is active. The members need not be direct children of `Root`; the tabs must stay direct children of the `List`.',
+          '**Fill.** Set `fill` on Root to take the parent allocation: List stays at content height and the active Panel gets the rest. Put List and Panels directly inside Root, and a Pane directly inside each Panel. Fragments are supported. An ordinary unsized Stack between those members breaks the height chain; compose spacing inside Pane slots instead. No gap or scroll region is added. Without a definite parent height, the panel grows with its content. Give the list and the child’s fixed content enough room. A direct bounded Table will also accept the panel bound once #142 supplies that API; that integration remains pending.',
+          '',
+          '**Separation (without fill).** Tabs sets no spacing between the row and the view. Put a `Stack` between `Tabs.Root` and its members - `<Tabs.Root><Stack gap="region"><Tabs.List/>…<Tabs.Panel/>…</Stack></Tabs.Root>`: `gap="stack"` holds the row and its view together as one block, `gap="region"` sets the view apart as a region of its own. Inactive panels are hidden, so the gap is exactly one whichever panel is active. The members need not be direct children of `Root`; the tabs must stay direct children of the `List`.',
         ].join('\n'),
       },
     },
   },
   tags: ['autodocs'],
   argTypes: {
+    fill: {
+      control: 'boolean',
+      description:
+        'Fill the allocated parent height; direct List and Panels are required. An unsized parent retains content height.',
+    },
     active: {
       control: false,
       description:
@@ -349,4 +357,168 @@ export const NarrowDesktop: Story = {
       />
     </Stack>
   ),
+};
+
+const lanes = [
+  { value: 'songs', label: 'Songs to record (60)', count: 60 },
+  { value: 'sessions', label: 'Recording sessions (2)', count: 2 },
+  { value: 'pool', label: 'Recording pool (40)', count: 40 },
+  { value: 'releases', label: 'Releases (1)', count: 1 },
+];
+
+const FillingTabs = () => {
+  const [active, setActive] = useState('songs');
+  const [onSelect$] = useState(() => new Subject<string>());
+  useEffect(() => {
+    const subscription = onSelect$.subscribe(setActive);
+    return () => subscription.unsubscribe();
+  }, [onSelect$]);
+  return (
+    <Tabs.Root
+      fill
+      active={active}
+      onSelect$={onSelect$}
+      label="Recording work"
+      testId="filling-tabs"
+    >
+      <Tabs.List>
+        {lanes.map((lane) => (
+          <Tabs.Tab key={lane.value} value={lane.value}>
+            {lane.label}
+          </Tabs.Tab>
+        ))}
+      </Tabs.List>
+      {lanes.map((lane) => (
+        <Tabs.Panel key={lane.value} value={lane.value}>
+          <Pane.Root name={lane.label}>
+            <Pane.Head>
+              <H2>{lane.label}</H2>
+            </Pane.Head>
+            <Pane.Body ariaLabel="Lane entries">
+              <Stack>
+                {Array.from(
+                  { length: lane.count },
+                  (_, index) => index + 1,
+                ).map((entry) => (
+                  <Button key={entry} variant="plain">
+                    Entry {entry}
+                  </Button>
+                ))}
+              </Stack>
+            </Pane.Body>
+            <Pane.Foot>
+              <Button>Continue</Button>
+            </Pane.Foot>
+          </Pane.Root>
+        </Tabs.Panel>
+      ))}
+    </Tabs.Root>
+  );
+};
+
+export const FillingPane: Story = {
+  parameters: {
+    layout: 'fullscreen',
+    docs: {
+      description: {
+        story:
+          'Four tabs over one bounded Pane in a 1280 × 720 allocation. Switch between long and short lanes: the list and root stay still, and only the long Pane body scrolls. The host div represents the enclosing layout allocation; the Tabs/Pane composition needs no consumer CSS.',
+      },
+    },
+  },
+  render: () => (
+    <div
+      style={{
+        width: 1280,
+        maxWidth: '100%',
+        height: 720,
+        padding: 16,
+        boxSizing: 'border-box',
+      }}
+    >
+      <FillingTabs />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const root = canvas.getByTestId('filling-tabs');
+    const list = canvas.getByRole('tablist', { name: 'Recording work' });
+    const rootBounds = root.getBoundingClientRect();
+    const listBounds = list.getBoundingClientRect();
+    await expect(rootBounds.height).toBe(688);
+    const body = await canvas.findByRole('group', { name: 'Lane entries' });
+    const foot = canvas.getByRole('button', { name: 'Continue' });
+    const footTop = foot.getBoundingClientRect().top;
+    const headTop = canvas.getByRole('heading').getBoundingClientRect().top;
+    canvas.getByRole('button', { name: 'Entry 60' }).focus();
+    await expect(body.scrollTop).toBeGreaterThan(0);
+    await expect(foot.getBoundingClientRect().top).toBe(footTop);
+    await expect(canvas.getByRole('heading').getBoundingClientRect().top).toBe(
+      headTop,
+    );
+    await expect(canvasElement.ownerDocument.scrollingElement?.scrollTop).toBe(
+      0,
+    );
+    await expect(foot.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      rootBounds.bottom,
+    );
+    const firstTab = canvas.getByRole('tab', { name: lanes[0]?.label });
+    firstTab.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(
+      canvas.getByRole('tab', { name: lanes[1]?.label }),
+    ).toHaveFocus();
+    await expect(
+      canvas.getByRole('tabpanel', { name: lanes[1]?.label }),
+    ).toBeVisible();
+    for (const lane of lanes) {
+      await userEvent.click(canvas.getByRole('tab', { name: lane.label }));
+      const panel = canvas.getByRole('tabpanel', { name: lane.label });
+      const pane = canvas.getByRole('group', { name: lane.label });
+      await expect(root.getBoundingClientRect().height).toBe(rootBounds.height);
+      await expect(list.getBoundingClientRect().top).toBe(listBounds.top);
+      await expect(list.getBoundingClientRect().height).toBe(listBounds.height);
+      await expect(panel.getBoundingClientRect().bottom).toBe(
+        rootBounds.bottom,
+      );
+      await expect(pane.getBoundingClientRect().bottom).toBe(rootBounds.bottom);
+      await expect(
+        canvas.getByRole('button', { name: 'Continue' }).getBoundingClientRect()
+          .bottom,
+      ).toBeLessThanOrEqual(rootBounds.bottom);
+    }
+  },
+};
+
+export const UnsizedFillingPane: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The same fill option in an unsized parent: the long pane grows with its content, without a bounded body or an invented height. Switching to a short lane makes the root shorter.',
+      },
+    },
+  },
+  render: () => (
+    <>
+      <FillingTabs />
+      <P>Content after the tabs</P>
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const root = canvas.getByTestId('filling-tabs');
+    const longHeight = root.getBoundingClientRect().height;
+    await expect(
+      canvas.queryByRole('group', { name: 'Lane entries' }),
+    ).toBeNull();
+    await expect(
+      canvas.getByText('Content after the tabs').getBoundingClientRect().top,
+    ).toBeGreaterThanOrEqual(root.getBoundingClientRect().bottom);
+    await userEvent.click(canvas.getByRole('tab', { name: 'Releases (1)' }));
+    await expect(root.getBoundingClientRect().height).toBeLessThan(longHeight);
+    await expect(
+      canvas.queryByRole('group', { name: 'Lane entries' }),
+    ).toBeNull();
+  },
 };
