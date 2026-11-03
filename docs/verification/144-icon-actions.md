@@ -109,3 +109,79 @@ Publication remains a human follow-up; no push, merge, release, issue closure or
 
 Standards: 2 findings addressed (1 documented breach, 1 judgement); Spec: 2 verification findings
 addressed, with sibling composition and publication still outstanding.
+
+## Final local integration (2026-11-04)
+
+This section supersedes the earlier pending-#142 statements. Merge commit `8ae8e64`
+incorporates local main `397936d` into `feature/ticket-144`; it does not merge to main.
+The bounded Table runtime and reviewed icon-action sizing are combined without a new runtime
+fix. Main's Stepper, letter typography, tokens and ColumnLayout changes are retained.
+The three conflicts were resolved by retaining both Table test/story sets and main's single
+Storybook Tailwind registration. No Pane stories or broader Stepper composition were edited.
+
+Four Table-owned stories now compose a bounded icon-action table directly in
+`Pane.Body scrollOwner="child"` and `Dialog.Content scrollOwner="child"`, at comfortable and
+compact density. A text reference row and 39 rows with five plain actions at each horizontal edge
+exercise row-height parity and horizontal overflow. Their play assertions verify:
+
+- one scrolling Table wrapper, a non-scrolling holder and stationary page/title/footer;
+- a sticky header retained during vertical scrolling (the caption scrolls away);
+- equal reference/action row heights, and action groups staying on one line;
+- keyboard-visible rings after focus moves to final, initial and interior rows at both horizontal
+  boundaries, with full outline-plus-offset clearance below the header and inside the scrollport.
+
+The Dialog story waits for the measured overflow group after the modal opens, rather than racing
+its ResizeObserver. The unit activation test now covers both natural-height and bounded tables.
+
+### Browser evidence
+
+All 16 combinations passed: Pane/Dialog × comfortable/compact × 1280/320 CSS pixels ×
+ordinary/emulated forced colours, at 720px viewport height. Storybook play assertions completed
+without JavaScript errors. Rows measured **39.5px comfortable** and **31.5px compact**, equal to the
+text reference in every scenario; narrow tables retained horizontal overflow and unwrapped actions.
+Rings retained a visible 3px outline and 2px offset, and the forced-colours media query was active.
+
+Durable [measurements](144-integration/measurements.json) record the matrix and geometry.
+The inspected [narrow compact Pane screenshot](144-integration/integration-pane-compact-320-active.png)
+and [1280px Dialog screenshot](144-integration/integration-dialog-comfortable-1280-active.png)
+show system-colour glyphs and visible focus in forced colours. The Pane story was also
+opened in Orca's embedded browser; its synthetic keyboard play failed the focus-visible assertion,
+so Orca is not counted as a passing browser run. The matrix used temporary Playwright with installed Chromium
+because the previous Orca forced-colours emulation did not activate the media query.
+The temporary driver is `/tmp/lib144-browser/integration.mjs`; no browser dependency was added.
+
+The original Icon Actions story also passed all six scenarios again (320, 1280, 1600px in ordinary
+and forced colours), retaining first/interior/last-column checks, row activation isolation,
+filtering-induced shrinkage, and all 30 drawing/tone combinations. Raw regression results are
+`/tmp/lib144-browser/review-integrated-evidence.json`.
+
+### Independent integration review
+
+Pinned base: `6d77fc0`; integration commit: `8ae8e64`; incoming reviewed main: `397936d`.
+Two independent agents reviewed Standards and Spec separately against the repository standards,
+issue #144 and its comments, and the dispatched integration requirements. Previously reviewed
+main changes were treated as baseline. No issue tracker writes were made, as the dispatch forbids
+posting to GitHub during this run.
+
+**Standards:** 0 documented breaches and 0 actionable smell findings.
+
+**Spec:** 1 confirmed finding, addressed: conflict resolution restored obsolete documentation
+claiming Table never bounds its height. The wording again states that natural height is the default
+and that the external ScrollContainer example applies to unbounded tables. No runtime defect or
+scope creep was found. Follow-up review confirmed the fix and corrected an evidence overstatement:
+sticky geometry is asserted; header opacity was visually inspected, not asserted.
+
+### Checks and remaining limits
+
+Package build including CSS delivery checks, lint, typecheck, full tests (63 files, 1438 tests),
+and Storybook build pass. Fallow completed with advisory findings and a semantic-attribution warning;
+it is not a clean advisory report. The existing jsdom navigation warning and Storybook bundle-size
+warning remain. Browser verification found no need to change production runtime code.
+
+Real Windows high-contrast themes, non-Chromium engines and screen readers remain unverified.
+The bounded composition uses screen-extent Dialog and static rows; the retained original story
+covers selected/interactive rows and action activation. Pane's broader composition and Stepper work
+remain with #141. Publication remains a human follow-up: no push, merge to main, issue closure,
+Done transition or publication was performed.
+
+Standards: 0 findings; Spec: 1 finding addressed.

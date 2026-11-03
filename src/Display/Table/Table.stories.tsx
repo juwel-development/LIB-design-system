@@ -43,7 +43,7 @@ const meta: Meta<typeof Table.Root> = {
 
 Until the consumer's data arrives, the icon and \`ariaSort\` keep stating the old order - metadata describes what is displayed, never what was requested.
 
-\`Table\` handles residual horizontal overflow automatically in every \`notes\` mode, with no opt-in, and never bounds its own height. For a long table, put it inside a \`ScrollContainer\` with \`axis="vertical"\`, named for what it holds rather than with the caption: the container and the table's own scroll region are two consecutive tab stops, and two stops announced by one name read as one thing.
+\`Table\` handles residual horizontal overflow automatically in every \`notes\` mode, with no opt-in, and defaults to natural height. For an unbounded table, put it inside a \`ScrollContainer\` with \`axis="vertical"\`, named for what it holds rather than with the caption: the container and the table's own scroll region are two consecutive tab stops, and two stops announced by one name read as one thing.
 
 \`\`\`tsx
 <div style={{ height: '20rem' }}>
@@ -2628,7 +2628,9 @@ const BoundedIconExample = ({
 const checkBoundedIconActions = async () => {
   const page = within(document.body);
   const table = page.getByRole('table', { name: 'Bounded icon actions' });
-  const wrapper = page.getByRole('group', { name: 'Bounded icon actions' });
+  const wrapper = await page.findByRole('group', {
+    name: 'Bounded icon actions',
+  });
   const holder = wrapper.parentElement;
   if (!holder) throw new Error('Missing child-scroll holder');
   expect(getComputedStyle(holder).overflowY).toBe('visible');
