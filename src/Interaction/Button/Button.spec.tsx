@@ -16,6 +16,46 @@ const variants = [
 const faced = ['primary', 'secondary', 'outlined', 'destructive'] as const;
 
 describe('Button Component', () => {
+  it('offers an inline action through the closed public Button contract', () => {
+    expectTypeOf<'link'>().toExtend<ComponentProps<typeof Button>['variant']>();
+    const onClick$ = new Subject<void>();
+    const activated = vi.fn();
+    const subscription = onClick$.subscribe(activated);
+    render(
+      <p>
+        Read about{' '}
+        <Button variant="link" onClick$={onClick$}>
+          Ana Carter
+        </Button>{' '}
+        here.
+      </p>,
+    );
+    const action = screen.getByRole('button', { name: 'Ana Carter' });
+    expect(action.tagName).toBe('BUTTON');
+    expect(action).toHaveAttribute('type', 'button');
+    expect(action).not.toHaveAttribute('href');
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    fireEvent.click(action);
+    expect(activated).toHaveBeenCalledExactlyOnceWith(undefined);
+    subscription.unsubscribe();
+  });
+
+  it('keeps an unavailable inline action disabled and emits nothing', () => {
+    const onClick$ = new Subject<void>();
+    const activated = vi.fn();
+    const subscription = onClick$.subscribe(activated);
+    render(
+      <Button variant="link" disabled onClick$={onClick$}>
+        Ana Carter
+      </Button>,
+    );
+    const action = screen.getByRole('button', { name: 'Ana Carter' });
+    expect(action).toBeDisabled();
+    fireEvent.click(action);
+    expect(activated).not.toHaveBeenCalled();
+    subscription.unsubscribe();
+  });
+
   it('renders correctly', () => {
     render(<Button>Click Me</Button>);
     const button = screen.getByRole('button');
@@ -278,6 +318,7 @@ describe('Button Component', () => {
       | 'outlined'
       | 'destructive'
       | 'plain'
+      | 'link'
       | null
       | undefined
     >();

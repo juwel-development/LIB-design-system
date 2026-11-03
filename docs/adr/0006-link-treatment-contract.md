@@ -176,3 +176,18 @@ it does not depend on the typography contract; the label's type is the caller's 
 browser defaults, and once `quiet` and `label-link` moved onto the tokens it became the library's last
 untokenised line. Migrating it is a change to a different component and is tracked as
 [#52](https://github.com/juwel-development/LIB-design-system/issues/52).
+
+## Inline actions without an address (#130)
+
+`Button variant="link"` borrows the prose treatment for an action in running text when the
+application changes screens through state and there is no address. An address still calls for
+`Link`; its contract and implementation do not change. The action keeps native button semantics,
+`onClick$`, Enter and Space activation, and the shared focus ring.
+
+Like `plain`, this Button has no face, corner, padding or minimum width of its own: it inherits
+surrounding typography, including line height, and its label wraps within the available width.
+This extends the plain-action exceptions recorded in ADR 0003 and ADR 0004 to another inline action.
+Unlike `plain`, it uses the `link` ink and the persistent prose underline, with the same underline
+offset and instant hover thickening. Disabled uses `disabled` ink, retains its underline without
+hover thickening, and keeps native disabled behavior. The consumer supplies the text and action;
+there is no routing, anchor without an address, or consumer styling escape hatch.

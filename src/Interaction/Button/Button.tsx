@@ -6,7 +6,7 @@ import type { Subject } from 'rxjs';
 // No `dark:` classes here by design: every colour below is a semantic token whose value is
 // re-pointed by the `.dark` class in tokens.css, so one set of classes serves both themes.
 // Every variant shares colour motion and the focus ring. Faced controls share their typography,
-// radius and label arrangement; plain inherits its surrounding text. Long words wrap within the
+// radius and label arrangement; plain and link inherit their surrounding text. Long words wrap within the
 // available width without clipping, and faced minimum widths yield to a narrower holder (#119).
 const face =
   'font-control text-body text-balance wrap-anywhere rounded-[var(--radius-control)] select-none inline-flex flex-row items-center justify-center gap-2';
@@ -30,6 +30,7 @@ const button = cva(
         // Disabled follows Input: edge and ink go to the disabled tones and no fill appears.
         outlined: `${face} px-[calc(1rem_-_1px)] sm:px-[calc(1.5rem_-_1px)] py-[calc(0.5rem_-_1px)] min-w-[min(var(--control-min-width),100%)] border border-solid border-secondary bg-transparent text-secondary hover:bg-backing disabled:border-disabled disabled:text-muted disabled:hover:bg-transparent`,
         destructive: `${face} px-4 sm:px-6 py-2 min-w-[min(var(--control-min-width),100%)] bg-error text-error-foreground hover:bg-error-hover disabled:bg-disabled disabled:hover:bg-disabled-hover forced-colors:border`,
+        link: 'inline p-0 min-w-0 max-w-full whitespace-normal wrap-anywhere bg-transparent [font:inherit] [letter-spacing:inherit] [text-align:inherit] text-link underline decoration-[length:var(--underline-thickness)] underline-offset-[var(--underline-offset)] enabled:hover:decoration-[length:var(--underline-thickness-hover)] disabled:text-disabled',
         plain:
           'inline p-0 min-w-0 max-w-full whitespace-normal wrap-anywhere bg-transparent [font:inherit] [letter-spacing:inherit] [color:inherit] [text-align:inherit] disabled:text-disabled',
       },
@@ -40,7 +41,7 @@ const button = cva(
   },
 );
 
-interface IButtonProps extends VariantProps<typeof button> {
+export interface IButtonProps extends VariantProps<typeof button> {
   /** Optional: an icon-only button renders none, and names itself with `ariaLabel` instead. */
   children?: ReactNode;
   onClick$?: Subject<void>;
@@ -82,17 +83,23 @@ interface IButtonProps extends VariantProps<typeof button> {
  *   text around it, with no face, padding, corner or hover underline of its own. Reach for it where
  *   the action belongs to a line of content - a sortable column header composed with `Icon` - and
  *   for `ghost` where a quiet but still button-shaped action is wanted
+ * - `link` is an inline action with the prose Link treatment: persistent underline and link ink,
+ *   inheriting the surrounding face, size and line height, with no inset, corner or minimum width.
+ *   Use `Link` when there is an address; use `Button variant="link"` with `onClick$` when there is
+ *   none. The consumer owns the action and navigation. Supply text, not nested interactive content.
  * - Maintain consistent button styling throughout the application
  * - Provide visual feedback on hover/active states
- * - Ensure sufficient touch target size (minimum 44x44px) for mobile users
+ * - Inline actions take their target size from the surrounding text; use faced actions for standalone controls
  * - Position primary actions on the right for multi-button layouts
  * - A submit button's busy state is a label swap ("Send" to "Sending…"), never a spinner: it costs
  *   nothing to render server-side and keeps a Form's `sending` state driver-agnostic
  *
  * @Accessibility
  * - Ensure adequate color contrast (4.5:1 minimum ratio)
- * - Provide focus styles for keyboard navigation: every variant, `plain` included, draws the shared
+ * - Provide focus styles for keyboard navigation: every variant, including `plain` and `link`, draws the shared
  *   focus ring and nothing else changes on focus
+ * - A disabled `link` retains its underline, uses the disabled ink and does not thicken on hover.
+ *   Native disabled semantics prevent activation and remove it from the tab sequence.
  * - A disabled `plain` button is told apart by the `disabled` text tone and keeps native disabled semantics
  * - Use appropriate ARIA attributes when needed
  * - Status colour never stands alone: a destructive action is named by its words or symbol

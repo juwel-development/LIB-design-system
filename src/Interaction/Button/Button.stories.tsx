@@ -1,7 +1,9 @@
 import { Icon } from 'Display/Icon/Icon';
+import { Prose } from 'Display/Typography/Prose/Prose';
+import { Link } from 'Interaction/Link/Link';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Subject } from 'rxjs';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { Button } from './Button';
 
 const meta: Meta<typeof Button> = {
@@ -14,7 +16,7 @@ const meta: Meta<typeof Button> = {
     docs: {
       description: {
         component:
-          `One \`<button>\` in one of six closed variants. \`primary\` and \`secondary\` are the filled
+          `One \`<button>\` in one of seven closed variants. \`primary\` and \`secondary\` are the filled
 actions, \`ghost\` is the padded text action with a hover underline and no minimum width, and two were
 added for the game action roles under the approved
 [#119](https://github.com/juwel-development/LIB-design-system/issues/119) brief:
@@ -67,11 +69,27 @@ A label wraps where the layout constrains it and nowhere else - in a wide row a 
 on one line exactly as before - and a word wider than its holder breaks inside the word rather than
 running past the edge, so nothing is clipped and no horizontal scroll appears. Height grows with the
 wrapped lines and the inset holds, so the hit area never shrinks. Content-sized actions in running
-text are \`ghost\`, or \`plain\`; \`Button\` adds no size or inline prop for them.` +
+text are \`plain\` or \`link\`; \`Button\` adds no size or inline prop for them.` +
           '\n\n' +
           '`plain` is an operable button in the typography and colour of the surrounding text, with no fill, border, corner, padding, minimum width, or hover underline. It preserves native semantics, disabled behaviour, `type`, `ariaLabel`, `onClick$`, and the shared focus ring. Use it for actions within content, such as a sortable table header composed with Icon. Long labels wrap within the available space. Use `ghost` for a padded text action instead.' +
           '\n\n' +
-          `### The quiet icon-only delete
+          `### Inline actions that read as prose links
+
+Use \`Link\` when there is an address (\`href\`). Use \`Button variant="link" onClick$={openSubject$}\`
+when an action changes application state and there is no address. It remains a native button for
+assistive technology and Enter/Space activation; the consumer owns navigation and the Subject.
+
+\`link\` reads the same \`link\` ink, \`--underline-thickness\`, \`--underline-offset\` and
+\`--underline-thickness-hover\` as prose Link. Its underline is always present and thickens instantly
+on enabled hover. It inherits face, size, weight, line height and tracking, has no padding, corner or
+minimum width, and wraps within the sentence. It draws the shared focus ring. Disabled keeps its
+underline, takes the \`disabled\` ink, does not thicken on hover, emits nothing and leaves the tab
+sequence. Supply a text label without nested controls. No CSS workaround or routing prop is needed.
+
+The example uses ordinary Prose: the letter role requested in #128 is not available in this revision;
+a letter-specific integration example depends on that ticket.
+
+### The quiet icon-only delete
 
 A secondary destructive action at the corner of a block of content - removing one row, one card, one
 attachment - is \`variant="ghost"\` with an \`ariaLabel\` and the bin \`Icon\` as its only child
@@ -104,6 +122,7 @@ any confirmation.`,
         'outlined',
         'destructive',
         'plain',
+        'link',
       ],
       description: 'The visual style variant of the button',
     },
@@ -141,6 +160,7 @@ const variants = [
   'destructive',
   'ghost',
   'plain',
+  'link',
 ] as const;
 
 /** One of every variant, so a story can show them in a row with the same args. */
@@ -515,4 +535,102 @@ export const PlainIconOnly: Story = {
       <Icon name={'sort'} />
     </Button>
   ),
+};
+
+export const InlineAction: Story = {
+  args: {
+    variant: 'link',
+    children: 'Ana Carter',
+    onClick$: new Subject<void>(),
+  },
+  render: (args) => (
+    <Prose.Root>
+      <Prose.Lede>
+        A message from{' '}
+        <Button variant="link" onClick$={args.onClick$}>
+          Ana Carter
+        </Button>{' '}
+        is ready to read.
+      </Prose.Lede>
+      <Prose.Body>
+        Open{' '}
+        <Button variant="link" onClick$={args.onClick$}>
+          Ana Carter
+        </Button>{' '}
+        in this application, or read the{' '}
+        <Link href="https://example.com/people/ana">public profile</Link> at its
+        address.
+      </Prose.Body>
+      <Prose.Body>
+        The profile of{' '}
+        <Button variant="link" disabled>
+          Robin Carter
+        </Button>{' '}
+        is unavailable.
+      </Prose.Body>
+      <Prose.Tail>
+        For background, open{' '}
+        <Button variant="link" onClick$={args.onClick$}>
+          the complete history of this collaboration
+        </Button>
+        .
+      </Prose.Tail>
+    </Prose.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const actions = canvas.getAllByRole('button', { name: 'Ana Carter' });
+    for (const action of actions) {
+      const paragraph = action.parentElement;
+      if (!paragraph)
+        throw new Error('The inline action needs its surrounding paragraph');
+      const text = getComputedStyle(paragraph);
+      const control = getComputedStyle(action);
+      await expect(control.fontFamily).toBe(text.fontFamily);
+      await expect(control.fontSize).toBe(text.fontSize);
+      await expect(control.lineHeight).toBe(text.lineHeight);
+      await expect(control.textDecorationLine).toContain('underline');
+      await expect(control.padding).toBe('0px');
+      await expect(control.minWidth).toBe('0px');
+    }
+    const profile = canvas.getByRole('link', { name: 'public profile' });
+    const action = actions[1];
+    if (!action) throw new Error('The body action must be present');
+    await expect(getComputedStyle(action).color).toBe(
+      getComputedStyle(profile).color,
+    );
+    await expect(getComputedStyle(action).textDecorationThickness).toBe(
+      getComputedStyle(profile).textDecorationThickness,
+    );
+    await expect(getComputedStyle(action).textUnderlineOffset).toBe(
+      getComputedStyle(profile).textUnderlineOffset,
+    );
+    await expect(
+      canvas.getByRole('button', { name: 'Robin Carter' }),
+    ).toBeDisabled();
+  },
+};
+
+export const NativeInlineActivation: Story = {
+  args: {
+    variant: 'link',
+    children: 'Open profile',
+    onClick$: new Subject<void>(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const action = within(canvasElement).getByRole('button', {
+      name: 'Open profile',
+    });
+    const activated = fn();
+    const subscription = args.onClick$?.subscribe(activated);
+    try {
+      await userEvent.tab();
+      await expect(action).toHaveFocus();
+      await userEvent.keyboard('{Enter}');
+      await userEvent.keyboard(' ');
+      await expect(activated).toHaveBeenCalledTimes(2);
+    } finally {
+      subscription?.unsubscribe();
+    }
+  },
 };
