@@ -9,7 +9,7 @@ import {
   Shell,
   Stack,
 } from 'index';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 const meta: Meta<typeof Pane.Root> = {
   title: 'Layout/Pane',
@@ -176,5 +176,47 @@ export const Stacked: Story = {
     await expect(canvasElement.ownerDocument.scrollingElement?.scrollTop).toBe(
       0,
     );
+  },
+};
+
+export const DynamicContent: Story = {
+  render: () => (
+    <Shell bar={bar} ariaLabel="Workspace body">
+      <Pane.Root name="Diagram">
+        <Pane.Body ariaLabel="Diagram content" scrollOwner={null} testId="body">
+          <svg width="100" height="40" role="img" aria-label="Growing diagram">
+            <title>Growing diagram</title>
+          </svg>
+        </Pane.Body>
+      </Pane.Root>
+    </Shell>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      canvas.queryByRole('group', { name: 'Diagram content' }),
+    ).toBeNull();
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+    const diagram = canvas.getByRole('img', { name: 'Growing diagram' });
+    diagram.setAttribute('width', String(window.innerWidth * 2));
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('group', { name: 'Diagram content' }),
+      ).toHaveAttribute('tabindex', '0'),
+    );
+    const body = canvas.getByTestId('body');
+    body.scrollLeft = 100;
+    await expect(body.scrollLeft).toBeGreaterThan(0);
+    diagram.setAttribute('width', '100');
+    await waitFor(() =>
+      expect(
+        canvas.queryByRole('group', { name: 'Diagram content' }),
+      ).toBeNull(),
+    );
+    await expect(
+      canvasElement.ownerDocument.scrollingElement?.scrollWidth,
+    ).toBe(window.innerWidth);
   },
 };

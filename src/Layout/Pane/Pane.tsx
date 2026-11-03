@@ -14,15 +14,12 @@ const paneSection = cva('min-w-0 shrink-0');
 const paneBody = cva('min-h-0 min-w-0 flex-[0_1_auto]', {
   variants: {
     scrollOwner: {
-      body: 'overflow-auto overscroll-contain outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
+      body: '[&>div]:flow-root [&>div]:w-fit [&>div]:min-w-full [&>div]:p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] overflow-auto overscroll-contain outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
       child: '',
     },
   },
   defaultVariants: { scrollOwner: 'body' },
 });
-const paneContent = cva(
-  'flow-root p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
-);
 
 const useOverflow = (
   container: { current: HTMLDivElement | null },
@@ -121,19 +118,13 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: the name and group role are assigned together
     <div
       ref={container}
-      className={paneBody({ scrollOwner })}
+      className={paneBody({ scrollOwner: scrollOwner ?? 'body' })}
       role={isScrollable ? 'group' : undefined}
       aria-label={isScrollable ? ariaLabel : undefined}
       tabIndex={isScrollable ? 0 : undefined}
       data-testid={testId}
     >
-      {ownsScroll ? (
-        <div ref={content} className={paneContent()}>
-          {children}
-        </div>
-      ) : (
-        children
-      )}
+      {ownsScroll ? <div ref={content}>{children}</div> : children}
     </div>
   );
 };
