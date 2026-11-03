@@ -1,8 +1,8 @@
 import { Link } from 'Interaction/Link/Link';
 import { render, screen } from '@testing-library/react';
+import { Note } from 'index';
 import type { ComponentProps } from 'react';
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { Note } from './Note';
 
 // Every prop combination the recipe can be called with, so the "emits nothing else" pins below hold
 // across the whole surface rather than on the default alone.
@@ -10,6 +10,23 @@ const statusTones = ['success', 'warning', 'error', 'info'] as const;
 const everyColour = [undefined, 'foreground', 'muted', ...statusTones] as const;
 
 describe('Note', () => {
+  it('offers opt-in truncation without removing the full text from the paragraph', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof Note>['truncate']>
+    >().toEqualTypeOf<boolean>();
+    render(
+      <Note truncate>
+        Alexandra Montgomery — international recording correspondence
+      </Note>,
+    );
+    const paragraph = screen.getByRole('paragraph');
+    expect(paragraph).toHaveTextContent(
+      'Alexandra Montgomery — international recording correspondence',
+    );
+    expect(paragraph).not.toHaveAttribute('aria-hidden');
+    expect(paragraph).not.toHaveAttribute('title');
+  });
+
   it('offers the complete selectable typography colour family', () => {
     expectTypeOf<
       NonNullable<ComponentProps<typeof Note>['color']>

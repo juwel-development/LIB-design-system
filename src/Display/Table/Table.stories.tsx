@@ -4,6 +4,7 @@ import { Input } from 'Interaction/Input/Input';
 import { Link } from 'Interaction/Link/Link';
 import { ScrollContainer } from 'Layout/ScrollContainer/ScrollContainer';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Note, P } from 'index';
 import {
   type ComponentProps,
   type CSSProperties,
@@ -59,7 +60,7 @@ Until the consumer's data arrives, the icon and \`ariaSort\` keep stating the ol
           [
             "**Column allocation (#115).** `Table.Root columns` declares every column's share of the width once, in the order the cells of every row are written, and every row shares it: `{ width: role }` is a fixed column that takes its role's theme width at any available width; `{ weight: n, minWidth?: role }` is a proportional column that shares the width the fixed columns leave by its positive weight, floored at its named minimum. While a minimum holds one column, the other proportional columns share what is left; a fixed `width` smaller than its `minWidth` resolves to the minimum; all-fixed columns do not stretch. Nothing a row holds moves a boundary: filtering, sorting, paging, long or short content, an empty body and its repopulation leave the allocation as it was - only the definitions, the theme and the available width can change it. Omit `columns` and widths follow content exactly as before.",
             "The width roles are `name`, `fact`, `figure` and `action` - the four column jobs the consumer specification attests, each a theme token a brand re-points (`--table-column-name` 12rem, `--table-column-fact` 9rem, `--table-column-figure` 8rem, `--table-column-action` 12.5rem by default, cell insets included; `action` holds one standard control at comfortable density). They are jobs, not a size ladder: allocate the subject's `name` first, proportional with a floor so it wraps rather than vanishes; facts proportional at `fact`; figures fixed at `figure` and right-aligned; the action column fixed at `action`, last.",
-            "Under an allocation the table lays out as a CSS grid of subgrids - still a semantic `table`, every `tr` still a box carrying its rule - and no narrow-viewport `notes` rule applies: the note column stays, rows stay tabular, and what does not fit scrolls in the wrapper as it does for every table. Text wraps inside its allocation, an unbroken run included; the table never truncates, hides or resizes content. A cell whose content cannot wrap - a `Button`, an `Input` - needs a column whose width or minimum holds it: the allocation never widens for content, so an under-allocated control overflows its cell. A proportional column with no `minWidth` may shrink to nothing once the fixed widths and floors alone exceed the available width, which is why the subject's `name` column carries a floor. Every row must write exactly as many cells as there are `columns`. Cells align to the top of their row under an allocation; a content-driven table keeps the browser's middle alignment.",
+            "Under an allocation the table lays out as a CSS grid of subgrids - still a semantic `table`, every `tr` still a box carrying its rule - and no narrow-viewport `notes` rule applies: the note column stays, rows stay tabular, and what does not fit scrolls in the wrapper as it does for every table. Text wraps inside its allocation, an unbroken run included; the table does not itself truncate, hide or resize content. The exception is consumer-marked `P truncate` or `Note truncate`: only that text ellipsizes, with complete accessible text, in both ordinary and allocated columns. Provide an operable route to the full wording; do not truncate essential content without that route or put interactive descendants inside truncated text. Unmarked content and column minimums retain their existing behavior. A cell whose content cannot wrap - a `Button`, an `Input` - needs a column whose width or minimum holds it: the allocation never widens for content, so an under-allocated control overflows its cell. A proportional column with no `minWidth` may shrink to nothing once the fixed widths and floors alone exceed the available width, which is why the subject's `name` column carries a floor. Every row must write exactly as many cells as there are `columns`. Cells align to the top of their row under an allocation; a content-driven table keeps the browser's middle alignment.",
             '**Density (#115).** `Table.Root density` is `comfortable` (the default, the former cell spacing exactly: `--table-cell-inset-inline` 1rem and `--table-cell-inset-block` 0.5rem) or `compact` (`--table-cell-inset-inline-compact` 0.5rem, `--table-cell-inset-block-compact` 0.25rem). It insets every header and body cell from the chosen pair and nothing else: no type size moves, no control inside a cell changes its dimensions, and two tables on one page may differ. Compact is for a dense comparison the viewer scans, not for fitting more in.',
           ].join('\n\n'),
         ].join('\n\n'),
@@ -1722,4 +1723,124 @@ export const SelectionUnderAllocation: Story = {
       true,
     );
   },
+};
+
+const truncatedName =
+  'Alexandra Montgomery — international recording correspondence';
+const truncatedSubject =
+  'Plans for the forthcoming release and the recording sessions across Europe';
+
+const TruncatedTextExample: FunctionComponent<{
+  allocated?: boolean;
+  direction?: 'ltr' | 'rtl';
+}> = ({ allocated, direction = 'ltr' }) => {
+  const open$ = useMemo(() => new Subject<void>(), []);
+  const [isOpen, setIsOpen] = useState(false);
+  useEffect(() => {
+    const subscription = open$.subscribe(() => setIsOpen(true));
+    return () => subscription.unsubscribe();
+  }, [open$]);
+  return (
+    <div
+      dir={direction}
+      style={{ width: '24rem', maxWidth: '100%' }}
+      data-testid="truncation-holder"
+    >
+      <Table.Root
+        caption="Open correspondence to read the full text"
+        density="compact"
+        columns={allocated ? [{ weight: 1 }, { width: 'figure' }] : undefined}
+      >
+        <Table.Body>
+          <Table.Row onClick$={open$}>
+            <Table.Cell>
+              <P truncate>{truncatedName}</P>
+              <Note truncate color="muted">
+                {truncatedSubject}
+              </Note>
+            </Table.Cell>
+            <Table.Cell>5 Jan</Table.Cell>
+          </Table.Row>
+        </Table.Body>
+      </Table.Root>
+      {isOpen && (
+        <section aria-label="Full correspondence">
+          <P>{truncatedName}</P>
+          <Note truncate={false}>{truncatedSubject}</Note>
+        </section>
+      )}
+    </div>
+  );
+};
+
+const verifyTruncatedText: NonNullable<Story['play']> = async ({
+  canvasElement,
+}) => {
+  const canvas = within(canvasElement);
+  const holder = canvas.getByTestId('truncation-holder');
+  const region = canvas.getByRole('region', {
+    name: 'Open correspondence to read the full text',
+  });
+  const row = canvas.getByRole('row');
+  for (const width of ['24rem', '18rem']) {
+    holder.style.width = width;
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
+    await expect(region.scrollWidth).toBeLessThanOrEqual(
+      region.clientWidth + 1,
+    );
+    for (const wording of [truncatedName, truncatedSubject]) {
+      const paragraph = within(row).getByText(wording);
+      await expect(paragraph.scrollWidth).toBeGreaterThan(
+        paragraph.clientWidth,
+      );
+      await expect(getComputedStyle(paragraph).whiteSpace).toBe('nowrap');
+      await expect(getComputedStyle(paragraph).textOverflow).toBe('ellipsis');
+      await expect(getComputedStyle(paragraph).direction).toBe(holder.dir);
+      await expect(paragraph).toHaveTextContent(wording);
+    }
+  }
+  row.focus();
+  await userEvent.keyboard('{Enter}');
+  const full = canvas.getByRole('region', { name: 'Full correspondence' });
+  await expect(row).toHaveFocus();
+  await expect(within(full).getByText(truncatedName)).toBeVisible();
+  await expect(
+    getComputedStyle(within(full).getByText(truncatedName)).whiteSpace,
+  ).toBe('normal');
+  await expect(within(row).getByRole('cell', { name: '5 Jan' })).toBeVisible();
+  await expect(
+    getComputedStyle(within(full).getByText(truncatedSubject)).whiteSpace,
+  ).toBe('normal');
+  await userEvent.click(row);
+  await expect(full).toBeVisible();
+};
+
+export const TruncatedText: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'An ordinary table in a narrow holder. Marked text no longer contributes intrinsic width; use Root columns (see Truncated Text Allocated) when the text column needs a predictable share. Only the two marked paragraphs truncate; the date stays visible. Click the row or press Enter/Space to open the full wording below, with focus staying on the row. No tooltip or local truncation CSS. The fixture sets available width only. Full text stays in the accessibility tree; do not truncate essential content without a route to it or interactive descendants.',
+      },
+    },
+  },
+  render: () => <TruncatedTextExample />,
+  play: verifyTruncatedText,
+};
+
+export const TruncatedTextAllocated: Story = {
+  render: () => <TruncatedTextExample allocated />,
+  play: verifyTruncatedText,
+};
+
+export const TruncatedTextRightToLeft: Story = {
+  render: () => <TruncatedTextExample direction="rtl" />,
+  play: verifyTruncatedText,
+};
+
+export const TruncatedTextAllocatedRightToLeft: Story = {
+  render: () => <TruncatedTextExample allocated direction="rtl" />,
+  play: verifyTruncatedText,
 };

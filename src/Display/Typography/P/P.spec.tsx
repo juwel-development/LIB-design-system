@@ -1,11 +1,28 @@
 import { render, screen } from '@testing-library/react';
+import { P } from 'index';
 import type { ComponentProps } from 'react';
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { P } from './P';
 
 const statusTones = ['success', 'warning', 'error', 'info'] as const;
 
 describe('P', () => {
+  it('offers opt-in truncation without removing the full text from the paragraph', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof P>['truncate']>
+    >().toEqualTypeOf<boolean>();
+    render(
+      <P truncate>
+        Alexandra Montgomery — international recording correspondence
+      </P>,
+    );
+    const paragraph = screen.getByRole('paragraph');
+    expect(paragraph).toHaveTextContent(
+      'Alexandra Montgomery — international recording correspondence',
+    );
+    expect(paragraph).not.toHaveAttribute('aria-hidden');
+    expect(paragraph).not.toHaveAttribute('title');
+  });
+
   it('offers the complete selectable typography colour family', () => {
     expectTypeOf<
       NonNullable<ComponentProps<typeof P>['color']>
