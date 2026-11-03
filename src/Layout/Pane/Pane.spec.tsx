@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { Pane } from 'index';
+import { Button, Pane, Table } from 'index';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 describe('Pane', () => {
@@ -166,5 +166,51 @@ describe('Pane', () => {
       </Pane.Root>,
     );
     expect(screen.queryByRole('group')).not.toBeInTheDocument();
+  });
+
+  it('leaves the sole overflowing keyboard group to the named table and preserves fixed content', () => {
+    vi.spyOn(Element.prototype, 'clientHeight', 'get').mockReturnValue(200);
+    vi.spyOn(Element.prototype, 'scrollHeight', 'get').mockReturnValue(800);
+    render(
+      <Pane.Root>
+        <Pane.Head>Available artists</Pane.Head>
+        <Pane.Body scrollOwner="child" ariaLabel="Unused body name">
+          <Table.Root bounded caption="Artist roster">
+            <Table.Head>
+              <Table.Row>
+                <Table.HeaderCell scope="col">Artist</Table.HeaderCell>
+              </Table.Row>
+            </Table.Head>
+            <Table.Body>
+              <Table.Row>
+                <Table.Cell>
+                  <Button>Open artist</Button>
+                </Table.Cell>
+              </Table.Row>
+            </Table.Body>
+          </Table.Root>
+        </Pane.Body>
+        <Pane.Foot>
+          <Button>Confirm roster</Button>
+        </Pane.Foot>
+      </Pane.Root>,
+    );
+    const wrapper = screen.getByRole('group', { name: 'Artist roster' });
+    expect(screen.getAllByRole('group')).toHaveLength(1);
+    expect(wrapper).toHaveAttribute('tabindex', '0');
+    expect(
+      within(wrapper).getByRole('table', { name: 'Artist roster' }),
+    ).toBeInTheDocument();
+    expect(
+      within(wrapper).getByRole('columnheader', { name: 'Artist' }),
+    ).toBeInTheDocument();
+    expect(
+      within(wrapper).queryByText('Available artists'),
+    ).not.toBeInTheDocument();
+    expect(
+      within(wrapper).queryByRole('button', { name: 'Confirm roster' }),
+    ).not.toBeInTheDocument();
+    act(() => screen.getByRole('button', { name: 'Open artist' }).focus());
+    expect(screen.getByRole('button', { name: 'Open artist' })).toHaveFocus();
   });
 });
