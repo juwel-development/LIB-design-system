@@ -35,5 +35,5 @@ selection belongs to a checkbox in a Form (guidance, not a new checkbox implemen
 
 ## Outstanding
 
-A separate fresh reviewer owns code review. Release publication remains an explicitly unmet
+The separate review is complete (see [137-review.md](137-review.md)). Release publication remains an explicitly unmet
 acceptance item, deferred to the human push/release; no version bump or publication was performed.
