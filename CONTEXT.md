@@ -207,6 +207,13 @@ A bounded content group with a semantic surface, border and inner padding. The c
 content, headings and internal arrangement.
 _Avoid_: Panel, card, generic styling container
 
+**Pane**:
+A parent-bounded enclosure with optional content-height head and foot around a scrolling body.
+A short body keeps its content height; an unsized pane grows with its content. Scroll ownership is
+explicit: the body either scrolls ordinary content or passes its bound to one child that owns
+scrolling, such as a bounded Table.
+_Avoid_: Scrolling Box, pinned column, nested panel, master-detail
+
 **Stack**:
 A vertical arrangement: children in a column, separated by one named space role and optionally bounded
 by the reading measure. One axis and one gap. It takes no outer space, so whatever holds it owns the
