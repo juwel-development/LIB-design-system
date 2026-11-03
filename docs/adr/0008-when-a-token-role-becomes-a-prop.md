@@ -236,7 +236,7 @@ defaulting to `region`. Columns align at the top and omitted columns reserve no 
 existing axis-switching behavior remains its own contract. This decision does not reopen the Figure
 or Brandmark width APIs or introduce a general measurement escape hatch.
 
-**Column maximums — triage decisions for #139.**
+**Column maximums — #139.**
 `ColumnLayout.Column` accepts an optional `maxWidth` custom-property name, extending the same narrow
 consumer-defined token-reference contract as `minWidth`. Omitting it leaves the column uncapped.
 

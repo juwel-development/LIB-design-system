@@ -140,7 +140,7 @@ const meta: Meta<typeof ColumnLayout.Root> = {
     docs: {
       description: {
         component:
-          "`ColumnLayout` is an arrangement of weighted columns that becomes one column when the space\nit is given cannot satisfy every column's minimum at the requested proportions. It owns the\narrangement and nothing else: no landmark, no band, no gutter, no fill, no scrolling. `Stack`'s\n`split` keeps its own viewport-keyed contract; `ColumnLayout` answers to the width of whatever\nholds it.\n\n```tsx\nimport { ColumnLayout } from '@juwel-development/design-system';\n\n<ColumnLayout.Root gap={'region'}>\n  <ColumnLayout.Column weight={2} minWidth={'--main-column-min-width'}>\n    <Table.Root caption={'A&R roster'}>…</Table.Root>\n  </ColumnLayout.Column>\n  {selected && (\n    <ColumnLayout.Column weight={1} minWidth={'--support-column-min-width'}>\n      <DefinitionList.Root>…</DefinitionList.Root>\n    </ColumnLayout.Column>\n  )}\n</ColumnLayout.Root>;\n```\n\n`Root` takes `fill?: boolean` (default false), `gap?: 'stack' | 'region'` (defaulting to `region`), `children` and `testId`. The\nsame gap separates the columns across the row and between the stacked lines. `Column` takes a\nrequired positive finite `weight`, a required `minWidth`, `children` and `testId`. Supply\ncolumns directly, through maps, in fragments or with conditional omissions; a column rendered\nthrough a wrapping component, loose, or nested inside another column throws\n`ColumnLayoutCompositionError`, and an invalid weight or token name throws\n`ColumnLayoutConfigurationError`.\n\n**Allocation.** In the row the gaps come off the Root's width and the rest is divided by weight:\n`2` beside `1` is two thirds and one third of what is left. Columns align at the top and keep\ntheir own heights by default. With `fill`, Root accepts its allocated height and horizontal columns\nfill it, bounding a Pane or ScrollContainer. An unsized holder leaves columns at content height.\nStacked columns always keep content height; the holder owns scrolling. No fixed height is invented.\nThe caller supplies a definite height and fitting fixed content. The internal fill frame uses\ninline-size containment; widths, minimums, order and mounted content keep their existing contract.\nA vertically bounded Table integration awaits #142, whose API is not available in this checkout. The row holds only while every share is at least its own minimum; the moment\none is not, every column takes a line of its own and fills the Root's width, a column narrower\nthan its minimum included. There is no partial wrap and no clamping. For `n` columns with gap\n`g`, total weight `S` and minimums `mᵢ`, the row fits at and above\n`(n − 1) × g + max(mᵢ × S ⁄ wᵢ)`; the space measured is the Root's, never the viewport's.\n\n**Minimum-width tokens.** `minWidth` names a CSS custom property the consumer declares, never a\nlength or a `var()`. The name is a theme role of the product's own (`--main-column-min-width`),\nnot a library preset: the library ships no column-width ladder. Declare it on `:root`, on a\ntheme class, or on any ancestor of the Root, as a valid nonnegative CSS length:\n\n```css\n:root {\n  --main-column-min-width: 28rem;\n  --support-column-min-width: 12rem;\n}\n.dark { --support-column-min-width: 14rem; }\n```\n\nThe token is read each time layout runs, so re-pointing it in a theme class or a media query\nmoves the threshold with it. A `rem` resolves against the document root, an `em` or `ch`\nagainst the Root's inherited type, a `px` as written. A percentage is not a length the contract\naccepts: a minimum is a readable width, which the holder's width cannot define. A missing or\ninvalid token is not a responsive configuration: the switch has nothing to compare and the\ncolumns size from their content instead. Anything placed beside the columns that is not a\n`Column` is rendered as given but takes no weight, no gap and no part in the threshold, so it\nbreaks the proportions; content belongs inside a `Column`.\n\n**What the content owns.** A column never widens for its content and adds no truncation or\nscrolling. Running text wraps inside its track; content that cannot wrap needs its own overflow\ncontract, as `Table.Root` has. Resizing the holder never remounts a column, so focus and\nstate survive the switch, and reading and keyboard order are the order the columns are written.",
+          "`ColumnLayout` is an arrangement of weighted columns that becomes one column when the space\nit is given cannot satisfy every column's minimum at the requested proportions. It owns the\narrangement and nothing else: no landmark, no band, no gutter, no fill, no scrolling. `Stack`'s\n`split` keeps its own viewport-keyed contract; `ColumnLayout` answers to the width of whatever\nholds it.\n\n```tsx\nimport { ColumnLayout } from '@juwel-development/design-system';\n\n<ColumnLayout.Root gap={'region'}>\n  <ColumnLayout.Column weight={2} minWidth={'--main-column-min-width'}>\n    <Table.Root caption={'A&R roster'}>…</Table.Root>\n  </ColumnLayout.Column>\n  {selected && (\n    <ColumnLayout.Column weight={1} minWidth={'--support-column-min-width'}>\n      <DefinitionList.Root>…</DefinitionList.Root>\n    </ColumnLayout.Column>\n  )}\n</ColumnLayout.Root>;\n```\n\n`Root` takes `fill?: boolean` (default false), `gap?: 'stack' | 'region'` (defaulting to `region`), `children` and `testId`. The\nsame gap separates the columns across the row and between the stacked lines. `Column` takes a\nrequired positive finite `weight`, a required `minWidth`, `children` and `testId`. Supply\ncolumns directly, through maps, in fragments or with conditional omissions; a column rendered\nthrough a wrapping component, loose, or nested inside another column throws\n`ColumnLayoutCompositionError`, and an invalid weight or token name throws\n`ColumnLayoutConfigurationError`.\n\n**Allocation.** In the row the gaps come off the Root's width and the rest is divided by weight:\n`2` beside `1` is two thirds and one third of what is left. Columns align at the top and keep\ntheir own heights by default. With `fill`, Root accepts its allocated height and horizontal columns\nfill it, bounding a Pane or ScrollContainer. An unsized holder leaves columns at content height.\nStacked columns always keep content height; the holder owns scrolling. No fixed height is invented.\nThe caller supplies a definite height and fitting fixed content. The internal fill frame uses\ninline-size containment; widths, minimums, order and mounted content keep their existing contract.\nA vertically bounded Table integration awaits #142, whose API is not available in this checkout. The row holds only while every share is at least its own minimum; the moment\none is not, every column takes a line of its own and fills the Root's width, a column narrower\nthan its minimum included. There is no partial wrap; maximums never change this switch. For `n` columns with gap\n`g`, total weight `S` and minimums `mᵢ`, the row fits at and above\n`(n − 1) × g + max(mᵢ × S ⁄ wᵢ)`; the space measured is the Root's, never the viewport's.\n\n**Bound tokens.** `minWidth` names a CSS custom property the consumer declares, never a\nlength or a `var()`. The name is a theme role of the product's own (`--main-column-min-width`),\nnot a library preset: the library ships no column-width ladder. Declare it on `:root`, on a\ntheme class, or on any ancestor of the Root, as a valid nonnegative CSS length:\n\n```css\n:root {\n  --main-column-min-width: 28rem;\n  --support-column-min-width: 12rem;\n}\n.dark { --support-column-min-width: 14rem; }\n```\n\nThe token is read each time layout runs, so re-pointing it in a theme class or a media query\nmoves the threshold with it. A `rem` resolves against the document root, an `em` or `ch`\nagainst the Root's inherited type, a `px` as written. A percentage is not a length the contract\naccepts: a minimum is a readable width, which the holder's width cannot define. A missing or\ninvalid token is not a responsive configuration: the switch has nothing to compare and the\ncolumns size from their content instead. Anything placed beside the columns that is not a\n`Column` is rendered as given but takes no weight, no gap and no part in the threshold, so it\nbreaks the proportions; content belongs inside a `Column`.\n\n**Maximums.** Optional `maxWidth` takes the same custom-property name form as `minWidth`. In horizontal mode columns take their weighted share up to their maximum; surplus is repeatedly redistributed by weight among columns still able to grow. If all reach their caps, unused width stays at the trailing edge with unchanged gaps, including a single capped column. A maximum below the original share applies immediately at the unchanged minimum-based threshold. Stacked columns ignore maximums and fill the holder. Themes must supply nonnegative CSS lengths and keep maximum >= minimum at every scope and responsive state. The component validates token names only: it does not read resolved lengths or guarantee an exception for maximum below minimum.\n\n**What the content owns.** A column never widens for its content and adds no truncation or\nscrolling. Running text wraps inside its track; content that cannot wrap needs its own overflow\ncontract, as `Table.Root` has. Resizing the holder never remounts a column, so focus and\nstate survive the switch, and reading and keyboard order are the order the columns are written.",
       },
     },
   },
@@ -886,5 +886,278 @@ export const DefaultContentHeight: Story = {
     await expect(
       canvas.getByTestId('fill-holder').scrollHeight,
     ).toBeGreaterThan(canvas.getByTestId('fill-holder').clientHeight);
+  },
+};
+
+/** The support list stops at its theme cap; the reading column receives the surplus. */
+export const CappedSupport: Story = {
+  render: () => (
+    <Holder
+      width="84rem"
+      style={{
+        '--support-minimum': '18rem',
+        '--support-maximum': '24rem',
+        '--reading-minimum': '28rem',
+      }}
+    >
+      <ColumnLayout.Root testId="capped-row">
+        <ColumnLayout.Column
+          weight={1}
+          minWidth="--support-minimum"
+          maxWidth="--support-maximum"
+        >
+          <Artists rows={2} />
+        </ColumnLayout.Column>
+        <ColumnLayout.Column weight={2} minWidth="--reading-minimum">
+          <P>
+            The reading column receives every extra pixel once the support list
+            reaches its maximum.
+          </P>
+        </ColumnLayout.Column>
+      </ColumnLayout.Root>
+    </Holder>
+  ),
+  play: async ({ canvasElement }) => {
+    const row = within(canvasElement).getByTestId('capped-row');
+    const [support, reading] = columnsOf(row);
+    if (!support || !reading)
+      throw new Error('Expected support and reading columns');
+    const rootSize = Number.parseFloat(
+      getComputedStyle(document.documentElement).fontSize,
+    );
+    const gap = Number.parseFloat(getComputedStyle(row).columnGap);
+    await expect(isOneRow(row)).toBe(true);
+    await expect(widthOf(support)).toBeCloseTo(24 * rootSize, 1);
+    await expect(widthOf(reading)).toBeCloseTo(
+      widthOf(row) - gap - 24 * rootSize,
+      1,
+    );
+  },
+};
+
+const CappedTracks: FunctionComponent<{
+  allCapped?: boolean;
+  fractional?: boolean;
+  single?: boolean;
+  fill?: boolean;
+}> = ({ allCapped, fractional, single, fill }) => (
+  <Holder
+    width="640px"
+    testId="caps-holder"
+    style={{
+      '--space-stack': '20px',
+      '--track-minimum': '40px',
+      '--first-maximum': '100px',
+      '--second-maximum': '250px',
+      '--third-maximum': '150px',
+      height: fill ? '200px' : undefined,
+    }}
+  >
+    <ColumnLayout.Root gap="stack" fill={fill} testId="capped-row">
+      <ColumnLayout.Column
+        weight={fractional ? 0.1 : 1}
+        minWidth="--track-minimum"
+        maxWidth="--first-maximum"
+      >
+        <Input label="Retained draft" name="draft" />
+      </ColumnLayout.Column>
+      {!single && (
+        <ColumnLayout.Column
+          weight={fractional ? 0.2 : 2}
+          minWidth="--track-minimum"
+          maxWidth="--second-maximum"
+        >
+          <P>Second capped column</P>
+        </ColumnLayout.Column>
+      )}
+      {!single && (
+        <ColumnLayout.Column
+          weight={fractional ? 0.1 : 1}
+          minWidth="--track-minimum"
+          maxWidth={allCapped ? '--third-maximum' : undefined}
+        >
+          <P>Remaining column</P>
+        </ColumnLayout.Column>
+      )}
+    </ColumnLayout.Root>
+  </Holder>
+);
+
+const expectWidths = async (
+  row: HTMLElement,
+  widths: readonly number[],
+): Promise<void> => {
+  await expect(isOneRow(row)).toBe(true);
+  const columns = columnsOf(row);
+  await expect(columns).toHaveLength(widths.length);
+  for (const [index, width] of widths.entries()) {
+    const column = columns[index];
+    if (!column) throw new Error('Expected allocated column');
+    await expect(widthOf(column)).toBeCloseTo(width, 1);
+  }
+};
+
+/** At 600px after gaps, caps at 100 and 250 leave 250 for the remaining column. */
+export const SuccessiveCaps: Story = {
+  render: () => <CappedTracks />,
+  play: async ({ canvasElement }) => {
+    await expectWidths(
+      within(canvasElement).getByTestId('capped-row'),
+      [100, 250, 250],
+    );
+  },
+};
+
+export const CappedFractionalWeights: Story = {
+  render: () => <CappedTracks fractional />,
+  play: SuccessiveCaps.play,
+};
+
+export const AllCapped: Story = {
+  render: () => <CappedTracks allCapped />,
+  play: async ({ canvasElement }) => {
+    const row = within(canvasElement).getByTestId('capped-row');
+    await expectWidths(row, [100, 250, 150]);
+    const [first, second, third] = columnsOf(row);
+    if (!first || !second || !third)
+      throw new Error('Expected three capped columns');
+    await expect(first.getBoundingClientRect().left).toBe(
+      row.getBoundingClientRect().left,
+    );
+    await expect(
+      second.getBoundingClientRect().left - first.getBoundingClientRect().right,
+    ).toBe(20);
+    await expect(
+      third.getBoundingClientRect().left - second.getBoundingClientRect().right,
+    ).toBe(20);
+    await expect(
+      row.getBoundingClientRect().right - third.getBoundingClientRect().right,
+    ).toBe(100);
+  },
+};
+
+export const SingleCapped: Story = {
+  render: () => <CappedTracks single />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = canvas.getByTestId('capped-row');
+    await expectWidths(row, [100]);
+    canvas.getByTestId('caps-holder').style.width = '30px';
+    await expect(isOneColumn(row)).toBe(true);
+  },
+};
+
+/** Caps do not change the original 340px threshold, even when a share exceeds its cap. */
+export const CappedThreshold: Story = {
+  render: () => (
+    <Holder
+      width="340px"
+      testId="caps-holder"
+      style={{
+        '--space-stack': '20px',
+        '--small-minimum': '40px',
+        '--large-minimum': '160px',
+        '--small-maximum': '80px',
+      }}
+    >
+      <ColumnLayout.Root gap="stack" testId="capped-row">
+        <ColumnLayout.Column
+          weight={1}
+          minWidth="--small-minimum"
+          maxWidth="--small-maximum"
+        >
+          <P>Capped at the threshold</P>
+        </ColumnLayout.Column>
+        <ColumnLayout.Column weight={1} minWidth="--large-minimum">
+          <P>The minimum decides the switch</P>
+        </ColumnLayout.Column>
+      </ColumnLayout.Root>
+    </Holder>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = canvas.getByTestId('capped-row');
+    const holder = canvas.getByTestId('caps-holder');
+    await expectWidths(row, [80, 240]);
+    holder.style.width = '339px';
+    await expect(isOneColumn(row)).toBe(true);
+    holder.style.width = '341px';
+    await expectWidths(row, [80, 241]);
+    holder.style.width = '30px';
+    await expect(isOneColumn(row)).toBe(true);
+    holder.style.width = '340px';
+  },
+};
+
+export const CappedThemeChanges: Story = {
+  render: () => <CappedTracks fill />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = canvas.getByTestId('capped-row');
+    const holder = canvas.getByTestId('caps-holder');
+    const input = canvas.getByRole('textbox', { name: 'Retained draft' });
+    input.focus();
+    await userEvent.clear(input);
+    await userEvent.keyboard('Preserved');
+    const columns = columnsOf(row);
+    await expectWidths(row, [100, 250, 250]);
+    for (const column of columns)
+      await expect(column.getBoundingClientRect().height).toBe(200);
+    holder.style.setProperty('--first-maximum', '5em');
+    holder.style.fontSize = '20px';
+    await expectWidths(row, [100, 250, 250]);
+    holder.style.fontSize = '24px';
+    await expectWidths(row, [120, 250, 230]);
+    holder.style.setProperty('--second-maximum', '200px');
+    await expectWidths(row, [120, 200, 280]);
+    holder.style.setProperty('--space-stack', '10px');
+    await expectWidths(row, [120, 200, 300]);
+    holder.style.width = '100px';
+    await expect(isOneColumn(row)).toBe(true);
+    holder.style.width = '640px';
+    await expect(columnsOf(row)).toEqual(columns);
+    await expect(input).toHaveFocus();
+    await expect(input).toHaveValue('Preserved');
+    holder.style.fontSize = '';
+    holder.style.setProperty('--first-maximum', '100px');
+    holder.style.setProperty('--second-maximum', '250px');
+    holder.style.setProperty('--space-stack', '20px');
+  },
+};
+
+/** A theme scope and a viewport query both update caps without a React render. */
+export const CappedResponsiveTheme: Story = {
+  render: () => (
+    <div className="column-cap-theme" data-testid="cap-theme">
+      <style>{`
+        .column-cap-theme { --responsive-cap: 100px; --responsive-minimum: 40px; --space-stack: 20px; }
+        @media (max-width: 900px) { .column-cap-theme { --responsive-cap: 80px; } }
+        .column-cap-theme.alternate { --responsive-cap: 120px; }
+      `}</style>
+      <Holder width="640px">
+        <ColumnLayout.Root gap="stack" testId="capped-row">
+          <ColumnLayout.Column
+            weight={1}
+            minWidth="--responsive-minimum"
+            maxWidth="--responsive-cap"
+          >
+            <P>Theme-capped support</P>
+          </ColumnLayout.Column>
+          <ColumnLayout.Column weight={2} minWidth="--responsive-minimum">
+            <P>Reading content</P>
+          </ColumnLayout.Column>
+        </ColumnLayout.Root>
+      </Holder>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = canvas.getByTestId('capped-row');
+    const cap = matchMedia('(max-width: 900px)').matches ? 80 : 100;
+    await expectWidths(row, [cap, 620 - cap]);
+    canvas.getByTestId('cap-theme').classList.add('alternate');
+    await expectWidths(row, [120, 500]);
+    canvas.getByTestId('cap-theme').classList.remove('alternate');
+    await expectWidths(row, [cap, 620 - cap]);
   },
 };
