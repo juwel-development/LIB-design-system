@@ -45,6 +45,7 @@ export { Form } from 'Layout/Form/Form';
 export { Header } from 'Layout/Header/Header';
 export { Hero } from 'Layout/Hero/Hero';
 export { PageHead } from 'Layout/PageHead/PageHead';
+export { Pane } from 'Layout/Pane/Pane';
 export { ScrollContainer } from 'Layout/ScrollContainer/ScrollContainer';
 export { Section } from 'Layout/Section/Section';
 export { Shell } from 'Layout/Shell/Shell';
