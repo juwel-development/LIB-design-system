@@ -39,6 +39,7 @@ const stepperStep = cva([
   '[&>[data-marker]]:size-[var(--step-marker-size)] [&>[data-marker]]:border [&>[data-marker]]:border-foreground [&>[data-marker]]:bg-surface [&>[data-marker]]:rounded-[var(--radius-control)]',
   '[&>[data-value-text]]:text-small [&>[data-status-content]]:text-small',
   'forced-colors:after:border-[CanvasText] forced-colors:aria-selected:border-[Highlight]',
+  'forced-colors:border-b-0 forced-colors:aria-selected:border-b-[length:var(--step-selection-thickness)]',
   'forced-colors:[&>[data-marker]]:bg-[Canvas] forced-colors:[&>[data-marker]]:text-[CanvasText] forced-colors:[&>[data-marker]]:border-[CanvasText]',
 ]);
 
@@ -95,11 +96,11 @@ const neighbourTab = (
   if (row === null) {
     return undefined;
   }
-  const stepper = Array.from(
+  const stepButtons = Array.from(
     row.querySelectorAll<HTMLButtonElement>(':scope > [role="tab"]'),
   );
-  const index = stepper.indexOf(current);
-  return stepper[(index + step + stepper.length) % stepper.length];
+  const index = stepButtons.indexOf(current);
+  return stepButtons[(index + step + stepButtons.length) % stepButtons.length];
 };
 
 export interface IStepperRootProps {
@@ -200,9 +201,6 @@ const StepperStep: FunctionComponent<IStepperStepProps> = ({
     throw new StepperCompositionError('Step (inside List)');
   const isActive = active === value;
 
-  // Left/Right move focus to the neighbouring tab and request its selection immediately -
-  // activation follows focus. Other keys fall through: Up/Down keep scrolling the page, Tab
-  // leaves the list for the active panel.
   const requestNeighbour = (event: KeyboardEvent<HTMLButtonElement>): void => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
       return;

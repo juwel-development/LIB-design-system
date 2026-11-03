@@ -143,7 +143,7 @@ export const FiveSteps: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const field = canvas.getByRole('textbox', { name: 'Session name' });
+    const field = await canvas.findByRole('textbox', { name: 'Session name' });
     await userEvent.clear(field);
     await userEvent.type(field, 'Saved booking');
     await userEvent.click(canvas.getByRole('tab', { name: 'Bill $1,104' }));
@@ -155,6 +155,9 @@ export const FiveSteps: Story = {
     await expect(canvas.getByRole('textbox')).toHaveValue('Saved booking');
     const root = canvas.getByTestId('stepper');
     await expect(root.getBoundingClientRect().height).toBe(600);
+    await expect(root.scrollHeight).toBe(root.clientHeight);
+    const panel = canvas.getByRole('tabpanel');
+    await expect(panel.scrollHeight).toBe(panel.clientHeight);
     const body = canvas.getByRole('group', { name: 'Song choices' });
     await expect(body.scrollHeight).toBeGreaterThan(body.clientHeight);
     await expect(body.getBoundingClientRect().bottom).toBeLessThan(
@@ -170,12 +173,16 @@ export const Narrow: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await canvas.findByRole('textbox', { name: 'Session name' });
     const row = canvas.getByRole('tablist');
     await expect(row.scrollWidth).toBeGreaterThan(row.clientWidth);
     await userEvent.click(canvas.getByRole('tab', { name: 'Songs 2 Songs' }));
     await userEvent.keyboard('{ArrowLeft}');
     const bill = canvas.getByRole('tab', { name: 'Bill $1,104' });
     await expect(bill).toHaveFocus();
+    await expect(bill.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+      row.getBoundingClientRect().left,
+    );
     await expect(bill.getBoundingClientRect().right).toBeLessThanOrEqual(
       row.getBoundingClientRect().right,
     );
@@ -186,9 +193,35 @@ export const Narrow: Story = {
     );
   },
 };
-export const NaturalHeight: Story = { render: () => <Booking /> };
+export const NaturalHeight: Story = {
+  render: () => <Booking />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const root = canvas.getByTestId('stepper');
+    const finalSong = await canvas.findByText('Song 30: recording notes');
+    await expect(finalSong.getBoundingClientRect().bottom).toBeLessThan(
+      root.getBoundingClientRect().bottom,
+    );
+    await expect(root.scrollHeight).toBe(root.clientHeight);
+    await expect(
+      canvas.queryByRole('group', { name: 'Song choices' }),
+    ).toBeNull();
+  },
+};
 export const ForcedColours: Story = {
   ...FiveSteps,
+  play: async (context) => {
+    await FiveSteps.play?.(context);
+    const canvas = within(context.canvasElement);
+    const selected = canvas.getByRole('tab', { selected: true });
+    const unselected = canvas.getByRole('tab', { name: 'Bill $1,104' });
+    if (window.matchMedia('(forced-colors: active)').matches) {
+      await expect(getComputedStyle(unselected).borderBottomWidth).toBe('0px');
+      await expect(getComputedStyle(selected).borderBottomWidth).not.toBe(
+        '0px',
+      );
+    }
+  },
   parameters: {
     docs: {
       description: {
