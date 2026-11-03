@@ -4,7 +4,7 @@ import { Input } from 'Interaction/Input/Input';
 import { Link } from 'Interaction/Link/Link';
 import { ScrollContainer } from 'Layout/ScrollContainer/ScrollContainer';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Note, P } from 'index';
+import { H2, Note, P, Stack } from 'index';
 import {
   type ComponentProps,
   type CSSProperties,
@@ -28,6 +28,7 @@ const meta: Meta<typeof Table.Root> = {
     docs: {
       description: {
         component: [
+          '`captionVisibility="visible"` is the default. Use `captionVisibility="hidden"` only when visible text directly above the table already names what it lists, such as a heading or quantities line. The required `caption` remains the native first child and accessible name; hiding removes its layout space and caption padding without changing the scroll region name. The enclosing arrangement owns the gap above the table. Supply meaningful caption wording in either treatment; there is no alternative table naming prop or consumer CSS workaround.',
           `A sortable table is composed, not configured. The consumer owns every part of the sort - the ordered column, its direction, the ordering of the rows and when a request is answered - and the library supplies three pieces to compose it from: \`Table.HeaderCell\` takes \`ariaSort\` (\`'none' | 'ascending' | 'descending' | 'other'\`), accessibility metadata describing the order *currently displayed* - set it on the one ordered column, omit it on the rest; changing it neither reorders rows nor triggers anything. \`Button variant="plain"\` carries the header's label and action in the header's own typography. \`Icon\` draws \`sort\`, \`sort-ascending\` or \`sort-descending\` to match the displayed order.
 
 \`\`\`tsx
@@ -130,6 +131,69 @@ const specificationRows = (
     </Table.Body>
   </>
 );
+
+const verifyHiddenCaption: Story['play'] = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  const table = canvas.getByRole('table');
+  const caption = table.querySelector('caption');
+  if (caption === null)
+    throw new Error('The native caption must remain present');
+  await expect(table).toHaveAccessibleName(caption.textContent ?? '');
+  await expect(table.firstElementChild).toBe(caption);
+  const appearance = getComputedStyle(caption);
+  await expect(appearance.position).toBe('absolute');
+  await expect(appearance.paddingBottom).toBe('0px');
+  await expect(appearance.clipPath).toBe('inset(50%)');
+  await expect(appearance.display).not.toBe('none');
+  await expect(appearance.visibility).toBe('visible');
+  const firstRow = canvas.getAllByRole('row')[0];
+  if (firstRow === undefined) throw new Error('The example must contain rows');
+  await expect(
+    Math.abs(
+      firstRow.getBoundingClientRect().top - table.getBoundingClientRect().top,
+    ),
+  ).toBeLessThanOrEqual(1);
+};
+
+/** The heading names the table visibly; Stack alone owns the gap before its first rule. */
+export const HiddenCaptionBelowHeading: Story = {
+  args: { caption: 'Material specification', captionVisibility: 'hidden' },
+  render: (args) => (
+    <Stack>
+      <H2>Material specification</H2>
+      <Table.Root {...args}>{specificationRows}</Table.Root>
+    </Stack>
+  ),
+  play: verifyHiddenCaption,
+};
+
+/** A quantities line supplies the visible context, including with compact allocated columns. */
+export const HiddenCaptionBelowQuantities: Story = {
+  args: {
+    caption: 'Material specification',
+    captionVisibility: 'hidden',
+    density: 'compact',
+    notes: 'supplementary',
+    columns: [
+      { weight: 1, minWidth: 'name' },
+      { width: 'figure' },
+      { weight: 1, minWidth: 'fact' },
+    ],
+  },
+  render: (args) => (
+    <Stack>
+      <P>Material specification · 3 properties</P>
+      <Table.Root {...args}>{specificationRows}</Table.Root>
+    </Stack>
+  ),
+  play: verifyHiddenCaption,
+};
+
+/** Below 48rem the content-note rows stack; the caption still adds no layout space. */
+export const HiddenCaptionWithContentNotes: Story = {
+  ...HiddenCaptionBelowHeading,
+  args: { ...HiddenCaptionBelowHeading.args, notes: 'content' },
+};
 
 /** A supplementary note column: dropped below 48rem for everyone. */
 export const SupplementaryNotes: Story = {
