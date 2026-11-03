@@ -927,4 +927,55 @@ describe('Table', () => {
       }
     },
   );
+
+  it('offers only marker and highlight treatments at the public root', () => {
+    expectTypeOf<
+      NonNullable<ComponentProps<typeof Table.Root>['selectionTreatment']>
+    >().toEqualTypeOf<'marker' | 'highlight'>();
+  });
+
+  it.each(['marker', 'highlight'] as const)(
+    'keeps selection consumer-owned and activation independent with %s',
+    (selectionTreatment) => {
+      const selected$ = new BehaviorSubject(true);
+      const activate$ = new Subject<void>();
+      const activated = vi.fn();
+      activate$.subscribe(activated);
+      const { rerender } = render(
+        <Table.Root
+          caption={'Messages'}
+          selectionTreatment={selectionTreatment}
+        >
+          <Table.Body>
+            <Table.Row isSelected$={selected$} onClick$={activate$}>
+              <Table.Cell>Open message</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table.Root>,
+      );
+      const row = screen.getByRole('row');
+      row.focus();
+      fireEvent.keyDown(row, { key: 'Enter' });
+      expect(activated).toHaveBeenCalledTimes(1);
+      expect(row).toHaveFocus();
+      expect(row).toHaveAttribute('aria-selected', 'true');
+      act(() => selected$.next(false));
+      expect(row).toHaveAttribute('aria-selected', 'false');
+      expect(activated).toHaveBeenCalledTimes(1);
+      rerender(
+        <Table.Root caption={'Messages'}>
+          <Table.Body>
+            <Table.Row isSelected$={selected$}>
+              <Table.Cell>Open message</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table.Root>,
+      );
+      expect(row).not.toHaveAttribute('tabindex');
+      act(() => selected$.next(true));
+      expect(row).toHaveAttribute('aria-selected', 'true');
+      fireEvent.click(row);
+      expect(activated).toHaveBeenCalledTimes(1);
+    },
+  );
 });

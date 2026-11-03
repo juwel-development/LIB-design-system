@@ -10,7 +10,7 @@
  * Light and dark are two complete sets of the same roles rather than a set of `dark:` overrides
  * scattered through the components. A component therefore carries no dark-mode classes at all:
  * swapping the `.dark` class re-points the variables underneath it. Complete means `Required`: the
- * two roles the type marks optional are optional for a consumer's palette object, never here.
+ * roles the type marks optional are optional for a consumer's palette object, never here.
  *
  * The values below are still depot-tracker's brand (primary is its violet). They are carried over
  * so nothing changed visually during the extraction - a starting point to replace, not a decision.
@@ -18,6 +18,13 @@
 export type PaletteTokens = {
   /** Page and panel background. */
   surface: string;
+  /** Selected Table row surface, distinct from resting and hover surfaces. Keep foreground, muted
+   *  link and status inks at 4.5:1; marker, rule and focusRing at 3:1 in each scheme.
+   *  Optional for existing palette objects; CSS overrides inherit the shipped default. Consumers
+   *  composing other inks or controls on this surface must ensure their contrast too. */
+  selectedSurface?: string;
+  /** Error ink/fill on a selected surface: 4.5:1 against selectedSurface and errorForeground. */
+  selectedError?: string;
   /** Default text colour on `surface`. */
   foreground: string;
   /** De-emphasised text - captions, help text, placeholders. */
@@ -170,6 +177,8 @@ export type PaletteTokens = {
  */
 export const light: Required<PaletteTokens> = {
   surface: '#ffffff',
+  selectedSurface: '#f8fafc',
+  selectedError: '#cd2d7d',
   foreground: '#0f172a',
   muted: '#64748b',
   border: '#e2e8f0',
@@ -225,6 +234,8 @@ export const light: Required<PaletteTokens> = {
  */
 export const dark: Required<PaletteTokens> = {
   surface: '#0f172a',
+  selectedSurface: '#151e30',
+  selectedError: '#f48fb1',
   foreground: '#f8fafc',
   muted: '#94a3b8',
   border: '#334155',
