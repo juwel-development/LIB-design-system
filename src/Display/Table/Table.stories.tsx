@@ -2196,23 +2196,27 @@ export const BoundedDialog: Story = {
 };
 
 const DynamicBoundedExample = () => {
-  const [short, setShort] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [isShort, setIsShort] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const streams = useMemo(
     () => ({
-      select: new Subject<void>(),
-      resize: new Subject<void>(),
-      filter: new Subject<void>(),
-      selected: new BehaviorSubject(false),
+      select$: new Subject<void>(),
+      resize$: new Subject<void>(),
+      filter$: new Subject<void>(),
+      selected$: new BehaviorSubject(false),
     }),
     [],
   );
   useEffect(() => {
-    const select = streams.select.subscribe(() => streams.selected.next(true));
-    const resize = streams.resize.subscribe(() =>
-      setExpanded((value) => !value),
+    const select = streams.select$.subscribe(() =>
+      streams.selected$.next(true),
     );
-    const filter = streams.filter.subscribe(() => setShort((value) => !value));
+    const resize = streams.resize$.subscribe(() =>
+      setIsExpanded((value) => !value),
+    );
+    const filter = streams.filter$.subscribe(() =>
+      setIsShort((value) => !value),
+    );
     return () => {
       select.unsubscribe();
       resize.unsubscribe();
@@ -2221,9 +2225,9 @@ const DynamicBoundedExample = () => {
   }, [streams]);
   return (
     <Stack>
-      <Button onClick$={streams.select}>Select final artist</Button>
-      <Button onClick$={streams.resize}>Change header wording</Button>
-      <Button onClick$={streams.filter}>Toggle short roster</Button>
+      <Button onClick$={streams.select$}>Select final artist</Button>
+      <Button onClick$={streams.resize$}>Change header wording</Button>
+      <Button onClick$={streams.filter$}>Toggle short roster</Button>
       <div style={{ height: '18rem', width: '22rem' }}>
         <Table.Root
           caption="Changing roster"
@@ -2233,7 +2237,7 @@ const DynamicBoundedExample = () => {
           <Table.Head>
             <Table.Row>
               <Table.HeaderCell scope="col">
-                {expanded
+                {isExpanded
                   ? 'Artist name and the consumer supplied description of their current recording project'
                   : 'Artist'}
               </Table.HeaderCell>
@@ -2242,12 +2246,12 @@ const DynamicBoundedExample = () => {
           </Table.Head>
           <Table.Body>
             {Array.from(
-              { length: short ? 1 : 30 },
+              { length: isShort ? 1 : 30 },
               (_, index) => index + 1,
             ).map((number) => (
               <Table.Row
                 key={number}
-                isSelected$={number === 30 ? streams.selected : undefined}
+                isSelected$={number === 30 ? streams.selected$ : undefined}
               >
                 <Table.HeaderCell scope="row">Artist {number}</Table.HeaderCell>
                 <Table.Cell>
