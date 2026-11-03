@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Collection, Icon, Note, Stack } from 'index';
 import { expect, userEvent, within } from 'storybook/test';
-import { Icon } from './Icon';
 
 const meta: Meta<typeof Icon> = {
   title: 'Display/Icon',
@@ -9,7 +9,7 @@ const meta: Meta<typeof Icon> = {
     layout: 'centered',
     docs: {
       description: {
-        component: `Draws one of six shapes, each named for what is drawn and never for a state or an action: \`sort\` (up and down arrows), \`sort-ascending\` (up), \`sort-descending\` (down), \`bin\`, \`bubble-exclamation\` (a speech bubble holding an exclamation mark) and \`bubble-tick\` (the same bubble holding a tick). The consumer picks the drawing that matches what it shows and owns what it means. Every drawing is sized in \`em\`, stroked in the colour of the text it sits in, and out of the tab order.
+        component: `Draws one of seven shapes, each named for what is drawn and never for a state or an action: \`sort\` (up and down arrows), \`sort-ascending\` (up), \`sort-descending\` (down), \`bin\`, \`bubble-exclamation\` (a speech bubble holding an exclamation mark) \`bubble-tick\` (the same bubble holding a tick), and \`dot\` (a small filled circle). The consumer picks the drawing that matches what it shows and owns what it means. Every drawing is sized in \`em\`, drawn in the colour of the text it sits in (filled for the dot, outlined for the others), and out of the tab order.
 
 ### Decorative by default
 
@@ -18,6 +18,10 @@ Without a \`label\` the icon is hidden from assistive technology, and the contro
 ### Status mark: when a label is required
 
 A \`label\` is required exactly when the icon stands alone for an item's state and no text beside it says so - a compact list or table row with no room for the words. With a non-empty \`label\` the icon becomes a status mark: one image (\`role="img"\`) whose accessible name is the label, announced once, still no tab stop. **The label is the status.** The consumer writes it in the reader's language; the library words nothing, and an empty label leaves the icon hidden rather than exposing an image without a name. The two forms of one state take two drawings - \`bubble-exclamation\` and \`bubble-tick\` share an outline and differ by the mark inside - so the state is told apart by shape, in forced colours and in print as well. Nothing is announced when a mark changes form: a live region is the consumer's, where the change is an event.
+
+### Dot and absence
+
+A \`dot\` before an item can mark unread or unseen content; the consumer chooses that meaning and its translated name. **When absence is the other form, the dot must not be the only carrier of state**: give the state a name or a second cue, such as stronger text weight. A standalone dot still needs a \`label\`. The unread example gives the dot a name and also spells out each state visibly, including the read item with no dot. The glyph sits inline on the first line, scales with small text, and needs no consumer CSS.
 
 ### Tone
 
@@ -36,6 +40,7 @@ A \`label\` is required exactly when the icon stands alone for an item's state a
         'bin',
         'bubble-exclamation',
         'bubble-tick',
+        'dot',
       ],
       description: 'Which drawing; a name selects a shape, never a state',
     },
@@ -84,6 +89,86 @@ export const BubbleExclamation: Story = {
 /** A speech bubble holding a tick: the same outline as `bubble-exclamation`, a different mark. */
 export const BubbleTick: Story = {
   args: { name: 'bubble-tick' },
+};
+
+/** A filled circle; without a label it remains decorative. */
+export const Dot: Story = {
+  args: { name: 'dot' },
+};
+
+/** Named unread mark, a visible second cue, and the absent-dot read state at the small text role. */
+export const UnreadDot: Story = {
+  args: { name: 'dot', label: 'Unread' },
+  render: () => (
+    <Collection.Root>
+      <Collection.Item>
+        <Note>
+          <Icon name={'dot'} label={'Unread'} /> <span>Alex Morgan</span>
+          <br />
+          Unread — Delivery on Thursday
+        </Note>
+      </Collection.Item>
+      <Collection.Item>
+        <Note>
+          Sam Rivera
+          <br />
+          Read — Invoice received
+        </Note>
+      </Collection.Item>
+    </Collection.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const mark = canvas.getByRole('img', { name: 'Unread' });
+    await expect(canvas.getAllByRole('img')).toHaveLength(1);
+    const firstLine = canvas.getByText('Alex Morgan').getBoundingClientRect();
+    const bounds = mark.getBoundingClientRect();
+    await expect(bounds.top).toBeLessThan(firstLine.bottom);
+    await expect(bounds.bottom).toBeGreaterThan(firstLine.top);
+    await expect(bounds.width).toBeCloseTo(
+      Number.parseFloat(getComputedStyle(mark).fontSize),
+      1,
+    );
+    await expect(mark).not.toHaveAttribute('tabindex');
+  },
+};
+
+/** Filled dots inherit small text colour or select each existing semantic tone. */
+export const DotTones: Story = {
+  args: { name: 'dot' },
+  render: () => (
+    <Stack>
+      {(
+        [undefined, 'muted', 'success', 'warning', 'error', 'info'] as const
+      ).map((color) => (
+        <Note key={color ?? 'inherited'} color={'muted'}>
+          <Icon name={'dot'} color={color} /> {color ?? 'Inherited muted text'}
+        </Note>
+      ))}
+    </Stack>
+  ),
+  play: async ({ canvasElement }) => {
+    const glyphs = canvasElement.querySelectorAll('svg');
+    const fills = new Set<string>();
+    for (const glyph of glyphs) {
+      const drawing = glyph.querySelector('path');
+      if (!drawing) throw new Error('Missing dot drawing');
+      const fill = getComputedStyle(drawing).fill;
+      await expect(fill).toBe(getComputedStyle(glyph).color);
+      await expect(fill).not.toBe('none');
+      await expect(getComputedStyle(drawing).stroke).toBe('none');
+      await expect(getComputedStyle(glyph).forcedColorAdjust).toBe('auto');
+      await expect(drawing.getBoundingClientRect().width).toBeGreaterThan(5);
+      fills.add(fill);
+    }
+    await expect(fills.size).toBe(5);
+    const inherited = glyphs[0];
+    if (!inherited?.parentElement)
+      throw new Error('Missing inherited colour example');
+    await expect(getComputedStyle(inherited).color).toBe(
+      getComputedStyle(inherited.parentElement).color,
+    );
+  },
 };
 
 const threads = [

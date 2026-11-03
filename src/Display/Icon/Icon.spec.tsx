@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react';
+import { Icon } from 'index';
 import type { ComponentProps } from 'react';
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { Icon } from './Icon';
 
 const names = ['sort', 'sort-ascending', 'sort-descending'] as const;
 
 const addedNames = ['bin', 'bubble-exclamation', 'bubble-tick'] as const;
-const everyName = [...names, ...addedNames] as const;
+const everyName = [...names, ...addedNames, 'dot'] as const;
 const colors = ['muted', 'success', 'warning', 'error', 'info'] as const;
 
 const colorClassesOf = (icon: HTMLElement): string[] =>
@@ -18,6 +18,44 @@ const drawingOf = (testId: string): string =>
     .join(' ');
 
 describe('Icon', () => {
+  it.each([undefined, ''])(
+    'keeps a dot with label %s decorative, so adjacent wording carries its meaning (#134)',
+    (label) => {
+      render(<Icon name={'dot'} label={label} testId={'dot'} />);
+      expect(screen.queryByRole('img')).not.toBeInTheDocument();
+      expect(screen.getByTestId('dot')).toHaveAttribute('aria-hidden', 'true');
+      expect(screen.getByTestId('dot')).not.toHaveAttribute('tabindex');
+    },
+  );
+
+  it.each(colors)(
+    'keeps a %s dot filled and named without announcing state changes (#134)',
+    (color) => {
+      const { container } = render(
+        <Icon name={'dot'} label={'Unread'} color={color} />,
+      );
+      const mark = screen.getByRole('img', { name: 'Unread' });
+      expect(mark.querySelector('path')).toHaveAttribute(
+        'fill',
+        'currentColor',
+      );
+      expect(
+        container.querySelector('[aria-live], [role="status"]'),
+      ).toBeNull();
+    },
+  );
+
+  it('draws a filled dot in the surrounding colour, sized with text, for a consumer-named unread mark (#134)', () => {
+    render(<Icon name={'dot'} label={'Ungelesen'} />);
+    const mark = screen.getByRole('img', { name: 'Ungelesen' });
+    expect(mark).toHaveAttribute('width', '1em');
+    expect(mark).toHaveAttribute('height', '1em');
+    const drawing = mark.querySelector('path');
+    expect(drawing).toHaveAttribute('fill', 'currentColor');
+    expect(drawing).toHaveAttribute('stroke', 'none');
+    expect(drawing?.getAttribute('d')).toBeTruthy();
+  });
+
   it.each(names)(
     'renders %s as an inline svg hidden from assistive technology and out of the tab order, so the containing control supplies the only spoken name',
     (name) => {
@@ -79,7 +117,7 @@ describe('Icon', () => {
     expect(container).toHaveTextContent('');
   });
 
-  it('offers six drawings named for their shape, never for a state or an action (#126)', () => {
+  it('offers seven drawings named for their shape, never for a state or an action (#126)', () => {
     expectTypeOf<ComponentProps<typeof Icon>['name']>().toEqualTypeOf<
       (typeof everyName)[number]
     >();
@@ -104,12 +142,12 @@ describe('Icon', () => {
     },
   );
 
-  it('draws six distinct path sets, so no two names share a shape (#126)', () => {
+  it('draws seven distinct path sets, so no two names share a shape (#126)', () => {
     render(
       everyName.map((name) => <Icon key={name} name={name} testId={name} />),
     );
     const drawings = everyName.map(drawingOf);
-    expect(new Set(drawings).size).toBe(6);
+    expect(new Set(drawings).size).toBe(7);
     for (const drawing of drawings) expect(drawing).not.toBe('');
   });
 
