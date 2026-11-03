@@ -11,6 +11,9 @@ import type { FunctionComponent, ReactNode } from 'react';
 // the page owns the rhythm around it. Colour is re-pointed by `.dark`, so no variant carries `dark:`.
 const note = cva('font-secondary text-small', {
   variants: {
+    // Inline containment removes this text's intrinsic width from automatic table sizing (#132).
+    // The block still fills its allocated width; only its own text is clipped, never its siblings.
+    truncate: { true: 'min-w-0 truncate [contain:inline-size]', false: '' },
     color: {
       foreground: 'text-foreground',
       muted: 'text-muted',
@@ -20,7 +23,7 @@ const note = cva('font-secondary text-small', {
       info: 'text-info',
     },
   },
-  defaultVariants: { color: 'foreground' },
+  defaultVariants: { color: 'foreground', truncate: false },
 });
 
 export interface INoteProps extends VariantProps<typeof note> {
@@ -41,8 +44,15 @@ export interface INoteProps extends VariantProps<typeof note> {
  *   nothing else paints text. A status tone changes colour only.
  * - Emits no tracking, no font-weight, no measure and no margin under any prop.
  * - Carries no ARIA role and no live region under any prop.
+ * - `truncate` opts into one line with an ellipsis at the inline end, following inherited writing
+ *   direction. The complete text stays in the DOM and accessibility tree. Omitted or false wraps
+ *   as before. Marked text can shrink inside ordinary and allocated Table cells.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - Allocate a width through the enclosing layout: truncated text does not size its holder.
+ * - Make the full wording reachable to sighted readers, for example by opening the item. Never
+ *   truncate essential content without that path, or put links, controls or line breaks inside
+ *   truncated text; use text and noninteractive inline phrasing only. No tooltip is added.
  * - The device has three carriers and this primitive is only one: use it for an annotation no other
  *   component owns. A form's own message belongs to `Form`'s `note` and a table's to its note cell,
  *   each painted by the component that owns it.
@@ -58,9 +68,10 @@ export interface INoteProps extends VariantProps<typeof note> {
 export const Note: FunctionComponent<INoteProps> = ({
   children,
   color,
+  truncate,
   testId,
 }) => (
-  <p className={note({ color })} data-testid={testId}>
+  <p className={note({ color, truncate })} data-testid={testId}>
     {children}
   </p>
 );

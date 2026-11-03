@@ -512,8 +512,12 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *   theme's `--table-column-*` values and the available width can. All-fixed columns do not stretch.
  * - With `columns` declared, no narrow-viewport rule applies whatever `notes` says: the note column
  *   stays, rows stay tabular, and what does not fit scrolls in the wrapper as above. Text wraps inside
- *   its allocation, an unbroken run included; the table never truncates, hides or resizes content.
+ *   its allocation, an unbroken run included; the table does not itself truncate, hide or resize content.
  *   Without `columns`, widths follow content and both `notes` behaviours are exactly as before.
+ * - Exception: a consumer may mark individual `P` or `Note` content with `truncate`. Only that
+ *   text stays on one line and ellipsizes at its allocated inline end, in either column layout;
+ *   its full DOM text remains accessible and does not force the table wider. Unmarked siblings
+ *   retain their wrapping/overflow behavior; fixed column widths and minimums still hold.
  * - `Root density` insets every header and body cell from one theme pair: `comfortable` (the
  *   default, the former spacing exactly) or `compact`, per table. It moves no type size and no
  *   control's own dimensions. A non-positive or non-finite `weight` throws
@@ -544,6 +548,8 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *   fixed width or minimum holds it: the `action` role holds one standard control at comfortable
  *   density. The allocation never widens for content, so an under-allocated control overflows its
  *   cell rather than moving its neighbours.
+ * - For truncated text, provide an operable path to the full wording (for example row activation
+ *   opening the item). Truncation must not hide essential content or interactive descendants.
  * - A cell's `align` and `variant` are the consumer's as before; an allocation sets neither.
  * - Each row's `onClick$` and `isSelected$` are tied to that row's stable identity, so a reordered or
  *   temporarily removed row keeps its association. Table holds no identity, registry or policy, and

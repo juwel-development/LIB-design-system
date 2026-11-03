@@ -15,6 +15,11 @@ const meta: Meta<typeof P> = {
   },
   tags: ['autodocs'],
   argTypes: {
+    truncate: {
+      control: 'boolean',
+      description:
+        'One line with an inline-end ellipsis. Keep a route to the full text; do not truncate essential content or interactive descendants.',
+    },
     color: {
       control: { type: 'radio' },
       options: ['foreground', 'muted', 'success', 'warning', 'error', 'info'],
@@ -59,5 +64,28 @@ export const StatusTones: Story = {
       <P color={'error'}>Error: the changes could not be saved.</P>
       <P color={'info'}>Information: a new version is available.</P>
     </>
+  ),
+};
+
+/** The fixture allocates width; truncation needs no consumer CSS. The Table stories show an
+ *  operable item opening the full wording for sighted readers. */
+export const Truncated: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Opt-in only: the full text stays accessible. Allocate width in the enclosing layout; this text does not size its holder. See Table / Truncated Text for a complete activation example. Never use truncation to hide essential content or links and controls.',
+      },
+    },
+  },
+  args: {
+    truncate: true,
+    children:
+      'Alexandra Montgomery — international recording correspondence and forthcoming release plans',
+  },
+  render: (args) => (
+    <div style={{ width: '18rem' }}>
+      <P {...args} />
+    </div>
   ),
 };

@@ -7,6 +7,9 @@ import type { FunctionComponent, ReactNode } from 'react';
 // P owns no reading measure - that belongs to whatever owns the reading column (Prose #21).
 const p = cva('font-body text-body leading-body', {
   variants: {
+    // Inline containment removes this text's intrinsic width from automatic table sizing (#132).
+    // The block still fills its allocated width; only its own text is clipped, never its siblings.
+    truncate: { true: 'min-w-0 truncate [contain:inline-size]', false: '' },
     color: {
       foreground: 'text-foreground',
       muted: 'text-muted',
@@ -16,10 +19,10 @@ const p = cva('font-body text-body leading-body', {
       info: 'text-info',
     },
   },
-  defaultVariants: { color: 'foreground' },
+  defaultVariants: { color: 'foreground', truncate: false },
 });
 
-interface IPProps extends VariantProps<typeof p> {
+export interface IPProps extends VariantProps<typeof p> {
   children: ReactNode;
   testId?: string;
 }
@@ -33,8 +36,15 @@ interface IPProps extends VariantProps<typeof p> {
  *   theme re-points it, #120), sized by `--text-body` and led by `--leading-body`.
  * - `color` selects `foreground`, `muted`, `success`, `warning`, `error` or `info`; nothing else
  *   paints text. A status tone changes colour only and adds no announcement semantics.
+ * - `truncate` opts into one line with an ellipsis at the inline end, following inherited writing
+ *   direction. The complete text stays in the DOM and accessibility tree. Omitted or false wraps
+ *   as before. Marked text can shrink inside ordinary and allocated Table cells.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - Allocate a width through the enclosing layout: truncated text does not size its holder.
+ * - Make the full wording reachable to sighted readers, for example by opening the item. Never
+ *   truncate essential content without that path, or put links, controls or line breaks inside
+ *   truncated text; use text and noninteractive inline phrasing only. No tooltip is added.
  * - Where line length matters, place the paragraph inside whatever bounds the reading measure; `P`
  *   does not constrain its own width.
  * - For a paragraph inside a reading column, reach for `Prose.Body`, which is measure-bounded by its
@@ -42,8 +52,13 @@ interface IPProps extends VariantProps<typeof p> {
  * - Status-toned content communicates its status without relying on colour. If a change needs to be
  *   announced, the caller owns that behavior; selecting a tone does not create a status event.
  */
-export const P: FunctionComponent<IPProps> = ({ children, color, testId }) => (
-  <p className={p({ color })} data-testid={testId}>
+export const P: FunctionComponent<IPProps> = ({
+  children,
+  color,
+  truncate,
+  testId,
+}) => (
+  <p className={p({ color, truncate })} data-testid={testId}>
     {children}
   </p>
 );
