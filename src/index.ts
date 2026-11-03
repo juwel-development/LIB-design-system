@@ -13,6 +13,7 @@ export { Figure } from 'Display/Figure/Figure';
 export { Icon } from 'Display/Icon/Icon';
 export { Meter } from 'Display/Meter/Meter';
 export { Rail } from 'Display/Rail/Rail';
+export { Rule } from 'Display/Rule/Rule';
 export type { TableColumnAllocation } from 'Display/Table/Table';
 export { Table } from 'Display/Table/Table';
 export { Eyebrow } from 'Display/Typography/Eyebrow/Eyebrow';
