@@ -590,11 +590,14 @@ describe('single-theme token variants (issue #62)', () => {
 
 describe('renderTokens dialog contract', () => {
   it('carries the scrim colour role in every stylesheet, its alpha part of the colour', () => {
-    // The scrim is the themed veil behind a Dialog (CONTEXT.md); both shipped themes carry the same
-    // translucent value, and a consumer re-points --color-scrim like any other role.
-    for (const render of [renderTokens, renderLightTokens, renderDarkTokens]) {
+    // A consumer re-points the translucent veil independently in each theme.
+    for (const [render, scrim] of [
+      [renderTokens, light.scrim],
+      [renderLightTokens, light.scrim],
+      [renderDarkTokens, dark.scrim],
+    ] as const) {
       const css = render();
-      expect(css).toContain('--color-scrim: rgb(15 23 42 / 0.5);');
+      expect(css).toContain(`--color-scrim: ${scrim};`);
       const themeInline = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? '';
       expect(themeInline).toContain('--color-scrim: var(--color-scrim);');
     }

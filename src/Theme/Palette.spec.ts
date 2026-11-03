@@ -451,10 +451,37 @@ describe('Palette', () => {
     }
   });
 
-  it('ships the same translucent scrim in both themes, its alpha part of the colour', () => {
-    expect(light.scrim).toBe('rgb(15 23 42 / 0.5)');
-    expect(dark.scrim).toBe('rgb(15 23 42 / 0.5)');
-  });
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ] as const)(
+    'darkens surface luminance by at least 50% with the scrim in the %s theme',
+    (_theme, tokens) => {
+      const match = tokens.scrim.match(
+        /^rgb\((\d+) (\d+) (\d+) \/ ([\d.]+)\)$/,
+      );
+      expect(match).not.toBeNull();
+      if (!match) throw new Error('Scrim must carry RGB channels and alpha');
+      const alpha = Number(match[4]);
+      const composite = [1, 2, 3]
+        .map((channel) => {
+          const offset = channel * 2 - 1;
+          const surface = Number.parseInt(
+            tokens.surface.slice(offset, offset + 2),
+            16,
+          );
+          return Math.round(
+            Number(match[channel]) * alpha + surface * (1 - alpha),
+          )
+            .toString(16)
+            .padStart(2, '0');
+        })
+        .join('');
+      expect(relativeLuminance(`#${composite}`)).toBeLessThanOrEqual(
+        relativeLuminance(tokens.surface) * 0.5,
+      );
+    },
+  );
 });
 
 describe('selected table surface (#136)', () => {
