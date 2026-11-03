@@ -506,3 +506,35 @@ meets that need without introducing a new inline component or widening the headi
 Emphasis changes only weight. Size, face and line height remain those of the existing role, so
 single-line regular and strong rows retain the same line box. A different weight may change glyph
 widths and therefore wrapping; equal total height for arbitrarily wrapped content is not promised.
+
+## Accepted for implementation: letter family role (#128)
+
+A letter is a whole correspondence block: salutation, running paragraphs and signature share one
+typography treatment and a reading measure of their own. Ordinary Prose retains its existing roles.
+The letter's measure also addresses #138's letter-specific need; it does not require a separate
+general-purpose measure selector.
+
+`--font-letter` names the correspondence family and falls back to `--font-primary`, independently
+of `--font-body`. Reusing body would lose the primary face when a theme assigns ordinary body copy
+another face; reading primary directly would bypass the family-role contract and prevent a theme
+from moving letters independently.
+
+As with the other content family roles, resolve `var(--font-letter, var(--font-primary))` where
+the family is applied, with no root-level alias declaration. This preserves scoped primary overrides.
+The consumer selects the letter treatment, never a face.
+
+The letter has dedicated tokens: `--text-letter: 1.25rem`, `--leading-letter: 1.8` and
+`--measure-letter: 60ch`. Each is independently re-pointable by a theme. Sharing the lede's default
+size does not share its role: a letter is sustained correspondence, while a lede is an opening
+paragraph with tighter leading. The letter measure resolves against the letter's own family and
+size on the element bounding the column, and is capped by the available width. It promises no fixed
+physical width across typefaces. Existing body, lede and measure defaults remain unchanged.
+
+The public entry point is `Prose.Root variant="letter"`. Callers continue to use `Prose.Body`
+for the salutation, running paragraphs and signature; those paragraphs follow their root's letter
+treatment. Omitting the variant preserves the existing Prose behavior. Typography and measure are
+selected together on the root, without per-paragraph size, face or measure choices.
+
+`Prose.Lede` and `Prose.Tail` retain their existing typography even inside a letter root. They are
+explicit opening and closing-note roles, not letter paragraphs. The documented correspondence
+composition uses `Prose.Body` throughout, including for the salutation and signature.

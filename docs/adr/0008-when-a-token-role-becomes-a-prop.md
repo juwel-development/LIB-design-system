@@ -236,6 +236,30 @@ defaulting to `region`. Columns align at the top and omitted columns reserve no 
 existing axis-switching behavior remains its own contract. This decision does not reopen the Figure
 or Brandmark width APIs or introduce a general measurement escape hatch.
 
+**Column maximums — triage decisions for #139.**
+`ColumnLayout.Column` accepts an optional `maxWidth` custom-property name, extending the same narrow
+consumer-defined token-reference contract as `minWidth`. Omitting it leaves the column uncapped.
+
+When every horizontal column reaches its maximum, the columns remain aligned to the start with
+the selected gaps unchanged. Unallocated width remains at the trailing edge; neither columns nor
+gaps stretch to consume it.
+
+The existing minimum-based proportional threshold still selects horizontal or stacked mode. In
+horizontal mode, a valid maximum below its column's proportional share applies immediately,
+including at the threshold: cap that column and redistribute the surplus among columns that can
+still grow, in proportion to their weights. Repeat as further columns reach their caps. A maximum
+does not postpone the switch to stacked mode.
+
+In stacked mode maximums have no effect: every column fills the available width, just as minimums
+already cease to constrain width after the switch.
+
+Invalid maximum token names throw `ColumnLayoutConfigurationError`, using the same name validation
+as minimums. Resolved bounds remain a theme-author constraint: tokens must hold valid nonnegative
+CSS lengths in the Root's theme context, and each maximum must be at least its column's minimum
+in every scope and responsive state. The component does not read resolved lengths or guarantee an
+exception for maximum below minimum. This explicitly narrows #139's original error requirement
+and preserves CSS-driven layout across theme, font and media-query changes.
+
 **Field/action arrangements ([#118](https://github.com/juwel-development/LIB-design-system/issues/118)).**
 The maintainer accepted a dedicated arrangement for several labelled fields and trailing shared
 actions. Controls align by their bottom edges within each row, independently of wrapping labels
@@ -270,6 +294,88 @@ The maintainer also explicitly accepted per-table `comfortable` (default) and `c
 This is a narrow exception to the distinct-job rule: these choices vary cell padding for different
 comparison densities, with each treatment supplied by theme tokens. They do not select typography,
 resize descendant controls, or authorize density/size scales on other components.
+
+**Icon-action columns — triage decisions for #144.**
+The narrow column and unchanged-row-height guarantee supports `Button variant="plain"` only.
+Ghost keeps its existing padding and button-shaped treatment; it is not silently resized to fit
+this column. This explicitly narrows the original plain-or-ghost acceptance criterion.
+
+The remove drawing is a minus sign paired with plus, distinct from the existing bin drawing:
+removing an item from a collection need not delete the item. The control's accessible label states
+the actual action. Each requested drawing is exposed as its own component, rather than only as a
+new name accepted by the existing Icon selector. The public components are `Icon.Plus`, `Icon.Up`,
+`Icon.Down`, `Icon.Right` and `Icon.Remove`, retaining Icon's shared colour and accessibility props.
+Existing `<Icon name="…">` usage remains compatible.
+
+One icon-action column may hold multiple icon actions. Do not require a separate column per action
+or assume the allocation holds exactly one glyph. The column sizes to the widest action group
+currently rendered, keeping its icons on one line and taking no proportional share of remaining
+table width. Allow room for inter-action spacing and focus rings. Filtering out the widest group
+may shrink the column; this content-dependent allocation is an explicit exception to the existing
+content-independent table allocation contract.
+
+Multiple actions compose as `Cluster gap="stack"` inside `Table.Cell`, containing individually
+named plain Buttons and their decorative Icon parts. The allocation accommodates the whole group
+on one line; a narrow table scrolls horizontally instead of wrapping those actions. Reuse the
+existing spacing and focus-ring tokens; no RowAct or button-group component is introduced.
+
+**Stepper — triage decisions for #143.**
+Current selection is independent of the consumer-supplied `done`, `open` or `blocked` status.
+Blocked steps remain focusable and selectable so their panel can explain missing prerequisites;
+validation and action availability belong to the consumer. Left/Right arrow travel requests selection
+as focus moves, matching Tabs' automatic activation. Selection remains consumer-controlled through
+the library's Observable-input/Subject-output contract; the Stepper never updates selection internally.
+For the initial version, steps remain in one horizontal row at narrow widths. Labels and value
+text may wrap within each step without truncation; residual overflow scrolls the row rather than
+the page, and focus reveals the step. The connector follows reading order. This is a provisional
+responsive decision: the maintainer wants later research into Stepper-specific alternatives before
+revisiting it. That research is not required for the initial implementation.
+Only the active panel mounts its content, matching Tabs. Leaving a step unmounts that content;
+returning mounts it fresh. The consumer owns state persistence in RxJS and supplies that state to
+the remounted controls. Stepper adds no keep-mounted mode or state cache.
+With a definite parent height, the step row stays above the active panel, which passes its remaining
+height to its content without adding scrolling. A Pane or bounded Table inside owns scrolling.
+Without a definite parent height, the Stepper grows naturally with its content.
+Status wording is an optional consumer-filled slot, not a required translation input. The library
+supplies status shapes and current-step emphasis but no generated status wording. When supplied,
+the slot is visible and contributes to the step's accessible description. Without it, status is
+distinguished visually by shape; no spoken done/open/blocked wording is promised. Selection remains
+communicated through the control's selection semantics. This explicitly narrows the original
+requirement for every step to announce its status regardless of consumer content.
+The interface is compositional: `Stepper.Root`, `Stepper.List`, `Stepper.Step` and `Stepper.Panel`.
+List owns the connected row; each Step supplies its identity, label, status, value text and optional
+status slot. Numbering follows rendered step order, and Panels match Steps by identity. Do not
+replace these parts with a monolithic steps-array rendering API.
+
+**Bounded tables — triage decisions for #142.**
+Narrow comparison tables use the existing weighted column allocation with minimums omitted. Text
+wraps within those shares; content such as controls that genuinely cannot fit retains residual
+horizontal overflow. No second proportional sizing API is introduced, and declared fixed widths
+or minimums retain their existing meaning.
+
+`Table.Root bounded` opts into vertical scrolling and a sticky header together. The Table's own
+wrapper owns both scroll axes and takes at most the height allocated by its parent. Short tables
+retain natural height; without a definite parent height the table grows with its content. Omitting
+`bounded` preserves existing behavior.
+
+`Dialog.Content` gains `scrollOwner="body" | "child"`, defaulting to `body` and preserving today's
+Content scrolling. In child mode it passes the available height to one bounded child and adds no
+scrolling of its own; the Dialog's title, description and actions stay fixed. This matches
+`Pane.Body scrollOwner="child"`: the bounded Table owns both axes in either composition. Intermediate
+wrappers must preserve the height allocation.
+
+Only the header stays pinned at the scroll wrapper's top edge, backed by an opaque themed surface
+so body rows cannot show through it. A visible caption scrolls normally and remains the table's
+accessible name when out of view; a hidden caption keeps its existing behavior.
+
+Bounded tables retain their rows and all columns at every width, including with `notes="content"`
+or `notes="supplementary"`. They disable the existing narrow-screen cell stacking and note hiding;
+residual overflow scrolls horizontally in the same wrapper. Unbounded responsive behavior is
+unchanged. This keeps the pinned header aligned with the same visible columns throughout scrolling.
+
+Keyboard or programmatic focus reveals the target row or control below the pinned header inside
+the Table wrapper, without scrolling the page. A selection change alone changes the existing
+marker or highlight and does not move the scroll position.
 
 **DefinitionList density and allocation ([#123](https://github.com/juwel-development/LIB-design-system/issues/123)).**
 During triage the maintainer explicitly extended the same density contract to DefinitionList:

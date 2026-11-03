@@ -130,6 +130,12 @@ as the type size moves under it. It belongs to whatever owns the reading column,
 paragraph inside it.
 _Avoid_: Max width, line length, content width
 
+**Letter**:
+A whole block of personal correspondence whose salutation, running paragraphs and signature share
+one typography treatment and a reading measure of its own. Its family role follows the primary face
+unless the theme assigns letters their own face; the consumer owns its words and language.
+_Avoid_: Large body copy, lede, paper treatment
+
 ### Motion
 
 **Motion**:
@@ -241,6 +247,12 @@ mode passes an allocated height to every horizontal column; an unsized parent or
 arrangement leaves columns at content height, with scrolling owned by the holder.
 _Avoid_: Proportional Stack, split Stack, Columns
 
+**Column maximum**:
+The upper bound on a horizontal column's allocation, beyond which available width passes to columns
+that can still grow in proportion to their weights. It has no effect in the stacked arrangement;
+when every column is capped, unused width remains at the trailing edge.
+_Avoid_: Fixed column width, content width
+
 **Collection**:
 A vertical group of freely composed items, separated by hairlines between neighbours with its outer
 edges open. The library owns the spacing and separation; the consumer owns each item's content,
@@ -286,10 +298,23 @@ A library component that makes overflowing content reachable along chosen axes w
 by its parent layout. It owns scrolling, while the consumer owns the content and the allocation of space.
 _Avoid_: Table scroller, sized panel
 
+**Bounded table**:
+A table whose parent allocates its available height and whose own scroll region keeps the column
+header visible while rows scroll. It retains its rows and columns at every width, owns scrolling on
+both axes, and takes only the height its content needs when shorter than the allocation.
+_Avoid_: Split table, fixed-height table
+
 **Table column allocation**:
-The consumer's assignment of space to a table column, independent of the rows currently displayed.
-An allocation is fixed or a proportional share of available space, optionally bounded by a minimum.
+The consumer's assignment of space to a table column: fixed or proportional allocations are
+independent of the rows currently displayed, optionally bounded by a minimum. The icon-action
+allocation instead fits the currently rendered action groups and takes no share of surplus width.
 _Avoid_: Content width, automatic sizing
+
+**Icon-action column**:
+A table column that fits the widest currently rendered group of icon-only plain actions on one
+line, including their spacing and focus-ring room. Its width can change when the visible action
+groups change, and it takes no proportional share of remaining width.
+_Avoid_: Single-icon column, fixed action width
 
 **Table density**:
 The amount of space around cell content, chosen per table as comfortable or compact.
@@ -395,6 +420,23 @@ text wraps inside its tab down to its longest word, and only when the controls s
 the row scroll — the row, never the page. No label is shortened, elided or hidden, and a tab carried
 past the edge is out of view, not gone: scrolling or focus brings it back.
 _Avoid_: Truncation, ellipsis, responsive tabs, collapsing tabs, multi-row tabs
+
+**Stepper**:
+A connected row of numbered form steps with one current panel, each step presenting its name,
+status and consumer-supplied value text. The consumer owns navigation, validation and persistent
+state; leaving a panel unmounts its content, and visiting a step does not complete it.
+_Avoid_: Wizard, progress bar, automatic workflow
+
+**Step status**:
+The consumer's classification of a form step as done, open or blocked, independently of which step
+is currently selected. Visiting a step does not change its status; a current step may be done or blocked.
+_Avoid_: Current status, navigation state, automatic completion
+
+**Blocked step**:
+A step whose work cannot proceed until consumer-defined prerequisites are met, while remaining
+focusable and selectable so its panel can explain what is needed. The consumer owns validation and
+the availability of actions within the panel.
+_Avoid_: Disabled step, unavailable view
 
 **Slider**:
 A control that sets one numeric value by moving one thumb along a fixed, visible operating range.
