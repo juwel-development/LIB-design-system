@@ -6,6 +6,7 @@
 
 :root {
   --color-surface: #0f172a;
+  --color-selected-surface: #172033;
   --color-foreground: #f8fafc;
   --color-muted: #94a3b8;
   --color-border: #334155;
@@ -35,6 +36,7 @@
 
 @theme inline {
   --color-surface: var(--color-surface);
+  --color-selected-surface: var(--color-selected-surface);
   --color-foreground: var(--color-foreground);
   --color-muted: var(--color-muted);
   --color-border: var(--color-border);

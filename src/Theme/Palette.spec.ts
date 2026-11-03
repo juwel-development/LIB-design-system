@@ -456,3 +456,24 @@ describe('Palette', () => {
     expect(dark.scrim).toBe('rgb(15 23 42 / 0.5)');
   });
 });
+
+describe('selected table surface (#136)', () => {
+  it.each([
+    ['light', light],
+    ['dark', dark],
+  ] as const)(
+    'keeps text and the persistent marker legible on the %s selected surface',
+    (_scheme, tokens) => {
+      expect(tokens.selectedSurface).not.toBe(tokens.surface);
+      expect(tokens.selectedSurface).not.toBe(tokens.backing);
+      for (const ink of [tokens.foreground, tokens.muted, tokens.link]) {
+        expect(
+          contrastRatio(ink, tokens.selectedSurface),
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(
+        contrastRatio(tokens.focusRing, tokens.selectedSurface),
+      ).toBeGreaterThanOrEqual(3);
+    },
+  );
+});

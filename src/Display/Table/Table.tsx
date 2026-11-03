@@ -14,11 +14,12 @@ import type { Observable, Subject } from 'rxjs';
 import { TableConfigurationError } from './TableConfigurationError';
 
 // Rules are the layout. One recipe styles the whole table from its wrapper, so the block reads as a
-// table from two rule weights and nothing else: no cell borders, no fill, no zebra, no hover. Colours
+// table from two rule weights and nothing else: no cell borders, no default fill, no zebra, no hover. Colours
 // are semantic tokens re-pointed by `.dark`, so no selector carries a `dark:` class. The responsive
 // behaviour is keyed on the wrapper's `data-notes`, so a server renders the right markup with no
 // hydration and the mode is one attribute a stylesheet and a test can both read.
 const DEFAULT_DENSITY = 'comfortable';
+const DEFAULT_SELECTION_TREATMENT = 'marker';
 
 const table = cva(
   [
@@ -69,6 +70,10 @@ const table = cva(
   ].join(' '),
   {
     variants: {
+      selectionTreatment: {
+        marker: '',
+        highlight: '[&>table>*>tr[aria-selected=true]]:bg-selected-surface',
+      },
       captionVisibility: {
         visible: '[&>table>caption]:pb-3',
         hidden: '[&>table>caption]:sr-only',
@@ -82,7 +87,11 @@ const table = cva(
           '[--table-cell-padding-inline:var(--table-cell-inset-inline-compact)] [--table-cell-padding-block:var(--table-cell-inset-block-compact)]',
       },
     },
-    defaultVariants: { density: DEFAULT_DENSITY, captionVisibility: 'visible' },
+    defaultVariants: {
+      density: DEFAULT_DENSITY,
+      captionVisibility: 'visible',
+      selectionTreatment: DEFAULT_SELECTION_TREATMENT,
+    },
   },
 );
 
@@ -324,6 +333,7 @@ const useHorizontalOverflow = (
 const TableRoot: FunctionComponent<ITableRootProps> = ({
   caption,
   captionVisibility,
+  selectionTreatment,
   notes,
   columns,
   density,
@@ -355,10 +365,13 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
   if (notes === undefined) {
     return (
       <section
-        className={table({ density, captionVisibility })}
+        className={table({ density, captionVisibility, selectionTreatment })}
         style={style}
         data-columns={columnCount}
         data-density={density ?? DEFAULT_DENSITY}
+        data-selection-treatment={
+          selectionTreatment ?? DEFAULT_SELECTION_TREATMENT
+        }
         data-testid={testId}
         aria-label={caption}
         // biome-ignore lint/a11y/noNoninteractiveTabindex: a scroll container must be keyboard-operable (WCAG 2.1.1)
@@ -372,11 +385,14 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: the name and the `group` role are set together; biome cannot see the pair
     <div
       ref={wrapper}
-      className={table({ density, captionVisibility })}
+      className={table({ density, captionVisibility, selectionTreatment })}
       style={style}
       data-notes={notes}
       data-columns={columnCount}
       data-density={density ?? DEFAULT_DENSITY}
+      data-selection-treatment={
+        selectionTreatment ?? DEFAULT_SELECTION_TREATMENT
+      }
       data-testid={testId}
       role={isOverflowing ? 'group' : undefined}
       aria-label={isOverflowing ? caption : undefined}
@@ -504,7 +520,7 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *   Hide it only when visible text directly above the table already names what it lists; the
  *   enclosing arrangement owns the gap above the table. The consumer still supplies the caption.
  * - The block reads as a table from two rule weights alone: the heavier `rule` above the first row,
- *   `border` hairlines between rows, and no bottom rule on the last. No cell borders, fill, zebra or hover.
+ *   `border` hairlines between rows, and no bottom rule on the last. No cell borders, default fill, zebra or hover.
  * - `Cell variant="value"` sets tabular figures; `variant="note"` does not. Both at the 15px small role.
  * - `HeaderCell` emits the `scope` it is given; none is inferred. It emits `ariaSort` the same way:
  *   the attribute states the displayed order and the component never orders, cycles or requests one.
@@ -541,6 +557,10 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *   emitted reads unselected; a replaced source reads unselected until it emits; unmounting
  *   unsubscribes. The selection input is independent of `onClick$`, so a row may be selected and
  *   noninteractive, interactive and unselected, or both. Rendering and selection changes emit nothing.
+ * - `Root selectionTreatment="highlight"` adds `selectedSurface` behind selected rows only;
+ *   the default `marker` preserves the former presentation. Neither treatment changes on hover.
+ *   The marker remains a border in forced colours, where backgrounds may be suppressed; selection
+ *   stays distinct from the focus outline. A nested table chooses its own treatment.
  * - The row stays a `tr` in a `table`: no grid role, no arrow-key navigation. `aria-selected` is a
  *   WAI-ARIA 1.2 state of `row` and valid here, but Chromium exposes a row's selected state only
  *   inside a `grid`, so Chrome and Edge screen readers do not announce it on these rows (accepted
@@ -551,6 +571,9 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *   clipped by the scroll region. A table with neither keeps its static geometry exactly.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - A theme's `selectedSurface` differs from resting/hover surfaces and keeps foreground, muted
+ *   and link text at 4.5:1, and the marker and focus ring at 3:1. Other consumer-composed inks and
+ *   controls must meet their own contrast constraints against this surface too.
  * - Every row writes exactly as many cells as there are `columns`, in the same order. A row with
  *   fewer leaves tracks empty; one with more breaks onto a second line of its own row.
  * - A cell whose content cannot wrap - a `Button`, an `Input`, an image - sits in a column whose
