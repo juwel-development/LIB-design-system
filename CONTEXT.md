@@ -167,6 +167,11 @@ raised-and-depressing material is one brand's opinion rather than a role any bra
 a *Floating Layer* it is a shared depth cue rather than decoration.
 _Avoid_: Depth, shadow, lift
 
+**Frame placement**:
+A modal task's relationship to a persistent application bar: the task and its Scrim occupy the
+remaining region while the original bar stays visible but unavailable under modality.
+_Avoid_: Header offset, interactive modal background, duplicated status bar
+
 **Floating Layer**:
 A temporary surface presented above existing content without taking a place in its layout. Dialogs,
 popup menus and drawers float; a standing surface does not become one merely by remaining sticky.

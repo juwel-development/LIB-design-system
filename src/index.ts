@@ -52,6 +52,7 @@ export { TextArea } from 'Interaction/TextArea/TextArea';
 export { Cover } from 'Layout/Cover/Cover';
 export { Dialog } from 'Layout/Dialog/Dialog';
 export { DialogCompositionError } from 'Layout/Dialog/DialogCompositionError';
+export { DialogFrameError } from 'Layout/Dialog/DialogFrameError';
 export { DialogNamingError } from 'Layout/Dialog/DialogNamingError';
 export { Footer } from 'Layout/Footer/Footer';
 export type { FormState } from 'Layout/Form/Form';

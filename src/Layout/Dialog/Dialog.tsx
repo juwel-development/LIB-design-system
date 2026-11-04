@@ -14,6 +14,7 @@ import {
 } from 'react';
 import type { Subject } from 'rxjs';
 import { DialogCompositionError } from './DialogCompositionError';
+import { DialogFrameError } from './DialogFrameError';
 import { DialogNamingError } from './DialogNamingError';
 
 // The layout classes ride the open: variant - a bare `flex` would defeat the UA's
@@ -23,24 +24,35 @@ import { DialogNamingError } from './DialogNamingError';
 const dialogRoot = cva(
   [
     'open:flex open:flex-col m-auto p-0 overflow-hidden',
+    'top-[var(--dialog-frame-top)] backdrop:top-[var(--dialog-frame-top)]',
     'bg-surface text-foreground',
     'rounded-[var(--radius-dialog)] shadow-[var(--elevation-floating)]',
     'backdrop:bg-scrim backdrop:[backdrop-filter:blur(var(--scrim-blur))]',
   ].join(' '),
   {
     variants: {
+      placement: {
+        viewport: '[--dialog-frame-top:0px]',
+        frame: [
+          '[--dialog-frame-top:var(--shell-bar-bottom)] backdrop:[clip-path:inset(0)]',
+          '[&>[data-dialog-member]:not([data-dialog-member=content])]:shrink-0',
+          'data-[scroll-task]:overflow-y-auto data-[scroll-task]:overscroll-contain',
+          '[&[data-scroll-task]>[data-dialog-member=content]]:shrink-0',
+          '[&[data-scroll-task]>[data-dialog-member=content]]:overflow-visible',
+        ].join(' '),
+      },
       extent: {
         screen: [
           'w-[calc(100vw-2*var(--gutter))] max-w-none',
-          'h-[calc(100dvh-2*var(--space-region))] max-h-none',
+          'h-[calc(100dvh-var(--dialog-frame-top)-2*var(--space-region))] max-h-none',
         ].join(' '),
         content: [
           'w-[32rem] max-w-[calc(100vw-2*var(--gutter))]',
-          'max-h-[calc(100dvh-2*var(--space-region))]',
+          'max-h-[calc(100dvh-var(--dialog-frame-top)-2*var(--space-region))]',
         ].join(' '),
       },
     },
-    defaultVariants: { extent: 'screen' },
+    defaultVariants: { extent: 'screen', placement: 'viewport' },
   },
 );
 
@@ -114,6 +126,38 @@ const useDialogContract = (member: string): DialogContract => {
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+// When the fixed regions leave less than one text line, the entire task must scroll.
+// Measure those regions independently of Content so switching scroll ownership cannot oscillate.
+const fitFrameTask = (dialog: HTMLDialogElement): void => {
+  if (dialog.dataset.placement !== 'frame' || !dialog.open) return;
+  const content = dialog.querySelector<HTMLElement>(
+    ':scope > [data-dialog-member="content"]',
+  );
+  const fixedHeight = Array.from(dialog.children)
+    .filter((child) => child !== content)
+    .reduce((height, child) => {
+      const style = getComputedStyle(child);
+      return (
+        height +
+        child.getBoundingClientRect().height +
+        Number.parseFloat(style.marginTop) +
+        Number.parseFloat(style.marginBottom)
+      );
+    }, 0);
+  const style = content ? getComputedStyle(content) : undefined;
+  const minimumContent = style
+    ? Number.parseFloat(style.paddingTop) +
+      Number.parseFloat(style.paddingBottom) +
+      Number.parseFloat(style.borderTopWidth) +
+      Number.parseFloat(style.borderBottomWidth) +
+      Number.parseFloat(style.fontSize)
+    : 0;
+  const mustScrollTask = fixedHeight + minimumContent > dialog.clientHeight;
+  if (!mustScrollTask && dialog.hasAttribute('data-scroll-task'))
+    dialog.scrollTop = 0;
+  dialog.toggleAttribute('data-scroll-task', mustScrollTask);
+};
+
 type Presentation = {
   presented: RefObject<boolean>;
   opener: RefObject<HTMLElement | undefined>;
@@ -129,6 +173,13 @@ const openDialog = (
   if (dialog === undefined || dialog.open) {
     return;
   }
+  if (dialog.dataset.placement === 'frame') {
+    const frame = dialog.closest('[data-modal-scope="body"]');
+    if (!frame) throw new DialogFrameError();
+    // Shell owns the metric. Refresh synchronously for opens in the same turn as a bar resize,
+    // before ResizeObserver can deliver its notification (the private protocol in ADR 0015).
+    frame.dispatchEvent(new Event('modal-frame-measure'));
+  }
   // With nothing focused the browser reports `body` as active; capturing it would make closing
   // focus `body`, which the contract forbids - so only a real opener is worth restoring.
   const active = document.activeElement;
@@ -137,6 +188,7 @@ const openDialog = (
       ? active
       : undefined;
   dialog.showModal();
+  fitFrameTask(dialog);
   presented.current = true;
   dialog.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
 };
@@ -152,6 +204,10 @@ const closeDialog = (
 };
 
 export interface IDialogRootProps extends VariantProps<typeof dialogRoot> {
+  /** `viewport` (default) retains full-viewport placement. `frame` reserves the bar of an
+   * ancestor Shell with modalScope="body"; the original bar remains visible but inert.
+   * The DOM relationship must survive for the lifetime of this Root; portals are unsupported. */
+  placement?: VariantProps<typeof dialogRoot>['placement'];
   /** The composed regions, in the supported order: Title, Description, Content, Actions. */
   children: ReactNode;
   /** Emits on every dismissal - Escape and the Scrim. A consumer's own Cancel control emits its
@@ -197,6 +253,7 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
   onDismiss$,
   showDialog$,
   extent,
+  placement,
   ariaLabel,
   testId,
 }) => {
@@ -247,6 +304,12 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
     if (dialog === undefined || event.target !== dialog || !dialog.open) {
       return;
     }
+    // The reserved bar remains inert, but a pointer there is not a dismissal.
+    if (
+      placement === 'frame' &&
+      event.clientY < Number.parseFloat(getComputedStyle(dialog).top)
+    )
+      return;
     const box = dialog.getBoundingClientRect();
     const onSurface =
       event.clientX >= box.left &&
@@ -304,6 +367,34 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
     };
   }, [showDialog$, presentation]);
 
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (placement !== 'frame' || !dialog) return;
+    const measure = () => fitFrameTask(dialog);
+    const resize =
+      typeof ResizeObserver === 'undefined'
+        ? undefined
+        : new ResizeObserver(measure);
+    const observe = () => {
+      resize?.disconnect();
+      resize?.observe(dialog);
+      for (const child of dialog.children) resize?.observe(child);
+      measure();
+    };
+    observe();
+    const mutations = new MutationObserver(observe);
+    mutations.observe(dialog, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    return () => {
+      resize?.disconnect();
+      mutations.disconnect();
+      dialog.removeAttribute('data-scroll-task');
+    };
+  }, [placement]);
+
   // headingreset is set through the ref because React's DOM typings do not know the attribute
   // yet; it marks the h1 as the top heading of an independent task (docs/adr/0005). React hands
   // the callback `null` on detach; the boundary normalizes that to the standard's `undefined`.
@@ -317,7 +408,8 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: the Scrim is pointer-only by nature; the keyboard dismissal is Escape, which the platform reports as the cancel event handled by onCancel */}
       <dialog
         ref={attachDialog}
-        className={dialogRoot({ extent })}
+        className={dialogRoot({ extent, placement })}
+        data-placement={placement}
         aria-label={ariaLabel}
         aria-labelledby={
           ariaLabel === undefined && nameParts.title
@@ -452,6 +544,13 @@ const DialogActions: FunctionComponent<IDialogActionsProps> = ({
  *   `--space-region` block insets, header and Actions fixed, only `Content` scrolling.
  *   `extent="content"` holds a fixed 32rem capped to the viewport with content-driven height;
  *   Default `Content` scrolls as the fallback when its content exceeds available space.
+ * - `placement="frame"` opts into an ancestor `Shell modalScope="body"`: both extents and
+ *   the Scrim (including blur) stay below its content-height bar. Pointer presses on the reserved
+ *   bar do nothing. The bar stays inert and unavailable to assistive navigation under native modality.
+ *   Without a qualifying ancestor, opening throws `DialogFrameError`.
+ * - In frame placement, when fixed regions cannot leave one em for Content, the whole task scrolls;
+ *   title and actions then scroll too. Returning to a fitting region restores Content scroll ownership.
+ *   This reachability fallback makes no promise that arbitrary task content fits without scrolling.
  * - `Content scrollOwner="child"` passes available height to one bounded child without scrolling.
  *   A bounded Table then owns both axes and pins its header; title, description and actions stay fixed.
  * - Regions take `--space-region` padding with `--space-stack` between Title and Description and
@@ -461,6 +560,7 @@ const DialogActions: FunctionComponent<IDialogActionsProps> = ({
  *   with the theme's optional `--scrim-blur`.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - Keep a frame-placed Root inside the opted-in Shell for its mounted lifetime.
  * - In child-scroll mode provide one child that accepts the height allocation and owns overflow.
  *   Intermediate wrappers must preserve that allocation. Fixed regions must fit the viewport and
  *   leave usable room for the child; a Table needs room for its header and readable rows.

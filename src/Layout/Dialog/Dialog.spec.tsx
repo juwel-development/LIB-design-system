@@ -1,3 +1,4 @@
+import { Shell } from 'Layout/Shell/Shell';
 import { fireEvent, render, screen } from '@testing-library/react';
 import {
   type FunctionComponent,
@@ -73,6 +74,22 @@ const Counter: FunctionComponent = () => {
 };
 
 describe('Dialog Component', () => {
+  it('rejects frame placement without an opted-in ancestor before presenting', () => {
+    expect(() =>
+      render(
+        <Dialog.Root
+          placement="frame"
+          onDismiss$={new Subject<void>()}
+          ariaLabel="Task"
+        >
+          <Dialog.Actions>
+            <button type="button">Cancel</button>
+          </Dialog.Actions>
+        </Dialog.Root>,
+      ),
+    ).toThrow('placement="frame" requires a Shell with modalScope="body"');
+  });
+
   it('renders a native dialog naming itself through the visible title', () => {
     render(confirmation(new Subject<void>()));
     const dialog = screen.getByRole('dialog', { name: 'End employment?' });
@@ -542,5 +559,137 @@ describe('Dialog Component', () => {
     for (const id of ['root', 'title', 'description', 'content', 'actions']) {
       expect(screen.getByTestId(id)).toBeInTheDocument();
     }
+  });
+});
+
+describe('Dialog in a persistent frame', () => {
+  const frame = (
+    visible$?: Subject<boolean>,
+    dismiss$ = new Subject<void>(),
+    titleless = false,
+  ) => (
+    <StrictMode>
+      <Shell
+        modalScope="body"
+        bar={<header>Balance</header>}
+        ariaLabel="Application"
+      >
+        <main>
+          <div>
+            <Dialog.Root
+              placement="frame"
+              showDialog$={visible$}
+              onDismiss$={dismiss$}
+              ariaLabel={titleless ? 'Task' : undefined}
+              testId="dialog"
+            >
+              {!titleless && <Dialog.Title>Task</Dialog.Title>}
+              <Dialog.Description>Task description</Dialog.Description>
+              <Dialog.Content>
+                <Counter />
+              </Dialog.Content>
+              <Dialog.Actions>
+                <button type="button">Cancel</button>
+              </Dialog.Actions>
+            </Dialog.Root>
+          </div>
+        </main>
+      </Shell>
+    </StrictMode>
+  );
+  it.each([false, true])(
+    'mounts open with resolved naming in StrictMode (titleless=%s)',
+    async (titleless) => {
+      render(frame(undefined, undefined, titleless));
+      await nativeCloseSettled();
+      expect(
+        screen.getByRole('dialog', { name: 'Task' }),
+      ).toHaveAccessibleDescription('Task description');
+      expect(screen.getByRole('button', { name: 'count is 0' })).toHaveFocus();
+    },
+  );
+  it('retains task state across hide/reopen and ignores the queued stale close', async () => {
+    const visible$ = new Subject<boolean>();
+    const dismiss$ = new Subject<void>();
+    const events: string[] = [];
+    const { unmount } = render(frame(visible$, dismiss$));
+    dismiss$.subscribe(() => events.push('dismiss'));
+    visible$.subscribe((value) => events.push(String(value)));
+    visible$.next(true);
+    fireEvent.click(screen.getByRole('button', { name: 'count is 0' }));
+    visible$.next(false);
+    visible$.next(true);
+    await nativeCloseSettled();
+    expect(screen.getByRole('button', { name: 'count is 1' })).toHaveFocus();
+    fireEvent(visibleDialog(), new Event('cancel', { cancelable: true }));
+    await nativeCloseSettled();
+    expect(events).toEqual(['true', 'false', 'true', 'dismiss', 'false']);
+    unmount();
+    expect(visible$.isStopped).toBe(false);
+  });
+  it('replaces the visibility channel, ignores its stale close, and tears down the old subscription', async () => {
+    const first = new Subject<boolean>();
+    const second = new Subject<boolean>();
+    const { rerender, unmount } = render(frame(first));
+    first.next(true);
+    rerender(frame(second));
+    expect(dialogElement().open).toBe(false);
+    expect(first.observed).toBe(false);
+    second.next(true);
+    await nativeCloseSettled();
+    expect(visibleDialog().open).toBe(true);
+    unmount();
+    expect(second.observed).toBe(false);
+  });
+  it.each([false, true])(
+    'synchronizes native close and restores only a surviving opener (removed=%s)',
+    async (removed) => {
+      const visible$ = new Subject<boolean>();
+      const events: boolean[] = [];
+      const { rerender } = render(
+        <>
+          <button type="button">Open</button>
+          {frame(visible$)}
+        </>,
+      );
+      const opener = screen.getByRole('button', { name: 'Open' });
+      opener.focus();
+      visible$.next(true);
+      visible$.subscribe((value) => events.push(value));
+      if (removed)
+        rerender(
+          <>
+            {false && <button type="button">Open</button>}
+            {frame(visible$)}
+          </>,
+        );
+      visibleDialog().close();
+      await nativeCloseSettled();
+      expect(events).toEqual([false]);
+      if (!removed) expect(opener).toHaveFocus();
+      else expect(opener).not.toHaveFocus();
+    },
+  );
+  it('rejects an ordinary Shell without the explicit opt-in', () => {
+    const composition = (enabled: boolean) => (
+      <Shell
+        modalScope={enabled ? 'body' : undefined}
+        bar="Balance"
+        ariaLabel="Application"
+      >
+        <Dialog.Root
+          placement="frame"
+          onDismiss$={new Subject<void>()}
+          ariaLabel="Task"
+        >
+          <Dialog.Actions>
+            <button type="button">Cancel</button>
+          </Dialog.Actions>
+        </Dialog.Root>
+      </Shell>
+    );
+    expect(() => render(composition(false))).toThrow(
+      'placement="frame" requires a Shell',
+    );
   });
 });
