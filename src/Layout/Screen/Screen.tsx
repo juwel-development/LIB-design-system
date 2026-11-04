@@ -3,7 +3,7 @@ import { type FunctionComponent, type ReactNode, useState } from 'react';
 import { ScreenBodyAllocation } from './ScreenBodyAllocation';
 
 const screen = cva(
-  'box-border grid h-full min-h-0 min-w-0 grid-rows-[minmax(0,1fr)] px-[var(--gutter)] py-[var(--space-region)] [&:has(>header)]:grid-rows-[auto_minmax(0,1fr)] [&:has(>header)]:gapx-[var(--gutter)] py-[var(--space-region)]',
+  'box-border grid h-full min-h-0 min-w-0 grid-rows-[minmax(0,1fr)] px-[var(--gutter)] py-[var(--space-region)] [&:has(>header)]:grid-rows-[auto_minmax(0,1fr)] [&:has(>header)]:gap-[var(--space-region)]',
 );
 const screenHeading = cva('min-w-0');
 const screenBody = cva(

@@ -52,6 +52,7 @@ const Example = ({
   sidebar = false,
   narrow = false,
   foot = true,
+  removable = false,
 }: {
   inside?: boolean;
   table?: boolean;
@@ -59,7 +60,9 @@ const Example = ({
   sidebar?: boolean;
   narrow?: boolean;
   foot?: boolean;
+  removable?: boolean;
 }) => {
+  const [hasBody, setHasBody] = useState(true);
   const [hasHeading, setHasHeading] = useState(!inside);
   const [translated, setTranslated] = useState(false);
   const heading = (
@@ -129,6 +132,14 @@ const Example = ({
                       >
                         Translate
                       </button>
+                      {removable && (
+                        <button
+                          type="button"
+                          onClick={() => setHasBody(!hasBody)}
+                        >
+                          Toggle body
+                        </button>
+                      )}
                       {translated && (
                         <>
                           <Button disabled>Auswahl nicht verfügbar</Button>
@@ -140,40 +151,42 @@ const Example = ({
                       )}
                     </Stack>
                   </Pane.Head>
-                  <Pane.Body
-                    ariaLabel="Entries"
-                    scrollOwner={table ? 'child' : 'body'}
-                    testId="list-body"
-                  >
-                    {table ? (
-                      <Table.Root bounded caption="Entries">
-                        <Table.Head>
-                          <Table.Row>
-                            <Table.HeaderCell scope="col">
-                              Entry
-                            </Table.HeaderCell>
-                          </Table.Row>
-                        </Table.Head>
-                        <Table.Body>
-                          {entries.slice(0, count).map((entry) => (
-                            <Table.Row key={entry}>
-                              <Table.Cell>
-                                <Button variant="plain">Entry {entry}</Button>
-                              </Table.Cell>
+                  {hasBody && (
+                    <Pane.Body
+                      ariaLabel="Entries"
+                      scrollOwner={table ? 'child' : 'body'}
+                      testId="list-body"
+                    >
+                      {table ? (
+                        <Table.Root bounded caption="Entries">
+                          <Table.Head>
+                            <Table.Row>
+                              <Table.HeaderCell scope="col">
+                                Entry
+                              </Table.HeaderCell>
                             </Table.Row>
+                          </Table.Head>
+                          <Table.Body>
+                            {entries.slice(0, count).map((entry) => (
+                              <Table.Row key={entry}>
+                                <Table.Cell>
+                                  <Button variant="plain">Entry {entry}</Button>
+                                </Table.Cell>
+                              </Table.Row>
+                            ))}
+                          </Table.Body>
+                        </Table.Root>
+                      ) : (
+                        <Stack>
+                          {entries.slice(0, count).map((entry) => (
+                            <Button key={entry} variant="plain">
+                              Entry {entry}
+                            </Button>
                           ))}
-                        </Table.Body>
-                      </Table.Root>
-                    ) : (
-                      <Stack>
-                        {entries.slice(0, count).map((entry) => (
-                          <Button key={entry} variant="plain">
-                            Entry {entry}
-                          </Button>
-                        ))}
-                      </Stack>
-                    )}
-                  </Pane.Body>
+                        </Stack>
+                      )}
+                    </Pane.Body>
+                  )}
                   {foot && (
                     <Pane.Foot testId="list-foot">
                       <Button>Next page</Button>
@@ -236,3 +249,5 @@ export const WithSidebar: Story = { render: () => <Example sidebar /> };
 export const NarrowHolder: Story = { render: () => <Example narrow /> };
 
 export const WithoutFoot: Story = { render: () => <Example foot={false} /> };
+
+export const OptionalBody: Story = { render: () => <Example removable /> };

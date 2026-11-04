@@ -80,15 +80,15 @@ export interface IPaneBodyProps extends VariantProps<typeof paneBody> {
   testId?: string;
 }
 
-const number = (value: string): number => Number.parseFloat(value) || 0;
+const parseLength = (value: string): number => Number.parseFloat(value) || 0;
 
 const blockEdges = (element: Element): number => {
   const style = getComputedStyle(element);
   return (
-    number(style.paddingTop) +
-    number(style.paddingBottom) +
-    number(style.borderTopWidth) +
-    number(style.borderBottomWidth)
+    parseLength(style.paddingTop) +
+    parseLength(style.paddingBottom) +
+    parseLength(style.borderTopWidth) +
+    parseLength(style.borderBottomWidth)
   );
 };
 
@@ -99,8 +99,8 @@ const usableBodyHeight = (body: HTMLElement): number => {
   for (const element of [body, ...body.querySelectorAll('*')]) {
     const style = getComputedStyle(element);
     if (style.display === 'none') continue;
-    const line = number(style.lineHeight) || number(style.fontSize);
-    const ring = number(
+    const line = parseLength(style.lineHeight) || parseLength(style.fontSize);
+    const ring = parseLength(
       getComputedStyle(body.firstElementChild ?? body).paddingTop,
     );
     const item = element.matches(
@@ -136,7 +136,6 @@ const useScreenFallback = (root: {
       const body = sections.find((section) =>
         section.hasAttribute('data-pane-body'),
       );
-      if (!(body instanceof HTMLElement)) return;
       const fixed = sections
         .filter((section) => section !== body)
         .reduce(
@@ -145,10 +144,13 @@ const useScreenFallback = (root: {
         );
       const gaps =
         Math.max(0, sections.length - 1) *
-        number(getComputedStyle(element).rowGap);
+        parseLength(getComputedStyle(element).rowGap);
       setIsUnusable(
         frame.getBoundingClientRect().height <
-          fixed + gaps + blockEdges(element) + usableBodyHeight(body),
+          fixed +
+            gaps +
+            blockEdges(element) +
+            (body instanceof HTMLElement ? usableBodyHeight(body) : 0),
       );
     };
     const observer =

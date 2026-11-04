@@ -1,5 +1,8 @@
 # #151 Screen implementation and validation
 
+This is the pre-review implementation record. The fresh independent review, fixes and superseding
+geometry/check results are in [151-review.md](151-review.md).
+
 Authority: the approved final briefs of 2026-11-04,
 [#151](https://github.com/juwel-development/LIB-design-system/issues/151#issuecomment-6637288592)
 and [#152](https://github.com/juwel-development/LIB-design-system/issues/152#issuecomment-6637289232).
@@ -126,6 +129,6 @@ and `/tmp/screen-tests-final.log`. Earlier timed-out runs are `/tmp/screen-tests
 Only Chromium was exercised, with representative library fixtures. This is not a claim of actual
 consumer geometry, every language/font, or cross-application validation. #152 still owns the deeper
 bounded roster integration, 15–17rem roster theme, real selection/pagination scenarios and its
-additional acceptance. A separate fresh reviewer must review this change; implementation intentionally
-skipped the implement skill's review step. No consumer changes, GitHub writes, push, merge, release,
+additional acceptance. A separate fresh reviewer subsequently reviewed and fixed this change; see
+[151-review.md](151-review.md). The implementation had intentionally skipped the implement skill's review step. No consumer changes, GitHub writes, push, merge, release,
 publication or issue closure were performed.

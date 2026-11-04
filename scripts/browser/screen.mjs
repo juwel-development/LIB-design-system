@@ -13,12 +13,10 @@ const browser = await chromium.launch();
 const page = await browser.newPage();
 const base = process.env.SCREEN_STORYBOOK_URL ?? 'http://localhost:6011';
 const evaluate = async (expression) => page.evaluate(expression);
-const call = async (command, ...args) => {
-  if (command === 'keypress') {
-    await page.keyboard.press(args[1]);
-    if (args[1] === 'PageDown')
-      await page.waitForFunction(() => document.activeElement.scrollTop > 0);
-  }
+const pressKey = async (key) => {
+  await page.keyboard.press(key);
+  if (key === 'PageDown')
+    await page.waitForFunction(() => document.activeElement.scrollTop > 0);
 };
 const settle = async () =>
   page.evaluate(
@@ -86,6 +84,40 @@ const natural = (result, delegated = false) => {
   );
 };
 
+const headingSpacing = async () => {
+  const spacing = await evaluate(`(() => {
+    const main = document.querySelector('main');
+    const heading = main.querySelector(':scope > header');
+    const content = main.lastElementChild;
+    const style = getComputedStyle(main);
+    return { hasHeading: !!heading, gap: heading ? content.getBoundingClientRect().top - heading.getBoundingClientRect().bottom : 0, expected: parseFloat(style.paddingTop), rowGap: parseFloat(style.rowGap) || 0 };
+  })()`);
+  assert(
+    Math.abs(spacing.gap - (spacing.hasHeading ? spacing.expected : 0)) < 1,
+    'Heading separation uses the region role and absence reserves no gap',
+  );
+  if (!spacing.hasHeading) assert.equal(spacing.rowGap, 0);
+};
+
+await open('optional-body');
+await resize(1280, 320);
+natural(await geometry());
+await page.getByRole('button', { name: 'Toggle body', exact: true }).click();
+await resize(1280, 720);
+const withoutBody = await geometry();
+assert(
+  withoutBody.detail.client < withoutBody.detail.scroll,
+  'Removing an unusable optional body restores the fitting sibling bound',
+);
+record('optional body removed, sibling restored', withoutBody);
+await page.getByRole('button', { name: 'Toggle body', exact: true }).click();
+await settle();
+bounded(await geometry());
+
+await open('heading-above');
+await resize(1280, 720);
+await headingSpacing();
+
 for (const story of [
   'heading-above',
   'heading-inside-panel',
@@ -118,6 +150,7 @@ for (const story of [
   );
   await resize(1280, 720);
   bounded(await geometry(), story === 'delegated-table');
+  await headingSpacing();
   assert(
     await evaluate('document.activeElement === retainedInput'),
     'Restoration preserves focus',
@@ -135,7 +168,7 @@ await resize(1280, 720);
 await evaluate(
   `(() => { const b = document.querySelector('[data-testid="list-body"]'); b.focus(); return true; })()`,
 );
-await call('keypress', '--key', 'PageDown');
+await pressKey('PageDown');
 await settle();
 let result = await geometry();
 assert(
@@ -149,9 +182,9 @@ record('native list PageDown', result);
 await evaluate(
   `(() => { document.querySelector('[data-testid="list-foot"] button').focus(); return true; })()`,
 );
-await call('keypress', '--key', 'Tab');
+await pressKey('Tab');
 await settle();
-await call('keypress', '--key', 'PageDown');
+await pressKey('PageDown');
 await settle();
 result = await geometry();
 assert(
@@ -169,7 +202,7 @@ await resize(1280, 320);
 await evaluate(
   `(() => { window.lastEntry = [...document.querySelectorAll('button')].find(b=>b.textContent==='Entry 40'); lastEntry.focus(); return true; })()`,
 );
-await call('keypress', '--key', 'Tab');
+await pressKey('Tab');
 await settle();
 assert(
   await evaluate('document.activeElement.textContent === "Next page"'),
@@ -181,7 +214,7 @@ assert(
   ),
   'Native focus reveal makes pagination visible',
 );
-await call('keypress', '--key', 'Shift+Tab');
+await pressKey('Shift+Tab');
 await settle();
 assert(
   await evaluate('document.activeElement === lastEntry'),
@@ -216,17 +249,29 @@ await evaluate(
 );
 await settle();
 natural(await geometry());
+assert(
+  await evaluate(
+    'document.activeElement === retainedInput && retainedInput.value === "stable" && retainedInput.selectionStart === 1 && retainedInput.selectionEnd === 3',
+  ),
+  'Font and content changes preserve input identity, value, selection and focus',
+);
 record('German heading, wrapping bar and enlarged text', await geometry());
 await evaluate(
   `(() => { document.documentElement.style.fontSize=''; [...document.querySelectorAll('button')].find(b=>b.textContent==='Translate').click(); return true; })()`,
 );
 await settle();
 bounded(await geometry());
+assert(
+  await evaluate(
+    'document.activeElement === retainedInput && retainedInput.value === "stable" && retainedInput.selectionStart === 1 && retainedInput.selectionEnd === 3',
+  ),
+  'Font and content changes preserve input identity, value, selection and focus',
+);
 
 await open('delegated-table');
 await resize(1280, 720);
 await evaluate('document.querySelector("main table").parentElement.focus()');
-await call('keypress', '--key', 'PageDown');
+await pressKey('PageDown');
 await settle();
 const tableScroll = await geometry();
 assert(
@@ -295,6 +340,36 @@ for (const height of [
 }
 record('usable-body threshold sweep', { cases: thresholdCases });
 
+for (const story of ['heading-above', 'delegated-table']) {
+  await open(story);
+  const cases = [];
+  for (const height of [720, 600, 580, 560, 540, 520, 480, 400, 320, 720]) {
+    await resize(1280, height);
+    const fit = await evaluate(`(() => {
+      const detail = document.querySelector('[data-testid="detail-body"]');
+      const text = detail.querySelector('p');
+      const textInset = parseFloat(getComputedStyle(detail.firstElementChild).paddingTop);
+      const table = document.querySelector('main table');
+      const scrollport = table?.parentElement;
+      const row = table?.querySelector('tbody tr');
+      const fixed = table ? [...table.children].filter(e => e.matches('thead, caption')).reduce((sum,e) => sum + e.getBoundingClientRect().height, 0) : 0;
+      const ring = scrollport ? parseFloat(getComputedStyle(scrollport).paddingTop) : 0;
+      return { height: innerHeight, textBody: detail.clientHeight, textMinimum: parseFloat(getComputedStyle(text).lineHeight) + 2 * textInset, rowBody: scrollport?.clientHeight, rowMinimum: row ? fixed + row.getBoundingClientRect().height + 2 * ring : 0 };
+    })()`);
+    assert(
+      fit.textBody + 1 >= fit.textMinimum,
+      'Text body fits a complete line and focus inset',
+    );
+    if (story === 'delegated-table')
+      assert(
+        fit.rowBody + 1 >= fit.rowMinimum,
+        'Delegated body fits fixed table regions plus a complete row and focus inset',
+      );
+    cases.push(fit);
+  }
+  record(`${story} text/row threshold sweep`, { cases });
+}
+await open('heading-above');
 await resize(1280, 320);
 await evaluate(`(() => {
  window.fallbackInput=document.querySelector('input');
@@ -370,10 +445,12 @@ for (const stylesheet of [
     await resize(1280, 720);
     record(`${stylesheet} ${story} bounded`, await geometry());
     bounded(await geometry(), story === 'delegated-table');
+    await headingSpacing();
     await resize(1280, 320);
     natural(await geometry(), story === 'delegated-table');
     await resize(1280, 720);
     bounded(await geometry(), story === 'delegated-table');
+    await headingSpacing();
   }
 }
 
