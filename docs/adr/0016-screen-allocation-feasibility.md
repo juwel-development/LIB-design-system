@@ -36,3 +36,16 @@ covers the participating owners; a third-party clipping child cannot claim autom
 Reference-window fit remains a caller content obligation. Scroll offsets clamp normally when a
 bounded owner becomes unbounded. The retained browser harness checks the 650px counterexample,
 height sweeps, restoration, native reveal, dynamic content, selection and independent distributors.
+
+
+For #152, Screen's separate heading slot is optional. The allocator receives references to its
+owned main, optional heading, body and allocation wrappers, rather than inferring a heading from
+the first child. Only a supplied slot contributes heading height plus region gap to the subtraction.
+Omission/undefined leaves one allocation track with the same outer insets. Heading insertion or
+removal tears down the previous observers and subscription, then measures the new slot arrangement;
+the body, provider, participating children and focus are retained. Empty supplied ReactNode values
+other than undefined keep their existing slot semantics. All participant rejection, footprint-held
+probes, load/font/mutation invalidation and natural-height restoration rules above still apply.
+The retained browser matrix covers child-only EN/DE reference fit, native last-row/pagination
+reveal at short heights, oversized fixed content, font and locale restoration, and slot transitions,
+alongside the original heading-present 650px counterexample and independent distributor lifecycle.

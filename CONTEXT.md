@@ -703,8 +703,12 @@ matter and the index repeats that name — so it is a visual device and says not
 screen reader.
 _Avoid_: Sidebar, aside, table of contents, section nav, breadcrumb
 
-**Screen allocation (#151).** `Screen` owns the active semantic main, a content-height heading
-and the remaining console allocation. It uses existing gutter inline and region inset/gap;
+**Screen allocation (#151/#152).** `Screen` owns the active semantic main, an optional separate
+content-height heading slot and the remaining console allocation. Omission (including explicit
+undefined) removes that slot, track and inter-track gap; other supplied ReactNode values retain
+the slot. The caller still owns exactly one visible H1, either in the slot or inside the child
+Roster Pane.Head aligned with its sibling detail head. The content/provider stay mounted through
+slot transitions. It uses existing gutter inline and region inset/gap;
 Section remains the page-band owner. A Screen belongs inside Sidebar.Content, outside Pane and
 other mains. It adds no scrolling or focus stop. Its own allocation wrapper is probed for visible
 vertical overflow; participating Pane.Body and bounded Table also assess local usable space through

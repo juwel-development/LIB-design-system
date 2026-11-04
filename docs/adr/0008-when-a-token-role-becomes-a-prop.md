@@ -489,3 +489,24 @@ existing container threshold still protects readability. The default `container`
 This is a fixed CSS-pixel policy, not 80rem and not Sidebar's 64rem navigation contract. It authorizes
 no arbitrary breakpoint prop and no changes to readable minima to force a row. Column caps and
 height release use the same effective threshold as arrangement; nested roots reset their own policy.
+
+
+**A heading inside the allocated child (#152).** The separate Screen heading is optional:
+`heading?: ReactNode`, with omission/undefined selecting one child track and no inter-track gap.
+Other supplied ReactNode values preserve their slot; Screen does not inspect arbitrary rendered
+content to guess whether it is visible. Outer gutter and region inset remain unchanged. The caller
+supplies exactly one visible H1 inside the child Roster Pane.Head when using the child-only path.
+The sanctioned composition is Shell(console) → Sidebar.Root(fill).Content → Screen →
+ColumnLayout.Root(fill, stacking="viewport") → sibling Panes. Navigation then roster heading,
+search/count, table, pagination and detail remain in natural reading order.
+
+This uses the existing semantic main and feasibility owner instead of adding a duplicate wrapper
+or a generic `as`/height/spacing escape hatch. Section/Stack cannot distribute finite height;
+Sidebar.Content is not main; an enclosing Pane would require forbidden Pane nesting, and fake
+Tabs would invent interaction semantics. The prop keys remain heading, children and testId.
+Owned wrapper refs replace first-child interpretation, and optional heading observation is renewed
+on insertion/removal with cleanup. The provider and content keep their React positions and focus.
+ADR 0016's usable-body fallback, single viewport owner, default container policy, exact1280 gate
+and independent Sidebar64rem policy remain unchanged. Representative 15–17rem roster fixtures
+prove their own EN/DE budgets only; consumer #305 requires a reviewed published release and actual
+game theme/content acceptance. No unpublished substitution or blanket migration is sanctioned.

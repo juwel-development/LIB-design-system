@@ -181,6 +181,196 @@ try {
       [1920, 1080],
       [1280, 720],
     ]) {
+      await load(`layout-screen--roster-${locale}`, width, height);
+      await record(
+        `roster ${locale} ${width}x${height} initial fit`,
+        `(()=>{
+        const main=document.querySelector('main'),styles=getComputedStyle(main),table=element('roster-table'),detail=element('detail-body'),shell=shellBody();
+        check(document.querySelectorAll('main').length===1 && Array.from(document.querySelectorAll('h1')).filter(node=>node.getClientRects().length>0).length===1,'single main/H1');
+        check(element('roster-head').contains(document.querySelector('main h1')),'H1 inside roster Head');
+        check(document.querySelector('main h1').textContent===('${locale}'==='english'?'Contracts':'Verträge'),'localized heading');
+        check(element('roster-count').textContent===('${locale}'==='english'?'40 active contracts':'40 aktive Verträge'),'localized count');
+        check(element('roster-foot').textContent.includes('${locale}'==='english'?'Page 1 of 4':'Seite 1 von 4'),'localized pagination');
+        check(element('detail-head').textContent.includes('${locale}'==='english'?'Exclusive recording rights':'Exklusive Aufnahmerechte'),'fixed detailed copy');
+        check(main.children.length===1 && styles.gridTemplateRows.split(' ').length===1,'no phantom heading track');
+        check(styles.rowGap==='normal' || parseFloat(styles.rowGap)===0,'no phantom gap');
+        check(Math.abs(rect('roster-columns').top-main.getBoundingClientRect().top-parseFloat(styles.paddingTop))<1,'only outer region inset');
+        check(Math.abs(rect('roster-columns').left-main.getBoundingClientRect().left-parseFloat(styles.paddingLeft))<1,'outer gutter retained');
+        check(Math.abs(rect('roster-head').top-rect('detail-head').top)<1,'aligned heads');
+        const rem=parseFloat(getComputedStyle(document.documentElement).fontSize),roster=rect('roster-column'),detailColumn=rect('detail-column'),columns=rect('roster-columns');
+        check(roster.width>=15*rem-1 && roster.width<=17*rem+1,'15–17rem roster');
+        check(Math.abs(detailColumn.right-columns.right)<1 && detailColumn.width>roster.width,'detail takes remainder');
+        const metrics={copy:{head:element('roster-head').textContent,detail:element('detail-head').textContent,foot:element('roster-foot').textContent},roster:roster.toJSON(),detail:detailColumn.toJSON(),table:[table.clientHeight,table.scrollHeight],body:[detail.clientHeight,detail.scrollHeight],shell:[shell.clientHeight,shell.scrollHeight],padding:[styles.paddingTop,styles.paddingLeft]};
+        check(shell.scrollTop===0 && table.scrollTop===0 && detail.scrollTop===0 && window.scrollY===0,'initial fit before scroll/focus');
+        check(shell.scrollHeight<=shell.clientHeight+1,'Shell does not overflow: '+JSON.stringify(metrics));
+        check(document.documentElement.scrollHeight<=innerHeight+1 && document.documentElement.scrollWidth<=innerWidth+1,'document does not overflow');
+        for(const id of ['roster-head','roster-search','roster-count','roster-foot','detail-head','detail-foot']){const box=rect(id);check(box.top>=document.querySelector('header').getBoundingClientRect().bottom && box.bottom<=innerHeight,id+' fully visible');}
+        check(table.scrollHeight>table.clientHeight && table.clientHeight>=table.querySelector('thead').offsetHeight+table.querySelector('button').offsetHeight,'usable table rows');
+        check(detail.scrollHeight>detail.clientHeight && detail.clientHeight>0,'independent long detail');
+        check(!main.hasAttribute('tabindex') && !element('roster-body').hasAttribute('tabindex'),'no allocator/delegator stop');
+        return metrics;
+      })()`,
+      );
+      await record(
+        `roster ${locale} ${width} pinned and independent`,
+        `(()=>{
+        const table=element('roster-table'),detail=element('detail-body'),head=table.querySelector('th'),top=head.getBoundingClientRect().top,foot=rect('roster-foot').top;
+        table.scrollTop=100;check(table.scrollTop===100 && detail.scrollTop===0,'table independent');
+        check(Math.abs(head.getBoundingClientRect().top-top)<1,'pinned header');detail.scrollTop=100;
+        check(table.scrollTop===100 && detail.scrollTop===100 && rect('roster-foot').top===foot,'detail independent and pagination fixed');
+        check(shellBody().scrollTop===0 && window.scrollY===0,'outer still');return true;
+      })()`,
+      );
+    }
+  }
+  await load('layout-screen--roster-english');
+  await evaluate(
+    `window.rosterInput=element('roster-search');rosterInput.value='Kept selection';rosterInput.focus();window.rosterTable=element('roster-table');void 0;`,
+  );
+  for (const heading of [true, false, true, false]) {
+    await evaluate(
+      `Array.from(document.querySelectorAll('header button')).find(button=>button.textContent==='Heading').click()`,
+    );
+    await settle();
+    await record(
+      `roster heading transition ${heading}`,
+      `(()=>{
+      const main=document.querySelector('main');check(main.children.length===(${heading}?2:1),'slot toggles');
+      check(Array.from(document.querySelectorAll('h1')).filter(node=>node.getClientRects().length>0).length===1,'one H1 after transition');
+      check(element('roster-table')===rosterTable && element('roster-search')===rosterInput && document.activeElement===rosterInput && rosterInput.value==='Kept selection','child/value/focus stable');
+      check(element('roster-table').clientHeight>0,'usable rows');return {shell:[shellBody().clientHeight,shellBody().scrollHeight],table:[rosterTable.clientHeight,rosterTable.scrollHeight]};
+    })()`,
+    );
+  }
+  for (const width of [1279, 1024, 1023, 800, 1280]) {
+    await resize(width, 720);
+    await record(
+      `roster policy ${width}`,
+      `(()=>{
+      check((Math.abs(rect('roster-column').top-rect('detail-column').top)<1)===(innerWidth>=1280),'exact1280');
+      check((document.querySelector('nav').getBoundingClientRect().right<=rect('roster-column').left)===(innerWidth>=1024),'Sidebar64rem');
+      check(document.activeElement===rosterInput && element('roster-search')===rosterInput,'resize focus');
+      check(element('roster-table').clientHeight>0 && element('detail-body').clientHeight>0,'usable owners');
+      if(innerWidth<1280)check(shellBody().scrollHeight>shellBody().clientHeight,'Shell fallback');
+      return {shell:[shellBody().clientHeight,shellBody().scrollHeight],width:rect('roster-column').width};
+    })()`,
+    );
+    if (width < 1280) {
+      await evaluate(`element('detail-last').focus()`);
+      await key('Tab', 'Tab', 9);
+      await record(
+        `roster stacked native footer ${width}`,
+        `(()=>{const box=document.activeElement.getBoundingClientRect();check(element('detail-foot').contains(document.activeElement),'Tab reaches detail footer');check(box.top>=document.querySelector('header').getBoundingClientRect().bottom && box.bottom<=innerHeight,'native reveal');return shellBody().scrollTop;})()`,
+      );
+      await key('Tab', 'Tab', 9, 8);
+      await record(
+        `roster stacked reverse ${width}`,
+        `({assertion:check(document.activeElement===element('detail-last'),'Shift+Tab reaches last body action')})`,
+      );
+      await evaluate('rosterInput.focus()');
+    }
+  }
+  for (const height of [250, 400, 650, 720, 1080, 250, 720]) {
+    await resize(1280, height);
+    await evaluate(
+      `element('roster-table').querySelectorAll('button')[39].focus()`,
+    );
+    await settle();
+    await record(
+      `roster short-height native last row ${height}`,
+      `(()=>{const table=element('roster-table'),focus=document.activeElement.getBoundingClientRect(),box=table.getBoundingClientRect(),bar=document.querySelector('header').getBoundingClientRect();check(table.clientHeight>=focus.height+table.querySelector('thead').offsetHeight,'usable row and pinned header');check(focus.top>=Math.max(bar.bottom,box.top+table.querySelector('thead').offsetHeight)-1 && focus.bottom<=Math.min(innerHeight,box.bottom)+1,'last row revealed');if(${height}===250)check(shellBody().scrollHeight>shellBody().clientHeight,'short releases');if(${height}>=720)check(shellBody().scrollHeight<=shellBody().clientHeight+1,'restores');check(rosterInput.isConnected && rosterTable===element('roster-table'),'same children');return {table:[table.clientHeight,table.scrollHeight],shell:[shellBody().clientHeight,shellBody().scrollHeight,shellBody().scrollTop]};})()`,
+    );
+    await key('Tab', 'Tab', 9);
+    await record(
+      `roster native pagination ${height}`,
+      `(()=>{const box=document.activeElement.getBoundingClientRect();check(element('roster-foot').contains(document.activeElement),'Tab to next page');check(box.top>=document.querySelector('header').getBoundingClientRect().bottom && box.bottom<=innerHeight,'pagination revealed');return true;})()`,
+    );
+  }
+  await load('layout-screen--roster-english');
+  await evaluate(
+    `window.rosterInput=element('roster-search');rosterInput.focus();`,
+  );
+  for (let locale = 0; locale < 2; locale++) {
+    await evaluate(
+      `Array.from(document.querySelectorAll('header button')).find(button=>button.textContent==='Translate').click()`,
+    );
+    await settle();
+    await record(
+      `roster dynamic locale ${locale}`,
+      `({assertion:check(element('roster-search')===rosterInput && document.activeElement===rosterInput && shellBody().scrollHeight<=shellBody().clientHeight+1,'locale retains focus and reference bound')})`,
+    );
+  }
+  for (let count = 0; count < 3; count++) {
+    await evaluate(
+      `Array.from(document.querySelectorAll('header button')).find(button=>button.textContent==='Content').click()`,
+    );
+    await settle();
+    await record(
+      `roster short empty long ${count}`,
+      `(()=>{const table=element('roster-table');check(table.querySelectorAll('tbody tr').length===([1,0,40][${count}]),'actual row count');check(table.clientHeight>0,'usable table');if(${count}<2)check(!table.hasAttribute('tabindex'),'no empty/short scroll stop');else check(table.scrollHeight>table.clientHeight,'restored long scrolling');return true;})()`,
+    );
+  }
+  await evaluate(
+    `window.fixedCopy=element('roster-count').textContent;element('roster-count').textContent=fixedCopy.repeat(30)`,
+  );
+  await settle();
+  await record(
+    'roster oversized fixed content releases',
+    `({assertion:check(shellBody().scrollHeight>shellBody().clientHeight && element('roster-table').clientHeight===element('roster-table').scrollHeight,'natural height')})`,
+  );
+  await evaluate(
+    `element('detail-last').focus();window.outerOffset=shellBody().scrollTop;document.fonts.dispatchEvent(new Event('loadingdone'));`,
+  );
+  await settle();
+  await record(
+    'roster font probe preserves ancestor range',
+    `({assertion:check(outerOffset>0 && shellBody().scrollTop===outerOffset && document.activeElement===element('detail-last'),'probe does not collapse scroll range or move focus')})`,
+  );
+  await evaluate(`element('roster-count').textContent=fixedCopy`);
+  await settle();
+  await record(
+    'roster fixed content restoration',
+    `({assertion:check(shellBody().scrollHeight<=shellBody().clientHeight+1 && element('roster-table').scrollHeight>element('roster-table').clientHeight,'restored finite allocation')})`,
+  );
+  await evaluate(`document.documentElement.style.fontSize='24px'`);
+  await settle();
+  await record(
+    'roster enlarged rem fallback',
+    `({assertion:check(rect('roster-column').top<rect('detail-column').top && shellBody().scrollHeight>shellBody().clientHeight,'minima remain readable')})`,
+  );
+  await evaluate(`document.documentElement.style.fontSize=''`);
+  await settle();
+  await record(
+    'roster font restoration',
+    `({assertion:check(Math.abs(rect('roster-column').top-rect('detail-column').top)<1 && shellBody().scrollHeight<=shellBody().clientHeight+1,'font restoration')})`,
+  );
+  for (const width of [1280, 800]) {
+    await load('layout-screen--roster-german', width, 720);
+    await evaluate(
+      `window.rosterOpener=element('detail-foot').querySelector('button');rosterOpener.focus();rosterOpener.click()`,
+    );
+    await settle();
+    await record(
+      `roster native modal ${width}`,
+      `(()=>{const dialog=document.querySelector('dialog'),box=dialog.getBoundingClientRect();check(dialog.matches(':modal') && box.top>=document.querySelector('header').getBoundingClientRect().bottom && box.bottom<=innerHeight,'frame reserves bar');document.querySelector('nav button').focus();check(dialog.contains(document.activeElement),'background inert');return box.toJSON();})()`,
+    );
+    await key('Tab', 'Tab', 9);
+    await key('Tab', 'Tab', 9, 8);
+    await record(
+      `roster modal trap ${width}`,
+      `({assertion:check(document.querySelector('dialog').contains(document.activeElement),'native trap')})`,
+    );
+    await key('Escape', 'Escape', 27);
+    await record(
+      `roster modal restoration ${width}`,
+      `({assertion:check(!document.querySelector('dialog').open && document.activeElement===rosterOpener,'Escape restores opener')})`,
+    );
+  }
+  for (const locale of ['english', 'german']) {
+    for (const [width, height] of [
+      [1920, 1080],
+      [1280, 720],
+    ]) {
       await load(`layout-screen--representative-${locale}`, width, height);
       await record(
         `representative ${locale} ${width}x${height} initial fit`,
@@ -612,6 +802,20 @@ try {
       await record(
         `shipped ${stylesheet} viewport gate`,
         `({assertion:check(rect('list-column').top<rect('letter-column').top && element('list-body').scrollHeight<=element('list-body').clientHeight+1,'published stack and release')})`,
+      );
+      await load('layout-screen--roster-german');
+      await evaluate(
+        `const theme=getComputedStyle(document.documentElement);const roles=['--screen-roster-minimum','--screen-roster-maximum','--screen-detail-minimum'].map(name=>name+':'+theme.getPropertyValue(name)).join(';');document.querySelectorAll('style[data-vite-dev-id],link[rel=stylesheet]').forEach(node=>node.remove());const sheet=document.createElement('style');sheet.textContent=${JSON.stringify(css)}+'\\n:root{'+roles+'}';document.head.append(sheet);`,
+      );
+      await settle();
+      await record(
+        `shipped ${stylesheet} child-only reference`,
+        `(()=>{const main=document.querySelector('main'),styles=getComputedStyle(main);check(styles.gridTemplateRows.split(' ').length===1 && (styles.rowGap==='normal' || parseFloat(styles.rowGap)===0),'delivered single track without gap');check(Math.abs(rect('roster-columns').top-main.getBoundingClientRect().top-parseFloat(styles.paddingTop))<1,'delivered inset');check(rect('roster-column').width>=240 && rect('roster-column').width<=272 && Math.abs(rect('roster-head').top-rect('detail-head').top)<1,'delivered roster geometry');check(shellBody().scrollHeight<=shellBody().clientHeight+1 && element('roster-table').scrollHeight>element('roster-table').clientHeight,'delivered finite allocation');return true;})()`,
+      );
+      await resize(1279, 720);
+      await record(
+        `shipped ${stylesheet} child-only release`,
+        `({assertion:check(rect('roster-column').top<rect('detail-column').top && element('roster-table').clientHeight===element('roster-table').scrollHeight && shellBody().scrollHeight>shellBody().clientHeight,'delivered exact gate and natural reachability')})`,
       );
     }
   }
