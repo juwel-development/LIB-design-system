@@ -1,3 +1,5 @@
+import { hasUsableScrollAllocation } from 'Layout/ScreenAllocation/hasUsableScrollAllocation';
+import { useScreenAllocation } from 'Layout/ScreenAllocation/useScreenAllocation';
 import { cva, type VariantProps } from 'class-variance-authority';
 import {
   type FunctionComponent,
@@ -103,6 +105,14 @@ const Foot: FunctionComponent<IPaneSectionProps> = ({ children, testId }) => (
     {children}
   </div>
 );
+const acceptsAllocation = (element: HTMLElement): boolean => {
+  const content = element.firstElementChild;
+  return (
+    !(content instanceof HTMLElement) ||
+    hasUsableScrollAllocation(element, content)
+  );
+};
+
 const Body: FunctionComponent<IPaneBodyProps> = ({
   children,
   ariaLabel,
@@ -112,6 +122,7 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
   const container = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const ownsScroll = scrollOwner !== 'child';
+  useScreenAllocation(container, ownsScroll, acceptsAllocation);
   const isScrollable =
     useOverflow(container, content, ownsScroll) && ownsScroll;
   return (

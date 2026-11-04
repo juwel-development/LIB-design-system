@@ -55,7 +55,8 @@
 		"fallow:map": "fallow viz",
 		"prepare": "husky",
 		"build:styles": "vite build --config vite.styles.config.ts",
-		"check:build": "tsx scripts/check-build.ts"
+		"check:build": "tsx scripts/check-build.ts",
+		"check:screen": "node scripts/check-screen.mjs"
 	},
 	"dependencies": {
 		"class-variance-authority": "^0.7.1"

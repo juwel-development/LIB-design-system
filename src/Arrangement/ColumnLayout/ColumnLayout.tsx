@@ -17,21 +17,29 @@ import { ColumnLayoutConfigurationError } from './ColumnLayoutConfigurationError
 // A wrapping flex row that aligns its tracks to the top. The gap variant also publishes the chosen
 // role as `--column-layout-gap`, which the threshold below reads, so the switch and the paint take
 // the role from one declaration. Nothing here measures: the arrangement needs no JavaScript.
-const columnLayout = cva('flex flex-wrap items-start', {
-  variants: {
-    fill: {
-      false: '',
-      true: 'h-full min-h-0 content-start [--column-layout-shortfall:clamp(0px,(var(--column-layout-threshold)-100cqi)*1000000,1px)] [&>div]:[@container_style(--column-layout-shortfall:0px)]:h-full [&>div]:[@container_style(--column-layout-shortfall:0px)]:min-h-0',
+const columnLayout = cva(
+  'flex flex-wrap items-start [--column-layout-viewport-floor:0px]',
+  {
+    variants: {
+      stacking: {
+        container: '',
+        viewport:
+          '[@media(width<1280px)]:[--column-layout-viewport-floor:1000000px]',
+      },
+      fill: {
+        false: '',
+        true: 'h-full min-h-0 content-start [--column-layout-shortfall:clamp(0px,(max(var(--column-layout-threshold),var(--column-layout-viewport-floor))-100cqi)*1000000,1px)] [&>div]:[@container_style(--column-layout-shortfall:0px)]:h-full [&>div]:[@container_style(--column-layout-shortfall:0px)]:min-h-0',
+      },
+      gap: {
+        stack:
+          'gap-[var(--space-stack)] [--column-layout-gap:var(--space-stack)]',
+        region:
+          'gap-[var(--space-region)] [--column-layout-gap:var(--space-region)]',
+      },
     },
-    gap: {
-      stack:
-        'gap-[var(--space-stack)] [--column-layout-gap:var(--space-stack)]',
-      region:
-        'gap-[var(--space-region)] [--column-layout-gap:var(--space-region)]',
-    },
+    defaultVariants: { gap: 'region', fill: false, stacking: 'container' },
   },
-  defaultVariants: { gap: 'region', fill: false },
-});
+);
 
 // A fill frame supplies the query width without imposing block-size containment. The row's
 // registered shortfall resolves against it, so style queries release the columns when stacked.
@@ -44,7 +52,7 @@ const columnLayoutFrame = cva(
 // and W < T amplifies the shortfall past 100% (a line each). The factor turns a 1/64px shortfall,
 // Chrome's layout grain, into a full switch; `0px` and `100%` are the two states, not measurements.
 const columnLayoutColumn = cva(
-  'min-w-0 grow-[calc(var(--column-layout-weight)/var(--column-layout-growth-unit))] basis-[clamp(0px,(var(--column-layout-threshold)-100%)*1000000,100%)] max-w-[var(--column-layout-maximum)]',
+  'min-w-0 grow-[calc(var(--column-layout-weight)/var(--column-layout-growth-unit))] basis-[clamp(0px,(max(var(--column-layout-threshold),var(--column-layout-viewport-floor))-100%)*1000000,100%)] max-w-[var(--column-layout-maximum)]',
 );
 
 // React's CSSProperties is closed over known properties; the custom properties the recipes
@@ -120,6 +128,9 @@ export interface IColumnLayoutRootProps
   /** Accept the parent's allocated height and pass it to horizontal columns. Unsized parents
    *  and stacked columns retain content height; the holder owns stacked overflow. */
   fill?: VariantProps<typeof columnLayout>['fill'];
+  /** Viewport policy additionally requires at least 1280 CSS pixels; container fit still applies.
+   * Default container policy is independent of the viewport. */
+  stacking?: VariantProps<typeof columnLayout>['stacking'];
   /** The columns, as `ColumnLayout.Column` elements: direct children, or arrays and fragments of
    *  them. A conditional that renders nothing reserves nothing. */
   children?: ReactNode;
@@ -178,6 +189,7 @@ const markColumns = (children: ReactNode): ReactNode =>
 const ColumnLayoutRoot: FunctionComponent<IColumnLayoutRootProps> = ({
   gap,
   fill,
+  stacking,
   children,
   testId,
 }) => {
@@ -191,7 +203,7 @@ const ColumnLayoutRoot: FunctionComponent<IColumnLayoutRootProps> = ({
         };
   const row = (
     <div
-      className={columnLayout({ gap, fill })}
+      className={columnLayout({ gap, fill, stacking })}
       style={style}
       data-testid={testId}
     >
@@ -216,7 +228,7 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
     '--column-layout-maximum':
       maxWidth === undefined
         ? 'none'
-        : `max(var(${maxWidth}), clamp(0px, (var(--column-layout-threshold) - 100%) * 1000000, 100%))`,
+        : `max(var(${maxWidth}), clamp(0px, (max(var(--column-layout-threshold), var(--column-layout-viewport-floor)) - 100%) * 1000000, 100%))`,
   };
   return (
     <div className={columnLayoutColumn()} style={style} data-testid={testId}>
@@ -230,9 +242,9 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
 /**
  * An arrangement of weighted columns that becomes one column when the space it is given cannot
  * satisfy every column's minimum at the requested proportions. It owns the arrangement and nothing
- * else - no landmark, no band, no join, no gutter, no fill - and takes no outer space, so whatever
+ * else - no landmark, no band, no join, no gutter - and takes no outer space, so whatever
  * holds it owns the rhythm around it. `Stack`'s `split` keeps its own viewport-keyed contract; this
- * one answers to the width of its holder (docs/adr/0008, Amendments).
+ * one answers to its holder, with an optional viewport gate (docs/adr/0008, Amendments).
  *
  * @Guarantees — enforced on every render
  * - `Root` renders plain containers with no landmark role, no heading and no margin. Each
@@ -255,8 +267,10 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
  *   There is no in-between: no column wraps alone. Caps and redistribution never postpone
  *   the switch; stacked columns ignore their maximums. For n columns, gap g, total weight S and
  *   minimums m_i the row fits at and above `(n - 1) * g + max(m_i * S / w_i)`.
- * - The space measured is the Root's own width, never the viewport, so two instances on one page
- *   switch independently, and a narrow holder on a wide screen stacks.
+ * - The default `stacking="container"` tests only the Root's own width. Opt-in
+ *   `stacking="viewport"` additionally requires viewport width >= 1280 CSS pixels (not rem).
+ *   Either failed gate releases caps and height together; a narrow holder still stacks.
+ *   Instances reset their policy locally, including nested default Roots.
  * - Every bound is read from the theme as a CSS length each time layout runs, so re-pointing a
  *   token - in a theme class, a media query, or a scope around the Root - updates allocation.
  *   Minimums move the threshold; maximums change caps. Font-relative bounds follow the type.
@@ -269,7 +283,7 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
  * - A column adds no scrolling, truncation or overflow treatment of its own and does not widen its
  *   track for its content: the content keeps whatever wrapping or scrolling contract it has.
  * - Every value it emits is a role the token layer or the consumer's theme already names; the
- *   only literals are the switch's two states.
+ *   fixed viewport policy is library-owned; callers cannot supply a numeric breakpoint.
  * - A non-positive or non-finite `weight`, or a bound that is not a custom-property name,
  *   throws {@link ColumnLayoutConfigurationError}; a `Column` that is not a direct child of a
  *   `Root` - loose, nested in another column, or reached through a wrapping component - throws

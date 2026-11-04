@@ -1,3 +1,5 @@
+import { hasUsableScrollAllocation } from 'Layout/ScreenAllocation/hasUsableScrollAllocation';
+import { useScreenAllocation } from 'Layout/ScreenAllocation/useScreenAllocation';
 import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
 import {
@@ -413,6 +415,19 @@ const revealFocus = (event: FocusEvent<HTMLDivElement>): void => {
       ringRoom;
 };
 
+const acceptsAllocation = (element: HTMLElement): boolean => {
+  const content = element.querySelector(':scope > table');
+  const header = content?.querySelector('thead');
+  return (
+    !(content instanceof HTMLElement) ||
+    hasUsableScrollAllocation(
+      element,
+      content,
+      header?.getBoundingClientRect().height ?? 0,
+    )
+  );
+};
+
 const TableRoot: FunctionComponent<ITableRootProps> = ({
   caption,
   captionVisibility,
@@ -427,6 +442,7 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
   const wrapper = useRef<HTMLDivElement>(null);
   const tableElement = useRef<HTMLTableElement>(null);
   const captionElement = useRef<HTMLTableCaptionElement>(null);
+  useScreenAllocation(wrapper, bounded === true, acceptsAllocation);
   const trackList = trackListOf(columns);
   const isOverflowing = useOverflow(
     wrapper,

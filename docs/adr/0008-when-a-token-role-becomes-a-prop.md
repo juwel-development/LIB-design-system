@@ -472,3 +472,20 @@ than a judgement call at the call site"* — the bound stops being on-or-off: `S
 gains `action` beside `true`/`false`, holding exactly the two attested roles and nothing else.
 `--measure-wide` and `--measure-display` remain refused as container bounds on the unchanged grounds
 above. Nothing in the rule itself moves.
+
+**Active-screen allocation and viewport policy (#151).** A console heading with a remaining-height
+body is a different job from Section's page band or Stack's content-height arrangement. Screen owns
+that job and semantic main, using existing gutter and region spacing without a new size prop or band
+gap. Its closed surface is heading, children and testId. Fixed-content overflow releases the owned
+allocation to natural height; it is not a second scroll owner. The enclosing Shell must own overflow,
+and the direct child must accept unbounded height and expose fixed-content overflow. Probes retain
+the existing natural footprint while measuring, so probing does not itself collapse the enclosing
+scroll range. No sibling component internals or consumer measurements are consulted. ADR 0016 records the private
+scroll-owner feasibility contract required when an unusable body does not overflow its outer box.
+
+The named ColumnLayout policy `stacking="viewport"` is an opt-in structural alternative: below
+1280 CSS pixels the entire arrangement stacks even when its minimum shares fit. Above it, the
+existing container threshold still protects readability. The default `container` policy is unchanged.
+This is a fixed CSS-pixel policy, not 80rem and not Sidebar's 64rem navigation contract. It authorizes
+no arbitrary breakpoint prop and no changes to readable minima to force a row. Column caps and
+height release use the same effective threshold as arrangement; nested roots reset their own policy.
