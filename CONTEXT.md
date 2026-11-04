@@ -167,11 +167,6 @@ raised-and-depressing material is one brand's opinion rather than a role any bra
 a *Floating Layer* it is a shared depth cue rather than decoration.
 _Avoid_: Depth, shadow, lift
 
-**Frame placement**:
-A modal task's relationship to a persistent application bar: the task and its Scrim occupy the
-remaining region while the original bar stays visible but unavailable under modality.
-_Avoid_: Header offset, interactive modal background, duplicated status bar
-
 **Floating Layer**:
 A temporary surface presented above existing content without taking a place in its layout. Dialogs,
 popup menus and drawers float; a standing surface does not become one merely by remaining sticky.
@@ -702,24 +697,3 @@ sit beside the text. It *files* a section without *heading* it — the section's
 matter and the index repeats that name — so it is a visual device and says nothing of its own to a
 screen reader.
 _Avoid_: Sidebar, aside, table of contents, section nav, breadcrumb
-
-**Screen allocation (#151/#152).** `Screen` owns the active semantic main, an optional separate
-content-height heading slot and the remaining console allocation. Omission (including explicit
-undefined) removes that slot, track and inter-track gap; other supplied ReactNode values retain
-the slot. The caller still owns exactly one visible H1, either in the slot or inside the child
-Roster Pane.Head aligned with its sibling detail head. The content/provider stay mounted through
-slot transitions. It uses existing gutter inline and region inset/gap;
-Section remains the page-band owner. A Screen belongs inside Sidebar.Content, outside Pane and
-other mains. It adds no scrolling or focus stop. Its own allocation wrapper is probed for visible
-vertical overflow; participating Pane.Body and bounded Table also assess local usable space through
-the private ScreenAllocation contract (ADR 0016). A rejection releases the allocation to
-natural height and the enclosing Shell owns reachability. Children must accept both finite and
-natural height and expose fixed-content overflow rather than clipping it. Resizing or changing
-content re-evaluates the allocation without replacing children or moving focus.
-
-ColumnLayout defaults to its existing container-fit policy. `stacking="viewport"` adds an exact
-1280 CSS-pixel minimum viewport width before a row is allowed; the container minimum-fit test
-still applies. Either failed gate releases column caps and fill. Sidebar stays at 64rem. The
-18rem/20rem, 1:2 example requires 54rem plus gap; the Screen browser fixture measures 926px
-available against 888px required at 1280px with the default theme. This does not promise fit for
-arbitrary themes, translations or fixed slot content.

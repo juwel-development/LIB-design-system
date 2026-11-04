@@ -1292,24 +1292,3 @@ export const CappedPropChanges: Story = {
     await expect(input).toHaveValue('Preserved');
   },
 };
-
-/** Below 1280 CSS pixels all columns stack; above it their own minimum-fit test still applies.
- * The default container policy remains independent of viewport width. See Layout/Screen for
- * the complete Shell/Sidebar/heading/Pane composition and keyboard reachability checks.
- */
-export const ViewportStacking: Story = {
-  render: () => (
-    <Holder width="100%">
-      <ColumnLayout.Root stacking="viewport">
-        <ColumnLayout.Column weight={2} minWidth="--main-column-min-width">
-          <P>
-            The main column requires its readable share even on a wide viewport.
-          </P>
-        </ColumnLayout.Column>
-        <ColumnLayout.Column weight={1} minWidth="--support-column-min-width">
-          <P>The supporting column stacks below the fixed viewport policy.</P>
-        </ColumnLayout.Column>
-      </ColumnLayout.Root>
-    </Holder>
-  ),
-};

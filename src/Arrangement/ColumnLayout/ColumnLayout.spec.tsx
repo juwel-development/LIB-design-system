@@ -608,27 +608,3 @@ describe('ColumnLayout', () => {
     }
   });
 });
-
-it('keeps the viewport policy closed and preserves content when its policy changes', () => {
-  expectTypeOf<
-    ComponentProps<typeof ColumnLayout.Root>['stacking']
-  >().toEqualTypeOf<'container' | 'viewport' | null | undefined>();
-  const { rerender } = render(
-    <ColumnLayout.Root stacking="viewport">
-      <ColumnLayout.Column weight={1} minWidth="--minimum">
-        <input aria-label="Choice" defaultValue="Selected" />
-      </ColumnLayout.Column>
-    </ColumnLayout.Root>,
-  );
-  const input = screen.getByRole('textbox');
-  input.focus();
-  rerender(
-    <ColumnLayout.Root stacking="container">
-      <ColumnLayout.Column weight={1} minWidth="--minimum">
-        <input aria-label="Choice" defaultValue="Selected" />
-      </ColumnLayout.Column>
-    </ColumnLayout.Root>,
-  );
-  expect(screen.getByRole('textbox')).toBe(input);
-  expect(input).toHaveFocus();
-});

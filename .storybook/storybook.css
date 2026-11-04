@@ -3,9 +3,3 @@ body,
 	background-color: var(--color-surface);
 	color: var(--color-foreground);
 }
-
-:root {
-	--screen-roster-minimum: 15rem;
-	--screen-roster-maximum: 17rem;
-	--screen-detail-minimum: 20rem;
-}

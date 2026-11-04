@@ -1,7 +1,5 @@
 import { P } from 'Display/Typography/P/P';
 import { Button } from 'Interaction/Button/Button';
-import { Header } from 'Layout/Header/Header';
-import { Shell } from 'Layout/Shell/Shell';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   type FunctionComponent,
@@ -10,7 +8,6 @@ import {
   useState,
 } from 'react';
 import { Subject, type Subscription } from 'rxjs';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Dialog } from './Dialog';
 
 const meta: Meta<typeof Dialog.Root> = {
@@ -21,7 +18,7 @@ const meta: Meta<typeof Dialog.Root> = {
     docs: {
       description: {
         component:
-          'Opt in with Shell modalScope="body" and a DOM-descendant Dialog.Root placement="frame". Both extents and the Scrim reserve the original bar, which stays visible but inert under native modality. Keep that DOM relationship while mounted; no portal, offset or consumer measurement is needed. Content extent remains 32rem. If fixed regions leave no useful Content space, the frame variant scrolls the whole task, including title and actions; this fallback does not guarantee no-scroll content fit. Dialog.Content defaults to scrollOwner="body". Use scrollOwner="child" for one bounded child, such as Table.Root bounded, which owns both scroll axes while title, description and actions stay fixed. Intermediate wrappers must preserve height allocation; fixed regions and a usable child viewport must fit the available space. See Display/Table → Bounded Dialog and Bounded Content Dialog for live compositions.',
+          'Dialog.Content defaults to scrollOwner="body". Use scrollOwner="child" for one bounded child, such as Table.Root bounded, which owns both scroll axes while title, description and actions stay fixed. Intermediate wrappers must preserve height allocation; fixed regions and a usable child viewport must fit the available space. See Display/Table → Bounded Dialog and Bounded Content Dialog for live compositions.',
       },
     },
   },
@@ -36,12 +33,6 @@ const meta: Meta<typeof Dialog.Root> = {
       control: false,
       description:
         'Bidirectional visibility Subject: consumer booleans drive presentation, the Dialog emits only false after a dismissal. Absent, the Dialog opens on mount',
-    },
-    placement: {
-      control: { type: 'radio' },
-      options: ['viewport', 'frame'],
-      description:
-        'Frame requires an ancestor Shell modalScope="body"; omitted placement retains viewport behavior.',
     },
     extent: {
       control: { type: 'radio' },
@@ -371,262 +362,4 @@ const TriggerRemovedExample: FunctionComponent = () => {
 
 export const TriggerRemovedOnConfirmation: Story = {
   render: () => <TriggerRemovedExample />,
-};
-
-const FrameExample: FunctionComponent<{
-  extent?: 'screen' | 'content' | null;
-  mode?: 'page' | 'console';
-  german?: boolean;
-  long?: boolean;
-  placement?: 'frame' | 'viewport';
-  farDown?: boolean;
-  mountOpen?: boolean;
-}> = ({
-  extent,
-  mode = 'page',
-  german = false,
-  long = false,
-  placement = 'frame',
-  farDown = false,
-  mountOpen = false,
-}) => {
-  const [visible$] = useState(() => new Subject<boolean>());
-  const [dismiss$] = useState(() => new Subject<void>());
-  const [open$] = useState(() => new Subject<void>());
-  const [cancel$] = useState(() => new Subject<void>());
-  const [continue$] = useState(() => new Subject<void>());
-  const [continued, setContinued] = useState(0);
-  const [mounted, setMounted] = useState(true);
-  useEffect(
-    () =>
-      unsubscribeAll([
-        open$.subscribe(() => {
-          setMounted(true);
-          visible$.next(true);
-        }),
-        cancel$.subscribe(() => {
-          setMounted(false);
-          visible$.next(false);
-        }),
-        dismiss$.subscribe(() => setMounted(false)),
-        continue$.subscribe(() => setContinued((value) => value + 1)),
-      ]),
-    [visible$, open$, cancel$, continue$, dismiss$],
-  );
-  return (
-    <Shell
-      mode={mode}
-      modalScope="body"
-      ariaLabel="Application"
-      bar={
-        <Header
-          status={
-            <span data-testid="readout">
-              {german
-                ? 'Mittwoch, 4. November 1950 · Kontostand 42.000,00 €'
-                : 'Wednesday, 4 November 1950 · Balance €42,000.00'}
-            </span>
-          }
-          action={<Button onClick$={continue$}>Continue {continued}</Button>}
-        />
-      }
-    >
-      <main>
-        {farDown &&
-          Array.from({ length: 60 }, (_, index) => `entry-${index + 1}`).map(
-            (entry) => <P key={entry}>Earlier application content</P>,
-          )}
-        <Button onClick$={open$}>Open task</Button>
-        <div>
-          {(!mountOpen || mounted) && (
-            <Dialog.Root
-              placement={placement}
-              extent={extent}
-              onDismiss$={dismiss$}
-              showDialog$={mountOpen ? undefined : visible$}
-            >
-              <Dialog.Title>
-                {german
-                  ? 'Auftrag für eine außergewöhnlich ausführliche Komposition bestätigen?'
-                  : 'Review the proposed commission?'}
-              </Dialog.Title>
-              <Dialog.Description>
-                {german
-                  ? 'Alle Angaben bleiben vor der Bestätigung verfügbar.'
-                  : 'All facts remain available before confirming.'}
-              </Dialog.Description>
-              <Dialog.Content>
-                {Array.from(
-                  { length: long ? 40 : 2 },
-                  (_, index) => `fact-${index + 1}`,
-                ).map((fact) => (
-                  <P key={fact}>
-                    {german
-                      ? 'Die vollständigen Rechte und Zahlungsbedingungen bleiben erhalten.'
-                      : 'The complete rights and payment terms remain available.'}
-                  </P>
-                ))}
-              </Dialog.Content>
-              <Dialog.Actions>
-                <Button onClick$={cancel$}>
-                  {german ? 'Auftrag abbrechen' : 'Cancel task'}
-                </Button>
-                <Button onClick$={cancel$}>
-                  {german ? 'Verbindlichen Auftrag bestätigen' : 'Confirm task'}
-                </Button>
-              </Dialog.Actions>
-            </Dialog.Root>
-          )}
-        </div>
-      </main>
-    </Shell>
-  );
-};
-
-const frameGeometry: Story['play'] = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  await userEvent.click(canvas.getByRole('button', { name: 'Open task' }));
-  // Read immediately after opening, before any test focus can reveal clipped actions.
-  const dialog = canvas.getByRole<HTMLDialogElement>('dialog');
-  const surface = dialog.getBoundingClientRect();
-  const bar = canvas.getByRole('banner').getBoundingClientRect();
-  const readout = canvas.getByTestId('readout').getBoundingClientRect();
-  const view = canvasElement.ownerDocument.defaultView;
-  if (!view) throw new Error('Story requires a window');
-  await expect(surface.top).toBeGreaterThanOrEqual(bar.bottom);
-  await expect(surface.bottom).toBeLessThanOrEqual(view.innerHeight);
-  if (!dialog.hasAttribute('data-scroll-task')) {
-    for (const region of dialog.children) {
-      const box = region.getBoundingClientRect();
-      await expect(box.top).toBeGreaterThanOrEqual(surface.top - 1);
-      await expect(box.bottom).toBeLessThanOrEqual(surface.bottom + 1);
-    }
-  }
-  await expect(readout.top).toBeGreaterThanOrEqual(0);
-  await expect(readout.bottom).toBeLessThanOrEqual(bar.bottom);
-  await expect(readout.right).toBeLessThanOrEqual(view.innerWidth);
-  await expect(view.document.documentElement.scrollWidth).toBeLessThanOrEqual(
-    view.innerWidth,
-  );
-  await expect(view.scrollY).toBe(0);
-  await expect(dialog).toHaveAccessibleDescription(/available|verfügbar/);
-  const content = dialog.querySelector<HTMLElement>(
-    '[data-dialog-member=content]',
-  );
-  if (
-    content &&
-    view.getComputedStyle(content).overflowY === 'auto' &&
-    content.scrollHeight > content.clientHeight
-  ) {
-    await expect(content).toHaveAttribute('tabindex', '0');
-  }
-  await expect(dialog.matches(':modal')).toBe(true);
-  await expect(dialog.contains(view.document.activeElement)).toBe(true);
-  const background = canvas.getByRole('button', { name: 'Continue 0' });
-  background.focus();
-  await expect(dialog.contains(view.document.activeElement)).toBe(true);
-  if (dialog.scrollHeight > dialog.clientHeight + 1) {
-    await expect(view.getComputedStyle(dialog).overflowY).toBe('auto');
-  }
-  await expect(
-    Number.parseFloat(view.getComputedStyle(dialog, '::backdrop').top),
-  ).toBeGreaterThanOrEqual(bar.bottom);
-};
-
-/** Both owners opt in. The original bar stays visible but native modality makes it inert.
- * Content remains 32rem; preserving the bar does not promise every task will fit without scrolling.
- * Ordinary wrappers may intervene; the dialog must remain a DOM descendant of the Shell.
- */
-export const PersistentFrame: Story = {
-  parameters: { layout: 'fullscreen' },
-  args: { extent: 'screen' },
-  render: (args) => <FrameExample extent={args.extent} />,
-  play: frameGeometry,
-};
-export const PersistentFrameContent: Story = {
-  ...PersistentFrame,
-  args: { extent: 'content' },
-};
-export const PersistentFrameGermanConsole: Story = {
-  ...PersistentFrame,
-  render: (args) => <FrameExample extent={args.extent} mode="console" german />,
-};
-export const PersistentFrameLongTask: Story = {
-  ...PersistentFrame,
-  args: { extent: 'content' },
-  render: (args) => <FrameExample extent={args.extent} german long />,
-};
-export const ViewportInFrame: Story = {
-  parameters: { layout: 'fullscreen' },
-  render: () => <FrameExample placement="viewport" />,
-};
-
-export const PersistentFrameFarDownOpener: Story = {
-  ...PersistentFrame,
-  render: () => <FrameExample farDown />,
-};
-export const PersistentFrameMountOpen: Story = {
-  parameters: { layout: 'fullscreen' },
-  render: () => <FrameExample mountOpen />,
-};
-
-export const PersistentFrameChangingBar: Story = {
-  ...PersistentFrame,
-  play: async (context) => {
-    await frameGeometry(context);
-    const canvas = within(context.canvasElement);
-    const dialog = canvas.getByRole<HTMLDialogElement>('dialog');
-    const readout = canvas.getByTestId('readout');
-    const original = readout.textContent;
-    const bar = canvas.getByRole('banner');
-    const initialHeight = bar.getBoundingClientRect().height;
-    const view = context.canvasElement.ownerDocument.defaultView;
-    if (!view) throw new Error('Story requires a window');
-    // Same-turn content change and opening must not rely on a later ResizeObserver delivery.
-    dialog.close();
-    await new Promise<void>((resolve) => view.setTimeout(resolve));
-    readout.textContent = `${original} `.repeat(12);
-    canvas.getByRole('button', { name: 'Open task' }).click();
-    await expect(bar.getBoundingClientRect().height).toBeGreaterThan(
-      initialHeight,
-    );
-    await expect(dialog.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-      bar.getBoundingClientRect().bottom,
-    );
-    readout.textContent = original;
-    await new Promise<void>((resolve) =>
-      view.requestAnimationFrame(() =>
-        view.requestAnimationFrame(() => resolve()),
-      ),
-    );
-    await expect(bar.getBoundingClientRect().height).toBe(initialHeight);
-    await expect(dialog.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-      bar.getBoundingClientRect().bottom,
-    );
-    await expect(dialog.scrollTop).toBe(0);
-  },
-};
-
-/** Nested content may grow after opening without changing its allocated region. */
-export const PersistentFrameGrowingContent: Story = {
-  ...PersistentFrame,
-  play: async (context) => {
-    await frameGeometry(context);
-    const canvas = within(context.canvasElement);
-    const dialog = canvas.getByRole('dialog');
-    const content = dialog.querySelector<HTMLElement>(
-      '[data-dialog-member=content]',
-    );
-    const paragraph = content?.querySelector('p');
-    if (!content || !paragraph) throw new Error('Story requires task content');
-    await expect(content).not.toHaveAttribute('tabindex');
-    // Model asynchronous nested geometry, such as an image gaining intrinsic height.
-    paragraph.style.minHeight = '1000px';
-    await waitFor(() =>
-      expect(content.scrollHeight).toBeGreaterThan(content.clientHeight),
-    );
-    await waitFor(() => expect(content).toHaveAttribute('tabindex', '0'));
-    paragraph.style.removeProperty('min-height');
-    await waitFor(() => expect(content).not.toHaveAttribute('tabindex'));
-  },
 };

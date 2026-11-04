@@ -9,7 +9,6 @@ import {
 
 const shell = cva(
   'h-dvh min-w-0 overflow-clip grid grid-rows-[auto_minmax(0,1fr)]',
-  { variants: { modalScope: { body: '' } } },
 );
 const shellBody = cva(
   'min-h-0 min-w-0 overflow-auto overscroll-contain p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] outline-focus-ring focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-[calc(-1*var(--focus-ring-width))]',
@@ -65,44 +64,7 @@ const useScrollableBody = (body: {
   return isScrollable;
 };
 
-// Private protocol with Dialog: the marker establishes ancestry; this inherited metric is
-// viewport geometry, not a theme token. Layout publication precedes passive modal presentation.
-const useModalBoundary = (
-  bar: { current: HTMLDivElement | null },
-  enabled: boolean,
-): void => {
-  useLayoutEffect(() => {
-    const element = bar.current;
-    const frame = element?.parentElement;
-    if (!enabled || !element || !frame) return;
-    const measure = () =>
-      frame.style.setProperty(
-        '--shell-bar-bottom',
-        `${element.getBoundingClientRect().bottom}px`,
-      );
-    measure();
-    const observer =
-      typeof ResizeObserver === 'undefined'
-        ? undefined
-        : new ResizeObserver(measure);
-    observer?.observe(element);
-    window.addEventListener('resize', measure);
-    frame.addEventListener('modal-frame-measure', measure);
-    return () => {
-      observer?.disconnect();
-      frame.removeEventListener('modal-frame-measure', measure);
-      window.removeEventListener('resize', measure);
-      frame.style.removeProperty('--shell-bar-bottom');
-    };
-  }, [bar, enabled]);
-};
-
-export interface IShellProps
-  extends VariantProps<typeof shellBody>,
-    VariantProps<typeof shell> {
-  /** Opt into frame-placed descendant Dialogs reserving the bar. Omitted, existing Dialogs
-   * retain viewport placement. The bar stays visible, but native modal inertness still applies. */
-  modalScope?: VariantProps<typeof shell>['modalScope'];
+export interface IShellProps extends VariantProps<typeof shellBody> {
   /** Consumer-owned top bar; its content determines its height. */
   bar: ReactNode;
   /** Body content; receives the remaining height in console mode. */
@@ -116,9 +78,6 @@ export interface IShellProps
  * A viewport-owning frame with a content-height bar and the remaining height for its body.
  *
  * @Guarantees
- * - `modalScope="body"` publishes the bar boundary before modal presentation and follows bar
- *   resizing. Descendant Dialogs explicitly choose `placement="frame"`; defaults are unchanged.
- *   The library owns the measurement; consumers pass no offsets, selectors or measured lengths.
  * - CSS allocates both tracks, including when bar content wraps. Header is unchanged.
  * - Console (default) passes a finite height to its child; page lets body content grow.
  *   Both keep overflow inside the body, with the bar visible and document still.
@@ -143,20 +102,13 @@ export const Shell: FunctionComponent<IShellProps> = ({
   children,
   ariaLabel,
   mode,
-  modalScope,
   testId,
 }) => {
   const body = useRef<HTMLDivElement>(null);
-  const barRef = useRef<HTMLDivElement>(null);
-  useModalBoundary(barRef, modalScope === 'body');
   const isScrollable = useScrollableBody(body);
   return (
-    <div
-      className={shell({ modalScope })}
-      data-modal-scope={modalScope ?? undefined}
-      data-testid={testId}
-    >
-      <div ref={barRef}>{bar}</div>
+    <div className={shell()} data-testid={testId}>
+      <div>{bar}</div>
       {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: the group and its name are conditional together */}
       <div
         ref={body}
