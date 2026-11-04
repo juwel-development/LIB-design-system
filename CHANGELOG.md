@@ -1,3 +1,33 @@
+# [4.1.0](https://github.com/juwel-development/LIB-design-system/compare/v4.0.0...v4.1.0) (2026-11-04)
+
+
+### Bug Fixes
+
+* **dialog:** make overflowing frame content keyboard reachable ([0baf692](https://github.com/juwel-development/LIB-design-system/commit/0baf69251158763f409a32d0fd76c18810423bfb))
+* **dialog:** observe nested frame content growth for keyboard access ([39e9942](https://github.com/juwel-development/LIB-design-system/commit/39e99421eed6e5a2a8a6483dd69d9eb7ad57c436))
+* **screen:** harden allocation review and browser validation ([#151](https://github.com/juwel-development/LIB-design-system/issues/151)) ([28ce3d9](https://github.com/juwel-development/LIB-design-system/commit/28ce3d91daeaffab183828b3c58478d77f340e2d))
+* **screen:** restore spacing and optional-body bounds ([#151](https://github.com/juwel-development/LIB-design-system/issues/151)) ([1bd4d1b](https://github.com/juwel-development/LIB-design-system/commit/1bd4d1b0b5a9dde2830e8a8894ee44d5a783d229))
+
+
+### Features
+
+* **dialog:** reserve the persistent Shell bar with opt-in frame placement ([8b8cdec](https://github.com/juwel-development/LIB-design-system/commit/8b8cdecd498cba157eaa2be32f1f7edba6e0c818))
+* **screen:** add bounded main with usable-body fallback ([#151](https://github.com/juwel-development/LIB-design-system/issues/151)) ([06cd3cd](https://github.com/juwel-development/LIB-design-system/commit/06cd3cda526ebcceac98eaefb0376ecabd9b0ce7))
+* **screen:** allocate reachable content and opt into viewport stacking ([#151](https://github.com/juwel-development/LIB-design-system/issues/151)) ([c3a2286](https://github.com/juwel-development/LIB-design-system/commit/c3a2286e6dc6077e3530808d95bded7b880f4621))
+* **screen:** support headings inside allocated panels ([#152](https://github.com/juwel-development/LIB-design-system/issues/152)) ([fd1648f](https://github.com/juwel-development/LIB-design-system/commit/fd1648f82b1a5d7fbbddab9aef470bb34d542b58))
+
+
+### Reverts
+
+* undo unauthorized design-system changes for tickets 150-152 ([c32879f](https://github.com/juwel-development/LIB-design-system/commit/c32879ffbc6b86be56c3ef742b77af2a1be5c449))
+
+
+### NOTE
+
+* **screen:** Passing undefined as the Screen heading now omits its wrapper and
+region gap. Other supplied empty ReactNode values retain their existing
+slot behavior.
+
 # [4.0.0](https://github.com/juwel-development/LIB-design-system/compare/v3.11.0...v4.0.0) (2026-11-03)
 
 
