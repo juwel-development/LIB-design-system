@@ -402,3 +402,107 @@ const MountedScreen = () => {
   );
 };
 export const MountLifecycle: Story = { render: () => <MountedScreen /> };
+
+// Fixed before geometry validation; catalog provenance and the separate consumer gate are
+// documented in this story. Keep the original Board translation as the oversized stress case.
+const representativeCopy = {
+  en: {
+    status: 'Workspace — rights, schedules and correspondence',
+    save: 'Save changes',
+    navigation: 'Workspace navigation',
+    list: 'All Messages',
+    letter: 'Contract offer',
+    sender: 'From Alex Morgan, Attorney at Law · 4 November 1950, 09:00',
+    waiting: 'This Message needs a Response. It holds Game time.',
+    accept: 'Accept offer',
+    negotiate: 'Negotiate with this Artist',
+    reason: 'Another negotiation is open.',
+  },
+  de: {
+    status: 'Arbeitsbereich — Rechte, Zeitpläne und ausführliche Korrespondenz',
+    save: 'Änderungen speichern',
+    navigation: 'Arbeitsbereich-Navigation',
+    list: 'Alle Nachrichten',
+    letter: 'Vertragsangebot',
+    sender: 'Von Alex Morgan, Rechtsanwalt · 4. November 1950, 09:00',
+    waiting: 'Diese Nachricht braucht eine Antwort. Sie hält die Spielzeit an.',
+    accept: 'Angebot annehmen',
+    negotiate: 'Mit diesem Artist verhandeln',
+    reason: 'Eine andere Verhandlung ist offen.',
+  },
+};
+const Representative = ({ locale }: { locale: 'en' | 'de' }) => {
+  const copy = representativeCopy[locale];
+  const [select$] = useState(() => new Subject<string>());
+  return (
+    <Shell
+      testId="shell"
+      ariaLabel={copy.navigation}
+      bar={
+        <Header status={copy.status} action={<Button>{copy.save}</Button>} />
+      }
+    >
+      <style>{`:root { --screen-list-minimum: 18rem; --screen-letter-minimum: 20rem; }`}</style>
+      <Sidebar.Root
+        fill
+        active="messages"
+        label={copy.navigation}
+        onSelect$={select$}
+      >
+        <Sidebar.Item entryKey="messages">{copy.list}</Sidebar.Item>
+        <Sidebar.Content>
+          <Screen heading={<H1 testId="heading">Harbor Records</H1>}>
+            <ColumnLayout.Root fill stacking="viewport" testId="columns">
+              <ColumnLayout.Column
+                weight={1}
+                minWidth="--screen-list-minimum"
+                testId="list-column"
+              >
+                <Pane.Root>
+                  <Pane.Head>
+                    <H2 testId="list-head">{copy.list}</H2>
+                  </Pane.Head>
+                  <Pane.Body ariaLabel={copy.list} testId="list-body">
+                    <Entries count={40} />
+                  </Pane.Body>
+                </Pane.Root>
+              </ColumnLayout.Column>
+              <ColumnLayout.Column
+                weight={2}
+                minWidth="--screen-letter-minimum"
+                testId="letter-column"
+              >
+                <Pane.Root>
+                  <Pane.Head>
+                    <H2 testId="letter-head">{copy.letter}</H2>
+                    <P>{copy.sender}</P>
+                  </Pane.Head>
+                  <Pane.Body ariaLabel={copy.letter} testId="letter-body">
+                    <Letter count={40} />
+                  </Pane.Body>
+                  <Pane.Foot testId="letter-foot">
+                    <P>{copy.waiting}</P>
+                    <Cluster>
+                      <Button>{copy.accept}</Button>
+                      <Button disabled>{copy.negotiate}</Button>
+                    </Cluster>
+                    <P>{copy.reason}</P>
+                  </Pane.Foot>
+                </Pane.Root>
+              </ColumnLayout.Column>
+            </ColumnLayout.Root>
+          </Screen>
+        </Sidebar.Content>
+      </Sidebar.Root>
+    </Shell>
+  );
+};
+const representativeDescription = `Representative library reference-fit fixture, with fixed caller Label-name sample “Harbor Records” in both locales; this is not a maximum-name promise. List heading, waiting notice, negotiation label and disabled reason are verbatim from g-label-manager packages/translations/catalogs/{en,de}.json (hubFilterAll, hubResponseNeeded, hubMessageActionContractNegotiation, hubMessageActionNegotiationOpen). Sender text instantiates hubMessageFrom with Alex Morgan, the catalog Attorney at Law/Rechtsanwalt role and a fixed localized date/time. Contract offer/Vertragsangebot, Accept offer/Angebot annehmen, Save changes/Änderungen speichern and navigation/bar copy are representative library-authored role labels fixed before measurement. Long body content reuses the existing neutral library fixture. Actual Hub content, consumer theme, answer inventories and long player Label names remain a separate #236 gate. The Correspondence story's 277px German stress heading is unchanged and fallback-only.`;
+export const RepresentativeEnglish: Story = {
+  render: () => <Representative locale="en" />,
+  parameters: { docs: { description: { story: representativeDescription } } },
+};
+export const RepresentativeGerman: Story = {
+  render: () => <Representative locale="de" />,
+  parameters: { docs: { description: { story: representativeDescription } } },
+};
