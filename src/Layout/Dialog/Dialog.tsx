@@ -80,6 +80,7 @@ const dialogDescription = cva(
 const dialogContent = cva(
   [
     'grow shrink min-h-0 min-w-0',
+    'outline-focus-ring focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)] focus-visible:outline-offset-[calc(-1*var(--focus-ring-width))]',
     'px-[var(--space-region)] py-[var(--space-region)]',
     '[&:not(:first-child)]:border-t [&:not(:first-child)]:border-border',
   ].join(' '),
@@ -156,6 +157,15 @@ const fitFrameTask = (dialog: HTMLDialogElement): void => {
   if (!mustScrollTask && dialog.hasAttribute('data-scroll-task'))
     dialog.scrollTop = 0;
   dialog.toggleAttribute('data-scroll-task', mustScrollTask);
+  if (content) {
+    const isScrollable =
+      !mustScrollTask &&
+      style?.overflowY === 'auto' &&
+      content.scrollHeight > content.clientHeight;
+    if (isScrollable || content === document.activeElement)
+      content.tabIndex = 0;
+    else content.removeAttribute('tabindex');
+  }
 };
 
 type Presentation = {
@@ -190,7 +200,11 @@ const openDialog = (
   dialog.showModal();
   fitFrameTask(dialog);
   presented.current = true;
-  dialog.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)?.focus();
+  dialog
+    .querySelector<HTMLElement>(
+      `:is(${FOCUSABLE_SELECTOR}):not([data-dialog-member=content])`,
+    )
+    ?.focus();
 };
 
 const closeDialog = (
@@ -382,6 +396,7 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
       measure();
     };
     observe();
+    dialog.addEventListener('focusout', measure);
     const mutations = new MutationObserver(observe);
     mutations.observe(dialog, {
       childList: true,
@@ -392,6 +407,10 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
       resize?.disconnect();
       mutations.disconnect();
       dialog.removeAttribute('data-scroll-task');
+      dialog.removeEventListener('focusout', measure);
+      dialog
+        .querySelector('[data-dialog-member=content]')
+        ?.removeAttribute('tabindex');
     };
   }, [placement]);
 
@@ -550,6 +569,8 @@ const DialogActions: FunctionComponent<IDialogActionsProps> = ({
  *   Without a qualifying ancestor, opening throws `DialogFrameError`.
  * - In frame placement, when fixed regions cannot leave one em for Content, the whole task scrolls;
  *   title and actions then scroll too. Returning to a fitting region restores Content scroll ownership.
+ *   Overflowing body-owned Content is a keyboard stop with a focus ring, retained while focused.
+ *   Initial focus still goes to the first consumer focusable descendant.
  *   This reachability fallback makes no promise that arbitrary task content fits without scrolling.
  * - `Content scrollOwner="child"` passes available height to one bounded child without scrolling.
  *   A bounded Table then owns both axes and pins its header; title, description and actions stay fixed.

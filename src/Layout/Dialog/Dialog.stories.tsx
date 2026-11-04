@@ -503,6 +503,16 @@ const frameGeometry: Story['play'] = async ({ canvasElement }) => {
   );
   await expect(view.scrollY).toBe(0);
   await expect(dialog).toHaveAccessibleDescription(/available|verfügbar/);
+  const content = dialog.querySelector<HTMLElement>(
+    '[data-dialog-member=content]',
+  );
+  if (
+    content &&
+    view.getComputedStyle(content).overflowY === 'auto' &&
+    content.scrollHeight > content.clientHeight
+  ) {
+    await expect(content).toHaveAttribute('tabindex', '0');
+  }
   await expect(dialog.matches(':modal')).toBe(true);
   await expect(dialog.contains(view.document.activeElement)).toBe(true);
   const background = canvas.getByRole('button', { name: 'Continue 0' });
