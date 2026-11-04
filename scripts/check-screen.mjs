@@ -158,6 +158,7 @@ try {
     const result = await evaluate(expression);
     results.push({ scenario, result });
     process.stdout.write(`PASS ${scenario}\n`);
+    return result;
   };
   const key = async (key, code, windowsVirtualKeyCode, modifiers = 0) => {
     await page('Input.dispatchKeyEvent', {
@@ -354,12 +355,23 @@ try {
       `roster native modal ${width}`,
       `(()=>{const dialog=document.querySelector('dialog'),box=dialog.getBoundingClientRect();check(dialog.matches(':modal') && box.top>=document.querySelector('header').getBoundingClientRect().bottom && box.bottom<=innerHeight,'frame reserves bar');document.querySelector('nav button').focus();check(dialog.contains(document.activeElement),'background inert');return box.toJSON();})()`,
     );
-    await key('Tab', 'Tab', 9);
-    await key('Tab', 'Tab', 9, 8);
-    await record(
-      `roster modal trap ${width}`,
-      `({assertion:check(document.querySelector('dialog').contains(document.activeElement),'native trap')})`,
-    );
+    // Native Chrome can expose body as the boundary sentinel even while hasFocus is true.
+    // Require the next key to reach the opposite modal action, never a background control.
+    for (const reverse of [false, true]) {
+      await evaluate(
+        `document.querySelector('dialog').querySelectorAll('button')[${reverse ? 0 : 1}].focus()`,
+      );
+      await key('Tab', 'Tab', 9, reverse ? 8 : 0);
+      const crossedBoundary = await record(
+        `roster modal boundary ${width} ${reverse ? 'reverse' : 'forward'}`,
+        `(()=>{const dialog=document.querySelector('dialog'),expected=dialog.querySelectorAll('button')[${reverse ? 1 : 0}],boundary=document.activeElement===document.body;check(document.activeElement===expected || boundary,'boundary never focuses background content');return {boundary,documentFocused:document.hasFocus()};})()`,
+      );
+      if (crossedBoundary.boundary) await key('Tab', 'Tab', 9, reverse ? 8 : 0);
+      await record(
+        `roster modal boundary return ${width} ${reverse ? 'reverse' : 'forward'}`,
+        `({assertion:check(document.activeElement===document.querySelector('dialog').querySelectorAll('button')[${reverse ? 1 : 0}],'boundary returns to expected modal action')})`,
+      );
+    }
     await key('Escape', 'Escape', 27);
     await record(
       `roster modal restoration ${width}`,
