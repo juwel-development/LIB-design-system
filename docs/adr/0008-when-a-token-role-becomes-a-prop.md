@@ -472,3 +472,20 @@ than a judgement call at the call site"* — the bound stops being on-or-off: `S
 gains `action` beside `true`/`false`, holding exactly the two attested roles and nothing else.
 `--measure-wide` and `--measure-display` remain refused as container bounds on the unchanged grounds
 above. Nothing in the rule itself moves.
+
+
+**Screen — approved final briefs for #151/#152 (2026-11-04).**
+Screen is a page composable with exactly `heading?: ReactNode`, required `children: ReactNode`, and
+`testId?: string`. It owns semantic main and allocation beneath an optional consumer heading, not
+column sizing or scrolling. Its horizontal inset fixes the existing gutter role; vertical inset and
+separation of the heading from the content fix the existing region role. There is no spacing selector,
+new sizing token, or viewport switch. ColumnLayout's existing proportional minimum fit remains the
+width policy. The second heading arrangement omits the slot and puts the heading inside Pane.Head.
+
+Pane participates in the shared fallback through a narrow internal Screen allocation boundary. The
+persistent remainder frame supplies the candidate height even while content is unbounded. Pane
+compares its actual fixed regions and a complete line/ordinary row or control, including focus room,
+to that candidate; an unusable Pane makes Screen release its whole content height. DOM identity stays
+stable and restoration never temporarily bounds fallback content to measure it. Table remains the
+scroll owner in delegated mode. This is specific Screen/Pane cooperation, not a general registry or
+public measurement protocol. Standalone Pane and ColumnLayout keep their existing contracts.

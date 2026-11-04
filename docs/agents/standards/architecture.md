@@ -19,6 +19,12 @@ must be composable from outside without knowing anything about who consumes it.
 2. **Dependencies point one way:** components → `Theme`. A component reads the token layer; the
    token layer never reads a component, and no component imports another component's internals.
 
+The approved Screen/Pane fallback (#151/#152, ADR 0008) has one narrow exception: Pane may read
+`Layout/Screen/ScreenBodyAllocation`, the private allocation boundary owned by Screen. It carries
+only the persistent remainder element, no component API, registration, or application state. Screen
+consumes Pane's private unusable marker through CSS; neither imports the other's implementation.
+This exception does not permit general sibling-component imports or expose a consumer protocol.
+
 **The import test:** could this file be deleted without touching `src/index.ts`, and does it import
 nothing from a sibling component? If either answer is no, look again.
 

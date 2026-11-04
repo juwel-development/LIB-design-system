@@ -1,7 +1,9 @@
+import { ScreenBodyAllocation } from 'Layout/Screen/ScreenBodyAllocation';
 import { cva, type VariantProps } from 'class-variance-authority';
 import {
   type FunctionComponent,
   type ReactNode,
+  useContext,
   useLayoutEffect,
   useRef,
   useState,
@@ -78,21 +80,127 @@ export interface IPaneBodyProps extends VariantProps<typeof paneBody> {
   testId?: string;
 }
 
+const number = (value: string): number => Number.parseFloat(value) || 0;
+
+const blockEdges = (element: Element): number => {
+  const style = getComputedStyle(element);
+  return (
+    number(style.paddingTop) +
+    number(style.paddingBottom) +
+    number(style.borderTopWidth) +
+    number(style.borderBottomWidth)
+  );
+};
+
+// HTML semantics describe the minimum usable item, including delegated tables. No Table internals
+// or consumer selectors participate. A tall row/control must fit intact, with its focus extent.
+const usableBodyHeight = (body: HTMLElement): number => {
+  let minimum = 0;
+  for (const element of [body, ...body.querySelectorAll('*')]) {
+    const style = getComputedStyle(element);
+    if (style.display === 'none') continue;
+    const line = number(style.lineHeight) || number(style.fontSize);
+    const ring = number(
+      getComputedStyle(body.firstElementChild ?? body).paddingTop,
+    );
+    const item = element.matches(
+      'tr, button, input, select, textarea, [role="button"]',
+    )
+      ? element.getBoundingClientRect().height
+      : line;
+    minimum = Math.max(minimum, item + 2 * ring);
+  }
+  const table = body.querySelector('table');
+  const fixedTable = table
+    ? Array.from(table.children)
+        .filter((element) => element.matches('caption, thead'))
+        .reduce(
+          (height, element) => height + element.getBoundingClientRect().height,
+          0,
+        )
+    : 0;
+  return minimum + fixedTable + blockEdges(body);
+};
+
+const useScreenFallback = (root: {
+  current: HTMLDivElement | null;
+}): boolean => {
+  const allocation = useContext(ScreenBodyAllocation);
+  const [isUnusable, setIsUnusable] = useState(false);
+  useLayoutEffect(() => {
+    const element = root.current;
+    const frame = allocation;
+    if (!element || !frame) return;
+    const measure = () => {
+      const sections = Array.from(element.children);
+      const body = sections.find((section) =>
+        section.hasAttribute('data-pane-body'),
+      );
+      if (!(body instanceof HTMLElement)) return;
+      const fixed = sections
+        .filter((section) => section !== body)
+        .reduce(
+          (height, section) => height + section.getBoundingClientRect().height,
+          0,
+        );
+      const gaps =
+        Math.max(0, sections.length - 1) *
+        number(getComputedStyle(element).rowGap);
+      setIsUnusable(
+        frame.getBoundingClientRect().height <
+          fixed + gaps + blockEdges(element) + usableBodyHeight(body),
+      );
+    };
+    const observer =
+      typeof ResizeObserver === 'undefined'
+        ? undefined
+        : new ResizeObserver(measure);
+    const observe = () => {
+      observer?.disconnect();
+      observer?.observe(frame);
+      observer?.observe(element);
+      for (const child of element.querySelectorAll('*'))
+        observer?.observe(child);
+      measure();
+    };
+    observe();
+    const mutations = new MutationObserver(observe);
+    mutations.observe(element, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    window.addEventListener('resize', measure);
+    return () => {
+      observer?.disconnect();
+      mutations.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [allocation, root]);
+  return isUnusable;
+};
+
 const Root: FunctionComponent<IPaneRootProps> = ({
   children,
   name,
   testId,
-}) => (
-  // biome-ignore lint/a11y/useAriaPropsSupportedByRole: the name and group role are assigned together
-  <div
-    className={pane()}
-    role={name ? 'group' : undefined}
-    aria-label={name || undefined}
-    data-testid={testId}
-  >
-    {children}
-  </div>
-);
+}) => {
+  const root = useRef<HTMLDivElement>(null);
+  const isUnusable = useScreenFallback(root);
+  return (
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: the name and group role are assigned together
+    <div
+      ref={root}
+      data-screen-unusable={isUnusable || undefined}
+      className={pane()}
+      role={name ? 'group' : undefined}
+      aria-label={name || undefined}
+      data-testid={testId}
+    >
+      {children}
+    </div>
+  );
+};
 const Head: FunctionComponent<IPaneSectionProps> = ({ children, testId }) => (
   <div className={paneSection()} data-testid={testId}>
     {children}
@@ -117,6 +225,7 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
   return (
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: the name and group role are assigned together
     <div
+      data-pane-body=""
       ref={container}
       className={paneBody({ scrollOwner: scrollOwner ?? 'body' })}
       role={isScrollable ? 'group' : undefined}
@@ -153,6 +262,8 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  *   At smaller sizes use an unsized stacked arrangement in a scrolling page or Shell body.
  * - In child mode supply one child that accepts its parent's allocated height and handles its
  *   own overflow and focus ring. Intermediate wrappers must preserve that allocation.
+ * - Inside Screen, fixed regions and the usable body minimum participate in whole-content
+ *   fallback and restoration. Outside Screen the parent remains responsible for that policy.
  * - Filled ColumnLayout columns and active Stepper panels can pass the bound to Root. Keep
  *   those holders and Pane directly composed so no intermediate wrapper loses the allocation.
  */

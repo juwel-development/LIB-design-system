@@ -222,6 +222,14 @@ owns its content, arrangement, controls and the words or named icon that state t
 adds neither focus nor announcement.
 _Avoid_: Alert, toast, banner, toned Box
 
+**Screen**:
+A semantic main that passes a parent's remaining height beneath an optional separate heading to
+bounded panels. The consumer can instead place the heading inside a panel. When fixed panel regions
+leave less than a complete line or ordinary row/control with focus room, the entire content grows
+into the enclosing body's scrollport; bounds return when room returns. Screen owns the main, gutter
+and region spacing, never scrolling or column widths.
+_Avoid_: Viewport breakpoint, scrolling main, application roster layout
+
 **Pane**:
 A parent-bounded enclosure with optional content-height head and foot around a scrolling body.
 A short body keeps its content height; an unsized pane grows with its content. Scroll ownership is
@@ -678,8 +686,8 @@ The frame of a page that is the whole app for a moment — a menu, a sign-in, a 
 least the viewport and centres one column in the leftover space, on both axes, with an optional foot
 on the bottom edge. The fold's counterpart: nothing follows a cover, so stopping short of the
 viewport would signal a continuation that does not exist. Because the frame equals the viewport it
-cannot sit inside a section band, and it owns its own inset — the one deliberate exception to
-"Section owns the gutter".
+cannot sit inside a section band, and it owns its own inset. Screen likewise owns its gutter
+rather than requiring a Section.
 _Avoid_: Full-screen hero, splash screen, viewport section, centred layout, page wrapper
 
 **Sidebar**:
