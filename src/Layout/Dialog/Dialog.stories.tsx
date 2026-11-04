@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react';
 import { Subject, type Subscription } from 'rxjs';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Dialog } from './Dialog';
 
 const meta: Meta<typeof Dialog.Root> = {
@@ -495,6 +495,13 @@ const frameGeometry: Story['play'] = async ({ canvasElement }) => {
   if (!view) throw new Error('Story requires a window');
   await expect(surface.top).toBeGreaterThanOrEqual(bar.bottom);
   await expect(surface.bottom).toBeLessThanOrEqual(view.innerHeight);
+  if (!dialog.hasAttribute('data-scroll-task')) {
+    for (const region of dialog.children) {
+      const box = region.getBoundingClientRect();
+      await expect(box.top).toBeGreaterThanOrEqual(surface.top - 1);
+      await expect(box.bottom).toBeLessThanOrEqual(surface.bottom + 1);
+    }
+  }
   await expect(readout.top).toBeGreaterThanOrEqual(0);
   await expect(readout.bottom).toBeLessThanOrEqual(bar.bottom);
   await expect(readout.right).toBeLessThanOrEqual(view.innerWidth);
@@ -597,5 +604,29 @@ export const PersistentFrameChangingBar: Story = {
       bar.getBoundingClientRect().bottom,
     );
     await expect(dialog.scrollTop).toBe(0);
+  },
+};
+
+/** Nested content may grow after opening without changing its allocated region. */
+export const PersistentFrameGrowingContent: Story = {
+  ...PersistentFrame,
+  play: async (context) => {
+    await frameGeometry(context);
+    const canvas = within(context.canvasElement);
+    const dialog = canvas.getByRole('dialog');
+    const content = dialog.querySelector<HTMLElement>(
+      '[data-dialog-member=content]',
+    );
+    const paragraph = content?.querySelector('p');
+    if (!content || !paragraph) throw new Error('Story requires task content');
+    await expect(content).not.toHaveAttribute('tabindex');
+    // Model asynchronous nested geometry, such as an image gaining intrinsic height.
+    paragraph.style.minHeight = '1000px';
+    await waitFor(() =>
+      expect(content.scrollHeight).toBeGreaterThan(content.clientHeight),
+    );
+    await waitFor(() => expect(content).toHaveAttribute('tabindex', '0'));
+    paragraph.style.removeProperty('min-height');
+    await waitFor(() => expect(content).not.toHaveAttribute('tabindex'));
   },
 };

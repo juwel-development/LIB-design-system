@@ -392,7 +392,8 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
     const observe = () => {
       resize?.disconnect();
       resize?.observe(dialog);
-      for (const child of dialog.children) resize?.observe(child);
+      // Nested intrinsic-size changes can alter overflow without resizing Content itself.
+      for (const child of dialog.querySelectorAll('*')) resize?.observe(child);
       measure();
     };
     observe();

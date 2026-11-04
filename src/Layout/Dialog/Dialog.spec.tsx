@@ -73,6 +73,41 @@ const Counter: FunctionComponent = () => {
   );
 };
 
+const frame = (
+  visible$?: Subject<boolean>,
+  dismiss$ = new Subject<void>(),
+  titleless = false,
+) => (
+  <StrictMode>
+    <Shell
+      modalScope="body"
+      bar={<header>Balance</header>}
+      ariaLabel="Application"
+    >
+      <main>
+        <div>
+          <Dialog.Root
+            placement="frame"
+            showDialog$={visible$}
+            onDismiss$={dismiss$}
+            ariaLabel={titleless ? 'Task' : undefined}
+            testId="dialog"
+          >
+            {!titleless && <Dialog.Title>Task</Dialog.Title>}
+            <Dialog.Description>Task description</Dialog.Description>
+            <Dialog.Content>
+              <Counter />
+            </Dialog.Content>
+            <Dialog.Actions>
+              <button type="button">Cancel</button>
+            </Dialog.Actions>
+          </Dialog.Root>
+        </div>
+      </main>
+    </Shell>
+  </StrictMode>
+);
+
 describe('Dialog Component', () => {
   it('rejects frame placement without an opted-in ancestor before presenting', () => {
     expect(() =>
@@ -560,43 +595,7 @@ describe('Dialog Component', () => {
       expect(screen.getByTestId(id)).toBeInTheDocument();
     }
   });
-});
 
-describe('Dialog in a persistent frame', () => {
-  const frame = (
-    visible$?: Subject<boolean>,
-    dismiss$ = new Subject<void>(),
-    titleless = false,
-  ) => (
-    <StrictMode>
-      <Shell
-        modalScope="body"
-        bar={<header>Balance</header>}
-        ariaLabel="Application"
-      >
-        <main>
-          <div>
-            <Dialog.Root
-              placement="frame"
-              showDialog$={visible$}
-              onDismiss$={dismiss$}
-              ariaLabel={titleless ? 'Task' : undefined}
-              testId="dialog"
-            >
-              {!titleless && <Dialog.Title>Task</Dialog.Title>}
-              <Dialog.Description>Task description</Dialog.Description>
-              <Dialog.Content>
-                <Counter />
-              </Dialog.Content>
-              <Dialog.Actions>
-                <button type="button">Cancel</button>
-              </Dialog.Actions>
-            </Dialog.Root>
-          </div>
-        </main>
-      </Shell>
-    </StrictMode>
-  );
   it.each([false, true])(
     'mounts open with resolved naming in StrictMode (titleless=%s)',
     async (titleless) => {
