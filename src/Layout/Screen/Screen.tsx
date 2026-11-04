@@ -71,11 +71,11 @@ const observeAllocation = (
     attributes: true,
   });
   element.addEventListener('load', schedule, true);
-  const unsubscribe = participants.subscribe(schedule);
+  const subscription = participants.invalidated$.subscribe(schedule);
   document.fonts?.addEventListener('loadingdone', schedule);
   measure();
   return () => {
-    unsubscribe();
+    subscription.unsubscribe();
     document.fonts?.removeEventListener('loadingdone', schedule);
     resize.disconnect();
     mutations.disconnect();

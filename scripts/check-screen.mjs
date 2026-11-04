@@ -19,20 +19,61 @@ const chrome = spawn(
 );
 let socket;
 try {
-  const url = await new Promise((resolve) =>
+  const url = await new Promise((resolve, reject) => {
+    const timeout = setTimeout(
+      () => reject(new Error('Chrome startup timed out')),
+      10000,
+    );
+    let output = '';
+    const failed = (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    };
+    chrome.once('error', (error) =>
+      failed(new Error('Chrome startup failed', { cause: error })),
+    );
+    chrome.once('exit', (code) =>
+      failed(new Error(`Chrome exited before startup (${code})`)),
+    );
     chrome.stderr.on('data', (buffer) => {
-      const match = buffer
-        .toString()
-        .match(/DevTools listening on (ws:\/\/\S+)/);
-      if (match) resolve(match[1]);
-    }),
-  );
+      output += buffer.toString();
+      const match = output.match(/DevTools listening on (ws:\/\/\S+)/);
+      if (match) {
+        clearTimeout(timeout);
+        resolve(match[1]);
+      }
+    });
+  });
   socket = new WebSocket(url);
-  await new Promise((resolve) =>
-    socket.addEventListener('open', resolve, { once: true }),
-  );
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(
+      () => reject(new Error('Chrome connection timed out')),
+      10000,
+    );
+    socket.addEventListener(
+      'open',
+      () => {
+        clearTimeout(timeout);
+        resolve();
+      },
+      { once: true },
+    );
+    socket.addEventListener(
+      'error',
+      () => {
+        clearTimeout(timeout);
+        reject(new Error('Chrome connection failed'));
+      },
+      { once: true },
+    );
+  });
   let next = 0;
   const pending = new Map();
+  socket.addEventListener('close', () => {
+    for (const waiter of pending.values())
+      waiter.reject(new Error('Chrome connection closed'));
+    pending.clear();
+  });
   socket.addEventListener('message', (event) => {
     const response = JSON.parse(event.data);
     const waiter = pending.get(response.id);
@@ -46,7 +87,20 @@ try {
   const send = (method, params = {}, sessionId) =>
     new Promise((resolve, reject) => {
       const id = ++next;
-      pending.set(id, { resolve, reject });
+      const timeout = setTimeout(() => {
+        pending.delete(id);
+        reject(new Error(`Chrome command timed out: ${method}`));
+      }, 10000);
+      pending.set(id, {
+        resolve: (value) => {
+          clearTimeout(timeout);
+          resolve(value);
+        },
+        reject: (error) => {
+          clearTimeout(timeout);
+          reject(error);
+        },
+      });
       socket.send(JSON.stringify({ id, method, params, sessionId }));
     });
   const { targetId } = await send('Target.createTarget', {
@@ -219,6 +273,57 @@ try {
       );
     }
   }
+  for (const story of ['correspondence', 'filling-tabs', 'booking-stepper']) {
+    await load(`layout-screen--${story}`);
+    const owner = story === 'correspondence' ? 'list-body' : 'panel-body';
+    if (story !== 'correspondence') {
+      await evaluate(`document.querySelectorAll('[role=tab]')[1].click()`);
+      await settle();
+    }
+    await evaluate(
+      `window.retained=element('${owner}').querySelector('button');retained.focus();`,
+    );
+    for (const width of [1279, 1024, 800, 1280]) {
+      await resize(width, 720);
+      await record(
+        `width transition retains focus ${story} ${width}`,
+        `(()=>{check(document.activeElement===retained && retained.isConnected,'same focused control');
+        if('${story}'!=='correspondence')check(document.querySelectorAll('[role=tab]')[1].getAttribute('aria-selected')==='true','selected panel retained');
+        const body=element('${owner}');check(body.clientHeight>0,'usable owner');
+        return {scroll:body.scrollTop,client:body.clientHeight,extent:body.scrollHeight};})()`,
+      );
+    }
+    await key('Tab', 'Tab', 9);
+    await record(
+      `native reveal after width transitions ${story}`,
+      `(()=>{const box=document.activeElement.getBoundingClientRect(),owner=element('${owner}').getBoundingClientRect();check(box.top>=Math.max(owner.top,document.querySelector('header').getBoundingClientRect().bottom)-1 && box.bottom<=Math.min(owner.bottom,innerHeight)+1,'next control revealed');return box.toJSON();})()`,
+    );
+  }
+  await load('layout-screen--correspondence', 1920, 1080);
+  await evaluate(
+    `window.scrolledControl=element('list-body').querySelectorAll('button')[3];scrolledControl.focus();element('list-body').scrollTop=100;`,
+  );
+  await resize(1600, 1080);
+  await record(
+    'bounded width preserves nonzero scroll',
+    `({assertion:check(element('list-body').scrollTop===100 && document.activeElement===scrolledControl,'bounded offset and focus retained')})`,
+  );
+  await resize(1920, 1080);
+  for (let translation = 0; translation < 2; translation++) {
+    await evaluate(
+      `Array.from(document.querySelectorAll('header button')).find(button=>button.textContent==='Translate').click()`,
+    );
+    await settle();
+    await record(
+      `bounded locale preserves nonzero scroll ${translation}`,
+      `({assertion:check(element('list-body').scrollTop===100 && document.activeElement===scrolledControl && shellBody().scrollHeight<=shellBody().clientHeight+1,'bounded locale offset and focus retained')})`,
+    );
+  }
+  await resize(1279, 1080);
+  await record(
+    'natural height clamps former pane offset',
+    `({assertion:check(element('list-body').scrollTop===0 && element('list-body').clientHeight===element('list-body').scrollHeight && document.activeElement===scrolledControl,'natural owner clamps scroll without replacing focus')})`,
+  );
   await load('layout-screen--independent-allocations');
   await record(
     'sibling allocation isolation',
@@ -371,12 +476,12 @@ try {
   );
   await load('layout-screen--correspondence');
   await evaluate(
-    `window.beforeLocale=element('list-body').querySelector('button');Array.from(document.querySelectorAll('header button')).find(button=>button.textContent==='Translate').click()`,
+    `window.beforeLocale=element('list-body').querySelector('button');beforeLocale.focus();Array.from(document.querySelectorAll('header button')).find(button=>button.textContent==='Translate').click()`,
   );
   await settle();
   await record(
-    'translated heading and wrapping bar',
-    `(()=>{check(beforeLocale.isConnected,'locale preserves child identity');check(element('list-body').clientHeight>0 && element('letter-body').clientHeight>0,'translated content stays reachable');return {heading:rect('heading').toJSON(),bar:document.querySelector('header').getBoundingClientRect().toJSON(),shell:[shellBody().clientHeight,shellBody().scrollHeight]};})()`,
+    'oversized translated heading reachability (not reference fit)',
+    `(()=>{check(beforeLocale.isConnected && document.activeElement===beforeLocale,'locale preserves child identity and focus');check(element('list-body').clientHeight>0 && element('letter-body').clientHeight>0,'translated content stays reachable');return {heading:rect('heading').toJSON(),bar:document.querySelector('header').getBoundingClientRect().toJSON(),shell:[shellBody().clientHeight,shellBody().scrollHeight]};})()`,
   );
   await evaluate(
     `Array.from(document.querySelectorAll('header button')).find(button=>button.textContent==='Translate').click()`,
@@ -384,7 +489,7 @@ try {
   await settle();
   await record(
     'locale restoration',
-    `({assertion:check(shellBody().scrollHeight<=shellBody().clientHeight+1,'restored locale remains bounded')})`,
+    `({assertion:check(shellBody().scrollHeight<=shellBody().clientHeight+1 && document.activeElement===beforeLocale,'restored locale remains bounded with retained focus')})`,
   );
   await evaluate(
     `Array.from(document.querySelectorAll('header button')).find(button=>button.textContent==='Foot').click()`,
@@ -472,7 +577,15 @@ try {
   );
 } finally {
   socket?.close();
-  chrome.kill();
-  await new Promise((resolve) => chrome.once('exit', resolve));
+  if (chrome.pid && chrome.exitCode === null && chrome.signalCode === null) {
+    await new Promise((resolve) => {
+      const timeout = setTimeout(() => chrome.kill('SIGKILL'), 2000);
+      chrome.once('exit', () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+      chrome.kill();
+    });
+  }
   await rm(profile, { recursive: true, force: true });
 }
