@@ -175,13 +175,19 @@ const natural = (result) => {
 };
 
 const retainInput = async () => {
-  await page.getByTestId('entry-2').focus();
+  await page
+    .getByRole('row', { name: /^Alex Morgan 2 (In progress|In Bearbeitung)$/ })
+    .focus();
   await page.keyboard.press('Enter');
-  await page.getByTestId('search').fill('Morgan');
-  await page.getByTestId('search').evaluate((element) => {
-    window.retainedInput = element;
-    element.setSelectionRange(1, 4);
-  });
+  await page
+    .getByRole('textbox', { name: /Search entries|Einträge durchsuchen/ })
+    .fill('Morgan');
+  await page
+    .getByRole('textbox', { name: /Search entries|Einträge durchsuchen/ })
+    .evaluate((element) => {
+      window.retainedInput = element;
+      element.setSelectionRange(1, 4);
+    });
   await settle();
 };
 const retained = async () => {
@@ -208,7 +214,9 @@ const clickWithoutMovingFocus = async (name) => {
   await settle();
 };
 const keyboard = async (fallback) => {
-  await page.getByTestId('search').focus();
+  await page
+    .getByRole('textbox', { name: /Search entries|Einträge durchsuchen/ })
+    .focus();
   let reachedLast = false;
   let reachedPagination = false;
   for (let step = 0; step < 45; step++) {
@@ -254,8 +262,9 @@ const keyboard = async (fallback) => {
     if (focus.id === 'next-page') {
       reachedPagination = true;
       assert(
-        focus.top >= (await geometry()).shell.top &&
-          focus.bottom <= focus.viewport,
+        focus.outline === 'solid' &&
+          focus.top - focus.ring >= (await geometry()).shell.top - 1 &&
+          focus.bottom + focus.ring <= focus.viewport + 1,
         'Pagination reached visibly by Tab',
       );
       break;
@@ -271,6 +280,31 @@ const keyboard = async (fallback) => {
     'entry-40',
     'Shift+Tab returns to last row',
   );
+  await settle();
+  assert(
+    await page.evaluate(() => {
+      const element = document.activeElement;
+      const bounds = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      const ring =
+        parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset);
+      const shell = document
+        .querySelector('[data-testid="shell"]')
+        .children[1].getBoundingClientRect();
+      const table = document
+        .querySelector('main table')
+        .parentElement.getBoundingClientRect();
+      const header = document
+        .querySelector('main thead')
+        .getBoundingClientRect();
+      return (
+        style.outlineStyle === 'solid' &&
+        bounds.top - ring >= Math.max(shell.top, header.bottom) - 1 &&
+        bounds.bottom + ring <= Math.min(innerHeight, table.bottom) + 1
+      );
+    }),
+    'Shift+Tab reveals the final row and its focus indication',
+  );
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   if (!fallback) await page.keyboard.press('Tab');
@@ -282,6 +316,25 @@ const keyboard = async (fallback) => {
       ),
     ),
     'Final detail action reachable',
+  );
+  assert(
+    await page.evaluate(() => {
+      const element = document.activeElement;
+      const bounds = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      const ring =
+        parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset);
+      const shell = document.querySelector('[data-testid="shell"]').children[1];
+      const body = document.querySelector('[data-testid="detail-body"]');
+      const shellBounds = shell.getBoundingClientRect();
+      const bodyBounds = body.getBoundingClientRect();
+      return (
+        style.outlineStyle === 'solid' &&
+        bounds.top - ring >= Math.max(shellBounds.top, bodyBounds.top) - 1 &&
+        bounds.bottom + ring <= Math.min(innerHeight, bodyBounds.bottom) + 1
+      );
+    }),
+    'Final detail action and focus indication are fully visible',
   );
   record(
     `native keyboard ${fallback ? 'fallback' : 'bounded'}`,
@@ -373,9 +426,11 @@ try {
       await retained();
       record(`${stylesheet ?? 'source'} ${story} 200% text`, await geometry());
       await keyboard(true);
-      await page.getByTestId('search').focus();
       await page
-        .getByTestId('search')
+        .getByRole('textbox', { name: /Search entries|Einträge durchsuchen/ })
+        .focus();
+      await page
+        .getByRole('textbox', { name: /Search entries|Einträge durchsuchen/ })
         .evaluate((element) => element.setSelectionRange(1, 4));
       await page.evaluate(() => {
         document.documentElement.style.fontSize = '';
@@ -438,6 +493,10 @@ try {
     }
     record(`${story} threshold sweep`, { cases });
   }
+  await open('wrapped-regions');
+  await resize(1280, 320);
+  natural(await geometry());
+  await keyboard(true);
   await open('english');
   await resize(1280, 720);
   await page
@@ -479,7 +538,9 @@ try {
     'Detail PageDown is independent',
   );
   record('Detail PageDown', result);
-  await page.getByTestId('entry-3').focus();
+  await page
+    .getByRole('row', { name: /^Alex Morgan 3 (In progress|In Bearbeitung)$/ })
+    .focus();
   await page.evaluate(() => {
     window.retainedRow = document.activeElement;
   });
@@ -517,9 +578,15 @@ try {
   record('stable fallback scroll range (80 frames)', await geometry());
   await open('english');
   await resize(1280, 720);
-  await page.getByTestId('next-page').click();
+  await page
+    .getByRole('button', { name: /^(Next page|Nächste Seite)$/ })
+    .click();
   assert.equal(
-    await page.getByTestId('entry-41').count(),
+    await page
+      .getByRole('row', {
+        name: /^Alex Morgan 41 (In progress|In Bearbeitung)$/,
+      })
+      .count(),
     1,
     'Pagination displays the next page',
   );
@@ -527,18 +594,26 @@ try {
     .getByRole('button', { name: 'Previous page', exact: true })
     .click();
   assert.equal(
-    await page.getByTestId('entry-1').count(),
+    await page
+      .getByRole('row', {
+        name: /^Alex Morgan 1 (In progress|In Bearbeitung)$/,
+      })
+      .count(),
     1,
     'Previous page returns',
   );
-  await page.getByTestId('search').fill('not present');
+  await page
+    .getByRole('textbox', { name: /Search entries|Einträge durchsuchen/ })
+    .fill('not present');
   await settle();
   assert.equal(
     (await geometry()).rows,
     0,
     'Search filters to empty without changing composition',
   );
-  await page.getByTestId('search').fill('Morgan');
+  await page
+    .getByRole('textbox', { name: /Search entries|Einträge durchsuchen/ })
+    .fill('Morgan');
   await settle();
   assert.equal((await geometry()).rows, 40, 'Clearing filter restores rows');
   bounded(await geometry());
