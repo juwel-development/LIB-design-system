@@ -57,7 +57,8 @@ _Avoid_: Status ink, alert background, emphasis colour
 
 **Scrim**:
 The themed veil behind a Dialog that marks the page beneath as present but unavailable. Its visual
-treatment may soften that page, but the Dialog's modality never depends on the treatment.
+treatment may soften the whole background, including navigation and application status, without
+preserving its readability; the Dialog's modality never depends on the treatment.
 _Avoid_: Backdrop, overlay, dimmer
 
 **Meter fill**:
@@ -384,7 +385,8 @@ _Avoid_: Catalogue, component list
 **Dialog**:
 A temporary, always-named modal surface that interrupts the page with one focused task; its name may
 be visible or supplied only to assistive technology. Only one stands at a time: it owns separation
-from and return to the page, while the consumer owns its content, actions, outcomes and replacement.
+from and return to the page, while the consumer owns its content, actions, outcomes and replacement,
+including any status needed within the task rather than in the obscured background.
 _Avoid_: Modal, popup, overlay
 
 **Dialog title**:
@@ -598,9 +600,17 @@ _Avoid_: Chrome, frame, layout, wrapper, masthead
 
 **Console mode**:
 A screen arrangement that keeps its top bar visible and its document still while long content scrolls
-within bounded panels. When fixed content cannot fit the available space, body scrolling is a
-reachability fallback rather than the screen's intended arrangement.
+within bounded panels. When fixed regions leave no usable panel body, the content takes its natural
+height and the enclosing body scrolls so every region and action remains reachable.
 _Avoid_: Clipped screen, fixed-height page
+
+**Bounded screen**:
+The main content of a console, with its heading either above the panels or within one of them.
+It shares the available height among its regions while preserving a whole-content scrolling fallback.
+
+**Usable panel body**:
+A panel's content area with room for at least one complete text line or ordinary row or control,
+including its focus indication; a merely nonzero sliver is not usable.
 
 **Page mode**:
 A screen arrangement whose body scrolls as a whole beneath a visible top bar while the document
