@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 import { renderToString } from 'react-dom/server';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { ColumnLayout } from './ColumnLayout';
 import { ColumnLayoutConfigurationError } from './ColumnLayoutConfigurationError';
@@ -103,7 +103,7 @@ const threeThenTwo = (fallback?: ReactNode) => (
 
 // An area with an interaction owner of its own: it subscribes to the consumer's stream while
 // mounted, so a subscription that outlives its removal shows as `observed`.
-const Subscribed: FunctionComponent<{ source$: Subject<string> }> = ({
+const Subscribed: FunctionComponent<{ source$: Observable<string> }> = ({
   source$,
 }) => {
   const [latest, setLatest] = useState('nothing yet');
@@ -212,20 +212,16 @@ describe('ColumnLayout.Alternatives', () => {
 
   it('leaves mounted content alone when the width changes without changing the selection', () => {
     const layout = installLayout({ layout: [true, true] });
-    const stream$ = new Subject<string>();
     let subscriptions = 0;
-    const counted$ = new Subject<string>();
-    const subscribe = counted$.subscribe.bind(counted$);
-    vi.spyOn(counted$, 'subscribe').mockImplementation((...observer) => {
+    const pool$ = new Observable<string>(() => {
       subscriptions += 1;
-      return subscribe(...(observer as Parameters<typeof subscribe>));
     });
     render(
       <ColumnLayout.Alternatives testId={'layout'}>
         <ColumnLayout.Root>
-          {area('Pool', <Subscribed source$={counted$} />)}
+          {area('Pool', <Subscribed source$={pool$} />)}
           {area('Sides', <input aria-label={'Note'} defaultValue={''} />)}
-          {area('Release', <Subscribed source$={stream$} />)}
+          {area('Release')}
         </ColumnLayout.Root>
         <ColumnLayout.Root>
           {area('Group')}
