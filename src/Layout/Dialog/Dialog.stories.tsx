@@ -536,3 +536,73 @@ export const BoundedSummaryShort: Story = {
 export const BoundedSummaryEmpty: Story = {
   render: () => <BoundedSummaryExample initialCount={0} />,
 };
+
+const ReplacementExample = () => {
+  const [channels] = useState(() => ({
+    first$: new Subject<boolean>(),
+    second$: new Subject<boolean>(),
+    dismissed$: new Subject<void>(),
+    open$: new Subject<void>(),
+    next$: new Subject<void>(),
+    previous$: new Subject<void>(),
+    close$: new Subject<void>(),
+  }));
+  useEffect(
+    () =>
+      unsubscribeAll([
+        channels.open$.subscribe(() => channels.first$.next(true)),
+        channels.next$.subscribe(() => {
+          channels.first$.next(false);
+          channels.second$.next(true);
+        }),
+        channels.previous$.subscribe(() => {
+          channels.second$.next(false);
+          channels.first$.next(true);
+        }),
+        channels.close$.subscribe(() => {
+          channels.first$.next(false);
+          channels.second$.next(false);
+        }),
+      ]),
+    [channels],
+  );
+  return (
+    <>
+      <Button onClick$={channels.open$}>Start task</Button>
+      <Dialog.Root
+        extent="content"
+        showDialog$={channels.first$}
+        onDismiss$={channels.dismissed$}
+      >
+        <Dialog.Title>First task</Dialog.Title>
+        <Dialog.Actions>
+          <Button onClick$={channels.next$}>Continue to next task</Button>
+          <Button onClick$={channels.close$}>Close task</Button>
+        </Dialog.Actions>
+      </Dialog.Root>
+      <Dialog.Root
+        extent="content"
+        showDialog$={channels.second$}
+        onDismiss$={channels.dismissed$}
+      >
+        <Dialog.Title>Second task</Dialog.Title>
+        <Dialog.Actions>
+          <Button onClick$={channels.previous$}>Return to first task</Button>
+          <Button onClick$={channels.close$}>Close task</Button>
+        </Dialog.Actions>
+      </Dialog.Root>
+    </>
+  );
+};
+
+export const Replacement: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Each transition closes the current Dialog before presenting its replacement in the same turn. The document stays locked across either direction and restores its previous overflow after the final task closes.',
+      },
+    },
+  },
+  render: () => <ReplacementExample />,
+};

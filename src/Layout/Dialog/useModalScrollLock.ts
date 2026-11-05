@@ -1,23 +1,51 @@
 import { type RefObject, useLayoutEffect } from 'react';
 
+type PageScrollLock = {
+  overflow: string;
+  priority: string;
+  dialogs: Set<HTMLDialogElement>;
+};
+
+const PAGE_SCROLL_LOCKS = new WeakMap<HTMLElement, PageScrollLock>();
+
+// Mutation observers can report the replacement opening before the previous dialog closing,
+// even when the consumer closes first. Share the snapshot until both observers have settled.
+const acquireScrollLock = (dialog: HTMLDialogElement): (() => void) => {
+  const page = dialog.ownerDocument.documentElement;
+  let lock = PAGE_SCROLL_LOCKS.get(page);
+  if (lock === undefined) {
+    lock = {
+      overflow: page.style.getPropertyValue('overflow'),
+      priority: page.style.getPropertyPriority('overflow'),
+      dialogs: new Set<HTMLDialogElement>(),
+    };
+    PAGE_SCROLL_LOCKS.set(page, lock);
+    page.style.setProperty('overflow', 'hidden');
+  }
+  const acquired = lock;
+  acquired.dialogs.add(dialog);
+  return () => {
+    acquired.dialogs.delete(dialog);
+    if (acquired.dialogs.size === 0) {
+      page.style.setProperty('overflow', acquired.overflow, acquired.priority);
+      PAGE_SCROLL_LOCKS.delete(page);
+    }
+  };
+};
+
 export const useModalScrollLock = (
   root: RefObject<HTMLDialogElement | undefined>,
 ): void => {
   useLayoutEffect(() => {
     const dialog = root.current;
     if (!dialog) return;
-    const page = dialog.ownerDocument.documentElement;
-    let previous: { value: string; priority: string } | undefined;
+    let release: (() => void) | undefined;
     const synchronize = () => {
-      if (dialog.open && previous === undefined) {
-        previous = {
-          value: page.style.getPropertyValue('overflow'),
-          priority: page.style.getPropertyPriority('overflow'),
-        };
-        page.style.setProperty('overflow', 'hidden');
-      } else if (!dialog.open && previous !== undefined) {
-        page.style.setProperty('overflow', previous.value, previous.priority);
-        previous = undefined;
+      if (dialog.open && release === undefined) {
+        release = acquireScrollLock(dialog);
+      } else if (!dialog.open && release !== undefined) {
+        release();
+        release = undefined;
       }
     };
     synchronize();
@@ -25,8 +53,7 @@ export const useModalScrollLock = (
     observer.observe(dialog, { attributes: true, attributeFilter: ['open'] });
     return () => {
       observer.disconnect();
-      if (previous !== undefined)
-        page.style.setProperty('overflow', previous.value, previous.priority);
+      release?.();
     };
   }, [root]);
 };

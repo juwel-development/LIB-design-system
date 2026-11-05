@@ -243,6 +243,75 @@ const checkIdentity = async () => {
   );
 };
 try {
+  await resize(1280, 720);
+  await page.goto(
+    `${base}/iframe.html?id=layout-dialog--replacement&viewMode=story`,
+  );
+  await page.getByRole('button', { name: 'Start task', exact: true }).waitFor();
+  await page.evaluate(() => {
+    document.documentElement.style.setProperty('overflow', 'auto', 'important');
+    document.body.style.minHeight = '2000px';
+  });
+  await page.getByRole('button', { name: 'Start task', exact: true }).click();
+  for (let cycle = 0; cycle < 3; cycle++) {
+    for (const [action, name] of [
+      ['Continue to next task', 'Second task'],
+      ['Return to first task', 'First task'],
+    ]) {
+      await page
+        .getByRole('dialog')
+        .getByRole('button', { name: action })
+        .click();
+      await settle();
+      await page.mouse.move(20, 100);
+      await page.mouse.wheel(0, 500);
+      await settle();
+      const replacement = await page.evaluate(() => ({
+        overflow: document.documentElement.style.overflow,
+        offset: window.scrollY,
+        open: document.querySelectorAll('dialog[open]').length,
+        modal: document.querySelectorAll('dialog:modal').length,
+      }));
+      records.push({
+        label: `replacement ${name} cycle ${cycle}`,
+        ...replacement,
+      });
+      assert.equal(
+        replacement.overflow,
+        'hidden',
+        'Replacement keeps the page locked',
+      );
+      assert.equal(
+        replacement.offset,
+        0,
+        'Replacement blocks background wheel scrolling',
+      );
+      assert.equal(replacement.open, 1, 'Only the replacement is open');
+      assert.equal(
+        replacement.modal,
+        1,
+        'Replacement preserves native modality',
+      );
+      assert(await page.getByRole('dialog', { name, exact: true }).isVisible());
+    }
+  }
+  await page.getByRole('button', { name: 'Close task', exact: true }).click();
+  await settle();
+  const restored = await page.evaluate(() => ({
+    overflow: document.documentElement.style.overflow,
+    priority: document.documentElement.style.getPropertyPriority('overflow'),
+  }));
+  assert.deepEqual(restored, { overflow: 'auto', priority: 'important' });
+  records.push({
+    label: 'replacement restores original page overflow',
+    ...restored,
+  });
+  await page.mouse.wheel(0, 500);
+  await press('PageDown');
+  assert(
+    await page.evaluate(() => window.scrollY > 0),
+    'Closed task releases background scrolling',
+  );
   for (const stylesheet of [
     'styles.css',
     'styles.light.css',

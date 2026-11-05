@@ -62,4 +62,31 @@ The browser driver remains ephemeral, matching the existing scripts/browser runn
 
 Local artifacts are under `/tmp/ticket-154-evidence/`: `geometry.json` (197 checkpoints), `browser.log`, `styles*.png` (bounded viewports plus fallback start/end screenshots), `screen-final.log`, `work-areas-final.log`, `roster.log`, `focused-tests.log`, `tests.log`, `lint.log`, `typecheck.log`, `build.log` and `storybook-build.log`. Red runs preserve the original missing bound, missing whole-dialog fallback, background-scroll leak and clipped focus-ring reproductions. These are local artifacts, not uploaded attachments.
 
-Independent review and publication belong to the coordinator. The separate consuming application and its private theme/catalog were not changed or run; this report establishes the library's approved matrix with its shipped themes. Firefox/WebKit were not part of this Chromium matrix. No implementation acceptance gap remains after the recorded checks pass; release identification and consumer adoption remain after publication.
+Independent review results follow below; publication belongs to the coordinator. The separate consuming application and its private theme/catalog were not changed or run; this report establishes the library's approved matrix with its shipped themes. Firefox/WebKit were not part of this Chromium matrix. No implementation acceptance gap remains after the recorded checks pass; release identification and consumer adoption remain after publication.
+
+## Independent review — 2026-11-05
+
+Pinned `git merge-base main HEAD` to **36ad968bcc08efcd9328e36d033d0dc869478cd8** and reviewed `git diff 36ad968bcc08efcd9328e36d033d0dc869478cd8...HEAD`, initially containing implementation commit **07ac047f77adaa8f2d25e5986fa1dee47b95d438**. Two parallel Codex reviewers assessed Standards and Spec independently. Both read the complete issue and approved Agent Brief; the Standards review covered all four files in `docs/agents/standards/`. The parent also assessed acceptance and ran the browser checks independently. Fallow's review brief informed inspection; its tooling advisories were not treated as confirmed defects.
+
+### Standards
+
+**0 confirmed findings, including no baseline smells requiring changes.** The closed public API, token styling, consumer wording, Subject ownership, component-local imports and release NOTE conform. The brief explicitly authorizes the composed browser regression seam. A second Standards pass cleared the replacement fix described below.
+
+### Spec
+
+**1 P1 finding, resolved: document scroll locking during sequential Dialog replacement.** The brief requires “Keep the background locked and preserve native modality” and preserving lifecycle behavior. Closing the current Dialog before opening a separately mounted replacement in the same synchronous turn obeyed the one-at-a-time precondition, but observer delivery could let the replacement save `hidden` before the previous Dialog restored the original overflow. That unlocked the open replacement and could leave the page permanently locked after closing.
+
+The lock now owns one original overflow snapshot per document and retains it across pending observer handoffs. Closing the final presentation restores the original value and priority. No public API or simultaneous-dialog support was added. A regression test first failed through the public Subjects; actual Chromium then independently failed on the original hook with `auto !== hidden`. Both pass after the fix. The second Spec pass found no remaining gap in the fix.
+
+`Layout/Dialog/Replacement` demonstrates the supported transition in both mounting orders. The browser regression performs three round trips, verifies exactly one open native modal, attempts background wheel scrolling after every replacement, and verifies restoration of `overflow: auto !important` plus working document scrolling after the final close.
+
+### Verification and limits
+
+- Lint, typecheck, all **65 test files / 1,492 tests**, package build and static Storybook build pass. Both review agents cleared the final code changes.
+- The original Chromium matrix passed independently before the review fix. After rebuilding, the expanded final matrix passes **204 checkpoints**, repeating the full EN/DE, three-stylesheet, four-viewport, insufficient-height, resize/content/lifecycle and integration checks with the replacement regression first. Screen, Work Areas and Roster browser acceptance also pass against that final static build. No builds run during these final browser suites.
+- Separate visual inspection in Orca's embedded browser confirmed the German 1280×720 bounded presentation and 1280×300 whole-dialog fallback. In fallback the dialog is 252px high with 1697px scroll height, Table is 1264px high with no independent scroll range or tab stop, its header is static, and document overflow remains hidden.
+- New local evidence is in **`/tmp/ticket-154-review/`**: `replacement-red.log`, `replacement-browser-red.log`, `replacement-green.log`, `dialog-browser-final.log`, `final-browser/geometry.json`, bounded/fallback PNGs, `*-browser-final.log`, and final lint/typecheck/test/build logs. Orca screenshots are preserved as `orca-*.png`. These paths are local artifacts, not uploaded attachments.
+- The separate Label Manager application, its installed theme and paired German catalog were not run. Full Firefox/WebKit matrices remain unverified. The supported library acceptance matrix uses consumer-owned verification wording and shipped styles.
+- The registry still reports **4.1.0**; these local fixes are unpublished. Coordinator owns landing, publication and consumer adoption against the actual resulting release. GitHub project status was left unchanged under the dispatch's prohibition on GitHub posting.
+
+Review totals: **Standards 0 (none); Spec 1 (worst: replacement lock race), resolved; no remaining confirmed findings.**

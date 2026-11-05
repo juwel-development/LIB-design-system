@@ -560,6 +560,38 @@ describe('Dialog Component', () => {
     }
   });
 
+  it('keeps the page locked when one dialog closes before its replacement opens in the same turn', async () => {
+    const page = document.documentElement;
+    page.style.setProperty('overflow', 'clip', 'important');
+    const first = new Subject<boolean>();
+    const second = new Subject<boolean>();
+    const view = render(
+      <>
+        {confirmation(new Subject<void>(), first)}
+        {confirmation(new Subject<void>(), second)}
+      </>,
+    );
+    try {
+      first.next(true);
+      await nativeCloseSettled();
+      first.next(false);
+      second.next(true);
+      await nativeCloseSettled();
+      expect(page.style.overflow).toBe('hidden');
+      second.next(false);
+      first.next(true);
+      await nativeCloseSettled();
+      expect(page.style.overflow).toBe('hidden');
+      first.next(false);
+      await nativeCloseSettled();
+      expect(page.style.overflow).toBe('clip');
+      expect(page.style.getPropertyPriority('overflow')).toBe('important');
+    } finally {
+      view.unmount();
+      page.style.removeProperty('overflow');
+    }
+  });
+
   it('exposes the explicit testId hook on every member', () => {
     const onDismiss$ = new Subject<void>();
     render(
