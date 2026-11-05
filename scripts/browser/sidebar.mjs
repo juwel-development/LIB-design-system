@@ -18,13 +18,13 @@ mkdirSync(artifacts, { recursive: true });
 const state = () =>
   page.evaluate(() => {
     const root = document.querySelector('[data-testid="navigation-example"]');
-    const nav = root.querySelector('nav');
-    const entries = [...nav.querySelectorAll('button')];
-    const current = nav.querySelector('[aria-current="true"]');
+    const navigation = root.querySelector('nav');
+    const entries = [...navigation.querySelectorAll('button')];
+    const current = navigation.querySelector('[aria-current="true"]');
     const content = root.querySelector('[data-testid="navigation-content"]');
     const text = (id) =>
       root.querySelector(`[data-testid="${id}"]`)?.textContent;
-    const rect = (element) => {
+    const measureBounds = (element) => {
       const bounds = element.getBoundingClientRect();
       return {
         left: bounds.left,
@@ -42,7 +42,7 @@ const state = () =>
       theme: document.documentElement.className,
       surface: getComputedStyle(document.body).backgroundColor,
       current: current?.textContent,
-      currentCount: nav.querySelectorAll('[aria-current]').length,
+      currentCount: navigation.querySelectorAll('[aria-current]').length,
       focused: document.activeElement.matches('button, input')
         ? document.activeElement.textContent
         : undefined,
@@ -59,8 +59,8 @@ const state = () =>
         !window.sidebarProbe ||
         window.sidebarProbe.section ===
           root.querySelector('[data-testid="section-content"]'),
-      track: rect(nav.parentElement),
-      content: rect(content),
+      track: measureBounds(navigation.parentElement),
+      content: measureBounds(content),
       overflow:
         document.documentElement.scrollWidth >
         document.documentElement.clientWidth,
@@ -77,7 +77,7 @@ const state = () =>
               line.left >= bounds.left - 0.5 &&
               line.right <= bounds.right + 0.5,
           ),
-          bounds: rect(entry),
+          bounds: measureBounds(entry),
         };
       }),
     };

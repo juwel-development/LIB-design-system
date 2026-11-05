@@ -118,6 +118,74 @@ Consumer adoption must wait for a published release containing #155, then identi
 version from npm and its changelog. No consumer Booking application was modified or rerun; the
 English/German examples demonstrate the library boundary, not payment or application acceptance.
 
-No implementation or check failures remain. A fresh reviewer handles code-review separately;
-review, landing and publication remain with the coordinator/maintainer. This worker did not
-self-dispatch review, push, merge, close the issue or publish.
+No implementation or check failures remained at the implementation handoff. The independent review
+below was dispatched separately; landing and publication remain with the coordinator/maintainer.
+The implementation worker did not self-dispatch review, push, merge, close the issue or publish.
+
+## Independent review and fixes — 2026-11-05
+
+Pinned review base: `36ad968bcc08efcd9328e36d033d0dc869478cd8`, captured with
+`git merge-base main HEAD` before review. Reviewed implementation commit
+`401ea133ddb0c723a0b64efce6d80731d7fb5323` using
+`git diff 36ad968bcc08efcd9328e36d033d0dc869478cd8...HEAD`. Later changes to main did not move this
+base. Authority was the full issue #155 and its approved Agent Brief comment
+`https://github.com/juwel-development/LIB-design-system/issues/155#issuecomment-6661823688`.
+
+Separate Codex subagents reviewed Standards and Spec in parallel, followed by independent browser
+verification and resolution by the review worker. All four standards were read: `coding.md`,
+`architecture.md`, `design-system-components.md` and `testing.md` in `docs/agents/standards/`.
+`npm run fallow:agent -- --base 36ad968bcc08efcd9328e36d033d0dc869478cd8` informed reading order;
+its inherited/heuristic warnings did not establish additional findings.
+
+### Standards
+
+**One low-severity documented violation, resolved; no actionable baseline smells.**
+The new browser harness used abbreviated identifiers `nav` and `rect`, contrary to
+`coding.md` → Naming: “No abbreviations — full words. Only `id`, `url`, `min`, `max` allowed.”
+Renamed them throughout to `navigation` and `measureBounds`. The Standards reviewer independently
+confirmed the resolution; the remaining `nav` strings are HTML selectors.
+
+The closed compound API, semantic styling, Subject ownership, controlled state, behavioral tests
+and consumer `NOTE:` footer conform to the reviewed standards. No production behavior changed
+during review.
+
+### Spec
+
+**Pass — zero findings.** The implementation satisfies the approved universal current-entry request
+semantics through one native click handler, preserving inert behavior, controlled current indication,
+content and focus. English/German ordinary and subordinate stories demonstrate the same application
+navigation handler and consumer-owned draft disposal. Public documentation explicitly supersedes
+#101's silence rule; no new API, mode, route, payment or focus policy was introduced.
+
+### Fresh verification and remaining boundaries
+
+The review worker reran lint, typecheck, all **65 test files / 1,493 tests**, package build with
+delivery checks, Storybook build and `git diff --check`: all passed. The only code edit was the
+identifier rename, so no new behavior test was necessary. The existing jsdom navigation diagnostic
+and Storybook optional MDX/deprecation/chunk warnings remain non-failing.
+
+After all builds finished, the final renamed browser harness passed **28/28 cases** in Chromium
+**156.0.8078.4**: **96 native source-CSS activations** across ordinary/subordinate content,
+English/German, light/dark, and 1023/1024px widths, plus 12 delivered-CSS cases at 800/1440px.
+It verified once-only current/inactive requests, inert click/Tab silence, current indication, retained
+focus, draft disposal/reopening, a 3px keyboard ring without movement, wrapping and no horizontal
+overflow. Representative German dark beside-content and English light stacked focus screenshots
+were visually inspected. The final run reported no page errors.
+
+A separate Orca embedded-browser interaction filled the German subordinate draft, focused
+Verträge and pressed Enter: requests became exactly `contracts`, subordinate content disappeared,
+the draft became `Kein Entwurf`, one current indication remained and focus stayed on a button.
+Standalone Chromium supplies the complete native focus-ring matrix.
+
+Fresh artifacts: `/tmp/lib-155-review-browser/results.json`, 44 PNGs in the same directory,
+`/tmp/lib-155-review-browser.log`, `/tmp/lib-155-review-orca-state.json`,
+`/tmp/lib-155-review-issue.json`, `/tmp/lib-155-review-registry.json`, and command logs matching
+`/tmp/lib-155-review-{lint,typecheck,tests,build,build-storybook}.log`.
+
+The registry still reports **4.1.0**; this capability remains unpublished. A release containing #155
+must be identified before adoption, and the consumer's assembled Booking flow still needs its own
+English/German rerun after adoption. No push, merge, issue/project mutation, close or release was
+performed by this reviewer; the coordinator owns landing.
+
+Review totals: Standards **1 found / 1 resolved / 0 remaining** (worst: low naming violation);
+Spec **0 findings**.
