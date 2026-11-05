@@ -1,4 +1,4 @@
-import { cva } from 'class-variance-authority';
+import { cva, type VariantProps } from 'class-variance-authority';
 import {
   createContext,
   type FunctionComponent,
@@ -10,7 +10,15 @@ import {
 import type { Subject } from 'rxjs';
 import { ChoicesCompositionError } from './ChoicesCompositionError';
 
-const choicesGroup = cva('flex flex-col gap-[var(--space-stack)]');
+const choicesGroup = cva('flex min-w-0 gap-[var(--space-stack)]', {
+  variants: {
+    arrangement: {
+      vertical: 'flex-col [&>[role=radio]]:w-full',
+      wrapping: 'flex-row flex-wrap items-start',
+    },
+  },
+  defaultVariants: { arrangement: 'vertical' },
+});
 
 // The selected row is told apart by the marker dot and a boundary flip from `controlBorder` to
 // `foreground` - Tabs' marker treatment, keyed on aria-checked so the attribute the device reads
@@ -18,7 +26,7 @@ const choicesGroup = cva('flex flex-col gap-[var(--space-stack)]');
 // geometry. Inert mutes only the name's ink (the Sidebar treatment); the selection stays visible.
 const choicesChoice = cva(
   [
-    'group/choice flex w-full flex-row items-start gap-3 text-left',
+    'group/choice flex min-w-0 max-w-full flex-none flex-row items-start gap-3 text-left wrap-anywhere',
     'rounded-[var(--radius-control)] border border-solid border-control-border bg-transparent aria-checked:border-foreground',
     'px-3 py-2',
     'cursor-pointer disabled:cursor-not-allowed',
@@ -68,7 +76,10 @@ const ARROW_STEP: Record<string, 1 | -1> = {
   ArrowLeft: -1,
 };
 
-export interface IChoicesRootProps {
+export interface IChoicesRootProps extends VariantProps<typeof choicesGroup> {
+  /** Full-width vertical rows by default; wrapping uses content-sized choices that flow onto
+   *  further lines. Both arrangements keep declared-order keyboard movement. */
+  arrangement?: VariantProps<typeof choicesGroup>['arrangement'];
   /** The key of the selected choice. Must name a declared choice; the consumer owns it. */
   selected: string;
   /** Emits a choice's key when an available non-selected row is activated by pointer or arrow
@@ -76,7 +87,7 @@ export interface IChoicesRootProps {
   onSelect$: Subject<string>;
   /** The radio group's accessible name. */
   label: string;
-  /** Present with its retained selection and every description visible, but unavailable:
+  /** Present with its retained selection and every supplied description visible, but unavailable:
    *  semantically disabled, skipped by Tab, and deaf to pointer and keyboard input. */
   inert?: boolean;
   children: ReactNode;
@@ -89,12 +100,13 @@ export interface IChoicesChoiceProps {
   value: string;
   /** The visible name. Text only - no icons, no per-row markup. */
   children: string;
-  /** The visible description under the name, exposed as the row's accessible description. */
-  description: string;
+  /** Optional visible text under the name, exposed as the choice's accessible description. */
+  description?: string;
   testId?: string;
 }
 
 const ChoicesRoot: FunctionComponent<IChoicesRootProps> = ({
+  arrangement,
   selected,
   onSelect$,
   label,
@@ -109,7 +121,7 @@ const ChoicesRoot: FunctionComponent<IChoicesRootProps> = ({
       role={'radiogroup'}
       aria-label={label}
       aria-disabled={inert === true ? 'true' : undefined}
-      className={choicesGroup()}
+      className={choicesGroup({ arrangement })}
       data-testid={testId}
     >
       {children}
@@ -157,7 +169,7 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
       role={'radio'}
       aria-checked={isSelected}
       aria-labelledby={nameId}
-      aria-describedby={descriptionId}
+      aria-describedby={description ? descriptionId : undefined}
       tabIndex={isSelected && !inert ? 0 : -1}
       disabled={inert}
       data-value={value}
@@ -200,19 +212,21 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
         >
           {children}
         </span>
-        <span
-          id={descriptionId}
-          className={'font-secondary text-muted text-small'}
-        >
-          {description}
-        </span>
+        {description && (
+          <span
+            id={descriptionId}
+            className={'font-secondary text-muted text-small'}
+          >
+            {description}
+          </span>
+        )}
       </span>
     </button>
   );
 };
 
 /**
- * A single selection from a small set of described options: vertically arranged choice rows,
+ * A single selection from a small set of named options with optional descriptions: choice rows,
  * exactly one selected, following the WAI-ARIA radio-group pattern. Controlled - the consumer owns
  * the selected key and every word; Choices owns the rows, the marker and the highlight. Composed
  * from two members: `Root` carries the contract, `Choice` one row.
@@ -220,7 +234,8 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
  * @Guarantees — enforced on every render
  * - Renders `role="radiogroup"` named by `label`, with each row a `role="radio"` button carrying
  *   `aria-checked`, its visible name as accessible name and its description as accessible
- *   description; ids are minted per row, so two groups on a page cannot collide.
+ *   description when supplied; omitted or empty descriptions render no content or association.
+ *   Ids are minted per row, so two groups on a page cannot collide.
  * - Selection is the value of `selected`, nothing else: activating an available non-selected row
  *   emits its key on `onSelect$`; the selected row, an unanswered request and every render emit
  *   nothing, and no fallback selection is invented - ever.
@@ -232,7 +247,10 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
  * - An inert group keeps the selected marker, highlight and every name and description visible,
  *   mutes only the names' ink, exposes `aria-disabled` on the group with every row disabled, adds
  *   no Tab stop, and emits nothing for any pointer or keyboard input.
- * - Names and descriptions wrap at narrow widths; a row never widens its group.
+ * - `arrangement="vertical"` (the default) gives every choice the group's width. `wrapping`
+ *   sizes choices to content without sharing surplus width and flows whole choices onto further
+ *   lines. Names, unbroken words and supplied descriptions wrap within the available group width.
+ * - Arrow order is declared order even across visual line breaks, never spatial row navigation.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - Choice rows are direct children of `Root` (arrays and fragments are supported), each `value`
@@ -243,7 +261,7 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
  *   a consumer that ignores a request has decided the selection stays.
  *
  * @UXGuidelines
- * - Names are short nouns for options and descriptions one or two sentences under them; the
+ * - Names are short nouns for options and optional descriptions one or two sentences under them; the
  *   consuming app words and translates both - the library ships no text of its own.
  * - This is not a form field: no `<label>` pairing, no validation, no submission. Wire `onSelect$`
  *   to whatever owns the selected key and pass that key back in.

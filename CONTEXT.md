@@ -520,7 +520,7 @@ The consumer owns the options, selection, wording and meaning of the selected se
 _Avoid_: Topic filter, multi-choice, checkbox list
 
 **Choice row**:
-One option within Choices - a stable key, a visible name and a description, selectable by
+One option within Choices - a stable key, a visible name and an optional description, selectable by
 activating any part of the row, its text included. The selected row is told apart by the marker
 and highlight rather than by colour alone. Availability belongs to the group: there is no per-row
 inert, and an option that cannot be offered is left out by the caller.
