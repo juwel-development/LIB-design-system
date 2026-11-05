@@ -493,11 +493,9 @@ A submitted selection belongs to a checkbox in a Form, and described alternative
 _Avoid_: Toggle button, checkbox, segmented control
 
 **Choices**:
-A single selection from a small set of described options, presented as vertically arranged choice
-rows with exactly one selected. The consumer owns the selected value and every word - each option
-arrives with a stable key, a name and a description, and a selection request is answered by
-rerendering with a new value. The whole group can be inert: visible with its selection and every
-description retained, but unavailable. Named for its job, not the widget style that renders it.
+A single selection from a small set of named options with optional descriptions, presented as
+vertical rows or a wrapping row with exactly one selected. The consumer owns the selection and
+wording; an inert group remains visible with its selection and supplied descriptions, but unavailable.
 _Avoid_: Radio group, radio buttons, option list, picker
 
 **Select**:
@@ -714,9 +712,9 @@ rather than requiring a Section.
 _Avoid_: Full-screen hero, splash screen, viewport section, centred layout, page wrapper
 
 **Sidebar**:
-The standing application navigation requesting section changes from the application: beside the
-active section's content and staying visible within its frame when space permits, above the content
-otherwise. The application owns which section is active and any location or history associated with it.
+The standing application navigation requesting a section destination, including the current section:
+beside that section's content when space permits, above it otherwise. Current indication describes
+location; the application owns the meaning of a navigation request and any location or history.
 _Avoid_: Router, index, drawer
 
 **Sidebar fill mode**:
