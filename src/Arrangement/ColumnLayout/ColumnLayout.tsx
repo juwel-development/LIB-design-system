@@ -10,7 +10,11 @@ import {
   type ReactElement,
   type ReactNode,
   useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 import { ColumnLayoutCompositionError } from './ColumnLayoutCompositionError';
 import { ColumnLayoutConfigurationError } from './ColumnLayoutConfigurationError';
 
@@ -47,11 +51,40 @@ const columnLayoutColumn = cva(
   'min-w-0 grow-[calc(var(--column-layout-weight)/var(--column-layout-growth-unit))] basis-[clamp(0px,(var(--column-layout-threshold)-100%)*1000000,100%)] max-w-[var(--column-layout-maximum)]',
 );
 
+// The selecting holder is the box the alternatives are measured against; it takes no space of
+// its own. The probes sit out of flow and clipped, so a shortfall never becomes overflow.
+const columnLayoutAlternatives = cva('relative min-w-0', {
+  variants: { fill: { false: '', true: 'h-full min-h-0' } },
+  defaultVariants: { fill: false },
+});
+const columnLayoutFitProbes = cva(
+  'pointer-events-none invisible absolute inset-x-0 top-0 h-0 overflow-hidden',
+);
+
+// One probe per declaration, as wide as that declaration's shortfall: the Column's own switch
+// expression against the holder's width, so `0px` means the row would hold and `1px` that it
+// would stack. Reading the width back is the whole measurement - no length is parsed in script.
+const columnLayoutFitProbe = cva(
+  'h-0 w-[clamp(0px,(var(--column-layout-threshold)-100%)*1000000,1px)]',
+  {
+    variants: {
+      gap: {
+        stack: '[--column-layout-gap:var(--space-stack)]',
+        region: '[--column-layout-gap:var(--space-region)]',
+      },
+    },
+    defaultVariants: { gap: 'region' },
+  },
+);
+
 // React's CSSProperties is closed over known properties; the custom properties the recipes
 // read are declared here so the style objects stay typed without an assertion.
 type ColumnLayoutRootStyle = CSSProperties & {
   '--column-layout-threshold': string;
   '--column-layout-growth-unit': number;
+};
+type ColumnLayoutFitProbeStyle = CSSProperties & {
+  '--column-layout-threshold': string;
 };
 type ColumnLayoutColumnStyle = CSSProperties & {
   '--column-layout-weight': number;
@@ -227,6 +260,131 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
   );
 };
 
+export interface IColumnLayoutAlternativesProps
+  extends VariantProps<typeof columnLayoutAlternatives> {
+  /** Accept the parent's allocated height and pass it to the mounted arrangement or fallback,
+   *  which must accept it in turn (`ColumnLayout.Root fill`, `Tabs.Root fill`). */
+  fill?: VariantProps<typeof columnLayoutAlternatives>['fill'];
+  /** Mounted when none of the alternatives fits. Omitted, `undefined`, `null` or `false`, the
+   *  last declared arrangement stays mounted instead, under its own stacking contract. */
+  fallback?: ReactNode;
+  /** The alternative arrangements in order of preference, as `ColumnLayout.Root` elements with
+   *  at least one column each: direct children, or arrays and fragments of them. A conditional
+   *  that renders nothing declares nothing. */
+  children?: ReactNode;
+  testId?: string;
+}
+
+type Arrangement = ReactElement<IColumnLayoutRootProps>;
+
+const isRoot = (node: ReactNode): node is Arrangement =>
+  isValidElement(node) && node.type === ColumnLayoutRoot;
+
+const collectArrangements = (children: ReactNode): Arrangement[] =>
+  Children.toArray(children).flatMap((child) => {
+    if (isFragment(child)) {
+      return collectArrangements(child.props.children);
+    }
+    if (!isRoot(child)) {
+      throw new ColumnLayoutConfigurationError(
+        'Alternatives takes ColumnLayout.Root elements only (arrays and fragments are fine; other content or a wrapping component is not)',
+      );
+    }
+    return [child];
+  });
+
+const fitThresholdOf = (arrangement: Arrangement, index: number): string => {
+  const tracks = collectColumns(arrangement.props.children).map(toTrack);
+  if (tracks.length === 0) {
+    throw new ColumnLayoutConfigurationError(
+      `alternative ${index + 1} declares no columns, so it has no minimum to fit`,
+    );
+  }
+  return thresholdOf(tracks);
+};
+
+const probeStyleOf = (threshold: string): ColumnLayoutFitProbeStyle => ({
+  '--column-layout-threshold': threshold,
+});
+
+// A probe is as wide as its declaration's shortfall, so a width of zero is a fit. No declaration
+// at all answers -1, which is also what "none fits" reads as.
+const firstFitOf = (probes: HTMLElement): number =>
+  Array.from(probes.children).findIndex(
+    (probe) => probe.getBoundingClientRect().width === 0,
+  );
+
+const ColumnLayoutAlternatives: FunctionComponent<
+  IColumnLayoutAlternativesProps
+> = ({ fill, fallback, children, testId }) => {
+  const arrangements = collectArrangements(children);
+  const thresholds = arrangements.map(fitThresholdOf);
+  const gaps = arrangements.map((arrangement) => arrangement.props.gap);
+  const declared = thresholds
+    .map((threshold, index) => `${gaps[index]} ${threshold}`)
+    .join('\n');
+  const probes = useRef<HTMLDivElement>(null);
+  const [firstFit, setFirstFit] = useState<number | undefined>(undefined);
+
+  // The first selection is made before the first paint; from then on a probe changes size only
+  // when its declaration's fit flips - on a holder resize or a re-pointed token alike. flushSync
+  // commits the new arrangement inside the observation, so no frame paints the outgoing one.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the probes are replaced exactly when the declarations are
+  useLayoutEffect(() => {
+    const holder = probes.current;
+    if (holder === null) {
+      return;
+    }
+    const select = (): void => setFirstFit(firstFitOf(holder));
+    select();
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const observer = new ResizeObserver(() => flushSync(select));
+    for (const probe of holder.children) {
+      observer.observe(probe);
+    }
+    return () => observer.disconnect();
+  }, [declared]);
+
+  const hasFallback =
+    fallback !== undefined && fallback !== null && fallback !== false;
+  const fitting = firstFit === undefined ? undefined : arrangements[firstFit];
+  const selected = fitting ?? (hasFallback ? undefined : arrangements.at(-1));
+  return (
+    <div className={columnLayoutAlternatives({ fill })} data-testid={testId}>
+      <div
+        ref={probes}
+        aria-hidden="true"
+        data-column-layout-fit=""
+        className={columnLayoutFitProbes()}
+      >
+        {thresholds.map((threshold, index) => (
+          <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: a probe's identity is its place in the order of preference
+            key={index}
+            className={columnLayoutFitProbe({ gap: gaps[index] })}
+            style={probeStyleOf(threshold)}
+          />
+        ))}
+      </div>
+      {firstFit !== undefined &&
+        (selected === undefined ? (
+          hasFallback && <Fragment key="fallback">{fallback}</Fragment>
+        ) : (
+          <ColumnLayoutRoot
+            key="arrangement"
+            gap={selected.props.gap}
+            fill={selected.props.fill}
+            testId={selected.props.testId}
+          >
+            {selected.props.children}
+          </ColumnLayoutRoot>
+        ))}
+    </div>
+  );
+};
+
 /**
  * An arrangement of weighted columns that becomes one column when the space it is given cannot
  * satisfy every column's minimum at the requested proportions. It owns the arrangement and nothing
@@ -275,6 +433,30 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
  *   `Root` - loose, nested in another column, or reached through a wrapping component - throws
  *   {@link ColumnLayoutCompositionError}. Both are programmer errors, raised loud and early.
  *
+ * @Guarantees — `Alternatives`, the consumer's choice between arrangements
+ * - Its children are `Root`s in the consumer's order of preference. It mounts the first whose
+ *   row would hold at its own width - the same threshold, tokens and gap that Root switches at,
+ *   compared by the browser, with equality fitting - also when later ones fit too. Nothing is
+ *   ranked, inferred or keyed to the viewport; two instances on a page select independently.
+ * - When none fits it mounts `fallback` if one was supplied, and otherwise keeps the last
+ *   declared Root, which stacks under its own contract. Selection never floors a width, so it
+ *   causes no horizontal overflow. With nothing declared it mounts the fallback, or nothing.
+ * - Selection follows the holder's width and every token the thresholds read - a re-pointed
+ *   minimum, a space role, a font-relative unit - without a resize, and is committed before the
+ *   next paint. Until the first measurement (a server render, the first client render) no
+ *   arrangement is mounted. Without layout, as in jsdom, every declaration measures as fitting.
+ * - Only the selected arrangement is mounted: no second copy of an area, an id or a control, and
+ *   nothing kept hidden. A change that leaves the selection alone touches no content.
+ * - On a selection change a column declared in both arrangements under the same React `key`
+ *   (unkeyed: the same position) with the same element types inside stays mounted, with its
+ *   state and focus. Everything else unmounts; content that returns mounts fresh, and no focus,
+ *   text selection, scroll position or local state is cached or restored for it.
+ * - It adds no role, name, tab stop, spacing, scrolling or selection request of its own. With
+ *   `fill` it passes its parent's allocated height to what it mounts.
+ * - A child that is not a `Root` - text, another element, a component wrapping a Root - or a
+ *   Root without columns throws {@link ColumnLayoutConfigurationError}. Every declaration is
+ *   validated, whether or not it is the one mounted.
+ *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - Every `minWidth` and supplied `maxWidth` token is declared, on the Root or an ancestor of it,
  *   as a valid nonnegative CSS length: `24rem`, `20em`, `40ch`, `320px`. A `rem` resolves against
@@ -292,7 +474,12 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
  *   contract, as `Table.Root` has; the column will not widen to hold it.
  * - `Root`'s children are `Column`s. Anything else placed beside them is rendered as given but is
  *   not a column: it takes no weight, counts for no gap or threshold, and sits in the row as
- *   content of its own width, which breaks the proportions. Content belongs inside a `Column`.
+ *   content of its own width, which breaks the proportions. Content belongs inside a `Column`. * - For `Alternatives`: state that must survive a removal - a draft, the active tab - is kept
+ *   by the application and supplied to the fresh mount; Tabs inside an arrangement receive a
+ *   valid `active` whenever they mount. An area that should stay mounted carries the same `key`
+ *   in each arrangement. With `fill`, the Roots and the fallback accept the height themselves.
+ *   The holder's width must not depend on which arrangement is mounted - a scrollbar that
+ *   appears for one of them only can undo the selection it follows from.
  *
  * @UXGuidelines
  * - A minimum is the width below which the column's content stops being readable or operable -
@@ -300,8 +487,12 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
  *   lines - not the width the designer would like. The stack is the readable fallback.
  * - Weights are structural relationships: `2` and `1` say the table is the subject and the summary
  *   its support. A ratio chosen to hit a pixel width is a measurement, and the theme owns those.
+ * - Alternatives are for one screen arranged differently, not for different screens: declare the
+ *   same areas in the same reading order and let the narrower arrangement group some of them,
+ *   in `Tabs` for instance. Which areas exist and how they group is the application's decision.
  */
 export const ColumnLayout = {
   Root: ColumnLayoutRoot,
   Column: ColumnLayoutColumn,
+  Alternatives: ColumnLayoutAlternatives,
 } as const;
