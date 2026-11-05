@@ -62,10 +62,11 @@ const columnLayoutFitProbes = cva(
 );
 
 // One probe per declaration, as wide as that declaration's shortfall: the Column's own switch
-// expression against the holder's width, so `0px` means the row would hold and `1px` that it
-// would stack. Reading the width back is the whole measurement - no length is parsed in script.
+// expression against the holder's width less any reserve, so `0px` means the row would hold and
+// `1px` that it would stack. Reading the width back is the whole measurement - no length is
+// parsed in script.
 const columnLayoutFitProbe = cva(
-  'h-0 w-[clamp(0px,(var(--column-layout-threshold)-100%)*1000000,1px)]',
+  'h-0 w-[clamp(0px,(var(--column-layout-threshold)-100%+var(--column-layout-reserve))*1000000,1px)]',
   {
     variants: {
       gap: {
@@ -85,6 +86,7 @@ type ColumnLayoutRootStyle = CSSProperties & {
 };
 type ColumnLayoutFitProbeStyle = CSSProperties & {
   '--column-layout-threshold': string;
+  '--column-layout-reserve': string;
 };
 type ColumnLayoutColumnStyle = CSSProperties & {
   '--column-layout-weight': number;
@@ -277,6 +279,43 @@ export interface IColumnLayoutAlternativesProps
 
 type Arrangement = ReactElement<IColumnLayoutRootProps>;
 
+// What an alternative contributes to selection: the Root to mount and the width its row holds at.
+type Declaration = { arrangement: Arrangement; threshold: string };
+
+// The outcome of one measurement, kept with the declarations it was taken for: an index into
+// them, or NONE_FITS.
+type Selection = { measured: string; firstFit: number };
+
+// A selection change: the choice it mounted and the holder width that asked for it.
+type Change = { to: number; width: number };
+
+const NONE_FITS = -1;
+
+// Changes further apart than this are separate events, not one mount answering another: a skipped
+// observation is delivered in the next frame, and a content update the frame after.
+const FEEDBACK_FRAMES = 3;
+
+// The width the holder loses to `asked`, where the trail shows it: two round trips, to `asked` at
+// this width and away at one other width. Only a holder whose width answers to what is mounted
+// repeats itself this exactly.
+const lossTo = (
+  trail: readonly Change[],
+  asked: number,
+  width: number,
+): number | undefined => {
+  const [first, away, second, awayAgain] = trail;
+  const isRepeated =
+    first?.to === asked &&
+    second?.to === asked &&
+    first.width === width &&
+    second.width === width &&
+    away?.to === awayAgain?.to &&
+    away?.width === awayAgain?.width;
+  return isRepeated && awayAgain !== undefined && awayAgain.width !== width
+    ? Math.abs(width - awayAgain.width)
+    : undefined;
+};
+
 const isRoot = (node: ReactNode): node is Arrangement =>
   isValidElement(node) && node.type === ColumnLayoutRoot;
 
@@ -293,49 +332,103 @@ const collectArrangements = (children: ReactNode): Arrangement[] =>
     return [child];
   });
 
-const fitThresholdOf = (arrangement: Arrangement, index: number): string => {
+const toDeclaration = (
+  arrangement: Arrangement,
+  index: number,
+): Declaration => {
   const tracks = collectColumns(arrangement.props.children).map(toTrack);
   if (tracks.length === 0) {
     throw new ColumnLayoutConfigurationError(
       `alternative ${index + 1} declares no columns, so it has no minimum to fit`,
     );
   }
-  return thresholdOf(tracks);
+  return { arrangement, threshold: thresholdOf(tracks) };
 };
 
-const probeStyleOf = (threshold: string): ColumnLayoutFitProbeStyle => ({
+const probeStyleOf = (
+  threshold: string,
+  reserve: string,
+): ColumnLayoutFitProbeStyle => ({
   '--column-layout-threshold': threshold,
+  '--column-layout-reserve': reserve,
 });
 
 // A probe is as wide as its declaration's shortfall, so a width of zero is a fit. No declaration
-// at all answers -1, which is also what "none fits" reads as.
+// at all answers NONE_FITS, which is also what "none fits" reads as.
 const firstFitOf = (probes: HTMLElement): number =>
   Array.from(probes.children).findIndex(
     (probe) => probe.getBoundingClientRect().width === 0,
   );
 
+// Declaration order is the preference; the fallback and the retained last declaration come after
+// every declaration that fits.
+const preferenceOf = (firstFit: number): number =>
+  firstFit === NONE_FITS ? Number.POSITIVE_INFINITY : firstFit;
+
 const ColumnLayoutAlternatives: FunctionComponent<
   IColumnLayoutAlternativesProps
 > = ({ fill, fallback, children, testId }) => {
-  const arrangements = collectArrangements(children);
-  const thresholds = arrangements.map(fitThresholdOf);
-  const gaps = arrangements.map((arrangement) => arrangement.props.gap);
-  const declared = thresholds
-    .map((threshold, index) => `${gaps[index]} ${threshold}`)
+  const declarations = collectArrangements(children).map(toDeclaration);
+  const declared = declarations
+    .map(
+      ({ arrangement, threshold }) => `${arrangement.props.gap} ${threshold}`,
+    )
     .join('\n');
   const probes = useRef<HTMLDivElement>(null);
-  const [firstFit, setFirstFit] = useState<number | undefined>(undefined);
+  const mounted = useRef<ReactNode>(null);
+  const [selection, setSelection] = useState<Selection | undefined>(undefined);
+  const [reserve, setReserve] = useState(0);
 
   // The first selection is made before the first paint; from then on a probe changes size only
   // when its declaration's fit flips - on a holder resize or a re-pointed token alike. flushSync
   // commits the new arrangement inside the observation, so no frame paints the outgoing one.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the probes are replaced exactly when the declarations are
   useLayoutEffect(() => {
     const holder = probes.current;
     if (holder === null) {
       return;
     }
-    const select = (): void => setFirstFit(firstFitOf(holder));
+    let selected: number | undefined;
+    let trail: readonly Change[] = [];
+    const keep = (change: Change): void => {
+      const kept = [...trail.slice(-3), change];
+      let frames = FEEDBACK_FRAMES;
+      const tick = (): void => {
+        if (trail !== kept) {
+          return;
+        }
+        frames -= 1;
+        if (frames === 0) {
+          trail = [];
+        } else {
+          requestAnimationFrame(tick);
+        }
+      };
+      trail = kept;
+      requestAnimationFrame(tick);
+    };
+    const select = (): void => {
+      const asked = firstFitOf(holder);
+      if (asked === selected) {
+        return;
+      }
+      const { width } = holder.getBoundingClientRect();
+      const lost = lossTo(trail, asked, width);
+      if (lost !== undefined) {
+        // Hold the loss back from the preferred of the two, and settle on the later declaration.
+        setReserve((reserved) => Math.max(reserved, lost));
+        trail = [];
+        if (
+          selected !== undefined &&
+          preferenceOf(asked) < preferenceOf(selected)
+        ) {
+          return;
+        }
+      }
+      keep({ to: asked, width });
+      selected = asked;
+      setSelection({ measured: declared, firstFit: asked });
+    };
+    setReserve(0);
     select();
     if (typeof ResizeObserver === 'undefined') {
       return;
@@ -344,43 +437,61 @@ const ColumnLayoutAlternatives: FunctionComponent<
     for (const probe of holder.children) {
       observer.observe(probe);
     }
-    return () => observer.disconnect();
+    return () => {
+      trail = [];
+      observer.disconnect();
+    };
   }, [declared]);
 
   const hasFallback =
     fallback !== undefined && fallback !== null && fallback !== false;
-  const fitting = firstFit === undefined ? undefined : arrangements[firstFit];
-  const selected = fitting ?? (hasFallback ? undefined : arrangements.at(-1));
+  // A selection measured for other declarations says nothing about these: what it mounted stays
+  // until the effect above has measured them, so no unselected arrangement mounts in between.
+  const current = selection?.measured === declared ? selection : undefined;
+  const fitting =
+    current === undefined
+      ? undefined
+      : declarations[current.firstFit]?.arrangement;
+  const chosen =
+    fitting ?? (hasFallback ? undefined : declarations.at(-1)?.arrangement);
+  const content: ReactNode =
+    current === undefined ? (
+      mounted.current
+    ) : chosen === undefined ? (
+      hasFallback && <Fragment key="fallback">{fallback}</Fragment>
+    ) : (
+      <ColumnLayoutRoot
+        key="arrangement"
+        gap={chosen.props.gap}
+        fill={chosen.props.fill}
+        testId={chosen.props.testId}
+      >
+        {chosen.props.children}
+      </ColumnLayoutRoot>
+    );
+  useLayoutEffect(() => {
+    mounted.current = content;
+  });
+
+  // Only a declaration preferred to the mounted one is judged with the reserve: the mounted one
+  // and those after it are measured at the width the holder has.
+  const reserveOf = (index: number): string =>
+    current !== undefined && index < preferenceOf(current.firstFit)
+      ? `${reserve}px`
+      : '0px';
   return (
     <div className={columnLayoutAlternatives({ fill })} data-testid={testId}>
-      <div
-        ref={probes}
-        aria-hidden="true"
-        data-column-layout-fit=""
-        className={columnLayoutFitProbes()}
-      >
-        {thresholds.map((threshold, index) => (
+      <div ref={probes} aria-hidden="true" className={columnLayoutFitProbes()}>
+        {declarations.map(({ arrangement, threshold }, index) => (
           <div
             // biome-ignore lint/suspicious/noArrayIndexKey: a probe's identity is its place in the order of preference
             key={index}
-            className={columnLayoutFitProbe({ gap: gaps[index] })}
-            style={probeStyleOf(threshold)}
+            className={columnLayoutFitProbe({ gap: arrangement.props.gap })}
+            style={probeStyleOf(threshold, reserveOf(index))}
           />
         ))}
       </div>
-      {firstFit !== undefined &&
-        (selected === undefined ? (
-          hasFallback && <Fragment key="fallback">{fallback}</Fragment>
-        ) : (
-          <ColumnLayoutRoot
-            key="arrangement"
-            gap={selected.props.gap}
-            fill={selected.props.fill}
-            testId={selected.props.testId}
-          >
-            {selected.props.children}
-          </ColumnLayoutRoot>
-        ))}
+      {content}
     </div>
   );
 };
@@ -446,7 +557,15 @@ const ColumnLayoutAlternatives: FunctionComponent<
  *   next paint. Until the first measurement (a server render, the first client render) no
  *   arrangement is mounted. Without layout, as in jsdom, every declaration measures as fitting.
  * - Only the selected arrangement is mounted: no second copy of an area, an id or a control, and
- *   nothing kept hidden. A change that leaves the selection alone touches no content.
+ *   nothing kept hidden. A change that leaves the selection alone touches no content. When the
+ *   declarations themselves change, what is mounted stays until the new ones are measured, in
+ *   the same update: nothing they do not select is mounted in between.
+ * - A holder that loses width to what is mounted in it - a scroll body whose scrollbar shows for
+ *   one arrangement only - settles. Once the same two selections have alternated at the same two
+ *   widths twice, no more than three frames apart, the later declaration stays and the width lost
+ *   is held back from every declaration preferred to the mounted one until the declarations
+ *   change: an earlier one returns once it fits with that much to spare. Otherwise nothing is
+ *   held back, and a width that merely drops and returns is followed exactly.
  * - On a selection change a column declared in both arrangements under the same React `key`
  *   (unkeyed: the same position) with the same element types inside stays mounted, with its
  *   state and focus. Everything else unmounts; content that returns mounts fresh, and no focus,
@@ -474,12 +593,14 @@ const ColumnLayoutAlternatives: FunctionComponent<
  *   contract, as `Table.Root` has; the column will not widen to hold it.
  * - `Root`'s children are `Column`s. Anything else placed beside them is rendered as given but is
  *   not a column: it takes no weight, counts for no gap or threshold, and sits in the row as
- *   content of its own width, which breaks the proportions. Content belongs inside a `Column`. * - For `Alternatives`: state that must survive a removal - a draft, the active tab - is kept
+ *   content of its own width, which breaks the proportions. Content belongs inside a `Column`.
+ * - For `Alternatives`: state that must survive a removal - a draft, the active tab - is kept
  *   by the application and supplied to the fresh mount; Tabs inside an arrangement receive a
  *   valid `active` whenever they mount. An area that should stay mounted carries the same `key`
  *   in each arrangement. With `fill`, the Roots and the fallback accept the height themselves.
- *   The holder's width must not depend on which arrangement is mounted - a scrollbar that
- *   appears for one of them only can undo the selection it follows from.
+ *   A holder whose width answers to the mounted arrangement more than three frames after the
+ *   mount, or differently each time, is outside the contract: that dependency is not recognised
+ *   and can alternate.
  *
  * @UXGuidelines
  * - A minimum is the width below which the column's content stops being readable or operable -

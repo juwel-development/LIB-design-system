@@ -5,9 +5,10 @@ import {
   type FunctionComponent,
   type ReactNode,
   useEffect,
+  useLayoutEffect,
   useState,
 } from 'react';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { ColumnLayout } from './ColumnLayout';
 
@@ -58,7 +59,11 @@ const meta: Meta<typeof ColumnLayout.Alternatives> = {
 
 **Errors.** Anything among the children that is not a \`ColumnLayout.Root\` — text, another element, a component wrapping a Root — and a Root without columns throw \`ColumnLayoutConfigurationError\`, as do the invalid weights and token names \`ColumnLayout\` already rejects. Every declaration is validated, mounted or not.
 
-**Caller must ensure.** Declare every \`minWidth\` token as a nonnegative length on an ancestor. Keep the element's width independent of what is mounted in it; a holder that gains a scrollbar only for one arrangement can change the answer it just gave. Give the same area the same \`key\` in every arrangement in which it should stay mounted.`,
+**When the declarations change** — an area is added or dropped, a weight or a token name changes — what is mounted stays until the new declarations are measured, within the same update. Nothing the new declarations do not select is mounted in between, and a column kept under its \`key\` stays mounted.
+
+**When the element's width answers to its content.** Inside a scroll body with space-taking scrollbars, mounting a preferred arrangement can cost the element the very width that arrangement needs: its content overflows, the scrollbar appears, the arrangement stops fitting, the next one restores the width, and the first fits again. \`Alternatives\` settles instead. Once the same two selections have alternated at the same two widths twice, with no more than three frames between changes, it takes the difference as its own doing: the later declaration stays mounted, and the width that was lost is held back when judging the declarations preferred to the mounted one, until the declarations change. A preferred arrangement returns once it fits with that much to spare, so it still fits after taking it. Settling mounts each of the two arrangements at most twice more. Where the element's width does not depend on its content nothing is held back and the boundary above is exact; a width that merely drops and returns — a stylesheet swapped, a panel toggled twice — is followed as usual. See *Width Feedback*.
+
+**Caller must ensure.** Declare every \`minWidth\` token as a nonnegative length on an ancestor. Give the same area the same \`key\` in every arrangement in which it should stay mounted. A holder whose width follows the mounted arrangement only after more than three frames, or by a different amount each time — a delayed or animated dependency — is outside the contract and can alternate.`,
       },
     },
   },
@@ -246,12 +251,14 @@ export const Preference: Story = {
 /** The boundary is exact. With weights `2`, `1`, `1` and minimums of 12rem, 8rem and 8rem the
  *  three areas fit from `2 × gap + max(12 × 4 ⁄ 2, 8 × 4, 8 × 4)rem = 2 × gap + 32rem`. The first
  *  holder is exactly that wide and mounts them, in one row; the second is a quarter pixel short
- *  and mounts the two-area arrangement, whose own threshold is `gap + 24rem`. */
+ *  and mounts the two-area arrangement, whose own threshold is `gap + 24rem`. The gap is the
+ *  declaration's own: the third holder is narrower than either, and exactly wide enough for the
+ *  same three areas declared with the `stack` gap. */
 export const FitBoundary: Story = {
   render: () => {
-    const declarations = (
+    const declarationsWith = (gap: 'region' | 'stack') => (
       <ColumnLayout.Alternatives>
-        <ColumnLayout.Root>
+        <ColumnLayout.Root gap={gap}>
           <ColumnLayout.Column weight={2} minWidth={'--pool-min-width'}>
             <Area name={'Pool'} />
           </ColumnLayout.Column>
@@ -283,14 +290,21 @@ export const FitBoundary: Story = {
           style={bounds}
           testId={'at'}
         >
-          {declarations}
+          {declarationsWith('region')}
         </Holder>
         <Holder
           width={'calc(2 * var(--space-region) + 32rem - 0.25px)'}
           style={bounds}
           testId={'below'}
         >
-          {declarations}
+          {declarationsWith('region')}
+        </Holder>
+        <Holder
+          width={'calc(2 * var(--space-stack) + 32rem)'}
+          style={bounds}
+          testId={'at-stack-gap'}
+        >
+          {declarationsWith('stack')}
         </Holder>
       </Stack>
     );
@@ -306,6 +320,12 @@ export const FitBoundary: Story = {
     await expect(
       at.getBoundingClientRect().width - below.getBoundingClientRect().width,
     ).toBeLessThanOrEqual(0.25);
+    const atStackGap = canvas.getByTestId('at-stack-gap');
+    await expect(atStackGap.getBoundingClientRect().width).toBeLessThan(
+      below.getBoundingClientRect().width,
+    );
+    await expect(areaNames(atStackGap)).toEqual(['Pool', 'Board', 'Summary']);
+    await expect(new Set(tops(atStackGap)).size).toBe(1);
   },
 };
 
@@ -521,6 +541,92 @@ export const Lifecycle: Story = {
     await expect(canvasElement.querySelectorAll('[name="title"]')).toHaveLength(
       1,
     );
+  },
+};
+
+// Stands in for content that overflows its scroll body: while mounted it reports itself, and the
+// story takes a scrollbar's width off the holder, as a classic scrollbar would.
+const Overflowing: FunctionComponent<{
+  present$: BehaviorSubject<boolean>;
+}> = ({ present$ }) => {
+  useLayoutEffect(() => {
+    present$.next(true);
+    return () => present$.next(false);
+  }, [present$]);
+  return <P>Taller than the scroll body can show.</P>;
+};
+
+/** A holder that loses width to what is mounted in it. The three areas fit the 33rem offered
+ *  exactly, but mounted they cost the holder 1rem - a scrollbar - and no longer fit; the tab group
+ *  gives the rem back. After two such round trips the tab group stays and the lost rem is held
+ *  back from then on: with one rem more offered the three areas return, once, and hold their
+ *  row at the 33rem they leave. */
+export const WidthFeedback: Story = {
+  render: () => {
+    const Scrolled: FunctionComponent = () => {
+      const [offered, setOffered] = useState(33);
+      const [isOverflowing, setIsOverflowing] = useState(false);
+      const [mountsOfThree, setMountsOfThree] = useState(0);
+      const [present$] = useState(() => new BehaviorSubject(false));
+      const [widen$] = useState(() => new Subject<void>());
+      useLayoutEffect(() => {
+        const subscriptions = [
+          present$.subscribe((isPresent) => {
+            setIsOverflowing(isPresent);
+            setMountsOfThree((count) => count + Number(isPresent));
+          }),
+          widen$.subscribe(() => setOffered((rem) => rem + 1)),
+        ];
+        return () => {
+          for (const subscription of subscriptions) subscription.unsubscribe();
+        };
+      }, [present$, widen$]);
+      return (
+        <Stack gap={'region'}>
+          <Cluster>
+            <Button variant={'plain'} onClick$={widen$}>
+              Offer one rem more
+            </Button>
+            <Note>
+              {offered}rem offered, three areas mounted {mountsOfThree} time(s)
+            </Note>
+          </Cluster>
+          <Holder
+            width={`${offered - Number(isOverflowing)}rem`}
+            testId={'holder'}
+          >
+            <WorkAreas summary={<Overflowing present$={present$} />} />
+          </Holder>
+        </Stack>
+      );
+    };
+    return <Scrolled />;
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const holder = canvas.getByTestId('holder');
+    const still = async (): Promise<void> => {
+      for (let frame = 0; frame < 12; frame++) {
+        await new Promise(requestAnimationFrame);
+      }
+    };
+    await still();
+    await expect(areaNames(holder)).toEqual(['Pool', 'Board']);
+    await expect(
+      canvas.getByText(/33rem offered, three areas mounted 2 time/),
+    ).toBeVisible();
+    await expect(holder.getBoundingClientRect().width).toBe(33 * 16);
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Offer one rem more' }),
+    );
+    await still();
+    await expect(areaNames(holder)).toEqual(['Pool', 'Board', 'Summary']);
+    await expect(new Set(tops(holder)).size).toBe(1);
+    await expect(holder.getBoundingClientRect().width).toBe(33 * 16);
+    await expect(
+      canvas.getByText(/34rem offered, three areas mounted 3 time/),
+    ).toBeVisible();
   },
 };
 

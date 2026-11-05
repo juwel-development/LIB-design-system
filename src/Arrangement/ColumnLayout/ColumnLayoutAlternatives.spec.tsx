@@ -16,21 +16,31 @@ import { ColumnLayoutConfigurationError } from './ColumnLayoutConfigurationError
 
 // Fit is a browser fact: jsdom lays nothing out, so the spec stands in for the layout engine by
 // answering each declaration's fit in preference order, keyed by the Alternatives' testId, and by
-// firing the observer. Selection and lifecycle are proven here; real fit lives in the stories.
-type Fits = Record<string, readonly boolean[]>;
+// firing the observer. A fit is a plain answer, or a rule over the probe the stylesheet would
+// resolve it on. Selection and lifecycle are proven here; real fit lives in the stories.
+type Fit = boolean | ((probe: HTMLElement) => boolean);
+type Fits = Record<string, readonly Fit[]>;
 
-const installLayout = (initial: Fits) => {
+const installLayout = (initial: Fits, ownWidth: () => number = () => 0) => {
   let fits = initial;
   const callbacks = new Set<ResizeObserverCallback>();
   const observed: Element[] = [];
-  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
-    function (this: Element) {
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+    function (this: HTMLElement) {
+      const owner = (element: Element | null | undefined): string =>
+        element?.parentElement?.getAttribute('data-testid') ?? '';
+      if (owner(this) in fits && this.previousElementSibling === null) {
+        return { width: ownWidth(), height: 0 } as DOMRect;
+      }
       const probes = this.parentElement;
-      const owner = probes?.parentElement?.getAttribute('data-testid') ?? '';
-      const isProbe = probes?.hasAttribute('data-column-layout-fit') === true;
-      const index = isProbe ? Array.from(probes.children).indexOf(this) : -1;
-      const width = isProbe && fits[owner]?.[index] === false ? 1 : 0;
-      return { width, height: 0 } as DOMRect;
+      const declared = fits[owner(probes)];
+      const index =
+        probes?.previousElementSibling === null
+          ? Array.from(probes.children).indexOf(this)
+          : -1;
+      const answer = declared?.[index] ?? true;
+      const fitting = typeof answer === 'function' ? answer(this) : answer;
+      return { width: fitting ? 0 : 1, height: 0 } as DOMRect;
     },
   );
   class ControlledResizeObserver {
@@ -58,7 +68,7 @@ const installLayout = (initial: Fits) => {
     set: (next: Fits) => {
       fits = next;
     },
-    resize: (next: Fits) => {
+    resize: (next: Fits = fits) => {
       fits = next;
       act(notify);
     },
@@ -71,6 +81,27 @@ const installLayout = (initial: Fits) => {
     },
     observing: (): number => observed.length,
   };
+};
+
+// A declaration that fits from `minimum` of the holder's own width, less whatever the component
+// holds back on its probe: the comparison the stylesheet makes, with numbers in place of tokens.
+const fitsFrom =
+  (minimum: number, ownWidth: () => number) =>
+  (probe: HTMLElement): boolean =>
+    ownWidth() -
+      Number.parseFloat(
+        probe.style.getPropertyValue('--column-layout-reserve') || '0',
+      ) >=
+    minimum;
+
+// As many frames as the browser would paint while a test waits.
+const frames = async (count: number): Promise<void> => {
+  for (let frame = 0; frame < count; frame++) {
+    await act(
+      () =>
+        new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+    );
+  }
 };
 
 const thresholdOf = (element: HTMLElement | undefined): string =>
@@ -575,7 +606,7 @@ describe('ColumnLayout.Alternatives', () => {
     ).toThrow(ColumnLayoutConfigurationError);
   });
 
-  it('measures each declaration against the threshold its own row switches at, gap role included', () => {
+  it('measures each declaration against the threshold its own row switches at', () => {
     const layout = installLayout({ layout: [true, true] });
     render(
       <ColumnLayout.Alternatives testId={'layout'}>
@@ -597,17 +628,11 @@ describe('ColumnLayout.Alternatives', () => {
       'calc(2 * var(--column-layout-gap) + max(var(--pool-min-width) * 2, var(--sides-min-width) * 4, var(--release-min-width) * 4))',
     );
     expect(thresholdOf(three)).toBe(thresholdOf(screen.getByTestId('three')));
-    expect(three?.className).toContain(
-      '[--column-layout-gap:var(--space-region)]',
-    );
     layout.resize({ layout: [false, true] });
     expect(thresholdOf(two)).toBe(
       'calc(1 * var(--column-layout-gap) + max(var(--group-min-width) * 2, var(--sides-min-width) * 2))',
     );
     expect(thresholdOf(two)).toBe(thresholdOf(screen.getByTestId('two')));
-    expect(two?.className).toContain(
-      '[--column-layout-gap:var(--space-stack)]',
-    );
   });
 
   it('selects again when the declarations change, without waiting for a resize', () => {
@@ -626,6 +651,187 @@ describe('ColumnLayout.Alternatives', () => {
       </ColumnLayout.Alternatives>,
     );
     expect(areaNames()).toEqual(['Sides']);
+  });
+
+  it('keeps what is mounted while changed declarations are measured, so nothing unselected mounts in between', () => {
+    const layout = installLayout({ layout: [true] });
+    let poolSubscriptions = 0;
+    const pool$ = new Observable<string>(() => {
+      poolSubscriptions += 1;
+    });
+    const sides = area(
+      'Sides',
+      <input aria-label={'Note'} defaultValue={''} />,
+    );
+    const { rerender } = render(
+      <ColumnLayout.Alternatives testId={'layout'}>
+        <ColumnLayout.Root>
+          {sides}
+          {area('Release')}
+        </ColumnLayout.Root>
+      </ColumnLayout.Alternatives>,
+    );
+    const note = screen.getByRole('textbox', { name: 'Note' });
+
+    layout.set({ layout: [false, true] });
+    rerender(
+      <ColumnLayout.Alternatives testId={'layout'}>
+        <ColumnLayout.Root>
+          {area('Pool', <Subscribed source$={pool$} />)}
+          {sides}
+          {area('Release')}
+        </ColumnLayout.Root>
+        <ColumnLayout.Root>
+          {area('Group')}
+          {sides}
+        </ColumnLayout.Root>
+      </ColumnLayout.Alternatives>,
+    );
+
+    expect(areaNames()).toEqual(['Group', 'Sides']);
+    expect(poolSubscriptions).toBe(0);
+    expect(screen.getByRole('textbox', { name: 'Note' })).toBe(note);
+  });
+
+  it('does not pass through the fallback when the declarations change to one that fits', () => {
+    const layout = installLayout({ layout: [false, true] });
+    let fallbackSubscriptions = 0;
+    const fallback$ = new Observable<string>(() => {
+      fallbackSubscriptions += 1;
+    });
+    const fallback = <Subscribed source$={fallback$} />;
+    const sides = area(
+      'Sides',
+      <input aria-label={'Note'} defaultValue={''} />,
+    );
+    const { rerender } = render(
+      <ColumnLayout.Alternatives fallback={fallback} testId={'layout'}>
+        <ColumnLayout.Root>
+          {area('Pool')}
+          {sides}
+          {area('Release')}
+        </ColumnLayout.Root>
+        <ColumnLayout.Root>
+          {area('Group')}
+          {sides}
+        </ColumnLayout.Root>
+      </ColumnLayout.Alternatives>,
+    );
+    const note = screen.getByRole('textbox', { name: 'Note' });
+
+    layout.set({ layout: [true] });
+    rerender(
+      <ColumnLayout.Alternatives fallback={fallback} testId={'layout'}>
+        <ColumnLayout.Root>
+          {sides}
+          {area('Release')}
+        </ColumnLayout.Root>
+      </ColumnLayout.Alternatives>,
+    );
+
+    expect(areaNames()).toEqual(['Sides', 'Release']);
+    expect(fallbackSubscriptions).toBe(0);
+    expect(screen.getByRole('textbox', { name: 'Note' })).toBe(note);
+  });
+
+  it('settles on the later arrangement when mounting the preferred one narrows the holder below its fit', () => {
+    // A holder in a scroll body: the three areas overflow it, and the scrollbar that follows
+    // takes 16px of the width the three were selected at.
+    const ownWidth = (): number =>
+      screen.queryByRole('region', { name: 'Pool' }) === null ? 1108 : 1092;
+    let poolSubscriptions = 0;
+    const pool$ = new Observable<string>(() => {
+      poolSubscriptions += 1;
+    });
+    const layout = installLayout(
+      { layout: [fitsFrom(1104, ownWidth), fitsFrom(728, ownWidth)] },
+      ownWidth,
+    );
+    render(
+      <ColumnLayout.Alternatives testId={'layout'}>
+        <ColumnLayout.Root>
+          {area('Pool', <Subscribed source$={pool$} />)}
+          {area('Sides')}
+          {area('Release')}
+        </ColumnLayout.Root>
+        <ColumnLayout.Root>
+          {area('Group')}
+          {area('Sides')}
+        </ColumnLayout.Root>
+      </ColumnLayout.Alternatives>,
+    );
+
+    for (let observation = 0; observation < 6; observation++) {
+      layout.resize();
+    }
+
+    expect(areaNames()).toEqual(['Group', 'Sides']);
+    expect(poolSubscriptions).toBe(2);
+  });
+
+  it('returns to the preferred arrangement once it fits with the width it costs held back', () => {
+    let offered = 1108;
+    const ownWidth = (): number =>
+      screen.queryByRole('region', { name: 'Pool' }) === null
+        ? offered
+        : offered - 16;
+    const layout = installLayout(
+      { layout: [fitsFrom(1104, ownWidth), fitsFrom(728, ownWidth)] },
+      ownWidth,
+    );
+    render(threeThenTwo());
+    for (let observation = 0; observation < 6; observation++) {
+      layout.resize();
+    }
+    expect(areaNames()).toEqual(['Group', 'Sides']);
+
+    offered = 1119;
+    layout.resize();
+    expect(areaNames()).toEqual(['Group', 'Sides']);
+
+    offered = 1120;
+    layout.resize();
+    layout.resize();
+    expect(areaNames()).toEqual(['Pool', 'Sides', 'Release']);
+  });
+
+  it('follows a width that drops and comes straight back, as when a stylesheet is swapped', () => {
+    let offered = 1104;
+    const ownWidth = (): number => offered;
+    const layout = installLayout(
+      { layout: [fitsFrom(1104, ownWidth), fitsFrom(728, ownWidth)] },
+      ownWidth,
+    );
+    render(threeThenTwo());
+    offered = 1000;
+    layout.resize();
+    offered = 1104;
+    layout.resize();
+    expect(areaNames()).toEqual(['Pool', 'Sides', 'Release']);
+
+    offered = 1103;
+    layout.resize();
+    offered = 1104;
+    layout.resize();
+    expect(areaNames()).toEqual(['Pool', 'Sides', 'Release']);
+  });
+
+  it('holds nothing back when the same two widths alternate frames apart, which is the holder being resized', async () => {
+    let offered = 1104;
+    const ownWidth = (): number => offered;
+    const layout = installLayout(
+      { layout: [fitsFrom(1104, ownWidth), fitsFrom(728, ownWidth)] },
+      ownWidth,
+    );
+    render(threeThenTwo());
+
+    for (const width of [1000, 1104, 1000, 1104]) {
+      await frames(4);
+      offered = width;
+      layout.resize();
+    }
+
+    expect(areaNames()).toEqual(['Pool', 'Sides', 'Release']);
   });
 
   it('applies a fit change before the browser paints, not a frame later', () => {
