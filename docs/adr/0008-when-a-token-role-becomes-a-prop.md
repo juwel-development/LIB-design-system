@@ -489,3 +489,31 @@ to that candidate; an unusable Pane makes Screen release its whole content heigh
 stable and restoration never temporarily bounds fallback content to measure it. Table remains the
 scroll owner in delegated mode. This is specific Screen/Pane cooperation, not a general registry or
 public measurement protocol. Standalone Pane and ColumnLayout keep their existing contracts.
+
+**Alternative arrangements — approved brief for #153 (2026-11-05).**
+The maintainer approved a consumer-composed capability, not a library-owned layout: the consumer
+declares alternative arrangements in order of preference with minimum usable widths named by theme
+tokens; the library mounts the first that fits its own container width, an optional fallback when
+none fits, and otherwise the last declaration under its normal wrapping and scrolling contracts.
+Active views and persistent state stay with the consumer. Inactive content is removed and
+unmounted; content retained in the DOM stays mounted; returning content mounts fresh, with no
+focus or selection restored. No component name or mechanism was prescribed.
+
+**What #153 shipped.** One member, `ColumnLayout.Alternatives`, with `children`, `fallback`,
+`fill` and `testId`. An alternative is a `ColumnLayout.Root`, so its minimum usable widths are the
+`minWidth` tokens its columns already carry and its fit is that Root's own documented threshold,
+gap included - no second declaration of the same widths and no new token-reference surface. A
+separate component taking one width token per alternative was rejected: its threshold could
+disagree with the row it holds, so a "fitting" arrangement could mount stacked. The fit is
+evaluated by the stylesheet in one hidden probe per declaration and only read back as zero or not,
+which keeps theme, font and media-query changes effective without a resize; script selects and
+mounts, because unmounting is not something CSS can do. This is the one place ColumnLayout uses
+script, and Root and Column stay stylesheet-only. The selected Root is rendered in one slot, so
+React keeps a column that two arrangements declare under the same key; that is the documented way
+to keep an area mounted across a change, and nothing else is retained or cached. A Root without
+columns and a child that is not a Root throw `ColumnLayoutConfigurationError`.
+
+Pane's part in Screen's fallback changed with it: the room a Pane is offered is Screen's remainder
+less whatever sits above the Pane inside it, so a Pane under a filling Tabs row releases before
+its body is unusable. This narrows the #151 statement that such wrappers are not measured; other
+height-consuming wrappers remain outside the contract.
