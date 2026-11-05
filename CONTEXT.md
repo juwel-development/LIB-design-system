@@ -186,6 +186,26 @@ _Avoid_: Focus state, focus highlight, per-variant ring
 
 ### Components
 
+**Consumer layout**:
+The consumer's composition of library-provided components into its application screen, including
+which work areas appear together or share a surface. The consumer declares alternative arrangements;
+library components select the fitting arrangement from available container space and provide its
+interaction semantics, while active-view selection and persistent application state remain consumer-owned.
+_Avoid_: Library-owned application layout
+
+**Arrangement fit**:
+Whether a consumer-declared arrangement has enough available container width to satisfy its
+consumer-supplied minimum usable widths, expressed through theme width tokens. Fit belongs to the
+component's container, not a universal viewport breakpoint.
+_Avoid_: Device breakpoint, desktop mode, laptop mode
+
+**Arrangement preference**:
+The consumer's declaration order for alternative arrangements; the first arrangement that fits
+the available container width is selected. If none fits, the consumer's optional fallback is used;
+without one, the last declared arrangement remains active under its components' normal wrapping
+and scrolling contracts, with minimum widths governing selection rather than forcing overflow.
+_Avoid_: Automatic layout ranking
+
 **Primitive**:
 A component on the roster that owns a single *element* — a button, an input, an eyebrow. Its props
 are its entire contract — there is no `className` or `style` escape hatch, so anything a consumer
@@ -426,6 +446,9 @@ preservation across views; Tabs owns the controls and the panels that present it
 the consumer's content — a text name first, with decoration at most, never a control — and is the
 tab's whole name. The separation between the row and the view is not the row's: a `Stack` between
 `Tabs.Root` and its members owns it, at the stack or the region gap.
+Inactive view content is removed and unmounted, never retained as hidden content; returning to a view
+does not restore its former focus or selection within its content. Content retained in the DOM stays
+mounted through arrangement changes; active-view selection remains the consumer's separate decision.
 _Avoid_: Router, panel manager, tab strip, tab spacing
 
 **Tab row overflow**:
