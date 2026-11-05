@@ -119,8 +119,8 @@ export interface ISidebarRootProps extends VariantProps<typeof sidebarRoot> {
   active: string;
   /** The nav landmark's accessible name. */
   label: string;
-  /** Emits the selected entry's key when a usable inactive entry is activated. The active and inert
-   *  entries emit nothing, and neither does any render. */
+  /** Emits a navigation request once per non-inert entry activation, including the current entry.
+   *  Rendering, focus and active-key changes emit nothing. The caller owns the Subject's lifetime. */
   onSelect$: Subject<string>;
   /** Direct `Sidebar.Item` children in display order, then one `Sidebar.Content`. */
   children?: ReactNode;
@@ -152,7 +152,7 @@ const SidebarItem: FunctionComponent<ISidebarItemProps> = ({
   const selection = useContext(SidebarSelectionContext);
   const isActive = selection !== undefined && selection.active === entryKey;
   const selectEntry = () => {
-    if (!isActive) selection?.onSelect$.next(entryKey);
+    selection?.onSelect$.next(entryKey);
   };
   return (
     <li>
@@ -203,16 +203,17 @@ const SidebarRoot: FunctionComponent<ISidebarRootProps> = ({
 /**
  * The standing application navigation beside the active section's content: a `nav` landmark named by
  * `label`, listing text entries as plain buttons, and a `Content` track for the section the
- * application shows. Selection is a request - activating a usable inactive entry emits its key through
- * `onSelect$` - and the application answers by rerendering with a new `active`. Composed from `Root`,
+ * application shows. Every non-inert activation requests that section through `onSelect$`, including
+ * the current section; the application decides whether to change content or `active`. Composed from `Root`,
  * `Item` and `Content`; Root assembles its direct Items into the list, in order, and places Content
  * beside them at 64rem or below them under it.
  *
  * @Guarantees — enforced on every render
  * - For valid caller input, the active entry alone carries `aria-current="true"`. Sidebar owns no
  *   selection, URL, history or fallback: it renders the key it is given; a missing key marks nothing.
- * - Activating the active entry or an inert one emits nothing; no render emits anything. Entries are
- *   non-submitting `type="button"` buttons with native Tab/Enter/Space behaviour - no tabs/menu model.
+ * - Each non-inert mouse/Enter/Space activation emits its key exactly once, including the current
+ *   entry. This supersedes #101's current-entry silence. Inert entries, render, focus and active-key
+ *   changes emit nothing. Entries are non-submitting native buttons, with no tabs/menu model.
  * - An inert entry stays visible but muted and disabled, so Tab skips it and activation is inert too.
  * - A label is rendered in full inside its entry, in either arrangement: a phrase wraps at its spaces
  *   and a word wider than the track breaks within itself. Nothing is truncated, renamed or hidden
@@ -238,6 +239,8 @@ const SidebarRoot: FunctionComponent<ISidebarRootProps> = ({
  *   and an Item rendered outside a Root has no selection to derive its treatment from.
  * - Focus after the content changes belongs to the application; Sidebar leaves it on the activated
  *   entry.
+ * - Navigation requests carry no routing, history, draft disposal, payment or content state policy.
+ *   Ordinary content may ignore a current-section request; subordinate content may return through it.
  *
  * @UXGuidelines
  * - Entries are section labels: short, parallel, text-only. A destination that is a URL belongs to

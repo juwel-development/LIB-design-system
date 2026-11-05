@@ -714,9 +714,9 @@ rather than requiring a Section.
 _Avoid_: Full-screen hero, splash screen, viewport section, centred layout, page wrapper
 
 **Sidebar**:
-The standing application navigation requesting section changes from the application: beside the
-active section's content and staying visible within its frame when space permits, above the content
-otherwise. The application owns which section is active and any location or history associated with it.
+The standing application navigation requesting a section destination, including the current section:
+beside that section's content when space permits, above it otherwise. Current indication describes
+location; the application owns the meaning of a navigation request and any location or history.
 _Avoid_: Router, index, drawer
 
 **Sidebar fill mode**:

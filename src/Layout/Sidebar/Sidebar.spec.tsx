@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Subject } from 'rxjs';
+import { userEvent } from 'storybook/test';
 import { describe, expect, it, vi } from 'vitest';
 import { Sidebar } from './Sidebar';
 
@@ -104,9 +105,14 @@ describe('Sidebar', () => {
     renderSidebar({ active: 'staff', onSelect$ });
     fireEvent.click(screen.getByRole('button', { name: 'Hub' }));
     expect(emitted).toEqual(['hub']);
+    expect(screen.getByRole('button', { name: 'Staff' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+    expect(screen.getByText("The active section's matter.")).toBeVisible();
   });
 
-  it('keeps the active entry focusable but emits nothing when it is activated', () => {
+  it('requests the current section once without changing its indication, content or focus', () => {
     const onSelect$ = new Subject<string>();
     const emitted: string[] = [];
     onSelect$.subscribe((entryKey) => emitted.push(entryKey));
@@ -115,8 +121,12 @@ describe('Sidebar', () => {
     expect(active).not.toBeDisabled();
     active.focus();
     expect(active).toHaveFocus();
-    fireEvent.click(active);
     expect(emitted).toEqual([]);
+    fireEvent.click(active);
+    expect(emitted).toEqual(['staff']);
+    expect(active).toHaveAttribute('aria-current', 'true');
+    expect(active).toHaveFocus();
+    expect(screen.getByText("The active section's matter.")).toBeVisible();
   });
 
   it('keeps an inert entry visible but disabled - out of the Tab order and emitting nothing', () => {
@@ -129,6 +139,64 @@ describe('Sidebar', () => {
     expect(inert).toBeDisabled();
     fireEvent.click(inert);
     expect(emitted).toEqual([]);
+  });
+
+  it.each(['{Enter}', ' '])(
+    'requests inactive and current entries once per %s activation and skips inert entries',
+    async (key) => {
+      const user = userEvent.setup();
+      const onSelect$ = new Subject<string>();
+      const emitted: string[] = [];
+      onSelect$.subscribe((entryKey) => emitted.push(entryKey));
+      renderSidebar({ onSelect$ });
+
+      await user.tab();
+      expect(screen.getByRole('button', { name: 'Hub' })).toHaveFocus();
+      expect(emitted).toEqual([]);
+      await user.keyboard(key);
+      expect(emitted).toEqual(['hub']);
+      await user.tab();
+      const current = screen.getByRole('button', { name: 'Staff' });
+      expect(current).toHaveFocus();
+      await user.keyboard(key);
+      expect(emitted).toEqual(['hub', 'staff']);
+      expect(current).toHaveFocus();
+      expect(current).toHaveAttribute('aria-current', 'true');
+    },
+  );
+
+  it('leaves the output Subject alive when the consumer replaces it or unmounts', () => {
+    const original = new Subject<string>();
+    const replacement = new Subject<string>();
+    const emitted: string[] = [];
+    const completed = vi.fn();
+    original.subscribe({
+      next: (key) => emitted.push(key),
+      complete: completed,
+    });
+    replacement.subscribe({
+      next: (key) => emitted.push(key),
+      complete: completed,
+    });
+    const view = renderSidebar({ onSelect$: original });
+    view.rerender(
+      <Sidebar.Root active="staff" label="Sections" onSelect$={replacement}>
+        <Sidebar.Item entryKey="staff">Staff</Sidebar.Item>
+        <Sidebar.Content>Changed by the consumer</Sidebar.Content>
+      </Sidebar.Root>,
+    );
+    expect(emitted).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Staff' }));
+    expect(emitted).toEqual(['staff']);
+    view.unmount();
+    expect(completed).not.toHaveBeenCalled();
+    original.next('original still usable');
+    replacement.next('replacement still usable');
+    expect(emitted).toEqual([
+      'staff',
+      'original still usable',
+      'replacement still usable',
+    ]);
   });
 
   it('emits nothing on render or rerender - selection is the user acting, never the component', () => {

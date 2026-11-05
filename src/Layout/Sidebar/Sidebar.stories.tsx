@@ -1,6 +1,8 @@
 import { Stack } from 'Arrangement/Stack/Stack';
 import { H2 } from 'Display/Typography/H2/H2';
 import { P } from 'Display/Typography/P/P';
+import { Button } from 'Interaction/Button/Button';
+import { Input } from 'Interaction/Input/Input';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { type FunctionComponent, useEffect, useState } from 'react';
 import { Subject } from 'rxjs';
@@ -30,7 +32,7 @@ const meta: Meta<typeof Sidebar.Root> = {
     docs: {
       description: {
         component:
-          'Compose Sidebar.Root with Sidebar.Item children - one text label each, in display order - and one Sidebar.Content. The application owns the active key and answers each `onSelect$` request by rerendering with a new `active`; an `inert` entry keeps its place but is muted, disabled and skipped by Tab. The arrangement follows the viewport: at and above 64rem the entries sit in a fixed 12rem track beside the content, sticky at the top of the scrolling area and capped to its height with their own vertical scrolling; below 64rem the whole list lies above the content in normal flow. One DOM serves both, so the nav landmark named by `label`, the plain non-submitting buttons, the Tab order, Enter and Space selection and the focus ring are the same at every width. Every label is rendered in full: a phrase wraps at its spaces and a word wider than the track breaks within itself, so a translated label is never truncated, never scrolls the nav sideways, and neither widens the track nor displaces the content. None of this needs consumer CSS. Opt into `fill` to pass a finite parent height through Root and Content at 64rem and above using CSS alone; below 64rem the enclosing body scrolls the stacked list and content. The enclosing layout owns fallback scrolling and intermediate consumer wrappers preserve the height. See Layout/Shell for console, stacked, and standalone fill examples.',
+          'Compose Sidebar.Root with Sidebar.Item children - one text label each, in display order - and one Sidebar.Content. Every non-inert activation emits its key exactly once through the caller-owned `onSelect$: Subject<string>`, including the current entry, by mouse, Enter or Space. This universally supersedes #101’s current-entry silence; there is no subordinate mode or opt-in prop. Current indication describes location; a navigation request changes neither `active` nor content on its own. The application owns the active key, routes/history, content, draft disposal, payment and any intentional focus transfer. It may ignore an ordinary current-section request or return from subordinate content through the same handler. Sidebar initiates no focus transfer and never subscribes to or completes the output Subject. Rendering, focus and active-key changes emit nothing. An `inert` entry keeps its place but is muted, disabled and skipped by Tab. The arrangement follows the viewport: at and above 64rem the entries sit in a fixed 12rem track beside the content, sticky at the top of the scrolling area and capped to its height with their own vertical scrolling; below 64rem the whole list lies above the content in normal flow. One DOM serves both, so the named nav, non-submitting buttons, keyboard order and focus ring are the same at every width. Every label wraps in full, without widening the track or scrolling sideways. None of this needs consumer CSS. Opt into `fill` to pass a finite parent height through Root and Content at 64rem and above using CSS alone; below 64rem the enclosing body scrolls the stacked list and content. See Layout/Shell for fill examples. Release status: this source change is unpublished; published 4.1.0 retains current-entry silence. Adopt only after the release containing #155 is published and identify its actual version from the package registry and changelog.',
       },
     },
   },
@@ -97,6 +99,149 @@ const ControlledSidebar: FunctionComponent = () => {
  */
 export const Controlled: Story = {
   render: () => <ControlledSidebar />,
+};
+
+const navigationCopy = {
+  en: {
+    label: 'Sections',
+    sections: [
+      'Hub',
+      'Contracts',
+      'Songs',
+      'Artists and repertoire',
+      'Staff',
+      'Market research',
+    ],
+    section: 'Containing section',
+    subordinate: 'Subordinate task',
+    draft: 'Unconfirmed draft',
+    empty: 'No draft',
+    open: 'Open subordinate task',
+    requests: 'No navigation requests',
+    explanation:
+      'This application handles every section request in one place. Returning discards its draft; an ordinary current-section request leaves the content as it is. No payment or booking action is attached to navigation.',
+  },
+  de: {
+    label: 'Bereiche',
+    sections: [
+      'Zentrale',
+      'Verträge',
+      'Songs',
+      'Künstlerinnen und Künstler',
+      'Mitarbeiterinnen und Mitarbeiter',
+      'Marktforschung',
+    ],
+    section: 'Übergeordneter Bereich',
+    subordinate: 'Untergeordnete Aufgabe',
+    draft: 'Unbestätigter Entwurf',
+    empty: 'Kein Entwurf',
+    open: 'Untergeordnete Aufgabe öffnen',
+    requests: 'Keine Navigationsanfragen',
+    explanation:
+      'Diese Anwendung verarbeitet jede Bereichsanfrage an einer Stelle. Bei der Rückkehr verwirft sie ihren Entwurf; im aktuellen Bereich bleibt der Inhalt unverändert. Navigation löst keine Zahlung oder Buchung aus.',
+  },
+};
+
+const navigationKeys = [
+  'hub',
+  'contracts',
+  'songs',
+  'artists',
+  'staff',
+  'research',
+];
+
+interface INavigationExampleProps {
+  language: keyof typeof navigationCopy;
+  subordinate?: boolean;
+}
+
+const NavigationExample: FunctionComponent<INavigationExampleProps> = ({
+  language,
+  subordinate,
+}) => {
+  const copy = navigationCopy[language];
+  const [active, setActive] = useState('contracts');
+  const [draft, setDraft] = useState<string | undefined>(
+    subordinate ? '' : undefined,
+  );
+  const [requests, setRequests] = useState<string[]>([]);
+  const [navigation$] = useState(() => new Subject<string>());
+  const [draft$] = useState(() => new Subject<string>());
+  const [open$] = useState(() => new Subject<void>());
+  useEffect(() => {
+    const navigation = navigation$.subscribe((destination) => {
+      setRequests((previous) => [...previous, destination]);
+      setDraft(undefined);
+      setActive(destination);
+    });
+    const editing = draft$.subscribe(setDraft);
+    const opening = open$.subscribe(() => setDraft(''));
+    return () => {
+      navigation.unsubscribe();
+      editing.unsubscribe();
+      opening.unsubscribe();
+    };
+  }, [navigation$, draft$, open$]);
+  return (
+    <Sidebar.Root
+      active={active}
+      label={copy.label}
+      onSelect$={navigation$}
+      testId="navigation-example"
+    >
+      {navigationKeys.map((entryKey, index) => (
+        <Sidebar.Item
+          key={entryKey}
+          entryKey={entryKey}
+          inert={entryKey === 'songs'}
+        >
+          {copy.sections[index] ?? ''}
+        </Sidebar.Item>
+      ))}
+      <Sidebar.Content testId="navigation-content">
+        <Stack gap="stack">
+          <H2>{copy.sections[navigationKeys.indexOf(active)]}</H2>
+          {draft === undefined ? (
+            <Stack gap="stack">
+              <P testId="section-content">{copy.section}</P>
+              {active === 'contracts' && (
+                <Button onClick$={open$}>{copy.open}</Button>
+              )}
+            </Stack>
+          ) : (
+            <Stack gap="stack">
+              <P testId="subordinate-content">{copy.subordinate}</P>
+              <Input name="draft" label={copy.draft} onInput$={draft$} />
+            </Stack>
+          )}
+          <P testId="draft-state">{draft || copy.empty}</P>
+          <P testId="navigation-requests">
+            {requests.join(', ') || copy.requests}
+          </P>
+          <P>{copy.explanation}</P>
+        </Stack>
+      </Sidebar.Content>
+    </Sidebar.Root>
+  );
+};
+
+/** Ordinary section content receives current-entry requests and may leave the destination unchanged. */
+export const OrdinaryEnglish: Story = {
+  render: () => <NavigationExample language="en" />,
+};
+
+export const OrdinaryGerman: Story = {
+  render: () => <NavigationExample language="de" />,
+};
+
+/** Contracts stays current. The application's ordinary handler returns and disposes its draft. */
+export const SubordinateEnglish: Story = {
+  render: () => <NavigationExample language="en" subordinate />,
+};
+
+export const SubordinateGerman: Story = {
+  render: () => <NavigationExample language="de" subordinate />,
 };
 
 /** Active, usable and inert treatments side by side, statically - one entry active, one muted. */
