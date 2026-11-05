@@ -1,5 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { type FunctionComponent, useEffect, useState } from 'react';
+import { Button, Note } from 'index';
+import {
+  type ComponentProps,
+  type FormEvent,
+  useEffect,
+  useState,
+} from 'react';
 import { Subject } from 'rxjs';
 import { Choices } from './Choices';
 
@@ -11,6 +17,12 @@ const meta: Meta<typeof Choices.Root> = {
   },
   tags: ['autodocs'],
   argTypes: {
+    arrangement: {
+      control: { type: 'select' },
+      options: ['vertical', 'wrapping'],
+      description:
+        'Full-width vertical rows (default), or content-sized choices flowing onto further lines',
+    },
     selected: {
       control: false,
       description:
@@ -43,7 +55,15 @@ type Story = StoryObj<typeof meta>;
 // The controlled wiring every consumer repeats: hold the selected key, subscribe it to the
 // Subject, and pass it back in. Choices itself never selects - clicking a row or arrowing
 // through the group is answered here, which is the changed-selection example in motion.
-const ControlledExample: FunctionComponent = () => {
+const ControlledExample = ({
+  arrangement,
+  inert,
+  labelOnly = false,
+}: {
+  arrangement?: ComponentProps<typeof Choices.Root>['arrangement'];
+  inert?: boolean;
+  labelOnly?: boolean;
+}) => {
   const [selected, setSelected] = useState('daily');
   const [onSelect$] = useState(() => new Subject<string>());
   useEffect(() => {
@@ -55,22 +75,34 @@ const ControlledExample: FunctionComponent = () => {
       selected={selected}
       onSelect$={onSelect$}
       label={'Notification cadence'}
+      arrangement={arrangement}
+      inert={inert}
     >
       <Choices.Choice
         value={'daily'}
-        description={'A short digest every morning, quiet the rest of the day.'}
+        description={
+          labelOnly
+            ? undefined
+            : 'A short digest every morning, quiet the rest of the day.'
+        }
       >
         Daily digest
       </Choices.Choice>
       <Choices.Choice
         value={'weekly'}
-        description={'One summary at the start of the week.'}
+        description={
+          labelOnly ? undefined : 'One summary at the start of the week.'
+        }
       >
         Weekly summary
       </Choices.Choice>
       <Choices.Choice
         value={'quiet'}
-        description={'Nothing arrives unless something needs your attention.'}
+        description={
+          labelOnly
+            ? undefined
+            : 'Nothing arrives unless something needs your attention.'
+        }
       >
         Quiet
       </Choices.Choice>
@@ -112,7 +144,11 @@ export const InertWithRetainedSelection: Story = {
 // Long descriptions in a narrow column, at English and German lengths: names and descriptions
 // wrap instead of overflowing or truncating. The German rows carry the compound-heavy strings
 // translation actually produces - caller-supplied content, like every word here.
-const LongDescriptionsExample: FunctionComponent = () => {
+const LongDescriptionsExample = ({
+  arrangement,
+}: {
+  arrangement?: ComponentProps<typeof Choices.Root>['arrangement'];
+}) => {
   const [selected, setSelected] = useState('summary');
   const [onSelect$] = useState(() => new Subject<string>());
   useEffect(() => {
@@ -125,6 +161,7 @@ const LongDescriptionsExample: FunctionComponent = () => {
         selected={selected}
         onSelect$={onSelect$}
         label={'Report depth'}
+        arrangement={arrangement}
       >
         <Choices.Choice
           value={'summary'}
@@ -142,6 +179,12 @@ const LongDescriptionsExample: FunctionComponent = () => {
         >
           Vollständiger Geschäftsbericht mit Anlagenverzeichnis
         </Choices.Choice>
+        <Choices.Choice
+          value="unbroken"
+          description="Wirtschaftsprüfungsgesellschaftsberichterstattungsanforderungen"
+        >
+          Donaudampfschifffahrtsgesellschaftskapitänsanwärterauswahl
+        </Choices.Choice>
       </Choices.Root>
     </div>
   );
@@ -149,4 +192,64 @@ const LongDescriptionsExample: FunctionComponent = () => {
 
 export const LongDescriptions: Story = {
   render: () => <LongDescriptionsExample />,
+};
+
+export const VerticalLabelOnly: Story = {
+  render: () => <ControlledExample labelOnly />,
+};
+
+export const WrappingDescriptions: Story = {
+  render: () => <ControlledExample arrangement="wrapping" />,
+};
+
+export const WrappingInert: Story = {
+  render: () => <ControlledExample arrangement="wrapping" inert />,
+};
+
+export const WrappingLongText: Story = {
+  render: () => <LongDescriptionsExample arrangement="wrapping" />,
+};
+
+export const NarrowWrapping: Story = {
+  render: () => (
+    <div style={{ maxWidth: '20rem' }}>
+      <ControlledExample arrangement="wrapping" labelOnly />
+    </div>
+  ),
+};
+
+const NativeActivationExample = () => {
+  const [onSelect$] = useState(() => new Subject<string>());
+  const [requests, setRequests] = useState(0);
+  const [submissions, setSubmissions] = useState(0);
+  useEffect(() => {
+    const subscription = onSelect$.subscribe(() =>
+      setRequests((count) => count + 1),
+    );
+    return () => subscription.unsubscribe();
+  }, [onSelect$]);
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmissions((count) => count + 1);
+  };
+  return (
+    <form onSubmit={submit}>
+      <Button variant="plain">Before choices</Button>
+      <Choices.Root
+        arrangement="wrapping"
+        label="Unanswered requests"
+        selected="daily"
+        onSelect$={onSelect$}
+      >
+        <Choices.Choice value="daily">Daily digest</Choices.Choice>
+        <Choices.Choice value="weekly">Weekly summary</Choices.Choice>
+      </Choices.Root>
+      <Button variant="plain">After choices</Button>
+      <Note>{`Requests: ${requests}; submissions: ${submissions}`}</Note>
+    </form>
+  );
+};
+
+export const UnansweredRequests: Story = {
+  render: () => <NativeActivationExample />,
 };

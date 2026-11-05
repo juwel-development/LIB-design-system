@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import {
+  Fragment,
   type FunctionComponent,
   type ReactNode,
   useEffect,
@@ -16,12 +17,14 @@ const cadenceChoices = (
   selected: string,
   onSelect$: Subject<string>,
   inert?: boolean,
+  arrangement?: 'vertical' | 'wrapping',
 ): ReactNode => (
   <Choices.Root
     selected={selected}
     onSelect$={onSelect$}
     label={'Notification cadence'}
     inert={inert}
+    arrangement={arrangement}
   >
     <Choices.Choice
       value={'daily'}
@@ -58,6 +61,90 @@ const ControlledCadence: FunctionComponent<{ onSelect$: Subject<string> }> = ({
 };
 
 describe('Choices Component', () => {
+  it('keeps label-only and described wrapping choices controlled and independent across arrays and fragments', () => {
+    const onSelect$ = new Subject<string>();
+    const requests = vi.fn();
+    onSelect$.subscribe(requests);
+    const choices = (selected: string) => (
+      <Choices.Root
+        arrangement="wrapping"
+        selected={selected}
+        onSelect$={onSelect$}
+        label="Preferred role"
+      >
+        <Choices.Choice value="all">All</Choices.Choice>
+        <Fragment key="extra-choices">
+          {['research', 'producer'].map((value) => (
+            <Choices.Choice
+              key={value}
+              value={value}
+              description={value === 'research' ? 'Find a market.' : undefined}
+            >
+              {value === 'research' ? 'Market Research' : 'Producer'}
+            </Choices.Choice>
+          ))}
+        </Fragment>
+      </Choices.Root>
+    );
+    const { rerender } = render(
+      <>
+        {choices('all')}
+        {cadenceChoices('daily', new Subject<string>())}
+      </>,
+    );
+    const group = screen.getByRole('radiogroup', { name: 'Preferred role' });
+    const all = within(group).getByRole('radio', { name: 'All' });
+    const research = within(group).getByRole('radio', {
+      name: 'Market Research',
+    });
+    const producer = within(group).getByRole('radio', { name: 'Producer' });
+
+    fireEvent.keyDown(all, { key: 'ArrowLeft' });
+    expect(producer).toHaveFocus();
+    expect(requests.mock.calls).toEqual([['producer']]);
+    expect(all).toBeChecked();
+    fireEvent.keyDown(producer, { key: 'ArrowRight' });
+    expect(all).toHaveFocus();
+    expect(requests).toHaveBeenCalledTimes(1);
+    fireEvent.click(research);
+    expect(requests.mock.calls).toEqual([['producer'], ['research']]);
+    expect(research).toHaveAccessibleDescription('Find a market.');
+    expect(producer).not.toHaveAttribute('aria-describedby');
+
+    rerender(
+      <>
+        {choices('research')}
+        {cadenceChoices('daily', new Subject<string>())}
+      </>,
+    );
+    expect(research).toBeChecked();
+    expect(research).toHaveAttribute('tabindex', '0');
+    expect(all).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Daily digest' })).toBeChecked();
+    expect(requests).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(['vertical', 'wrapping'] as const)(
+    'omits absent description content and association in the %s arrangement',
+    (arrangement) => {
+      render(
+        <Choices.Root
+          selected={'all'}
+          onSelect$={new Subject<string>()}
+          label={'Preferred role'}
+          arrangement={arrangement}
+        >
+          <Choices.Choice value={'all'}>All</Choices.Choice>
+        </Choices.Root>,
+      );
+
+      const choice = screen.getByRole('radio', { name: 'All' });
+      expect(choice).not.toHaveAttribute('aria-describedby');
+      expect(choice).not.toHaveAccessibleDescription();
+      expect(choice).toHaveTextContent(/^All$/);
+    },
+  );
+
   it('renders a radio group named by the label prop', () => {
     render(cadenceChoices('daily', new Subject<string>()));
     expect(
@@ -290,16 +377,21 @@ describe('Choices Component', () => {
     }
   });
 
-  it('exposes an inert group as unavailable, with every row disabled and no Tab stop', () => {
-    render(cadenceChoices('weekly', new Subject<string>(), true));
-    expect(
-      screen.getByRole('radiogroup', { name: 'Notification cadence' }),
-    ).toHaveAttribute('aria-disabled', 'true');
-    for (const row of screen.getAllByRole('radio')) {
-      expect(row).toBeDisabled();
-      expect(row).not.toHaveAttribute('tabindex', '0');
-    }
-  });
+  it.each(['vertical', 'wrapping'] as const)(
+    'exposes an inert group as unavailable, with every row disabled and no Tab stop (%s)',
+    (arrangement) => {
+      render(
+        cadenceChoices('weekly', new Subject<string>(), true, arrangement),
+      );
+      expect(
+        screen.getByRole('radiogroup', { name: 'Notification cadence' }),
+      ).toHaveAttribute('aria-disabled', 'true');
+      for (const row of screen.getAllByRole('radio')) {
+        expect(row).toBeDisabled();
+        expect(row).not.toHaveAttribute('tabindex', '0');
+      }
+    },
+  );
 
   it('keeps the retained selection and every name and description visible while inert', () => {
     render(cadenceChoices('weekly', new Subject<string>(), true));
@@ -312,32 +404,38 @@ describe('Choices Component', () => {
     ).toBeVisible();
   });
 
-  it('permits no selection change through pointer input while inert', () => {
-    const onSelect$ = new Subject<string>();
-    const selected = vi.fn();
-    onSelect$.subscribe(selected);
-    render(cadenceChoices('weekly', onSelect$, true));
+  it.each(['vertical', 'wrapping'] as const)(
+    'permits no selection change through pointer input while inert (%s)',
+    (arrangement) => {
+      const onSelect$ = new Subject<string>();
+      const selected = vi.fn();
+      onSelect$.subscribe(selected);
+      render(cadenceChoices('weekly', onSelect$, true, arrangement));
 
-    fireEvent.click(screen.getByRole('radio', { name: 'Daily digest' }));
-    fireEvent.click(screen.getByText('A short digest every morning.'));
+      fireEvent.click(screen.getByRole('radio', { name: 'Daily digest' }));
+      fireEvent.click(screen.getByText('A short digest every morning.'));
 
-    expect(selected).not.toHaveBeenCalled();
-  });
+      expect(selected).not.toHaveBeenCalled();
+    },
+  );
 
-  it('permits no selection change through keyboard input while inert', () => {
-    const onSelect$ = new Subject<string>();
-    const selected = vi.fn();
-    onSelect$.subscribe(selected);
-    render(cadenceChoices('weekly', onSelect$, true));
-    const weekly = screen.getByRole('radio', { name: 'Weekly summary' });
+  it.each(['vertical', 'wrapping'] as const)(
+    'permits no selection change through keyboard input while inert (%s)',
+    (arrangement) => {
+      const onSelect$ = new Subject<string>();
+      const selected = vi.fn();
+      onSelect$.subscribe(selected);
+      render(cadenceChoices('weekly', onSelect$, true, arrangement));
+      const weekly = screen.getByRole('radio', { name: 'Weekly summary' });
 
-    fireEvent.keyDown(weekly, { key: 'ArrowDown' });
+      fireEvent.keyDown(weekly, { key: 'ArrowDown' });
 
-    expect(selected).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole('radio', { name: 'Daily digest' }),
-    ).not.toHaveFocus();
-  });
+      expect(selected).not.toHaveBeenCalled();
+      expect(
+        screen.getByRole('radio', { name: 'Daily digest' }),
+      ).not.toHaveFocus();
+    },
+  );
 
   it('gives two instances collision-free name and description ids', () => {
     render(
