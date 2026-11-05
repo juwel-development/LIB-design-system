@@ -513,6 +513,18 @@ React keeps a column that two arrangements declare under the same key; that is t
 to keep an area mounted across a change, and nothing else is retained or cached. A Root without
 columns and a child that is not a Root throw `ColumnLayoutConfigurationError`.
 
+Review of #153 added two rules to selection. When the declarations themselves change, what is
+mounted stays until the new ones are measured, so no arrangement they do not select mounts in
+between. And a holder whose width answers to what is mounted settles: with space-taking scrollbars
+the German work-areas fixture at 1462×720 remounted the three areas and the tab group against each
+other on every frame, because the released three areas gave Shell's body a scrollbar that took the
+16px they needed. Once the same two selections have alternated at the same two widths twice, no
+more than three frames apart, the later declaration stays and the width lost is held back from the
+declarations preferred to it. A fixed margin was rejected because it would move every boundary;
+this one is measured, and is zero wherever the holder's width does not depend on its content. A
+stable scrollbar gutter on Shell was not chosen: it changes Shell for every screen and would not
+cover a consumer's own scroll body.
+
 Pane's part in Screen's fallback changed with it: the room a Pane is offered is Screen's remainder
 less whatever sits above the Pane inside it, so a Pane under a filling Tabs row releases before
 its body is unusable. This narrows the #151 statement that such wrappers are not measured; other

@@ -688,6 +688,7 @@ try {
     'token-change',
     'none-fits',
     'lifecycle',
+    'width-feedback',
     'two-areas',
   ]) {
     await resize(1280, 900);
@@ -701,6 +702,110 @@ try {
     );
     await settle();
     record(`play ${story}`, { failures: failures.length });
+  }
+
+  // Space-taking scrollbars, which the default headless launch hides. German at 1462x720: the
+  // three areas fit 1108px but release, the Shell body's 16px scrollbar leaves 1092px, and the
+  // bounded tab group gives it back. The selection must settle, not alternate (#153 review).
+  const classic = await chromium.launch({
+    ignoreDefaultArgs: ['--hide-scrollbars'],
+  });
+  try {
+    const scrolled = await classic.newPage({
+      viewport: { width: 1462, height: 720 },
+    });
+    scrolled.on('pageerror', (error) => failures.push(String(error)));
+    await scrolled.addInitScript(() => {
+      const takeSpace = () => {
+        const style = document.createElement('style');
+        style.textContent = '*::-webkit-scrollbar{width:16px;height:16px}';
+        document.head.append(style);
+      };
+      if (document.readyState === 'loading')
+        document.addEventListener('DOMContentLoaded', takeSpace);
+      else takeSpace();
+    });
+    await scrolled.goto(
+      `${base}/iframe.html?id=layout-screen-work-areas--german&viewMode=story`,
+    );
+    await scrolled.getByRole('main').waitFor();
+    await scrolled.evaluate(() => document.fonts.ready);
+    const watch = (width) =>
+      scrolled.setViewportSize({ width, height: 720 }).then(() =>
+        scrolled.evaluate(async () => {
+          const byId = (id) => document.querySelector(`[data-testid="${id}"]`);
+          for (let frame = 0; frame < 20; frame++)
+            await new Promise(requestAnimationFrame);
+          const sides = byId('sides-column');
+          const first =
+            byId('alternatives').lastElementChild.firstElementChild
+              .firstElementChild;
+          const seen = [];
+          for (let frame = 0; frame < 30; frame++) {
+            await new Promise(requestAnimationFrame);
+            const shell = byId('shell').children[1];
+            seen.push({
+              mounted: ['three-areas', 'grouped-areas'].filter(byId)[0],
+              own: byId('alternatives').getBoundingClientRect().width,
+              bar: shell.offsetWidth - shell.clientWidth,
+              released: document.querySelectorAll('[data-screen-unusable]')
+                .length,
+              sameNodes:
+                byId('sides-column') === sides &&
+                byId('alternatives').lastElementChild.firstElementChild
+                  .firstElementChild === first,
+              rows: new Set(
+                [...document.querySelectorAll('[data-testid$="-column"]')].map(
+                  (column) => Math.round(column.getBoundingClientRect().top),
+                ),
+              ).size,
+            });
+          }
+          return seen;
+        }),
+      );
+    const alike = (seen, expected, label) => {
+      for (const frame of seen) assert.deepEqual(frame, expected, label);
+      record(label, expected);
+    };
+    alike(
+      await watch(1462),
+      {
+        mounted: 'grouped-areas',
+        own: 1108,
+        bar: 0,
+        released: 0,
+        sameNodes: true,
+        rows: 1,
+      },
+      'classic scrollbars 1462x720: the tab group stays, bounded, on the same nodes',
+    );
+    alike(
+      await watch(1473),
+      {
+        mounted: 'grouped-areas',
+        own: 1119,
+        bar: 0,
+        released: 0,
+        sameNodes: true,
+        rows: 1,
+      },
+      'classic scrollbars 1473x720: a pixel short of three areas beside their scrollbar',
+    );
+    alike(
+      await watch(1474),
+      {
+        mounted: 'three-areas',
+        own: 1104,
+        bar: 16,
+        released: 1,
+        sameNodes: true,
+        rows: 1,
+      },
+      'classic scrollbars 1474x720: three areas hold their row at exactly their threshold',
+    );
+  } finally {
+    await classic.close();
   }
 
   assert.deepEqual(failures, [], 'No page or console errors');

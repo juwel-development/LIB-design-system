@@ -30,7 +30,7 @@ whatever sits above the pane (`fix(pane)`). It was found by this work and is des
 *Short heights* below.
 
 Stories: `ColumnLayoutAlternatives.stories.tsx` (Preference, FitBoundary, TokenChange, NoneFits,
-Lifecycle, TwoAreas, each with a measuring play function) and `ScreenWorkAreas.stories.tsx`
+Lifecycle, WidthFeedback, TwoAreas, each with a measuring play function) and `ScreenWorkAreas.stories.tsx`
 (English, German, ShortBodies, ReadOnly, ReadOnlyGerman, NarrowFallback) — a representative
 consumer screen inside Shell, a status/action bar and a six-entry Sidebar. Its area names, tokens
 and grouping belong to the fixture, not the library.
@@ -50,7 +50,7 @@ npm run lint && npm run typecheck && npm test
 
 ## jsdom results — selection logic and lifecycle, not layout
 
-`ColumnLayoutAlternatives.spec.tsx`, 33 tests. jsdom lays nothing out, so the spec answers each
+`ColumnLayoutAlternatives.spec.tsx`, 39 tests after review (33 as implemented). jsdom lays nothing out, so the spec answers each
 probe's fit itself and fires a stand-in ResizeObserver. It therefore proves what the component does
 *given* a fit, and nothing about whether an arrangement fits a width:
 
@@ -68,12 +68,20 @@ probe's fit itself and fires a stand-in ResizeObserver. It therefore proves what
 - no duplicate id and one emission per activation in either arrangement; regrouping into Tabs emits
   no selection request, shows the consumer's `active`, leaves the inactive panel empty, and a later
   round trip neither changes nor remembers the active view;
-- each probe carries the same threshold text and gap role as the row it stands for;
+- each probe carries the same threshold text as the row it stands for (the gap role is measured
+  in the FitBoundary story instead of read from a class string);
+- review additions: changed declarations keep what is mounted until they are measured, so neither
+  an unselected arrangement nor the fallback mounts in between and a keyed column keeps its node;
+  a holder that narrows whenever the preferred arrangement is mounted settles on the later one
+  after two round trips and returns to the preferred one only with the lost width to spare; a
+  width that drops and comes straight back, and the same two widths alternating frames apart, are
+  followed with nothing held back;
 - arrays, fragments and conditionals; an empty declaration list; `ColumnLayoutConfigurationError`
   for text, a host element, a loose Column, a wrapped Root, a Root without columns and an invalid
   column in an unselected declaration; no role, name or tab stop of its own.
 
-`Pane.spec.tsx` gained two cases for the row above a pane. Whole suite: 65 files, 1,484 tests passed.
+`Pane.spec.tsx` gained two cases for the row above a pane. Whole suite as implemented: 65 files,
+1,484 tests passed; the figures after review are under *Review* below.
 
 ## Browser observations — Chromium 156.0.8078.4
 
@@ -156,11 +164,83 @@ outcome, as a pane directly in a column starts at the top of the remainder.
   on this machine. The mechanism uses `clamp()` with a percentage in `width` and ResizeObserver.
 - Representative fixtures only. Actual Label Manager content, theme, translations and reference
   validation remain the consumer's; these windows are outcomes of the fixture's tokens.
-- An arrangement whose own holder changes width because of what is mounted - a scrollbar that
-  appears for one arrangement only - can alternate. The contract states it as a caller constraint;
-  no hysteresis was added, since it would blur the exact boundary.
+- A holder whose width follows the mounted arrangement more than three frames late, or by a
+  different amount each time, is not recognised and can still alternate; the contract states it.
+  The immediate case is handled: see *Review*.
 - Before the first measurement nothing is mounted, so a server render carries no arrangement.
 - Focus inside removed content falls to the document. That is the approved behavior, not restored.
 - No assistive-technology run. Tab semantics are the existing Tabs component's.
 - No push, merge, publication, issue closure or tracker write. Review is left to the separately
   dispatched reviewer; no Fallow result is claimed here.
+
+## Review — 2026-11-05, independent pass on `6f4ea9f`
+
+Standards and spec review against the same brief, then fixes on the branch. Browser and jsdom
+results are again kept apart.
+
+### Defects found and fixed
+
+1. **Selection alternated without end where scrollbars take space** (browser, Chromium
+   156.0.8078.4 launched without `--hide-scrollbars`, 16px scrollbars). German at 1462×720: the
+   three areas fit the 1108px offered but release, Shell's body gains a scrollbar, 1092px no
+   longer fits, the bounded tab group returns the 16px, and the three areas fit again. Measured
+   before the fix: both arrangements remounted in every frame - up to five times in one - with a
+   `ResizeObserver loop` error per frame, for as long as the page was open. The original runs
+   could not see it: Playwright's default launch hides scrollbars, so no width was ever lost.
+   After the fix the selection settles on the tab group after two round trips and holds 16px
+   back from the three areas.
+2. **A declaration change mounted an unselected arrangement for one commit** (jsdom). The stored
+   selection was an index applied to the new declarations before they were measured: read-only to
+   editing mounted the three areas, ran their effects and removed them where only the tab group
+   fitted; with a fallback, the fallback mounted and the keyed column was replaced. What is
+   mounted now stays until the new declarations are measured.
+3. A contract bullet in the TSDoc was fused onto the previous line; the spec asserted two class
+   strings, against `testing.md`; a test-only attribute shipped on the probe holder. All removed.
+
+### Browser observations after the fixes
+
+`work-areas.mjs`: **PASS**, 63 records (59 before; one more play function and three records with
+space-taking scrollbars). `screen.mjs`: **PASS**, 42 records. `roster.mjs`: **PASS**, 113 records.
+All against a fresh `npm run build`, Storybook dev server, Chromium 156.0.8078.4.
+
+- Every record of the original run still holds, including the 1104px and 728px boundaries and the
+  stylesheet swap inside `open()`, which drops and restores the width within a frame and must
+  not be taken for feedback - a first version of the fix did, and the runner caught it.
+- Space-taking scrollbars, German, 30 consecutive frames each: 1462×720 tab group, own width
+  1108px, no Shell scrollbar, nothing released, same column nodes throughout; 1473×720 the same
+  at 1119px; 1474×720 three areas in one row at exactly 1104px beside a 16px scrollbar.
+- *Width Feedback* play function: a holder offered 33rem that loses 1rem while the three areas
+  are mounted keeps the tab group after the three areas mounted twice; offered 34rem the three
+  areas return once and hold one row at 33rem. Against the unfixed component the same play fails.
+- *Fit Boundary* play function now also mounts three areas declared with the `stack` gap in a
+  holder exactly `2 × --space-stack + 32rem` wide, narrower than the region-gap holder that does
+  not fit them.
+- The Pane change, checked by reverting `Pane.tsx` alone to main: German at 1280px wide with the
+  second tab active gave a release body of 12.6px at a 650px window, 2.6px at 640px and 0px at
+  630px, releasing at 620px. With the change the body is 38.6px at 676px and Screen releases at
+  674px. This reproduces the implementer's figures; `screen.mjs` and `roster.mjs` are unchanged.
+
+- Scrollbars switched on under an already mounted three-area arrangement (same window): tab
+  group, three areas, tab group, three areas, tab group, all inside one frame, then still.
+
+### Checks after the fixes
+
+- `npm run lint`: 215 files, no errors. `npm run typecheck`: passed.
+- `npm test`: 65 files / 1,490 tests passed.
+- `npm run build` including `check:build`: passed; `dist/design-system.js` exports
+  `ColumnLayout.Alternatives`; `npm pack --dry-run`: 161 files. `npm run build-storybook`: completed.
+
+### Not changed, for the maintainer
+
+- **Server render.** Nothing is mounted before the first measurement, so server HTML carries no
+  arrangement, unlike `ColumnLayout.Root` and `Tabs`. The brief does not ask for one and any
+  guess would mount content the client may remove at once. Documented; a decision if a consumer
+  renders on the server.
+- **Browser runner.** `testing.md` says there is no browser-driver level. `screen.mjs` and
+  `roster.mjs` on main are the precedent this runner follows, and the reference windows cannot be
+  set from a play function. The Screen Work Areas stories have no play function of their own.
+- **Settling costs remounts.** Recognising feedback takes two round trips, so each of the two
+  arrangements mounts up to twice more, within a few frames, once per set of declarations.
+- A `ResizeObserver loop` error event can still fire once while settling. Firefox and WebKit
+  remain unrun.
+
