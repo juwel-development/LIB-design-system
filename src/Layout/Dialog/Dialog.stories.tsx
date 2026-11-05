@@ -1,5 +1,7 @@
+import { Table } from 'Display/Table/Table';
 import { P } from 'Display/Typography/P/P';
 import { Button } from 'Interaction/Button/Button';
+import { Pane } from 'Layout/Pane/Pane';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   type FunctionComponent,
@@ -18,7 +20,7 @@ const meta: Meta<typeof Dialog.Root> = {
     docs: {
       description: {
         component:
-          'Dialog.Content defaults to scrollOwner="body". Use scrollOwner="child" for one bounded child, such as Table.Root bounded, which owns both scroll axes while title, description and actions stay fixed. Intermediate wrappers must preserve height allocation; fixed regions and a usable child viewport must fit the available space. See Display/Table → Bounded Dialog and Bounded Content Dialog for live compositions.',
+          'Dialog.Content defaults to scrollOwner="body". Use scrollOwner="child" for one bounded child, including Pane.Root → Pane.Body scrollOwner="child" → Table.Root bounded with a fixed Pane.Foot summary. While fixed regions plus a complete table row and focus room fit, only Table scrolls and its header stays visible. If they cannot fit, the entire task scrolls in Dialog, Table releases its scroller and pinned header, and the background stays locked. Growing the available space restores the bounds without remounting content. Intermediate consumer wrappers still need to preserve height allocation. Bounded Summary demonstrates the 33-row compact confirmation in English and German; Display/Table retains direct bounded Dialog examples.',
       },
     },
   },
@@ -362,4 +364,245 @@ const TriggerRemovedExample: FunctionComponent = () => {
 
 export const TriggerRemovedOnConfirmation: Story = {
   render: () => <TriggerRemovedExample />,
+};
+
+const recordingTitles = [
+  'Harbour recording 08',
+  'The long road home across the harbour after midnight',
+  'The long road home across the harbour after midnight',
+  ...Array.from(
+    { length: 30 },
+    (_, index) => `Harbour recording ${index + 11}`,
+  ),
+].map((title, position) => ({ id: `recording-${position}`, title }));
+
+const summaryCopy = {
+  en: {
+    title: 'Leave the withdrawn Medium?',
+    description:
+      '10-inch LP was withdrawn: once this Release leaves it, it cannot be picked again.',
+    list: 'Affected recordings',
+    column: 'Recording title',
+    warning: '33 Recordings will be unplaced.',
+    cancel: 'Cancel',
+    confirm: 'Leave Medium',
+  },
+  de: {
+    title: 'Zurückgezogenes Medium verlassen?',
+    description:
+      'Die 10-Zoll-LP wurde zurückgezogen: Sobald diese Veröffentlichung sie verlässt, kann sie nicht erneut ausgewählt werden.',
+    list: 'Betroffene Aufnahmen',
+    column: 'Titel der Aufnahme',
+    warning: '33 Aufnahmen werden nicht mehr zugeordnet sein.',
+    cancel: 'Abbrechen',
+    confirm: 'Medium verlassen',
+  },
+} as const;
+
+const BoundedSummaryExample = ({
+  language = 'en',
+  extent = 'content',
+  initialCount = 33,
+}: {
+  language?: 'en' | 'de';
+  extent?: 'content' | 'screen';
+  initialCount?: number;
+}) => {
+  const [locale, setLocale] = useState(language);
+  const [count, setCount] = useState(initialCount);
+  const [lifecycle, setLifecycle] = useState(() => ({
+    shown$: new Subject<boolean>(),
+    dismissed$: new Subject<void>(),
+  }));
+  const [actions] = useState(() => ({
+    open$: new Subject<void>(),
+    cancel$: new Subject<void>(),
+    confirm$: new Subject<void>(),
+    translate$: new Subject<void>(),
+    filter$: new Subject<void>(),
+    replace$: new Subject<void>(),
+  }));
+  const [outcome, setOutcome] = useState('No outcome');
+  const copy = summaryCopy[locale];
+  useEffect(
+    () =>
+      unsubscribeAll([
+        actions.open$.subscribe(() => lifecycle.shown$.next(true)),
+        lifecycle.dismissed$.subscribe(() => setOutcome('Dismissed')),
+        actions.cancel$.subscribe(() => {
+          setOutcome('Cancelled');
+          lifecycle.shown$.next(false);
+        }),
+        actions.confirm$.subscribe(() => {
+          setOutcome('Confirmed');
+          lifecycle.shown$.next(false);
+        }),
+        actions.translate$.subscribe(() =>
+          setLocale((value) => (value === 'en' ? 'de' : 'en')),
+        ),
+        actions.filter$.subscribe(() =>
+          setCount((value) => (value === 33 ? 2 : value === 2 ? 0 : 33)),
+        ),
+        actions.replace$.subscribe(() =>
+          setLifecycle({
+            shown$: new Subject<boolean>(),
+            dismissed$: new Subject<void>(),
+          }),
+        ),
+      ]),
+    [actions, lifecycle],
+  );
+  return (
+    <>
+      <Button onClick$={actions.open$}>Review recordings</Button>
+      <Button onClick$={actions.translate$}>Translate summary</Button>
+      <Button onClick$={actions.filter$}>Change recordings</Button>
+      <Button onClick$={actions.replace$}>Fresh lifecycle</Button>
+      <P>{outcome}</P>
+      <Dialog.Root
+        extent={extent}
+        onDismiss$={lifecycle.dismissed$}
+        showDialog$={lifecycle.shown$}
+      >
+        <Dialog.Title>{copy.title}</Dialog.Title>
+        <Dialog.Description>{copy.description}</Dialog.Description>
+        <Dialog.Content scrollOwner="child" testId="summary-content">
+          <Pane.Root testId="summary-pane">
+            <Pane.Body scrollOwner="child" ariaLabel={copy.list}>
+              <Table.Root
+                bounded
+                density="compact"
+                caption={copy.list}
+                columns={[{ weight: 1 }]}
+              >
+                <Table.Head>
+                  <Table.Row>
+                    <Table.HeaderCell scope="col">
+                      {copy.column}
+                    </Table.HeaderCell>
+                  </Table.Row>
+                </Table.Head>
+                <Table.Body>
+                  {recordingTitles.slice(0, count).map(({ id, title }) => (
+                    <Table.Row key={id}>
+                      <Table.Cell>
+                        <P>{title}</P>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table.Root>
+            </Pane.Body>
+            <Pane.Foot>
+              <P color="warning">
+                {count === 33 ? copy.warning : `${count} recordings`}
+              </P>
+            </Pane.Foot>
+          </Pane.Root>
+        </Dialog.Content>
+        <Dialog.Actions>
+          <Button variant="secondary" onClick$={actions.cancel$}>
+            {copy.cancel}
+          </Button>
+          <Button variant="destructive" onClick$={actions.confirm$}>
+            {copy.confirm}
+          </Button>
+        </Dialog.Actions>
+      </Dialog.Root>
+    </>
+  );
+};
+
+export const BoundedSummary: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Open Review recordings, then reduce the viewport height: the fixed summary follows the titles above the actions while Table alone scrolls at sufficient height; at insufficient height the whole Dialog scrolls. Translate summary and Change recordings are consumer state controls exercised by the browser regression while open. Fresh lifecycle replaces both Subjects and closes the current presentation. No application CSS or additional public props are needed.',
+      },
+    },
+  },
+  render: () => <BoundedSummaryExample />,
+};
+export const BoundedSummaryGerman: Story = {
+  render: () => <BoundedSummaryExample language="de" />,
+};
+export const BoundedSummaryScreen: Story = {
+  render: () => <BoundedSummaryExample extent="screen" />,
+};
+export const BoundedSummaryShort: Story = {
+  render: () => <BoundedSummaryExample initialCount={2} />,
+};
+export const BoundedSummaryEmpty: Story = {
+  render: () => <BoundedSummaryExample initialCount={0} />,
+};
+
+const ReplacementExample = () => {
+  const [channels] = useState(() => ({
+    first$: new Subject<boolean>(),
+    second$: new Subject<boolean>(),
+    dismissed$: new Subject<void>(),
+    open$: new Subject<void>(),
+    next$: new Subject<void>(),
+    previous$: new Subject<void>(),
+    close$: new Subject<void>(),
+  }));
+  useEffect(
+    () =>
+      unsubscribeAll([
+        channels.open$.subscribe(() => channels.first$.next(true)),
+        channels.next$.subscribe(() => {
+          channels.first$.next(false);
+          channels.second$.next(true);
+        }),
+        channels.previous$.subscribe(() => {
+          channels.second$.next(false);
+          channels.first$.next(true);
+        }),
+        channels.close$.subscribe(() => {
+          channels.first$.next(false);
+          channels.second$.next(false);
+        }),
+      ]),
+    [channels],
+  );
+  return (
+    <>
+      <Button onClick$={channels.open$}>Start task</Button>
+      <Dialog.Root
+        extent="content"
+        showDialog$={channels.first$}
+        onDismiss$={channels.dismissed$}
+      >
+        <Dialog.Title>First task</Dialog.Title>
+        <Dialog.Actions>
+          <Button onClick$={channels.next$}>Continue to next task</Button>
+          <Button onClick$={channels.close$}>Close task</Button>
+        </Dialog.Actions>
+      </Dialog.Root>
+      <Dialog.Root
+        extent="content"
+        showDialog$={channels.second$}
+        onDismiss$={channels.dismissed$}
+      >
+        <Dialog.Title>Second task</Dialog.Title>
+        <Dialog.Actions>
+          <Button onClick$={channels.previous$}>Return to first task</Button>
+          <Button onClick$={channels.close$}>Close task</Button>
+        </Dialog.Actions>
+      </Dialog.Root>
+    </>
+  );
+};
+
+export const Replacement: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Each transition closes the current Dialog before presenting its replacement in the same turn. The document stays locked across either direction and restores its previous overflow after the final task closes.',
+      },
+    },
+  },
+  render: () => <ReplacementExample />,
 };

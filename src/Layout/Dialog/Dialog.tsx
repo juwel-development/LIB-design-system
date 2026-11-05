@@ -15,14 +15,25 @@ import {
 import type { Subject } from 'rxjs';
 import { DialogCompositionError } from './DialogCompositionError';
 import { DialogNamingError } from './DialogNamingError';
+import { useDialogAllocation } from './useDialogAllocation';
+import { useModalScrollLock } from './useModalScrollLock';
 
 // The layout classes ride the open: variant - a bare `flex` would defeat the UA's
 // dialog:not([open]) hiding. Tailwind's preflight zeroes the UA's centering margins (m-auto
 // restores them) and strips ::backdrop, so the Scrim colour and blur are declared here.
-// overflow-hidden overrides the UA's `dialog { overflow: auto }` - Content or its delegated child owns scrolling.
+// Content or its delegated child owns scrolling while usable; insufficient height releases the whole task.
 const dialogRoot = cva(
   [
     'open:flex open:flex-col m-auto p-0 overflow-hidden',
+    '[&[data-dialog-unusable]]:overflow-auto [&[data-dialog-unusable]]:[--_scroll-released:1]',
+    '[&[data-dialog-unusable]]:scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
+    '[&[data-dialog-unusable]>*]:shrink-0',
+    '[&[data-dialog-unusable]>[data-dialog-member=content]]:flex-none',
+    '[&[data-dialog-unusable]>[data-dialog-member=content]]:overflow-visible',
+    '[&[data-dialog-unusable]>[data-dialog-member=content]>*]:h-auto',
+    '[&[data-dialog-unusable]_div:has(>table)]:max-h-none',
+    '[&[data-dialog-unusable]_div:has(>table)]:overflow-visible',
+    '[&[data-dialog-unusable]_thead]:static',
     'bg-surface text-foreground',
     'rounded-[var(--radius-dialog)] shadow-[var(--elevation-floating)]',
     'backdrop:bg-scrim backdrop:[backdrop-filter:blur(var(--scrim-blur))]',
@@ -50,14 +61,14 @@ const dialogRoot = cva(
 // followed by a Description hands the region's bottom padding to it.
 const dialogTitle = cva(
   [
-    'px-[var(--space-region)] pt-[var(--space-region)] pb-[var(--space-region)]',
+    'shrink-0 px-[var(--space-region)] pt-[var(--space-region)] pb-[var(--space-region)]',
     '[&:has(+[data-dialog-member=description])]:pb-0',
   ].join(' '),
 );
 
 const dialogDescription = cva(
   [
-    'px-[var(--space-region)] pt-[var(--space-region)] pb-[var(--space-region)]',
+    'shrink-0 px-[var(--space-region)] pt-[var(--space-region)] pb-[var(--space-region)]',
     '[[data-dialog-member=title]+&]:mt-[var(--space-stack)] [[data-dialog-member=title]+&]:pt-0',
   ].join(' '),
 );
@@ -202,6 +213,8 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
 }) => {
   const baseId = useId();
   const dialogRef = useRef<HTMLDialogElement | undefined>(undefined);
+  const isUnusable = useDialogAllocation(dialogRef);
+  useModalScrollLock(dialogRef);
   // What the component believes about its own presentation. The close handler reads it to tell a
   // platform-initiated close (form method="dialog") - which must synchronize the Subject - from a
   // close the component performed itself, which must not re-emit.
@@ -318,6 +331,7 @@ const DialogRoot: FunctionComponent<IDialogRootProps> = ({
       <dialog
         ref={attachDialog}
         className={dialogRoot({ extent })}
+        data-dialog-unusable={isUnusable || undefined}
         aria-label={ariaLabel}
         aria-labelledby={
           ariaLabel === undefined && nameParts.title
@@ -451,9 +465,14 @@ const DialogActions: FunctionComponent<IDialogActionsProps> = ({
  * - `extent="screen"` (the default) fills the viewport minus the `--gutter` inline and
  *   `--space-region` block insets, header and Actions fixed, only `Content` scrolling.
  *   `extent="content"` holds a fixed 32rem capped to the viewport with content-driven height;
- *   Default `Content` scrolls as the fallback when its content exceeds available space.
+ *   Default `Content` owns overflow while a usable viewport fits.
  * - `Content scrollOwner="child"` passes available height to one bounded child without scrolling.
- *   A bounded Table then owns both axes and pins its header; title, description and actions stay fixed.
+ *   A bounded Table, directly or through Pane's child-owned Body, owns both axes and pins its header;
+ *   title, description, Pane.Foot summary and actions stay fixed while they and a complete row fit.
+ * - When fixed regions plus a complete row/control or text line and focus room cannot fit, the
+ *   whole task scrolls in Dialog. Content and Table contribute no separate scroll region and the
+ *   Table header is released. Bounds restore on resize or content changes without remounting.
+ *   The background document is locked while presented; its prior overflow is restored on close.
  * - Regions take `--space-region` padding with `--space-stack` between Title and Description and
  *   between Actions controls; hairlines separate header from `Content` and `Content` from
  *   `Actions` only where both neighbours exist. The surface reads `--radius-dialog`,
@@ -462,8 +481,10 @@ const DialogActions: FunctionComponent<IDialogActionsProps> = ({
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - In child-scroll mode provide one child that accepts the height allocation and owns overflow.
- *   Intermediate wrappers must preserve that allocation. Fixed regions must fit the viewport and
- *   leave usable room for the child; a Table needs room for its header and readable rows.
+ *   Intermediate consumer wrappers must preserve that allocation. Pane.Root with child-owned
+ *   Pane.Body and a fixed Pane.Foot is supported. The fallback measures the composed table and
+ *   surrounding fixed content at their current width; arbitrary height-consuming wrappers need
+ *   their own allocation contract.
  * - Direct children in the order `Title`, `Description`, `Content`, `Actions`, at most one of
  *   each; `Actions` is present and holds at least one explicit dismissal control, wired to the
  *   same dismissal and visibility transitions. Cancel-before-Confirm order puts initial focus on
