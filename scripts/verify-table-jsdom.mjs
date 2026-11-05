@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
 
@@ -16,38 +16,14 @@ const directory = process.argv[3]
 // A fresh directory prevents npm retaining a same-version local tarball for a registry run.
 if (process.argv[3]) mkdirSync(directory);
 
-const fixture = `// @vitest-environment jsdom
-import { Stack, Table } from "@juwel-development/design-system";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { useState } from "react";
-import { expect, test } from "vitest";
-
-const Example = () => {
-\tconst [open, setOpen] = useState(false);
-\tlet content = open ? (
-\t\t<Table.Root caption="Population" notes="content">
-\t\t\t<Table.Body>
-\t\t\t\t<Table.Row>
-\t\t\t\t\t<Table.HeaderCell scope="row">Population</Table.HeaderCell>
-\t\t\t\t\t<Table.Cell>231</Table.Cell>
-\t\t\t\t</Table.Row>
-\t\t\t</Table.Body>
-\t\t</Table.Root>
-\t) : undefined;
-\tfor (let depth = 0; depth < 20; depth++) content = <Stack>{content}</Stack>;
-\treturn <><button type="button" onClick={() => setOpen(true)}>Open</button>{content}</>;
-};
-
-test("one public Table opens under nested public Stack components", async () => {
-\trender(<Example />);
-
-\tawait userEvent.click(screen.getByRole("button", { name: "Open" }));
-
-\texpect(screen.getByRole("cell").textContent).toBe("231");
-});
-
-`;
+// Keep the foreign-runtime fixture colocated without running it under the native jsdom 30 suite.
+const fixture = readFileSync(
+  new URL(
+    '../src/Display/Table/Table.jsdom29.spec.tsx.fixture',
+    import.meta.url,
+  ),
+  'utf8',
+);
 
 writeFileSync(
   join(directory, 'package.json'),

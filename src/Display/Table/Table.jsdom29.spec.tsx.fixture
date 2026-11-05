@@ -1,0 +1,31 @@
+// @vitest-environment jsdom
+import { Stack, Table } from "@juwel-development/design-system";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { useState } from "react";
+import { expect, test } from "vitest";
+
+const Example = () => {
+	const [open, setOpen] = useState(false);
+	let content = open ? (
+		<Table.Root caption="Population" notes="content">
+			<Table.Body>
+				<Table.Row>
+					<Table.HeaderCell scope="row">Population</Table.HeaderCell>
+					<Table.Cell>231</Table.Cell>
+				</Table.Row>
+			</Table.Body>
+		</Table.Root>
+	) : undefined;
+	for (let depth = 0; depth < 20; depth++) content = <Stack>{content}</Stack>;
+	return <><button type="button" onClick={() => setOpen(true)}>Open</button>{content}</>;
+};
+
+test("one public Table opens under nested public Stack components", async () => {
+	render(<Example />);
+
+	await userEvent.click(screen.getByRole("button", { name: "Open" }));
+
+	expect(screen.getByRole("cell").textContent).toBe("231");
+});
+
