@@ -1,3 +1,42 @@
+# [4.2.0](https://github.com/juwel-development/LIB-design-system/compare/v4.1.0...v4.2.0) (2026-11-05)
+
+
+### Bug Fixes
+
+* **column-layout:** settle width feedback and measure changed declarations first ([#153](https://github.com/juwel-development/LIB-design-system/issues/153)) ([b329123](https://github.com/juwel-development/LIB-design-system/commit/b329123e6a2b7513aec2609d7bdd461d3701a362))
+* **dialog:** bound nested table confirmations with whole-task fallback ([#154](https://github.com/juwel-development/LIB-design-system/issues/154)) ([07ac047](https://github.com/juwel-development/LIB-design-system/commit/07ac047f77adaa8f2d25e5986fa1dee47b95d438))
+* **dialog:** preserve page locking across replacement ([#154](https://github.com/juwel-development/LIB-design-system/issues/154)) ([193cefc](https://github.com/juwel-development/LIB-design-system/commit/193cefc877b2b44306d25588ef9f78f719605c57))
+* **pane:** count a row above the pane against its room in a screen ([#153](https://github.com/juwel-development/LIB-design-system/issues/153)) ([031cf68](https://github.com/juwel-development/LIB-design-system/commit/031cf68bef269ee632f1abc4e9e2e61fecb5b2fe))
+
+
+### Features
+
+* **choices:** add wrapping arrangement and optional descriptions ([#156](https://github.com/juwel-development/LIB-design-system/issues/156)) ([83d49d2](https://github.com/juwel-development/LIB-design-system/commit/83d49d220657a0bd1ffd44e5520c8243d5fed0ff))
+* **column-layout:** select among declared arrangements by fit ([#153](https://github.com/juwel-development/LIB-design-system/issues/153)) ([862d84d](https://github.com/juwel-development/LIB-design-system/commit/862d84d343e5f09da567ed8fda38908fa3606dcc))
+* **sidebar:** request current section navigation ([#155](https://github.com/juwel-development/LIB-design-system/issues/155)) ([401ea13](https://github.com/juwel-development/LIB-design-system/commit/401ea133ddb0c723a0b64efce6d80731d7fb5323))
+
+
+### NOTE
+
+* **dialog:** Replacing a Dialog in the same turn now keeps the background locked
+and restores its original scrolling behavior when the final task closes.
+* **choices:** Choices now wrap long unbroken names and descriptions within the
+available width in both arrangements. Empty descriptions no longer render
+description content or an accessible-description reference.
+* **dialog:** Child-owned Dialog content now bounds a Pane's Table while keeping
+its summary and actions visible. When fixed regions and a readable row
+cannot fit, the whole dialog scrolls and restores Table scrolling when
+space returns. The background document stays locked while a dialog is open.
+* **sidebar:** Sidebar now emits onSelect$ when the current entry is activated by
+mouse, Enter or Space, as it already does for inactive entries. Consumers
+own the meaning of this navigation request and may ignore it when already
+at its destination or return from subordinate content through their usual
+navigation handler. Active state, draft disposal and focus remain theirs.
+* **pane:** a Pane under a filling Tabs row inside Screen now releases to the
+enclosing scroll body earlier, before its body is less than a usable line.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
 # [4.1.0](https://github.com/juwel-development/LIB-design-system/compare/v4.0.0...v4.1.0) (2026-11-04)
 
 
