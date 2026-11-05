@@ -33,8 +33,8 @@ export interface IScreenProps {
  * - Use Shell's console body, optionally Sidebar.Root fill / Sidebar.Content, to allocate height
  *   and own fallback scrolling. Every intermediate wrapper must pass that allocation through.
  * - Compose filling ColumnLayout with direct Pane children; retain Pane's Head/Body/Foot order.
- *   Body can delegate to one bounded Table. Additional height-consuming wrappers need their own
- *   allocation contract and are not measured as panel fixed regions by Screen.
+ *   Body can delegate to one bounded Table. A filling Tabs row above a Pane counts against that
+ *   Pane's room; other height-consuming wrappers need their own allocation contract.
  * - Keep the Shell bar short enough to leave a usable enclosing scrollport. This is representative
  *   panel fit, not a guarantee that arbitrary content fits any particular viewport.
  */

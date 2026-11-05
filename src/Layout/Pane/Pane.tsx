@@ -145,8 +145,15 @@ const useScreenFallback = (root: {
       const gaps =
         Math.max(0, sections.length - 1) *
         parseLength(getComputedStyle(element).rowGap);
+      // A height-passing holder may keep a row of its own above the pane (Tabs.Root fill); the
+      // pane is offered the remainder less that row, bounded or released alike (#153).
+      const allocation = frame.getBoundingClientRect();
+      const above = Math.max(
+        0,
+        element.getBoundingClientRect().top - allocation.top,
+      );
       setIsUnusable(
-        frame.getBoundingClientRect().height <
+        allocation.height - above <
           fixed +
             gaps +
             blockEdges(element) +
@@ -265,7 +272,8 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  * - In child mode supply one child that accepts its parent's allocated height and handles its
  *   own overflow and focus ring. Intermediate wrappers must preserve that allocation.
  * - Inside Screen, fixed regions and the usable body minimum participate in whole-content
- *   fallback and restoration. Outside Screen the parent remains responsible for that policy.
+ *   fallback and restoration, measured against what Screen's remainder leaves below anything
+ *   above the pane - a filling Tabs row. Outside Screen the parent owns that policy.
  * - Filled ColumnLayout columns and active Stepper panels can pass the bound to Root. Keep
  *   those holders and Pane directly composed so no intermediate wrapper loses the allocation.
  */

@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { Button, Pane, Table } from 'index';
+import { Button, Pane, Screen, Table } from 'index';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 describe('Pane', () => {
@@ -213,4 +213,43 @@ describe('Pane', () => {
     act(() => screen.getByRole('button', { name: 'Open artist' }).focus());
     expect(screen.getByRole('button', { name: 'Open artist' })).toHaveFocus();
   });
+  it.each([
+    ['releases', 300, true],
+    ['keeps', 0, false],
+  ])(
+    "%s Screen's bound for a pane with a %ipx row above it, counting that row against the remainder",
+    (_, above, isReleased) => {
+      // 400px of remainder holds a 100px head and a usable body; the 100px a row above the pane
+      // - a tab row - leaves of it does not.
+      const boxes: Record<string, { top: number; height: number }> = {
+        row: { top: 0, height: above },
+        pane: { top: above, height: 400 - above },
+        head: { top: above, height: 100 },
+      };
+      vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+        function (this: Element) {
+          const isRemainder = this.parentElement?.tagName === 'MAIN';
+          const box = isRemainder
+            ? { top: 0, height: 400 }
+            : (boxes[this.getAttribute('data-testid') ?? ''] ?? {
+                top: 0,
+                height: 0,
+              });
+          return { ...box, bottom: box.top + box.height } as DOMRect;
+        },
+      );
+      render(
+        <Screen>
+          <div data-testid="row">Views</div>
+          <Pane.Root testId="pane">
+            <Pane.Head testId="head">Facts</Pane.Head>
+            <Pane.Body ariaLabel="Entries">Rows</Pane.Body>
+          </Pane.Root>
+        </Screen>,
+      );
+      expect(
+        screen.getByTestId('pane').hasAttribute('data-screen-unusable'),
+      ).toBe(isReleased);
+    },
+  );
 });
