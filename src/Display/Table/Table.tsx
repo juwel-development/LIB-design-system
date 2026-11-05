@@ -341,7 +341,10 @@ const useOverflow = (
           Number.parseFloat(getComputedStyle(element).paddingTop) || 0;
         element.style.scrollPaddingTop = `${headerHeight + 2 * ringRoom}px`;
       }
+      // Only bounded tables participate in Dialog release. Reading an absent inherited custom
+      // property is depth-dependent in jsdom 29.1.1, even for ordinary content tables (#157).
       const isReleased =
+        bounded &&
         getComputedStyle(element)
           .getPropertyValue('--_scroll-released')
           .trim() === '1';
