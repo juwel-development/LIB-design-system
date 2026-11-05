@@ -17,7 +17,7 @@ const paneBody = cva('min-h-0 min-w-0 flex-[0_1_auto]', {
   variants: {
     scrollOwner: {
       body: '[&>div]:flow-root [&>div]:w-fit [&>div]:min-w-full [&>div]:p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))] overflow-auto overscroll-contain outline-focus-ring outline-offset-[var(--focus-ring-offset)] focus-visible:outline focus-visible:outline-[length:var(--focus-ring-width)]',
-      child: '',
+      child: 'flex flex-col',
     },
   },
   defaultVariants: { scrollOwner: 'body' },
@@ -261,7 +261,8 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  *   overflowing, retained while focused. It reserves the shared focus ring's room and leaves
  *   native focus reveal, scrolling and child keyboard interactions intact.
  * - Body scrollOwner="child" passes its allocated height directly to its child, without an
- *   inner wrapper, overflow, group or keyboard stop. The child owns scroll semantics and naming.
+ *   inner wrapper, overflow, group or keyboard stop. Its flex allocation permits a bounded Table
+ *   to shrink even in a content-height Dialog. The child owns scroll semantics and naming.
  *   Use this for a bounded Table: its wrapper must own both axes so its header stays in view.
  *
  * @CallerMustEnsure
@@ -273,7 +274,8 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  *   own overflow and focus ring. Intermediate wrappers must preserve that allocation.
  * - Inside Screen, fixed regions and the usable body minimum participate in whole-content
  *   fallback and restoration, measured against what Screen's remainder leaves below anything
- *   above the pane - a filling Tabs row. Outside Screen the parent owns that policy.
+ *   above the pane - a filling Tabs row. Dialog owns the corresponding whole-task fallback for
+ *   a Pane with child-owned Body and bounded Table. Other parents own their fallback policy.
  * - Filled ColumnLayout columns and active Stepper panels can pass the bound to Root. Keep
  *   those holders and Pane directly composed so no intermediate wrapper loses the allocation.
  */

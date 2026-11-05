@@ -325,8 +325,8 @@ const useOverflow = (
   table: { current: HTMLElement | null },
   caption: { current: HTMLElement | null },
   bounded: boolean,
-): boolean => {
-  const [isOverflowing, setIsOverflowing] = useState(true);
+): number | undefined => {
+  const [scrollTabIndex, setScrollTabIndex] = useState<number | undefined>(0);
   useLayoutEffect(() => {
     const element = wrapper.current;
     if (element === null) return;
@@ -341,10 +341,24 @@ const useOverflow = (
           Number.parseFloat(getComputedStyle(element).paddingTop) || 0;
         element.style.scrollPaddingTop = `${headerHeight + 2 * ringRoom}px`;
       }
-      setIsOverflowing(
+      const isReleased =
+        getComputedStyle(element)
+          .getPropertyValue('--_scroll-released')
+          .trim() === '1';
+      const isFocused = element === document.activeElement;
+      const overflows =
         element.scrollWidth > element.clientWidth ||
-          (bounded && element.scrollHeight > element.clientHeight) ||
-          element === document.activeElement,
+        (bounded && element.scrollHeight > element.clientHeight);
+      // Removing tabindex from an active element blurs it in Chromium. A retained -1 keeps
+      // that focus through release while removing the extra scrolling stop from Tab order.
+      setScrollTabIndex(
+        isReleased
+          ? isFocused
+            ? -1
+            : undefined
+          : overflows || isFocused
+            ? 0
+            : undefined,
       );
     };
     measure();
@@ -376,11 +390,16 @@ const useOverflow = (
       element.removeEventListener('blur', measure);
     };
   }, [wrapper, table, caption, bounded]);
-  return isOverflowing;
+  return scrollTabIndex;
 };
 
 const revealFocus = (event: FocusEvent<HTMLDivElement>): void => {
   const wrapper = event.currentTarget;
+  if (
+    getComputedStyle(wrapper).getPropertyValue('--_scroll-released').trim() ===
+    '1'
+  )
+    return;
   const target = event.target;
   if (target === wrapper) return;
   const bounds = wrapper.getBoundingClientRect();
@@ -428,12 +447,13 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
   const tableElement = useRef<HTMLTableElement>(null);
   const captionElement = useRef<HTMLTableCaptionElement>(null);
   const trackList = trackListOf(columns);
-  const isOverflowing = useOverflow(
+  const scrollTabIndex = useOverflow(
     wrapper,
     tableElement,
     captionElement,
     bounded === true,
   );
+  const isOverflowing = scrollTabIndex !== undefined;
   const style: TableRootStyle | undefined =
     trackList === undefined ? undefined : { '--table-columns': trackList };
   const columnCount = trackList === undefined ? undefined : columns?.length;
@@ -500,7 +520,7 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
       data-testid={testId}
       role={isOverflowing ? 'group' : undefined}
       aria-label={isOverflowing ? caption : undefined}
-      tabIndex={isOverflowing ? 0 : undefined}
+      tabIndex={scrollTabIndex}
     >
       {content}
     </div>
@@ -682,6 +702,10 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  *   head and foot included, so the marker has room and no column shifts as the selection moves. A
  *   table holding an interactive row makes ring room around itself, so a focused row's ring is never
  *   clipped by the scroll region. A table with neither keeps its static geometry exactly.
+ *
+ * - In Dialog's insufficient-height fallback the enclosing Dialog releases this wrapper's
+ *   bound and pinned header. It contributes no independent scroll region or scroll tab stop;
+ *   content and focus stay mounted while sufficient space restores bounded scrolling.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
  * - For bounded mode supply finite usable parent height, with room for the header and readable rows.

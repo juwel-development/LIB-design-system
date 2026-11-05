@@ -527,6 +527,39 @@ describe('Dialog Component', () => {
     expect(destination).toHaveFocus();
   });
 
+  it('locks the page only while presented and restores the previous overflow on replacement and unmount', async () => {
+    const page = document.documentElement;
+    page.style.setProperty('overflow', 'clip', 'important');
+    const first = new Subject<boolean>();
+    const dismissed = new Subject<void>();
+    const view = render(confirmation(dismissed, first));
+    try {
+      expect(page.style.overflow).toBe('clip');
+      first.next(true);
+      await nativeCloseSettled();
+      expect(page.style.overflow).toBe('hidden');
+      first.next(false);
+      await nativeCloseSettled();
+      expect(page.style.overflow).toBe('clip');
+      expect(page.style.getPropertyPriority('overflow')).toBe('important');
+      first.next(true);
+      await nativeCloseSettled();
+      const second = new Subject<boolean>();
+      view.rerender(confirmation(dismissed, second));
+      await nativeCloseSettled();
+      expect(page.style.overflow).toBe('clip');
+      second.next(true);
+      await nativeCloseSettled();
+      expect(page.style.overflow).toBe('hidden');
+      view.unmount();
+      expect(page.style.overflow).toBe('clip');
+      expect(page.style.getPropertyPriority('overflow')).toBe('important');
+    } finally {
+      view.unmount();
+      page.style.removeProperty('overflow');
+    }
+  });
+
   it('exposes the explicit testId hook on every member', () => {
     const onDismiss$ = new Subject<void>();
     render(
