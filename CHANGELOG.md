@@ -1,3 +1,16 @@
+## [4.2.1](https://github.com/juwel-development/LIB-design-system/compare/v4.2.0...v4.2.1) (2026-11-05)
+
+
+### Bug Fixes
+
+* **table:** skip release checks for unbounded tables ([#157](https://github.com/juwel-development/LIB-design-system/issues/157)) ([3cb9f97](https://github.com/juwel-development/LIB-design-system/commit/3cb9f976ce6a8fcec66d96f22bff54d8c4d0c788))
+
+
+### NOTE
+
+* **table:** Unbounded Tables with note columns no longer stall tests using jsdom
+29.1.1 in deeply nested layouts.
+
 # [4.2.0](https://github.com/juwel-development/LIB-design-system/compare/v4.1.0...v4.2.0) (2026-11-05)
 
 
