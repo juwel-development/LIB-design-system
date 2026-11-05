@@ -60,68 +60,128 @@ const ControlledCadence: FunctionComponent<{ onSelect$: Subject<string> }> = ({
   return <>{cadenceChoices(selected, onSelect$)}</>;
 };
 
+const roleChoices = (
+  selected: string,
+  onSelect$: Subject<string>,
+): ReactNode => (
+  <Choices.Root
+    arrangement="wrapping"
+    selected={selected}
+    onSelect$={onSelect$}
+    label="Preferred role"
+  >
+    <Choices.Choice value="all">All</Choices.Choice>
+    <Fragment key="extra-choices">
+      {['research', 'producer'].map((value) => (
+        <Choices.Choice
+          key={value}
+          value={value}
+          description={value === 'research' ? 'Find a market.' : undefined}
+        >
+          {value === 'research' ? 'Market Research' : 'Producer'}
+        </Choices.Choice>
+      ))}
+    </Fragment>
+  </Choices.Root>
+);
+
 describe('Choices Component', () => {
-  it('keeps label-only and described wrapping choices controlled and independent across arrays and fragments', () => {
+  it('keeps array and fragment choices keyboard reachable in declared order with wraparound', () => {
+    render(roleChoices('all', new Subject<string>()));
+    const all = screen.getByRole('radio', { name: 'All' });
+    const research = screen.getByRole('radio', { name: 'Market Research' });
+    const producer = screen.getByRole('radio', { name: 'Producer' });
+
+    fireEvent.keyDown(all, { key: 'ArrowRight' });
+    expect(research).toHaveFocus();
+    fireEvent.keyDown(research, { key: 'ArrowRight' });
+    expect(producer).toHaveFocus();
+    fireEvent.keyDown(producer, { key: 'ArrowRight' });
+    expect(all).toHaveFocus();
+    fireEvent.keyDown(all, { key: 'ArrowLeft' });
+    expect(producer).toHaveFocus();
+  });
+
+  it('keeps wrapping selection unchanged until the consumer answers the stable identity request', () => {
     const onSelect$ = new Subject<string>();
     const requests = vi.fn();
     onSelect$.subscribe(requests);
-    const choices = (selected: string) => (
-      <Choices.Root
-        arrangement="wrapping"
-        selected={selected}
-        onSelect$={onSelect$}
-        label="Preferred role"
-      >
-        <Choices.Choice value="all">All</Choices.Choice>
-        <Fragment key="extra-choices">
-          {['research', 'producer'].map((value) => (
-            <Choices.Choice
-              key={value}
-              value={value}
-              description={value === 'research' ? 'Find a market.' : undefined}
-            >
-              {value === 'research' ? 'Market Research' : 'Producer'}
-            </Choices.Choice>
-          ))}
-        </Fragment>
-      </Choices.Root>
-    );
-    const { rerender } = render(
-      <>
-        {choices('all')}
-        {cadenceChoices('daily', new Subject<string>())}
-      </>,
-    );
-    const group = screen.getByRole('radiogroup', { name: 'Preferred role' });
-    const all = within(group).getByRole('radio', { name: 'All' });
-    const research = within(group).getByRole('radio', {
-      name: 'Market Research',
-    });
-    const producer = within(group).getByRole('radio', { name: 'Producer' });
+    const { rerender } = render(roleChoices('all', onSelect$));
+    const all = screen.getByRole('radio', { name: 'All' });
+    const research = screen.getByRole('radio', { name: 'Market Research' });
 
-    fireEvent.keyDown(all, { key: 'ArrowLeft' });
-    expect(producer).toHaveFocus();
-    expect(requests.mock.calls).toEqual([['producer']]);
-    expect(all).toBeChecked();
-    fireEvent.keyDown(producer, { key: 'ArrowRight' });
-    expect(all).toHaveFocus();
-    expect(requests).toHaveBeenCalledTimes(1);
     fireEvent.click(research);
-    expect(requests.mock.calls).toEqual([['producer'], ['research']]);
-    expect(research).toHaveAccessibleDescription('Find a market.');
-    expect(producer).not.toHaveAttribute('aria-describedby');
 
-    rerender(
-      <>
-        {choices('research')}
-        {cadenceChoices('daily', new Subject<string>())}
-      </>,
-    );
+    expect(requests.mock.calls).toEqual([['research']]);
+    expect(all).toBeChecked();
+    expect(research).not.toBeChecked();
+
+    rerender(roleChoices('research', onSelect$));
+
     expect(research).toBeChecked();
     expect(research).toHaveAttribute('tabindex', '0');
     expect(all).not.toBeChecked();
+    expect(requests).toHaveBeenCalledTimes(1);
+  });
+
+  it('emits nothing when wrapping keyboard movement returns to the supplied selection', () => {
+    const onSelect$ = new Subject<string>();
+    const requests = vi.fn();
+    onSelect$.subscribe(requests);
+    render(roleChoices('all', onSelect$));
+    const all = screen.getByRole('radio', { name: 'All' });
+    fireEvent.keyDown(all, { key: 'ArrowLeft' });
+    expect(requests.mock.calls).toEqual([['producer']]);
+
+    fireEvent.keyDown(screen.getByRole('radio', { name: 'Producer' }), {
+      key: 'ArrowRight',
+    });
+
+    expect(all).toHaveFocus();
+    expect(requests).toHaveBeenCalledTimes(1);
+  });
+
+  it('associates a supplied wrapping description only with the described choice', () => {
+    render(roleChoices('all', new Subject<string>()));
+
+    expect(
+      screen.getByRole('radio', { name: 'Market Research' }),
+    ).toHaveAccessibleDescription('Find a market.');
+    expect(screen.getByRole('radio', { name: 'Producer' })).not.toHaveAttribute(
+      'aria-describedby',
+    );
+  });
+
+  it('keeps wrapping keyboard requests and controlled selection independent of another group', () => {
+    const onSelect$ = new Subject<string>();
+    const otherSelect$ = new Subject<string>();
+    const otherRequests = vi.fn();
+    otherSelect$.subscribe(otherRequests);
+    const groups = (selected: string) => (
+      <>
+        {roleChoices(selected, onSelect$)}
+        {cadenceChoices('daily', otherSelect$)}
+      </>
+    );
+    const { rerender } = render(groups('all'));
+    const group = screen.getByRole('radiogroup', { name: 'Preferred role' });
+
+    fireEvent.keyDown(within(group).getByRole('radio', { name: 'All' }), {
+      key: 'ArrowLeft',
+    });
+
+    expect(
+      within(group).getByRole('radio', { name: 'Producer' }),
+    ).toHaveFocus();
+    expect(otherRequests).not.toHaveBeenCalled();
+
+    rerender(groups('research'));
+
+    expect(
+      within(group).getByRole('radio', { name: 'Market Research' }),
+    ).toBeChecked();
     expect(screen.getByRole('radio', { name: 'Daily digest' })).toBeChecked();
-    expect(requests).toHaveBeenCalledTimes(2);
+    expect(otherRequests).not.toHaveBeenCalled();
   });
 
   it.each(['vertical', 'wrapping'] as const)(

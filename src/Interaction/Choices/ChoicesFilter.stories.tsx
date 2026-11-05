@@ -40,11 +40,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const roles = [
-  { value: 'all', en: 'All', de: 'Alle' },
-  { value: 'ar', en: 'A&R', de: 'A&R' },
-  { value: 'research', en: 'Market Research', de: 'Marktforschung' },
-  { value: 'songwriting', en: 'Songwriting', de: 'Songwriting' },
-  { value: 'producer', en: 'Producer', de: 'Produzent' },
+  { value: 'all', english: 'All', german: 'Alle' },
+  { value: 'ar', english: 'A&R', german: 'A&R' },
+  { value: 'research', english: 'Market Research', german: 'Marktforschung' },
+  { value: 'songwriting', english: 'Songwriting', german: 'Songwriting' },
+  { value: 'producer', english: 'Producer', german: 'Produzent' },
 ];
 
 const FilterExample = ({ german = false }: { german?: boolean }) => {
@@ -72,7 +72,9 @@ const FilterExample = ({ german = false }: { german?: boolean }) => {
     .filter(
       (role) =>
         (selected === 'all' || role.value === selected) &&
-        role[german ? 'de' : 'en'].toLowerCase().includes(query.toLowerCase()),
+        role[german ? 'german' : 'english']
+          .toLowerCase()
+          .includes(query.toLowerCase()),
     );
   return (
     <Shell
@@ -118,7 +120,7 @@ const FilterExample = ({ german = false }: { german?: boolean }) => {
                       >
                         {roles.map((role) => (
                           <Choices.Choice key={role.value} value={role.value}>
-                            {role[german ? 'de' : 'en']}
+                            {role[german ? 'german' : 'english']}
                           </Choices.Choice>
                         ))}
                       </Choices.Root>
@@ -167,7 +169,7 @@ const FilterExample = ({ german = false }: { german?: boolean }) => {
                         {visible.map((role) => (
                           <Table.Row key={role.value}>
                             <Table.Cell>
-                              {role[german ? 'de' : 'en']}
+                              {role[german ? 'german' : 'english']}
                             </Table.Cell>
                           </Table.Row>
                         ))}
