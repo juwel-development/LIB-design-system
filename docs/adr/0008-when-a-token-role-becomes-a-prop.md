@@ -613,8 +613,12 @@ the default tokens and a 16px type, compact gives a bounded Pane body 72px more 
 Screen heading with Head and Foot, and 68px with one slot fewer. That is room the enclosures
 recover; it is not evidence that a consumer screen fits.
 
-A Pane follows a compact Screen when the Screen is a DOM ancestor and no `dialog` lies between
-them. A Dialog's task is not one of the console's work areas, so its Pane keeps the default.
+A Pane follows a compact Screen when the Screen is a DOM ancestor and the Pane has no `dialog`
+ancestor. Screen renders the page's `main`, which HTML does not place inside a `dialog`, so in a
+valid composition that means no dialog lies between them. A Dialog's task is not one of the
+console's work areas, so its Pane keeps the default. The brief does not name Dialog: this
+exclusion is the implementation's reading of "contained Panes". A consumer `role="dialog"` element
+that is not a native `dialog`, and a Pane portalled out of the Screen's `main`, are not detected.
 The treatment travels through a private attribute that Pane's recipe reads (architecture
 standard, Two rules); it is not a context or a public propagation mechanism.
 

@@ -142,7 +142,7 @@ The rows below apply the measured recovery (72/68/56px) to each reporter's own f
 | Consumer | Reported deficit (default) | Applied | Estimated residual |
 | --- | --- | --- | --- |
 | Release planning #311, pool entry | body 376 vs entry ≈506 + ring room | +68 | ≈ 72 short |
-| Release planning #311, rules | body 219 vs H3 38 + Checklist 235 (en) / 262 (de) + Note | +72 | ≈ 8 (en) / 35 (de) short plus the unmeasured Note |
+| Release planning #311, rules | body 219 vs H3 38 + Checklist 235 (en) / 262 (de) + Note | +72 | ≈ 18 to spare (en) / ≈ 9 short (de), before the unmeasured Note and ring room |
 | Write a new song #314, arrival | 20 / 43 | +72 | fits by ≈ 52 / 29 |
 | Write a new song #314, Artist or commission picked | 140 / 160 | +72 | 68 / 88 short |
 | Write a new song #314, employed writer picked | 190 / 235 | +72 | 118 / 163 short |

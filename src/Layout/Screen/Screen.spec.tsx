@@ -120,7 +120,7 @@ describe('Screen', () => {
       expect([input.selectionStart, input.selectionEnd]).toEqual([2, 6]);
     }
   });
-  it('offers Pane no spacing selector of its own', () => {
+  it('rejects a spacing prop on Pane at compile time: Pane follows its Screen', () => {
     render(
       // @ts-expect-error Pane follows its Screen; it has no independent treatment.
       <Pane.Root spacing="compact">

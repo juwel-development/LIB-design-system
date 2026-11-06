@@ -254,11 +254,10 @@ const BOX_INSET = `:root {
   --space-box-inset: 1em;
 }`;
 
-/* Screen's compact console treatment (#158, docs/adr/0008 Amendments): one value per enclosure
-   position it replaces - Screen's vertical air and heading separation (region), Pane's inset (box
-   inset) and Head/Body/Foot gaps (stack) - so a theme tunes a compact console without retuning the
-   generic roles every descendant reads. In em like those roles. Constraint: nonnegative; Screen
-   and Pane never go below the focus ring's room, whatever these resolve to. */
+/* Screen's compact console treatment (#158, ADR 0008): one value per enclosure position, so a
+   theme tunes it without retuning the generic region, box-inset and stack roles descendants read.
+   In em like those roles. Constraint: nonnegative; Screen and Pane floor them at the focus ring's
+   room. */
 const CONSOLE_SPACING = `:root {
   --space-screen-region-compact: 0.5em;
   --space-pane-inset-compact: 0.5em;

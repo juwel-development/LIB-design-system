@@ -593,14 +593,20 @@ export const CompactWithDialog: Story = {
     const consolePane = canvas.getByRole('group', { name: 'Console pane' });
     const probe = canvasElement.ownerDocument.createElement('div');
     probe.style.padding = 'var(--space-box-inset)';
+    probe.style.rowGap = 'var(--space-stack)';
     dialogPane.append(probe);
     const boxInset = length(getComputedStyle(probe).paddingTop);
+    const stack = length(getComputedStyle(probe).rowGap);
     probe.remove();
     await expect(length(getComputedStyle(dialogPane).paddingTop)).toBe(
       boxInset,
     );
+    await expect(length(getComputedStyle(dialogPane).rowGap)).toBe(stack);
     await expect(length(getComputedStyle(consolePane).paddingTop)).toBeLessThan(
       boxInset,
+    );
+    await expect(length(getComputedStyle(consolePane).rowGap)).toBeLessThan(
+      stack,
     );
   },
 };
