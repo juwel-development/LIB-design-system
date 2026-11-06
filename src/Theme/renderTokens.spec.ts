@@ -391,6 +391,25 @@ describe('renderTokens spacing contract', () => {
     }
   });
 
+  it('declares the compact console positions in every stylesheet as em values beside the generic roles they stand in for (#158)', () => {
+    // Screen's compact treatment reads these three instead of region, box inset and stack; the
+    // generic roles stay untouched for every other component and descendant.
+    for (const css of [
+      renderTokens(),
+      renderLightTokens(),
+      renderDarkTokens(),
+    ]) {
+      expect(css).toMatch(
+        /:root\s*\{[^}]*--space-screen-region-compact:\s*[0-9.]+em;[^}]*--space-pane-inset-compact:\s*[0-9.]+em;[^}]*--space-pane-slot-compact:\s*[0-9.]+em;/,
+      );
+      for (const role of ['region', 'box-inset', 'stack'])
+        expect(css).toMatch(new RegExp(`--space-${role}:\\s*[0-9.]+em;`));
+      for (const block of css.matchAll(/@theme(?: inline)?\s*\{([^}]*)\}/g)) {
+        expect(block[1]).not.toMatch(/--space-(screen|pane)-/);
+      }
+    }
+  });
+
   it('emits the three spacing roles into :root, expressed in em so they track the type ramp', () => {
     const css = renderTokens();
     expect(css).toMatch(/--space-stack:\s*[0-9.]+em;/);

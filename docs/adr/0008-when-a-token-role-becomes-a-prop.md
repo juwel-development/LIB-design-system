@@ -601,3 +601,30 @@ actually recover room, and values must preserve focus room and fallback. General
 rearrangement, including multiple DefinitionList item columns, is separate work rather than an
 unresolved requirement of this issue. The scope is ready for an agent brief; it is not a feature
 already shipped in 4.2.1.
+
+**Compact console spacing — implementation choices and completion boundary (#158, 2026-11-06).**
+Screen takes `spacing?: 'comfortable' | 'compact'`, the comfortable/compact vocabulary Table and
+DefinitionList already use for their densities, defaulting to `comfortable`. The compact positions
+are three treatment-specific tokens: `--space-screen-region-compact` (Screen's vertical padding and
+heading gap, 0.5em), `--space-pane-inset-compact` (0.5em) and `--space-pane-slot-compact`
+(0.25em). The generic region, box-inset and stack roles are not re-pointed, so descendants keep
+them. Screen's padding and heading gap and Pane's inset are floored at the focus ring's room. With
+the default tokens and a 16px type, compact gives a bounded Pane body 72px more height under a
+Screen heading with Head and Foot, and 68px with one slot fewer. That is room the enclosures
+recover; it is not evidence that a consumer screen fits.
+
+A Pane follows a compact Screen when the Screen is a DOM ancestor and the Pane has no `dialog`
+ancestor. Screen renders the page's `main`, which HTML does not place inside a `dialog`, so in a
+valid composition that means no dialog lies between them. A Dialog's task is not one of the
+console's work areas, so its Pane keeps the default. The brief does not name Dialog: this
+exclusion is the implementation's reading of "contained Panes". A consumer `role="dialog"` element
+that is not a native `dialog`, and a Pane portalled out of the Screen's `main`, are not detected.
+The treatment travels through a private attribute that Pane's recipe reads (architecture
+standard, Two rules); it is not a context or a public propagation mechanism.
+
+The user subsequently changed the completion boundary set above. #158 now closes once the
+capability is implemented, independently reviewed and merged with passing checks; that close no
+longer waits for publication. Publication still follows through the normal release process. The
+release that first contains the treatment is recorded when it is published. Until then no version
+is claimed to contain it. The obligations on residual fit stay: verified fit, measured residual
+overflow and unreproduced consumer cases are reported separately and tracked in linked issues.
