@@ -254,6 +254,17 @@ const BOX_INSET = `:root {
   --space-box-inset: 1em;
 }`;
 
+/* Screen's compact console treatment (#158, docs/adr/0008 Amendments): one value per enclosure
+   position it replaces - Screen's vertical air and heading separation (region), Pane's inset (box
+   inset) and Head/Body/Foot gaps (stack) - so a theme tunes a compact console without retuning the
+   generic roles every descendant reads. In em like those roles. Constraint: nonnegative; Screen
+   and Pane never go below the focus ring's room, whatever these resolve to. */
+const CONSOLE_SPACING = `:root {
+  --space-screen-region-compact: 0.5em;
+  --space-pane-inset-compact: 0.5em;
+  --space-pane-slot-compact: 0.25em;
+}`;
+
 /* Table cell insets (#115): one inline/block pair per density, in :root so a brand tunes both
    treatments without Table gaining a measurement prop. comfortable is exactly what px-4 / py-2
    resolved to, so the default moves nothing; compact halves both. In rem: cell type is fixed at the
@@ -477,6 +488,9 @@ ${COLUMN_LAYOUT_FIT}
 
 /* Box's inner padding, measured against inherited type, beside Collection's. */
 ${BOX_INSET}
+
+/* Screen's compact console positions, beside the roles they stand in for. */
+${CONSOLE_SPACING}
 
 /* Callout marks an edge without enclosing or arranging its content. */
 ${CALLOUT_MARK}

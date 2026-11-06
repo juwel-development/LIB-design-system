@@ -23,6 +23,9 @@ The approved Screen/Pane fallback (#151/#152, ADR 0008) has one narrow exception
 `Layout/Screen/ScreenBodyAllocation`, the private allocation boundary owned by Screen. It carries
 only the persistent remainder element, no component API, registration, or application state. Screen
 consumes Pane's private unusable marker through CSS; neither imports the other's implementation.
+The compact console spacing treatment (#158) adds the reverse CSS-only read: a compact Screen marks
+its main with the private `data-screen-spacing` attribute, and Pane's recipe reads it from an
+ancestor outside any `dialog`. No context, prop or import carries the treatment.
 This exception does not permit general sibling-component imports or expose a consumer protocol.
 
 **The import test:** could this file be deleted without touching `src/index.ts`, and does it import

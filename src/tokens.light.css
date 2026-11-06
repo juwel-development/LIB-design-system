@@ -257,6 +257,13 @@
   --space-box-inset: 1em;
 }
 
+/* Screen's compact console positions, beside the roles they stand in for. */
+:root {
+  --space-screen-region-compact: 0.5em;
+  --space-pane-inset-compact: 0.5em;
+  --space-pane-slot-compact: 0.25em;
+}
+
 /* Callout marks an edge without enclosing or arranging its content. */
 :root {
   --callout-mark-width: 0.25rem;
