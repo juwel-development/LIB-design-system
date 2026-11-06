@@ -86,9 +86,117 @@ describe('Slider Component', () => {
     expect(screen.getByRole('slider')).toHaveValue('60');
   });
 
-  it('renders the label as its only text: no value display, no min/max captions', () => {
+  it('renders the label as its only text without visibleValue: valueText stays announcement-only, no min/max captions', () => {
     const { container } = renderSlider({ valueText: '$60 a week' });
     expect(container.textContent).toBe('Weekly Wage in $');
+  });
+
+  it("shows the consumer's value wording beside the label when asked to", () => {
+    renderSlider({ visibleValue: '$60' });
+    expect(screen.getByText('$60')).toBeVisible();
+    expect(screen.getByText('Weekly Wage in $')).toBeVisible();
+  });
+
+  it('keeps the label alone as the accessible name while the value wording is shown', () => {
+    renderSlider({ visibleValue: '$60', valueText: '$60 a week' });
+    const slider = screen.getByRole('slider', { name: 'Weekly Wage in $' });
+    expect(slider).toHaveAccessibleName('Weekly Wage in $');
+    expect(screen.getByText('Weekly Wage in $')).toHaveAttribute(
+      'for',
+      slider.id,
+    );
+  });
+
+  it('adds no description and no live region for the shown value, so it is not announced twice', () => {
+    const { container } = renderSlider({ visibleValue: '$60' });
+    expect(screen.getByRole('slider')).not.toHaveAccessibleDescription();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(container.querySelector('[aria-live], output')).toBeNull();
+    expect(screen.getByText('$60')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('announces the shown wording through aria-valuetext when no separate announcement is given', () => {
+    renderSlider({ visibleValue: '$60' });
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuetext', '$60');
+  });
+
+  it('announces valueText rather than the shown wording when the consumer gives both', () => {
+    renderSlider({ visibleValue: '$60', valueText: '$60 a week' });
+    expect(screen.getByRole('slider')).toHaveAttribute(
+      'aria-valuetext',
+      '$60 a week',
+    );
+  });
+
+  it('updates the shown wording and value on the same control, keeping its name, without remounting', () => {
+    const onInput$ = new Subject<number>();
+    const slider = (value: number, visibleValue: string) => (
+      <Slider
+        min={20}
+        max={300}
+        step={5}
+        value={value}
+        onInput$={onInput$}
+        label={'Weekly Wage in $'}
+        visibleValue={visibleValue}
+      />
+    );
+    const { rerender } = render(slider(60, '$60'));
+    const control = screen.getByRole('slider');
+
+    rerender(slider(65, '$65'));
+
+    expect(screen.getByRole('slider')).toBe(control);
+    expect(control).toHaveValue('65');
+    expect(control).toHaveAccessibleName('Weekly Wage in $');
+    expect(control).toHaveAttribute('aria-valuetext', '$65');
+    expect(screen.getByText('$65')).toBeVisible();
+    expect(screen.queryByText('$60')).not.toBeInTheDocument();
+  });
+
+  it('keeps the same control when the consumer starts or stops showing the value', () => {
+    const onInput$ = new Subject<number>();
+    const slider = (visibleValue?: string) => (
+      <Slider
+        min={20}
+        max={300}
+        value={60}
+        onInput$={onInput$}
+        label={'Level'}
+        visibleValue={visibleValue}
+      />
+    );
+    const { rerender, container } = render(slider());
+    const control = screen.getByRole('slider');
+
+    rerender(slider('60'));
+    expect(screen.getByRole('slider')).toBe(control);
+
+    rerender(slider());
+    expect(screen.getByRole('slider')).toBe(control);
+    expect(container.textContent).toBe('Level');
+  });
+
+  it('keeps showing the consumer-held wording and value when an emission is not passed back in', () => {
+    const { onInput$ } = renderSlider({ visibleValue: '$60' });
+    onInput$.subscribe(() => {
+      // A consumer that listens but does not pass the value back.
+    });
+    fireEvent.input(screen.getByRole('slider'), { target: { value: '65' } });
+    expect(screen.getByRole('slider')).toHaveValue('60');
+    expect(screen.getByText('$60')).toBeVisible();
+  });
+
+  it('shows the wording exactly as given, even beside an off-range value it renders at the bound', () => {
+    renderSlider({ value: 500, visibleValue: '$500' });
+    expect(screen.getByRole('slider')).toHaveValue('300');
+    expect(screen.getByText('$500')).toBeVisible();
+  });
+
+  it('still shows the wording when disabled, beside a natively disabled control', () => {
+    renderSlider({ visibleValue: '$60', disabled: true });
+    expect(screen.getByRole('slider')).toBeDisabled();
+    expect(screen.getByText('$60')).toBeVisible();
   });
 
   it('is natively disabled when the consumer says so', () => {
