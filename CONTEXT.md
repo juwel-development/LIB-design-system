@@ -243,12 +243,18 @@ adds neither focus nor announcement.
 _Avoid_: Alert, toast, banner, toned Box
 
 **Screen**:
-A semantic main that passes a parent's remaining height beneath an optional separate heading to
-bounded panels. The consumer can instead place the heading inside a panel. When fixed panel regions
-leave less than a complete line or ordinary row/control with focus room, the entire content grows
-into the enclosing body's scrollport; bounds return when room returns. Screen owns the main, gutter
-and region spacing, never scrolling or column widths.
+A semantic main for content-height regions and parent-bounded work areas beneath an optional
+separate heading, owning the main, gutter and region spacing rather than scrolling or column widths.
+When fixed content and the work areas' usable body minimum no longer fit, the whole content grows
+into the enclosing body's scrollport; bounds return when room returns.
 _Avoid_: Viewport breakpoint, scrolling main, application roster layout
+
+**Console spacing treatment**:
+The space around Screen content and between its heading and content, together with the inset and
+slot gaps of its Panes, selected once on Screen and optionally made compact while preserving
+typography and control dimensions.
+It describes the spacing of the enclosures, independently of the density of their content.
+_Avoid_: Small type, small controls, global spacing scale
 
 **Pane**:
 A parent-bounded enclosure with optional content-height head and foot around a scrolling body.
@@ -483,7 +489,8 @@ _Avoid_: Disabled step, unavailable view
 
 **Slider**:
 A control that sets one numeric value by moving one thumb along a fixed, visible operating range.
-It is neither a bounded pair nor a field for freely entered content.
+Its stable visible label names the control; optional visible value wording states the consumer-held
+amount without changing that name.
 _Avoid_: Range, range input, range picker
 
 **Switch**:

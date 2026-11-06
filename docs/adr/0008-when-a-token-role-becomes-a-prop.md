@@ -529,3 +529,75 @@ Pane's part in Screen's fallback changed with it: the room a Pane is offered is 
 less whatever sits above the Pane inside it, so a Pane under a filling Tabs row releases before
 its body is unusable. This narrows the #151 statement that such wrappers are not measured; other
 height-consuming wrappers remain outside the contract.
+
+**Content-height and bounded Screen composition — approved scope for #159 (2026-11-06).**
+The maintainer accepted extending Screen's supported composition beyond direct Panes. A column may
+hold a content-height header above a filling Pane or arrangement of Panes, including Alternatives
+and filling Tabs. Supported content also includes a content-height Stack containing a Box and an
+unsized summary Pane, a content-height column beside a bounded column or another content-height
+column, and a sole content-height Stack or unbounded Table inside Screen, with or without its
+separate heading. A second main, nested Panes, consumer CSS and undocumented height-passing wrappers
+are not substitutes for this capability. No component name or public mechanism is prescribed.
+
+The trade-off is to broaden a deliberately narrow allocation/fallback contract so consumers can
+preserve their content grouping, rather than force everything into Pane.Head to obtain a supported
+height chain. Fixed content, including non-Pane regions, must participate in whole-content fallback
+and restoration when it and bounded bodies' usable minimum cannot fit. Bounded Body content still
+owns its intended scrolling; its full scroll height is not a fixed-content minimum. Content-only
+screens remain reachable in the enclosing Shell body when they outgrow their allocation. Existing
+Pane scroll ownership, short-body behavior, mounting semantics and container-fit width policies
+remain in force.
+
+This extends the earlier direct-Pane restriction for these compositions only. It does not authorize
+a general public registration/measurement protocol, arbitrary sizing, spacing selectors, density
+changes, or a guarantee that a consumer's complete inventory fits 720px. That fit remains #158's
+separate triage. The accepted contract is pending implementation and browser verification; it does
+not describe additional capability already shipped in 4.2.1.
+
+**Optional visible Slider value — approved scope for #160 (2026-11-06).**
+The maintainer accepted an optional consumer-worded value display alongside Slider's stable visible
+label. The display and label share one row when they fit and wrap when they do not; the value does
+not become part of the control's accessible name or an additional announcement. The consumer keeps
+ownership of numeric state, formatting and wording, and existing value announcements and native
+range conduct remain intact. Omitting the option preserves current behavior. Exact prop names are
+implementation choices within the closed public surface.
+
+This deliberately revises #112's no-value-display boundary. The trade-off is to let the control own
+the association and layout of its displayed value, rather than require a separate value line or
+make a changing value part of the label. It adds no captions, ticks, editable value field, units or
+formatting logic, field annotations, form participation or general size vocabulary. No claim is
+made that the full consumer form now fits 720px. This is an accepted scope pending implementation
+and verification, not a feature already shipped in 4.2.1.
+
+**Optional compact console spacing — approved scope for #158 (2026-11-06).**
+The maintainer accepted an optional compact console spacing treatment for Screen's padding and
+heading separation and Pane's inset and slot gaps. Existing defaults must remain unchanged. This
+explicitly reopens the earlier fixed-spacing decision for those positions; the acceptance comes
+from this decision, not from Table's or DefinitionList's component-specific density precedents.
+
+The trade-off is to recover space taken by library-owned enclosures in a bounded console without
+reducing typography, control dimensions or the consumer's inventory. It authorizes a treatment
+for these positions, not a general spacing scale, global retuning of the existing roles, density
+on arbitrary descendants, or changes to Shell, Tabs and Sidebar. Focus room and whole-content
+fallback remain constraints. Nothing here establishes the pixel savings or that the five reported
+consumer screens fit; those outcomes require browser measurements.
+
+The maintainer subsequently selected Screen as the sole opt-in boundary: one Screen choice applies
+the treatment to its contained Panes. Pane gains no independent selector; a standalone Pane and
+other Screens keep their existing default treatment. This coordinates the enclosures within one
+console without asking every Pane caller to repeat a setting. It does not change the spacing of
+arbitrary descendant content or authorize a public propagation mechanism.
+
+The maintainer chose shipment as this issue's completion boundary. #158 is scoped to the approved
+compact console spacing capability and can close when that capability ships, with its published
+version recorded and any remaining consumer-fit gaps tracked in separate linked issues. Passing
+all five reported screens is not a condition for closing this scoped issue. Measurement results
+must still distinguish verified fit, measured residual overflow and cases not yet reproduced;
+shipping a spacing option does not establish complete-screen fit.
+
+The optional Screen API, treatment-specific semantic token names and compact values are
+implementation choices within this scope. Existing defaults stay unchanged, compact spacing must
+actually recover room, and values must preserve focus room and fallback. General content
+rearrangement, including multiple DefinitionList item columns, is separate work rather than an
+unresolved requirement of this issue. The scope is ready for an agent brief; it is not a feature
+already shipped in 4.2.1.
