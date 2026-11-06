@@ -179,10 +179,18 @@ const useScreenFallback = (root: {
       subtree: true,
       characterData: true,
     });
+    // Content above the pane - a column head, a tab row - moves it without resizing it (#159).
+    const surroundings = new MutationObserver(measure);
+    surroundings.observe(frame, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
     window.addEventListener('resize', measure);
     return () => {
       observer?.disconnect();
       mutations.disconnect();
+      surroundings.disconnect();
       window.removeEventListener('resize', measure);
     };
   }, [allocation, root]);
@@ -275,7 +283,7 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  *   own overflow and focus ring. Intermediate wrappers must preserve that allocation.
  * - Inside Screen, fixed regions and the usable body minimum participate in whole-content
  *   fallback and restoration, measured against what Screen's remainder leaves below anything
- *   above the pane - a filling Tabs row or a column head.
+ *   above the pane - a filling Tabs row or a column head - and again whenever that changes.
  *   Dialog owns the corresponding whole-task fallback for a Pane with child-owned Body and
  *   bounded Table. Other parents own their fallback policy.
  * - Filled ColumnLayout columns, with or without a head, and active Stepper panels can pass

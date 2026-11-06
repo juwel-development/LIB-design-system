@@ -252,4 +252,38 @@ describe('Pane', () => {
       ).toBe(isReleased);
     },
   );
+  it('measures its room again when content above it inside Screen changes, so the bound returns', async () => {
+    const boxes: Record<string, { top: number; height: number }> = {
+      pane: { top: 300, height: 100 },
+      head: { top: 300, height: 100 },
+    };
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: Element) {
+        const box =
+          this.parentElement?.tagName === 'MAIN'
+            ? { top: 0, height: 400 }
+            : (boxes[this.getAttribute('data-testid') ?? ''] ?? {
+                top: 0,
+                height: 0,
+              });
+        return { ...box, bottom: box.top + box.height } as DOMRect;
+      },
+    );
+    const example = (strip: string) => (
+      <Screen>
+        <p>{strip}</p>
+        <Pane.Root testId="pane">
+          <Pane.Head testId="head">Facts</Pane.Head>
+          <Pane.Body ariaLabel="Entries">Rows</Pane.Body>
+        </Pane.Root>
+      </Screen>
+    );
+    const { rerender } = render(example('A long strip of facts'));
+    expect(screen.getByTestId('pane')).toHaveAttribute('data-screen-unusable');
+    boxes.pane = { top: 0, height: 400 };
+    await act(async () => rerender(example('Short')));
+    expect(screen.getByTestId('pane')).not.toHaveAttribute(
+      'data-screen-unusable',
+    );
+  });
 });
