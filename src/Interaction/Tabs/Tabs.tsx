@@ -167,7 +167,11 @@ const TabsRoot: FunctionComponent<ITabsRootProps> = ({
     <TabsContext.Provider
       value={{ active, onSelect$, label, baseId, fill: fill === true }}
     >
-      <div className={tabsRoot({ fill })} data-testid={testId}>
+      <div
+        className={tabsRoot({ fill })}
+        data-height-passing={fill || undefined}
+        data-testid={testId}
+      >
         {children}
       </div>
     </TabsContext.Provider>
@@ -253,6 +257,7 @@ const TabsPanel: FunctionComponent<ITabsPanelProps> = ({
       hidden={!isActive}
       tabIndex={isActive ? 0 : undefined}
       className={tabsPanel({ fill })}
+      data-height-passing={fill || undefined}
       data-testid={testId}
     >
       {isActive ? children : undefined}

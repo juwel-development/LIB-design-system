@@ -284,6 +284,12 @@ mode passes an allocated height to every horizontal column; an unsized parent or
 arrangement leaves columns at content height, with scrolling owned by the holder.
 _Avoid_: Proportional Stack, split Stack, Columns
 
+**Column head**:
+Consumer content at content height above one column's content, spanning that column only. In a
+filled column the content beneath takes the remaining height; the head is fixed content in Screen's
+whole-content fallback. It carries no landmark, surface or heading level of its own.
+_Avoid_: Column header, sub-screen heading, Pane head, second main
+
 **Column maximum**:
 The upper bound on a horizontal column's allocation, beyond which available width passes to columns
 that can still grow in proportion to their weights. It has no effect in the stacked arrangement;

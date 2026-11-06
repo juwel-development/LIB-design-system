@@ -119,6 +119,80 @@ describe('ColumnLayout', () => {
     ]);
   });
 
+  it('puts an optional column head before the column content, adding no landmark, heading or name', () => {
+    render(
+      <ColumnLayout.Root fill>
+        <ColumnLayout.Column weight={1} minWidth="--roster" testId="roster">
+          <button type="button">Open roster entry</button>
+        </ColumnLayout.Column>
+        <ColumnLayout.Column
+          weight={3}
+          minWidth="--detail"
+          head={<button type="button">Open artist</button>}
+          testId="detail"
+        >
+          <button type="button">Add song</button>
+        </ColumnLayout.Column>
+      </ColumnLayout.Root>,
+    );
+    const detail = screen.getByTestId('detail');
+    expect(
+      screen.getAllByRole('button').map((button) => button.textContent),
+    ).toEqual(['Open roster entry', 'Open artist', 'Add song']);
+    expect(detail).toContainElement(
+      screen.getByRole('button', { name: 'Open artist' }),
+    );
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+    expect(screen.queryByRole('group')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region')).not.toBeInTheDocument();
+  });
+
+  it('keeps the column content mounted with its focus as the head appears, changes and goes', () => {
+    const example = (head?: ReactNode) => (
+      <ColumnLayout.Root fill>
+        <ColumnLayout.Column weight={1} minWidth="--detail" head={head}>
+          <input aria-label="Song title" defaultValue="Kept" />
+        </ColumnLayout.Column>
+      </ColumnLayout.Root>
+    );
+    const { rerender } = render(example());
+    const input = screen.getByRole('textbox', { name: 'Song title' });
+    input.focus();
+    fireEvent.change(input, { target: { value: 'Edited' } });
+    for (const head of [
+      <p key="one">Artist</p>,
+      <p key="one">Artist · two facts</p>,
+      undefined,
+      null,
+      false,
+      <p key="again">Artist</p>,
+    ]) {
+      rerender(example(head));
+      expect(screen.getByRole('textbox', { name: 'Song title' })).toBe(input);
+      expect(input).toHaveFocus();
+      expect(input).toHaveValue('Edited');
+    }
+  });
+
+  it.each([undefined, null, false])(
+    'renders the column unchanged for a %s head',
+    (head) => {
+      render(
+        <ColumnLayout.Root>
+          <ColumnLayout.Column
+            weight={1}
+            minWidth="--detail"
+            head={head}
+            testId="detail"
+          >
+            <p>Content</p>
+          </ColumnLayout.Column>
+        </ColumnLayout.Root>,
+      );
+      expect(screen.getByTestId('detail').children).toHaveLength(1);
+    },
+  );
+
   it('offers Root only the two attested gap roles, defaulting to region (ADR 0008)', () => {
     expectTypeOf<
       NonNullable<ComponentProps<typeof ColumnLayout.Root>['gap']>

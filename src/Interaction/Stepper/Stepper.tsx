@@ -154,7 +154,7 @@ const StepperRoot: FunctionComponent<IStepperRootProps> = ({
   }, [active$]);
   return (
     <StepperContext.Provider value={{ active, onSelect$, label, baseId }}>
-      <div className={stepperRoot()} data-testid={testId}>
+      <div className={stepperRoot()} data-height-passing data-testid={testId}>
         {children}
       </div>
     </StepperContext.Provider>
@@ -272,6 +272,7 @@ const StepperPanel: FunctionComponent<IStepperPanelProps> = ({
       hidden={!isActive}
       tabIndex={isActive ? 0 : undefined}
       className={stepperPanel()}
+      data-height-passing
       data-testid={testId}
     >
       {isActive ? children : undefined}

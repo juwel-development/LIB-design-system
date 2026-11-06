@@ -136,6 +136,7 @@ export const ScrollContainer: FunctionComponent<IScrollContainerProps> = ({
     <div
       ref={container}
       className={scrollContainer({ axis })}
+      data-height-bounded
       data-testid={testId}
       role={isScrollable ? 'group' : undefined}
       aria-label={isScrollable ? ariaLabel : undefined}

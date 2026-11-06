@@ -511,6 +511,7 @@ const TableRoot: FunctionComponent<ITableRootProps> = ({
       })}
       style={style}
       data-bounded={bounded || undefined}
+      data-height-bounded={bounded || undefined}
       data-notes={notes}
       data-columns={columnCount}
       data-icon-actions={

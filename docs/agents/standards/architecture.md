@@ -25,6 +25,15 @@ only the persistent remainder element, no component API, registration, or applic
 consumes Pane's private unusable marker through CSS; neither imports the other's implementation.
 This exception does not permit general sibling-component imports or expose a consumer protocol.
 
+The content-height compositions of #159 extend that boundary by two private DOM attributes, still
+without imports. `data-height-passing` marks a box that stretches to the allocation it is given
+and passes it on (ColumnLayout's fill frame, row and columns, `Alternatives fill`, `Tabs.Root
+fill` and its panels, Stepper's root and panels); `data-height-bounded` marks a box that bounds
+and scrolls its own content (Pane's root, a bounded Table, ScrollContainer). Screen looks through
+the first, skips the second and measures every other in-flow box as content-height. Pane also
+re-measures when content above it inside Screen changes. A new height-passing or self-bounded
+component sets the matching attribute; none of this is public API.
+
 **The import test:** could this file be deleted without touching `src/index.ts`, and does it import
 nothing from a sibling component? If either answer is no, look again.
 

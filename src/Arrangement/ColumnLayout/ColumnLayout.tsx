@@ -49,7 +49,19 @@ const columnLayoutFrame = cva(
 // Chrome's layout grain, into a full switch; `0px` and `100%` are the two states, not measurements.
 const columnLayoutColumn = cva(
   'min-w-0 grow-[calc(var(--column-layout-weight)/var(--column-layout-growth-unit))] basis-[clamp(0px,(var(--column-layout-threshold)-100%)*1000000,100%)] max-w-[var(--column-layout-maximum)]',
+  {
+    variants: {
+      // The head keeps its content height and the next row takes what is left of a filled
+      // column's height; in a content-height column both rows keep their content height.
+      hasHead: {
+        true: 'grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] gap-[var(--column-layout-gap)]',
+        false: '',
+      },
+    },
+    defaultVariants: { hasHead: false },
+  },
 );
+const columnLayoutColumnHead = cva('min-w-0');
 
 // The selecting holder is the box the alternatives are measured against; it takes no space of
 // its own. The probes sit out of flow and clipped, so a shortfall never becomes overflow.
@@ -173,7 +185,13 @@ export interface IColumnLayoutColumnProps {
    * The theme must supply a nonnegative CSS length at least as large as minWidth; resolved
    * lengths are not read or validated by the component. */
   maxWidth?: WidthToken;
-  /** The column's content. Rendered unmodified: the column imposes no anatomy. */
+  /** Optional consumer content at content height above the column's content, spanning this
+   *  column only. In a filled column the content below it takes the remaining height. Omitted,
+   *  `undefined`, `null` or `false`, the column renders exactly as without it. */
+  head?: ReactNode;
+  /** The column's content, rendered unmodified. With a `head`, supply one element: one that
+   *  accepts the remaining height (a Pane, `Alternatives fill`, `Root fill`, `Tabs.Root fill`)
+   *  or content-height content. */
   children?: ReactNode;
   testId?: string;
 }
@@ -224,21 +242,31 @@ const ColumnLayoutRoot: FunctionComponent<IColumnLayoutRootProps> = ({
           '--column-layout-threshold': thresholdOf(tracks),
           '--column-layout-growth-unit': growthUnitOf(tracks),
         };
+  // `data-height-passing` tells Screen's fit check to look through a box to its children: it
+  // stretches to its allocation, so only what it holds has a height of its own (#159).
   const row = (
     <div
       className={columnLayout({ gap, fill })}
       style={style}
+      data-height-passing={fill || undefined}
       data-testid={testId}
     >
       {markColumns(children)}
     </div>
   );
-  return fill ? <div className={columnLayoutFrame()}>{row}</div> : row;
+  return fill ? (
+    <div className={columnLayoutFrame()} data-height-passing>
+      {row}
+    </div>
+  ) : (
+    row
+  );
 };
 
 const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
   weight,
   maxWidth,
+  head,
   children,
   testId,
 }) => {
@@ -253,9 +281,18 @@ const ColumnLayoutColumn: FunctionComponent<IColumnLayoutColumnProps> = ({
         ? 'none'
         : `max(var(${maxWidth}), clamp(0px, (var(--column-layout-threshold) - 100%) * 1000000, 100%))`,
   };
+  const hasHead = head !== undefined && head !== null && head !== false;
+  // The head takes a slot of its own ahead of the content, so its arrival or departure never
+  // moves the content's position among the column's children and never remounts it.
   return (
-    <div className={columnLayoutColumn()} style={style} data-testid={testId}>
+    <div
+      className={columnLayoutColumn({ hasHead })}
+      style={style}
+      data-height-passing
+      data-testid={testId}
+    >
       <ColumnLayoutMembership.Provider value={false}>
+        {hasHead && <div className={columnLayoutColumnHead()}>{head}</div>}
         {children}
       </ColumnLayoutMembership.Provider>
     </div>
@@ -480,7 +517,11 @@ const ColumnLayoutAlternatives: FunctionComponent<
       ? `${reserve}px`
       : '0px';
   return (
-    <div className={columnLayoutAlternatives({ fill })} data-testid={testId}>
+    <div
+      className={columnLayoutAlternatives({ fill })}
+      data-height-passing={fill || undefined}
+      data-testid={testId}
+    >
       <div ref={probes} aria-hidden="true" className={columnLayoutFitProbes()}>
         {declarations.map(({ arrangement, threshold }, index) => (
           <div
@@ -516,6 +557,11 @@ const ColumnLayoutAlternatives: FunctionComponent<
  * - With `fill`, Root accepts its parent's allocated height and every horizontal column takes
  *   that height, bounding a filling Pane, Table or ScrollContainer. An internal inline-size
  *   frame supplies the width query; columns remain direct children of the row.
+ * - A Column's optional `head` renders first inside that column, at content height, separated
+ *   from the content by the Root's gap role and spanning that column only. In a filled
+ *   horizontal column the content takes the height left below it; otherwise both keep their
+ *   content height. The head adds no role, name, tab stop or scrolling, and its arrival,
+ *   change or removal never remounts the content.
  * - In an unsized parent, `fill` invents no bound: columns retain content height. When stacked,
  *   columns return to content height and the holder owns scrolling. No column scrolls itself.
  * - The row holds only while every proportional share is at least its own minimum. The moment one
@@ -586,7 +632,11 @@ const ColumnLayoutAlternatives: FunctionComponent<
  *   maximum below minimum has no guaranteed runtime exception. A valid maximum below the
  *   original share at the threshold applies immediately, with its surplus redistributed.
  * - With `fill`, the holder supplies a definite height to bound content and owns overflow for
- *   the stacked fallback. Filling children own their overflow; fixed content must fit the bound.
+ *   the stacked fallback. Filling children own their overflow; fixed content must fit the bound,
+ *   or - inside Screen - releases the whole content into the enclosing scroll owner.
+ * - Under a `head`, supply one child that accepts the remaining height (a Pane, `Root fill`,
+ *   `Alternatives fill`, `Tabs.Root fill`) or content-height content. The head is the
+ *   consumer's: its wording, controls and any heading level are not supplied by the column.
  * - The holder gives the Root a definite width, as any block does. Inside a shrink-to-fit frame
  *   there is no width to measure the shares against.
  * - Content that cannot wrap - an unbroken string, a fixed-width control - needs its own overflow

@@ -201,6 +201,7 @@ const Root: FunctionComponent<IPaneRootProps> = ({
     <div
       ref={root}
       data-screen-unusable={isUnusable || undefined}
+      data-height-bounded
       className={pane()}
       role={name ? 'group' : undefined}
       aria-label={name || undefined}
@@ -274,9 +275,11 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  *   own overflow and focus ring. Intermediate wrappers must preserve that allocation.
  * - Inside Screen, fixed regions and the usable body minimum participate in whole-content
  *   fallback and restoration, measured against what Screen's remainder leaves below anything
- *   above the pane - a filling Tabs row. Dialog owns the corresponding whole-task fallback for
- *   a Pane with child-owned Body and bounded Table. Other parents own their fallback policy.
- * - Filled ColumnLayout columns and active Stepper panels can pass the bound to Root. Keep
- *   those holders and Pane directly composed so no intermediate wrapper loses the allocation.
+ *   above the pane - a filling Tabs row or a column head.
+ *   Dialog owns the corresponding whole-task fallback for a Pane with child-owned Body and
+ *   bounded Table. Other parents own their fallback policy.
+ * - Filled ColumnLayout columns, with or without a head, and active Stepper panels can pass
+ *   the bound to Root. Keep those holders and Pane directly composed so no intermediate
+ *   wrapper loses the allocation. An unsized Pane inside a content-height Stack grows with it.
  */
 export const Pane = { Root, Head, Body, Foot } as const;
