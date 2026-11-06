@@ -286,4 +286,41 @@ describe('Pane', () => {
       'data-screen-unusable',
     );
   });
+  it('measures its room again when content above it changes only an attribute, so the bound returns', async () => {
+    const boxes: Record<string, { top: number; height: number }> = {
+      pane: { top: 300, height: 100 },
+      head: { top: 300, height: 100 },
+    };
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: Element) {
+        const box =
+          this.parentElement?.tagName === 'MAIN'
+            ? { top: 0, height: 400 }
+            : (boxes[this.getAttribute('data-testid') ?? ''] ?? {
+                top: 0,
+                height: 0,
+              });
+        return { ...box, bottom: box.top + box.height } as DOMRect;
+      },
+    );
+    const example = (isLong: boolean) => (
+      <Screen>
+        <div>
+          <p>Facts</p>
+          <p hidden={!isLong}>A long strip of facts</p>
+        </div>
+        <Pane.Root testId="pane">
+          <Pane.Head testId="head">Facts</Pane.Head>
+          <Pane.Body ariaLabel="Entries">Rows</Pane.Body>
+        </Pane.Root>
+      </Screen>
+    );
+    const { rerender } = render(example(true));
+    expect(screen.getByTestId('pane')).toHaveAttribute('data-screen-unusable');
+    boxes.pane = { top: 0, height: 400 };
+    await act(async () => rerender(example(false)));
+    expect(screen.getByTestId('pane')).not.toHaveAttribute(
+      'data-screen-unusable',
+    );
+  });
 });

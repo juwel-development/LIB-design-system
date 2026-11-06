@@ -164,33 +164,40 @@ const useScreenFallback = (root: {
       typeof ResizeObserver === 'undefined'
         ? undefined
         : new ResizeObserver(measure);
+    const mutations = new MutationObserver(() => observe());
+    const content = { childList: true, subtree: true, characterData: true };
+    // Content above the pane - a column head, a tab row - moves it without resizing it, so each
+    // box ahead of it up to the remainder is watched, attributes included (#159).
     const observe = () => {
       observer?.disconnect();
+      mutations.disconnect();
       observer?.observe(frame);
       observer?.observe(element);
       for (const child of element.querySelectorAll('*'))
         observer?.observe(child);
+      mutations.observe(element, content);
+      for (
+        let node: Element = element;
+        node !== frame && node.parentElement;
+        node = node.parentElement
+      ) {
+        mutations.observe(node.parentElement, { childList: true });
+        for (
+          let before = node.previousElementSibling;
+          before;
+          before = before.previousElementSibling
+        ) {
+          observer?.observe(before);
+          mutations.observe(before, { ...content, attributes: true });
+        }
+      }
       measure();
     };
     observe();
-    const mutations = new MutationObserver(observe);
-    mutations.observe(element, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-    // Content above the pane - a column head, a tab row - moves it without resizing it (#159).
-    const surroundings = new MutationObserver(measure);
-    surroundings.observe(frame, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
     window.addEventListener('resize', measure);
     return () => {
       observer?.disconnect();
       mutations.disconnect();
-      surroundings.disconnect();
       window.removeEventListener('resize', measure);
     };
   }, [allocation, root]);
