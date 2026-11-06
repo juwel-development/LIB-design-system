@@ -135,6 +135,8 @@ try {
             overflow: holder.scrollWidth - holder.clientWidth,
             valueColor: getComputedStyle(value).color,
             labelColor: getComputedStyle(label).color,
+            labelOnlyValueText: labelOnly.getAttribute('aria-valuetext'),
+            withValueValueText: withValue.getAttribute('aria-valuetext'),
           };
         }),
       );
@@ -151,11 +153,31 @@ try {
           ...holder,
         });
       }
+      // Each holder contributes its label-only slider, then the one showing its value.
       const reference = await accessibleSliders();
-      for (const slider of reference.sliders.filter(
-        (_slider, index) => index % 2 === 1,
-      ))
-        assert.ok(!slider.name.match(/\d/), JSON.stringify(slider));
+      assert.deepEqual(
+        reference.sliders,
+        holders.flatMap(({ label }) =>
+          [label, label].map((name) => ({
+            name,
+            description: undefined,
+            value: 3542,
+            disabled: false,
+          })),
+        ),
+      );
+      assert.equal(reference.liveRegions, 0);
+      for (const holder of holders) {
+        assert.ok(!reference.exposedText.includes(holder.value), holder.value);
+        // No valueText given: the shown wording is the announcement, and only beside it.
+        assert.equal(holder.labelOnlyValueText, null);
+        assert.equal(holder.withValueValueText, holder.value);
+      }
+      record('reference names stay the label; shown wording is the valuetext', {
+        ...variant,
+        sliders: reference.sliders.length,
+        liveRegions: reference.liveRegions,
+      });
       await page.screenshot({
         path: `${artifacts}/reference-${theme}-${variant.stylesheet}.png`,
         fullPage: true,
