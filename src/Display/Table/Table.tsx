@@ -89,9 +89,11 @@ const table = cva(
         highlight:
           '[&>table>*>tr[aria-selected=true]]:bg-selected-surface [&>table>*>tr[aria-selected=true]]:[--color-error:var(--color-selected-error)]',
       },
+      // A hidden caption is positioned against the table's own box, so it scrolls and clips with the
+      // table instead of extending the document below an enclosing scroll owner (#159).
       captionVisibility: {
         visible: '[&>table>caption]:pb-3',
-        hidden: '[&>table>caption]:sr-only',
+        hidden: 'relative [&>table>caption]:sr-only',
       },
       // Density publishes the two cell insets the cells read, so head and body move together and the
       // theme's comfortable or compact pair is the only source (docs/adr/0008, Amendments, #115).
@@ -645,6 +647,7 @@ const TableCell: FunctionComponent<ITableCellProps> = ({
  * - `Root` renders its required `caption` as the table's first child, so every table is named.
  *   `captionVisibility` defaults to `visible`; `hidden` visually clips the caption out of flow,
  *   including its spacing, while preserving its native accessible name and the scroll wrapper's name.
+ *   The clipped caption stays inside the table's box, so it never extends an enclosing scrollport.
  *   Hide it only when visible text directly above the table already names what it lists; the
  *   enclosing arrangement owns the gap above the table. The consumer still supplies the caption.
  * - The block reads as a table from two rule weights alone: the heavier `rule` above the first row,
