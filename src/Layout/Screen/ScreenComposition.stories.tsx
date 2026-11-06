@@ -44,7 +44,7 @@ const meta: Meta<typeof Screen> = {
 
 **2 · A content-height Stack holding a Box and an unsized Pane** (*FocusColumn*) beside a bounded Pane with a delegated Table. The summary Pane takes its content height; neither it nor the Stack scrolls.
 
-**3 · Content-only screens** (*ProfileOnly*, *TableOnly*). A content-height Stack or an unbounded Table is Screen's sole content, with or without Screen's heading. No Pane and no filling ColumnLayout are needed.
+**3 · Content-only screens** (*ProfileOnly*, *TableOnly*, *TableOnlyWithoutHeading*). A content-height Stack or an unbounded Table is Screen's sole content, with or without Screen's heading. No Pane and no filling ColumnLayout are needed.
 
 **4 · Content-height columns** (*ContentColumns*). A Stack with no Pane fills one column beside a bounded Pane; *End* replaces the Pane with a content-height result block, so both columns are content height.
 
@@ -692,11 +692,12 @@ const ProfileOnlyFixture: FunctionComponent<{
   );
 };
 
-/** Case 3: a heading above an unbounded compact Table as Screen's sole content. */
+/** Case 3: an unbounded compact Table as Screen's sole content, with or without a heading. */
 const TableOnlyFixture: FunctionComponent<{
   translated: boolean;
+  withHeading?: boolean;
   rows: number;
-}> = ({ translated, rows }) => {
+}> = ({ translated, withHeading = true, rows }) => {
   const [isGerman, translate$] = useToggle(translated);
   const copy = isGerman ? german : english;
   return (
@@ -705,16 +706,18 @@ const TableOnlyFixture: FunctionComponent<{
       active={3}
       translate$={translate$}
       heading={
-        <Stack direction="split">
-          <Stack>
-            <Eyebrow>{copy.markets}</Eyebrow>
-            <H1>{copy.research}</H1>
+        withHeading ? (
+          <Stack direction="split">
+            <Stack>
+              <Eyebrow>{copy.markets}</Eyebrow>
+              <H1>{copy.research}</H1>
+            </Stack>
+            <Stack>
+              <Eyebrow>{copy.focus}</Eyebrow>
+              <P>{copy.focusStatus}</P>
+            </Stack>
           </Stack>
-          <Stack>
-            <Eyebrow>{copy.focus}</Eyebrow>
-            <P>{copy.focusStatus}</P>
-          </Stack>
-        </Stack>
+        ) : undefined
       }
     >
       <Table.Root
@@ -900,6 +903,18 @@ export const TableOnly: Story = {
 };
 export const TableOnlyGerman: Story = {
   render: () => <TableOnlyFixture translated rows={5} />,
+};
+/** The same markets with no Screen heading: the Table alone is Screen's content. */
+export const TableOnlyWithoutHeading: Story = {
+  render: () => (
+    <TableOnlyFixture translated={false} withHeading={false} rows={5} />
+  ),
+};
+/** Twenty markets and no heading: the Table alone scrolls in the Shell body. */
+export const TableOnlyWithoutHeadingOverflowing: Story = {
+  render: () => (
+    <TableOnlyFixture translated={false} withHeading={false} rows={20} />
+  ),
 };
 /** Twenty markets: the heading and the table scroll together in the Shell body. */
 export const TableOnlyOverflowing: Story = {

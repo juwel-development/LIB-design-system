@@ -14,7 +14,7 @@ const screenHeading = cva('min-w-0');
 const screenBody = cva(
   'h-full min-h-0 min-w-0 [&>div]:h-full [&:has([data-screen-unusable])>div]:h-auto',
 );
-type Extent = { bottom: number; boxes: readonly Element[] };
+type Extent = { bottom: number; observed: readonly Element[] };
 
 const isOutOfFlow = (computed: CSSStyleDeclaration): boolean =>
   computed.display === 'none' ||
@@ -29,23 +29,23 @@ const extentOf = (holder: Element): Extent =>
   Array.from(holder.children).reduce<Extent>(
     (extent, child) => {
       const computed = getComputedStyle(child);
-      const boxes = [...extent.boxes, child];
+      const observed = [...extent.observed, child];
       if (isOutOfFlow(computed) || child.hasAttribute('data-height-bounded')) {
-        return { bottom: extent.bottom, boxes };
+        return { bottom: extent.bottom, observed };
       }
       if (child.hasAttribute('data-height-passing')) {
         const inner = extentOf(child);
         return {
           bottom: Math.max(extent.bottom, inner.bottom),
-          boxes: [...boxes, ...inner.boxes],
+          observed: [...observed, ...inner.observed],
         };
       }
       const bottom =
         child.getBoundingClientRect().bottom +
         (Number.parseFloat(computed.marginBottom) || 0);
-      return { bottom: Math.max(extent.bottom, bottom), boxes };
+      return { bottom: Math.max(extent.bottom, bottom), observed };
     },
-    { bottom: Number.NEGATIVE_INFINITY, boxes: [] },
+    { bottom: Number.NEGATIVE_INFINITY, observed: [] },
   );
 
 const useContentOverflow = (allocation: HTMLDivElement | null): boolean => {
@@ -65,7 +65,7 @@ const useContentOverflow = (allocation: HTMLDivElement | null): boolean => {
     const observe = () => {
       observer?.disconnect();
       observer?.observe(allocation);
-      for (const box of extentOf(content).boxes) observer?.observe(box);
+      for (const box of extentOf(content).observed) observer?.observe(box);
       measure();
     };
     observe();

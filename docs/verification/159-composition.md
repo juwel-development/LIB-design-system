@@ -13,7 +13,8 @@ compact spacing is not part of this work.
 | --- | --- |
 | `ColumnLayout.Column` | Optional `head?: ReactNode`: consumer content at content height above the column's content, spanning that column only. In a filled horizontal column the content takes the remaining height. No role, name, tab stop or scrolling; its arrival, change or removal never remounts the content. Omitted/`undefined`/`null`/`false` renders the column exactly as before. |
 | `Screen` | Whole-content fallback now also covers content-height regions: a column head, a content-height Stack in a filled column, a Stack or unbounded Table as sole content. When any of them ends below the remainder, the whole content (heading included) grows into the Shell body; it restores when room returns. TSDoc lists the four supported compositions and their obligations. |
-| `Pane` | Measures its room again when content above it inside Screen changes (a column head growing or shrinking moved it without resizing it, so a stale release survived). |
+| `Pane` | Measures its room again when content above it inside Screen changes (a column head growing or shrinking moved it without resizing it, so a stale release survived). It watches the boxes ahead of it and each holder up to Screen's remainder for size, content and attribute changes. |
+| `Table` | `captionVisibility="hidden"` positions the clipped caption against the table's own box, so in fallback it stays inside the Shell body instead of extending the document. |
 | Private markers | `data-height-passing` (ColumnLayout fill frame/row/columns, `Alternatives fill`, `Tabs.Root fill` and panels, Stepper root and panels) and `data-height-bounded` (Pane root, bounded Table wrapper, ScrollContainer). Recorded in `docs/agents/standards/architecture.md`; not public API. |
 
 No new component, barrel line, token, error class or consumer CSS. One public prop (`head`).
@@ -35,7 +36,7 @@ bounded body is never counted.
 | --- | --- |
 | `npm run lint` | clean (224 files) |
 | `npm run typecheck` | clean |
-| `npm test` | 65 files, 1523 tests passed |
+| `npm test` | 65 files, 1524 tests passed (after the review fixes) |
 | `npm run build` | passed, including `check:build` for the three stylesheet exports and the JS bundle |
 | `npm run build-storybook` | passed |
 | `scripts/browser/screen-composition.mjs` (new) | PASS |
@@ -61,7 +62,7 @@ SCREEN_STORYBOOK_URL=http://localhost:6159 npm exec --yes --package=playwright@1
 
 Stories: *Layout/Screen Composition* — ContractDetail(+German) and HeadAbovePane(+German) for case 1,
 FocusColumn(+German) for case 2, ProfileOnly, ProfileOnlyHeadingGerman, ProfileOnlyOverflowing,
-TableOnly(+German), TableOnlyOverflowing for case 3, ContentColumns(+German, with *End*) for case 4.
+TableOnly(+German), TableOnlyOverflowing, TableOnlyWithoutHeading(+Overflowing) for case 3, ContentColumns(+German, with *End*) for case 4.
 The runner keeps scrollbars visible (Playwright hides them by default), so width feedback from the
 Shell body's scrollbar is part of every check. 100 % zoom, root 16px.
 
@@ -82,6 +83,8 @@ lowest content within the Shell body's scroll range. Region: top / height / widt
 | ProfileOnlyOverflowing | released (961) | released (997) |
 | TableOnly EN / DE | bounded; 312 | bounded; 312 / 440 under a wrapped heading |
 | TableOnlyOverflowing | released (1070) | released (1070) |
+| TableOnlyWithoutHeading | bounded; 312 | bounded; 312 |
+| TableOnlyWithoutHeadingOverflowing | released (1070) | released (1070) |
 | ContentColumns EN, DE | bounded; facts 270, history body 846 of 1627 | bounded; facts 289, history body 489 of 1627 |
 
 The released rows are the documented fallback on representative fixture content, not a defect and
@@ -110,21 +113,55 @@ viewport edge without Screen's bottom inset. That matches the existing Pane fall
   (ContractDetail), the Stack to 1233px (FocusColumn), the facts column to 913px (ContentColumns);
   each releases, holds the release for 30 sampled frames, restores when the content shrinks and
   holds the bound for 30 frames. This exposed the stale Pane release fixed above.
+- **German behavior**: the release/restore with focus and the selected tab (*Vorrat*) and the
+  dynamic head also run on ContractDetail German; the dynamic head on ContentColumns German.
+- **No clipping on the way**: *Longer head* is clicked inside the page and every one of the next
+  30 frames is sampled; no content-height region is ever shorter than its content, released or
+  restoring. In fallback no region is clipped.
+- **Heading in the scroll flow**: on ProfileOnlyOverflowing and TableOnlyOverflowing at 1280×720,
+  scrolling the Shell body by 200px moves Screen's heading and the content by 200px together.
+- **Attribute-only change above a Pane**: a 400px line appended to the column head releases
+  ContractDetail and HeadAbovePane; hiding it with the `hidden` attribute alone (no node or text
+  change) restores the bound.
+- **Hidden caption in fallback**: HeadAbovePane German at 1280×360 releases and the document
+  stays still; the rounds Table's hidden caption no longer extends it.
 - **Pane → result block** (ContentColumns *End*): two content-height columns, bounded at 1280×720.
-- **Enlarged text** (root 200 % at 1920×1080): ContractDetail (columns stack under the doubled rem
-  minimums) and TableOnly release and stay reachable; ContentColumns still fits bounded (facts 775
+- **Enlarged text** (root 200 % at 1920×1080): ContractDetail (its columns stack under the doubled
+  rem minimums inside the still-bounded Screen, asserted) and TableOnly release and stay reachable; ContentColumns still fits bounded (facts 775
   in 963). All three return to bounded at 100 %.
 - **Width**: bounded at 1024×720; at 800×720 the Sidebar stacks, Screen becomes unsized, every body
   takes its natural height and the Shell body scrolls; bounded again at 1280×720. No sideways
   overflow at any width.
-- **No oscillation**: TableOnly German, searched by height at 1280 wide — released at ≤ 701px,
-  bounded at ≥ 702px; at 700, 701, 702 and 703px the state holds for 60 consecutive frames with
-  the Shell body's scrollbar visible.
+- **No oscillation, no stuck release**: searched by height at 1280 wide, once arriving from a
+  bounded 720px window and once from a released 300px one. TableOnly German releases at ≤ 701px
+  and is bounded at ≥ 702px from both directions; ContractDetail German (two-line head) at
+  ≤ 548 / ≥ 549px from both. So the Shell scrollbar that fallback adds leaves no band where the
+  bound would fit but does not return. One pixel either side of each boundary holds for 60 frames.
 - **Themes and distributed stylesheets**: dark (source CSS), and `dist/styles.css` (light and
   dark), `dist/styles.light.css`, `dist/styles.dark.css` replacing the source styles, for
   ContractDetail EN/DE, FocusColumn, TableOnly German, ContentColumns and ProfileOnlyOverflowing at
   both reference windows: 60 runs, identical outcomes to the table above.
 - No page errors.
+
+## Independent review — 2026-11-06
+
+Two-axis review (`.claude/skills/code-review`) against `git merge-base main HEAD` = `71f0ec6`,
+Standards (all four standards, smell baseline) and Spec (issue body, comments, the approved
+Agent Brief, ADR 0008's #159 amendment), each by a separate agent, then browser probes of every
+suspected defect before fixing it.
+
+| Finding | Axis | Verdict | Resolution |
+| --- | --- | --- | --- |
+| A line above a Pane hidden by an attribute left the Pane's release stale: the screen stayed released with room back (ContractDetail, HeadAbovePane at 1280×720) | Spec | confirmed in Chromium | Pane watches the boxes ahead of it, attributes included; jsdom spec and runner check added |
+| Pane re-measured on every DOM change anywhere in Screen, through a second observer duplicating its own | Spec, Standards | confirmed by reading | replaced by the scoped observer above |
+| A Table's hidden caption below the window in fallback extended the document (HeadAbovePane German, 1280×360: document 639 / 360) | found while adding the attribute check | confirmed in Chromium | Table contains its hidden caption; runner check added |
+| Released layout narrower by the Shell scrollbar could leave a band that never restores | Spec (suspected) | refuted: release and restore meet from both directions | boundary search now runs both directions on two fixtures |
+| Clipping, heading scroll flow, ColumnLayout stacking under enlarged text, German behavior and TableOnly without a heading were prose only | Spec | confirmed | asserted by the runner; TableOnlyWithoutHeading(+Overflowing) stories added |
+| `Extent.boxes` holds every observed box, not only the measured ones | Standards (smell) | accepted | renamed `observed` |
+| Specs read the private `data-screen-unusable` marker; the runner is a browser driver; repeated observer, layout-mock and runner-preamble setup | Standards (judgement) | not changed | jsdom has no layout, so the marker is the only signal and Pane.spec already did this; the Screen family (#151–#153) records geometry with runners, not play functions; extracting shared setup is a refactor across the existing #151–#157 runners and specs, outside this issue |
+
+No scope creep was found: nothing touches #158 density, #160, persistence or the release. The one
+public addition stays `ColumnLayout.Column head`.
 
 ## Library behavior versus application fit
 
@@ -140,7 +177,7 @@ g-label-manager screen fits 1280×720: the consumer measurements in the issue co
   architecture standard records the rule.
 - A content-height region placed *below* a bounded Pane in the same flow is outside the supported
   compositions: in fallback the Pane above it grows and moves it, so it could hold the release.
-- Pane re-measures on DOM changes above it and on window resize; a non-DOM size change above it
-  that leaves the Pane's own size unchanged (e.g. a web-font swap in the head only) waits for the
-  next mutation or resize.
+- Shell's console body is `position: static`, so any other absolutely positioned descendant
+  below the window in fallback (consumer content, not the library's) can still extend the
+  document. The hidden Table caption was the library's case and is fixed; Shell is unchanged.
 - Not run: WebKit and Firefox, real 200 % browser zoom (root font size was used), screen readers.

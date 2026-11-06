@@ -136,6 +136,9 @@ const geometry = () =>
         clientWidth: shell.clientWidth,
       },
       main: rect(main),
+      heading: main.querySelector(':scope > header')
+        ? rect(main.querySelector(':scope > header'))
+        : null,
       heads: named('-head'),
       foots: named('-foot'),
       bodies,
@@ -193,9 +196,12 @@ const assertNatural = async (label, result) => {
   assert(result.released, `${label}: released`);
   for (const [id, box] of Object.entries(result.bodies))
     assert(box.client >= box.scroll - 1, `${label}: ${id} released whole`);
+  for (const [id, box] of Object.entries(result.regions))
+    assert(box.client >= box.scroll - 1, `${label}: ${id} is not clipped`);
   // Everything is reachable in the Shell body: its scroll range covers the lowest box.
   const lowest = Math.max(
     ...[
+      ...(result.heading ? [result.heading] : []),
       ...Object.values(result.heads),
       ...Object.values(result.foots),
       ...Object.values(result.regions),
@@ -228,6 +234,8 @@ const EXPECTATIONS = {
   'table-only': { 1920: true, 1280: true },
   'table-only-german': { 1920: true, 1280: true },
   'table-only-overflowing': { 1920: false, 1280: false },
+  'table-only-without-heading': { 1920: true, 1280: true },
+  'table-only-without-heading-overflowing': { 1920: false, 1280: false },
   'content-columns': { 1920: true, 1280: true },
   'content-columns-german': { 1920: true, 1280: true },
 };
@@ -397,10 +405,9 @@ const preserve = async (story, prepare, verify) => {
   await verify();
   record(`${story} short and restored`, { short, restored });
 };
-await preserve(
-  'contract-detail',
+const keepsTab = (tab) => [
   async () => {
-    await page.getByRole('tab', { name: 'Pool' }).click();
+    await page.getByRole('tab', { name: tab }).click();
     await page.getByTestId('strip').getByRole('button').focus();
     await page.evaluate(() => {
       window.keptButton = document.activeElement;
@@ -418,9 +425,11 @@ await preserve(
         document.querySelector('[role="tab"][aria-selected="true"]')
           .textContent,
     );
-    assert.equal(kept, 'Pool', 'Same focused node and the selected tab kept');
+    assert.equal(kept, tab, 'Same focused node and the selected tab kept');
   },
-);
+];
+await preserve('contract-detail', ...keepsTab('Pool'));
+await preserve('contract-detail-german', ...keepsTab('Vorrat'));
 await preserve(
   'focus-column',
   async () => {
@@ -458,14 +467,89 @@ await preserve(
   async () => {},
   async () => {},
 );
+// A card above a Pane whose Table hides its caption: in fallback the caption sits below the
+// window, and it must stay inside the Shell body rather than extend the document.
+await preserve(
+  'head-above-pane-german',
+  async () => {},
+  async () => {},
+);
+
+// 2a · In fallback Screen's heading scrolls with the content; nothing stays pinned above it.
+for (const story of ['profile-only-overflowing', 'table-only-overflowing']) {
+  await open(story);
+  await resize(1280, 720);
+  const top = await geometry();
+  const region = story === 'table-only-overflowing' ? 'markets' : 'profile';
+  await page
+    .getByTestId('shell')
+    .locator(':scope > :nth-child(2)')
+    .evaluate((body) => {
+      body.scrollTop = 200;
+    });
+  await settle();
+  const moved = await geometry();
+  record(`${story} heading scrolled`, {
+    heading: [top.heading, moved.heading],
+  });
+  assert(top.heading && moved.shell.offset === 200, `${story}: scrolled`);
+  for (const [before, after] of [
+    [top.heading, moved.heading],
+    [top.regions[region], moved.regions[region]],
+  ])
+    assert(
+      Math.abs(before.top - after.top - 200) < 1,
+      `${story}: the heading and the content move together`,
+    );
+}
+
+// Clicks a toggle in the page and samples every following frame, so a release or restore that
+// clipped or collapsed a content-height region on its way would show in one of them.
+const toggleAndSample = (name, frames) =>
+  page.evaluate(
+    ({ name, frames, regions }) =>
+      new Promise((resolve) => {
+        const samples = [];
+        const sample = () => {
+          samples.push({
+            released:
+              document.querySelector('main [data-screen-unusable]') !== null,
+            clipped: regions
+              .map((id) => document.querySelector(`[data-testid="${id}"]`))
+              .filter(Boolean)
+              .filter(
+                (element) => element.scrollHeight > element.clientHeight + 1,
+              )
+              .map((element) => element.dataset.testid),
+          });
+          if (samples.length < frames) requestAnimationFrame(sample);
+          else resolve(samples);
+        };
+        [...document.querySelectorAll('button')]
+          .find((button) => button.textContent === name)
+          .click();
+        requestAnimationFrame(sample);
+      }),
+    { name, frames, regions: REGIONS },
+  );
 
 // 3 · Dynamic fixed content: a longer head releases, removing it restores, without flicker.
-for (const story of ['contract-detail', 'focus-column', 'content-columns']) {
+for (const [story, longerHead] of [
+  ['contract-detail', 'Longer head'],
+  ['contract-detail-german', 'Längerer Kopf'],
+  ['focus-column', 'Longer head'],
+  ['content-columns', 'Longer head'],
+  ['content-columns-german', 'Längerer Kopf'],
+]) {
   await open(story);
   await resize(1280, 720);
   assertBounded(`${story} before`, await geometry());
-  await page.getByRole('button', { name: 'Longer head' }).click();
-  await settle();
+  const releasing = await toggleAndSample(longerHead, 30);
+  assert.deepEqual(
+    releasing.flatMap((frame) => frame.clipped),
+    [],
+    `${story}: no region clipped while releasing`,
+  );
   const longer = await geometry();
   await assertNatural(`${story} longer head`, longer);
   assert.deepEqual(
@@ -473,8 +557,12 @@ for (const story of ['contract-detail', 'focus-column', 'content-columns']) {
     [true],
     `${story}: release holds frame after frame`,
   );
-  await page.getByRole('button', { name: 'Longer head' }).click();
-  await settle();
+  const restoring = await toggleAndSample(longerHead, 30);
+  assert.deepEqual(
+    restoring.flatMap((frame) => frame.clipped),
+    [],
+    `${story}: no region clipped while restoring`,
+  );
   assertBounded(`${story} head shortened`, await geometry());
   assert.deepEqual(
     [...new Set(await releasedFor(30))],
@@ -483,6 +571,28 @@ for (const story of ['contract-detail', 'focus-column', 'content-columns']) {
   );
   record(`${story} longer head`, longer);
 }
+// 3a · Fixed content above a Pane that shrinks by an attribute alone (a hidden line, no node
+// added or removed and no text changed) still returns the bound.
+for (const [story, head] of [
+  ['contract-detail', 'strip'],
+  ['head-above-pane', 'card'],
+]) {
+  await open(story);
+  await resize(1280, 720);
+  await page.getByTestId(head).evaluate((element) => {
+    const line = document.createElement('p');
+    line.style.height = '400px';
+    element.append(line);
+  });
+  await settle();
+  await assertNatural(`${story} taller head`, await geometry());
+  await page.getByTestId(head).evaluate((element) => {
+    element.lastElementChild.hidden = true;
+  });
+  await settle();
+  assertBounded(`${story} head hidden by attribute`, await geometry());
+}
+
 await open('content-columns');
 await resize(1280, 720);
 await page.getByRole('button', { name: 'End', exact: true }).click();
@@ -495,8 +605,15 @@ assert(
 );
 record('content-columns ended', ended);
 
-// 4 · Enlarged text: twice the root size releases where it no longer fits, and restores.
-for (const story of ['contract-detail', 'table-only', 'content-columns']) {
+// 4 · Enlarged text: twice the root size releases where it no longer fits, and restores. The
+// detail's doubled rem minimums no longer fit beside the Roster, so its columns stack inside
+// the still-bounded Screen and the whole content falls back to the Shell body.
+const ENLARGED = {
+  'contract-detail': false,
+  'table-only': false,
+  'content-columns': true,
+};
+for (const story of Object.keys(ENLARGED)) {
   await open(story);
   await resize(1920, 1080);
   await page.evaluate(() => {
@@ -505,8 +622,14 @@ for (const story of ['contract-detail', 'table-only', 'content-columns']) {
   await settle();
   const enlarged = await geometry();
   record(`${story} 200% text`, enlarged);
-  if (enlarged.released) await assertNatural(`${story} 200%`, enlarged);
-  else assertBounded(`${story} 200%`, enlarged);
+  if (ENLARGED[story]) assertBounded(`${story} 200%`, enlarged);
+  else await assertNatural(`${story} 200%`, enlarged);
+  if (story === 'contract-detail')
+    assert(
+      enlarged.columns['detail-column'].top >=
+        enlarged.columns['roster-column'].bottom - 1,
+      'The columns stack under enlarged text',
+    );
   await page.evaluate(() => {
     document.documentElement.style.fontSize = '';
   });
@@ -529,23 +652,38 @@ assert(stacked.shell.scroll > stacked.shell.client, 'The Shell body scrolls');
 await resize(1280, 720);
 assertBounded('contract-detail unstacked', await geometry());
 
-// 6 · No oscillation at the boundary with visible scrollbars: find the release height, then
-// hold each side of it for 60 frames.
-await open('table-only-german');
-await resize(1280, 720);
-let low = 300;
-let high = 720;
-while (high - low > 1) {
-  const middle = Math.floor((low + high) / 2);
-  await resize(1280, middle);
-  if ((await geometry()).released) low = middle;
-  else high = middle;
-}
-for (const height of [low - 1, low, high, high + 1]) {
-  await resize(1280, height);
-  const states = [...new Set(await releasedFor(60))];
-  assert.equal(states.length, 1, `Stable at ${height}px`);
-  record(`boundary ${height}px`, { released: states[0] });
+// 6 · No oscillation and no stuck release at the boundary, with visible scrollbars. The release
+// height is searched arriving from a bounded window, the restore height arriving from a
+// released one; they must meet, so no height keeps a release the bounded layout would fit.
+// Each side is then held for 60 frames.
+const boundary = async (from) => {
+  let low = 300;
+  let high = 720;
+  while (high - low > 1) {
+    const middle = Math.floor((low + high) / 2);
+    await resize(1280, from);
+    await resize(1280, middle);
+    if ((await geometry()).released) low = middle;
+    else high = middle;
+  }
+  return { low, high };
+};
+for (const story of ['table-only-german', 'contract-detail-german']) {
+  await open(story);
+  const releasing = await boundary(720);
+  const restoring = await boundary(300);
+  record(`${story} boundary`, { releasing, restoring });
+  assert.deepEqual(restoring, releasing, `${story}: release and restore meet`);
+  for (const height of [
+    releasing.low - 1,
+    releasing.low,
+    releasing.high,
+    releasing.high + 1,
+  ]) {
+    await resize(1280, height);
+    const states = [...new Set(await releasedFor(60))];
+    assert.equal(states.length, 1, `${story}: stable at ${height}px`);
+  }
 }
 
 // 7 · Both themes and the three built stylesheets at both reference windows.
