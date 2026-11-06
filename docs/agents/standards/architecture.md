@@ -23,6 +23,9 @@ The approved Screen/Pane fallback (#151/#152, ADR 0008) has one narrow exception
 `Layout/Screen/ScreenBodyAllocation`, the private allocation boundary owned by Screen. It carries
 only the persistent remainder element, no component API, registration, or application state. Screen
 consumes Pane's private unusable marker through CSS; neither imports the other's implementation.
+The compact console spacing treatment (#158) adds the reverse CSS-only read: a compact Screen marks
+its main with the private `data-screen-spacing` attribute, and Pane's recipe reads it from an
+ancestor outside any `dialog`. No context, prop or import carries the treatment.
 This exception does not permit general sibling-component imports or expose a consumer protocol.
 
 The content-height compositions of #159 extend that boundary by two private DOM attributes, still
@@ -32,8 +35,10 @@ fill` and its panels, Stepper's root and panels); `data-height-bounded` marks a 
 and scrolls its own content (Pane's root, a bounded Table, ScrollContainer). Screen looks through
 the first, skips the second and measures every other in-flow box as content-height. Pane also
 re-measures when content above it inside Screen changes: it watches the boxes ahead of it and
-each holder up to Screen's remainder, not the whole Screen. A new height-passing or self-bounded
-component sets the matching attribute; none of this is public API.
+each holder up to Screen's remainder, not the whole Screen. Neither watches the
+`data-screen-spacing` marker: a treatment switch reaches both fit checks as a resize of the
+remainder, a Pane's root or its shrinking Body. A new height-passing or self-bounded component
+sets the matching attribute; none of this is public API.
 
 **The import test:** could this file be deleted without touching `src/index.ts`, and does it import
 nothing from a sibling component? If either answer is no, look again.

@@ -5,7 +5,8 @@ Authority: the approved Agent Brief,
 read with the issue body and the five consumer comments through `gh issue view 159 --comments`. The
 brief supersedes the consumer questions A1–E3. Base revision: `71f0ec6` (approved scope for #158,
 #159, #160). Read CONTEXT.md, the four standards and ADR 0008 with its #159 amendment. #158's
-compact spacing is not part of this work.
+compact spacing is not implemented here; it arrived by merging `main`, and how the two interact
+is recorded under *Integration with #158 and #160*.
 
 ## What was built
 
@@ -163,11 +164,72 @@ suspected defect before fixing it.
 No scope creep was found: nothing touches #158 density, #160, persistence or the release. The one
 public addition stays `ColumnLayout.Column head`.
 
+## Integration with #158 and #160 — merge of `main` at `128d008`
+
+`main` (#158 compact console spacing, #160 Slider value) was merged into this branch. The only
+textual conflict was `Screen.tsx`: the imports and the props declaration. Both are kept. #158's
+`spacing` variant, its `comfortable` default, its `data-screen-spacing` marker (compact only) and
+its focus-ring floor stay as they were. So do #159's walk (`extentOf`, `useContentOverflow`), the
+release marker on the inner box and the four compositions in the TSDoc. Pane's compact classes
+and #159's observers merged without conflict. Pane's fit check reads the computed inset and gap,
+so it measures whichever treatment is active. Neither check watches the marker. A switch reaches
+them as a resize of the remainder, of a Pane's root or of its shrinking Body.
+
+The composition fixtures' Console gained a *Compact spacing* toggle. It is off by default, so
+every default measurement above is unchanged. It switches any #159 composition in place.
+Runner section 8 asserts the following, in English and German, at 1920×1080 and 1280×720:
+- Screen's air and heading gap and every Pane's inset and slot gap shrink; the gutter does not.
+- No region is clipped in any of the 30 frames after the switch.
+- The same nodes stay, with focus on a bounded body's control and the selected tab (Pool or
+  Vorrat) kept.
+- Compact never loses a bound the default holds.
+- Switching back returns every head, foot, body and region to its default geometry.
+- The same checks run in the dark theme and with `styles.css`, `styles.light.css` and
+  `styles.dark.css` for ContractDetail German, HeadAbovePane German and ContentColumns.
+
+| Fixture at 1280×720 | default | compact | bounded body gained |
+| --- | --- | --- | --- |
+| ContractDetail EN / DE | bounded | bounded | 56px (active lane and Roster) |
+| HeadAbovePane EN | bounded | bounded | rounds body 68px |
+| HeadAbovePane DE | released | **bounded** | – |
+| FocusColumn EN / DE | bounded / released | bounded / **bounded** | Roster 56px |
+| ProfileOnly EN, ProfileOnlyHeadingGerman | released | **bounded** | – (Screen air only) |
+| TableOnly DE | bounded | bounded | – |
+| ContentColumns EN / DE | bounded | bounded | history body 52px |
+
+At 1920×1080 every fixture is bounded in both treatments.
+
+- **Fallback and restoration under compact.** At 1280×360, ContractDetail German, HeadAbovePane
+  German, ContentColumns German and FocusColumn release. Back at 1280×720 they return to the
+  same compact geometry.
+- **Longer head under compact.** On ContractDetail German and ContentColumns the head releases
+  and restores, holding each state for 25 frames with nothing clipped.
+- **Boundary under compact.** The release height drops and still meets the restore height from
+  both directions. ContractDetail German goes from 548/549 to 492/493; HeadAbovePane German from
+  719/720 to 653/654.
+- **Theme with only the slot gap different** (compact Screen and inset tokens set to the
+  defaults; the case the integration review suspected). At the default's release height,
+  compact fits, and switching back to default releases (ContractDetail German 548,
+  HeadAbovePane German 719). The Body's resize carries the change.
+- **jsdom.** `Screen.spec.tsx` switches compact → default → compact over a column head, its Pane
+  and a content-height column. Nodes, focus, the marker and the release are kept, and the bound
+  returns when the content shrinks.
+- **#158's own runner** (`console-spacing.mjs`) passes on the merged tree, including its
+  baseline part: 132 rectangle comparisons against the `71f0ec6` stylesheets are identical.
+  Omission still renders as before with #159's fallback in place.
+
+An independent review of the resolution and the interaction diff found no resolution defect. It
+named gaps in the first draft of section 8, all closed above: every Pane, heading gap, gutter,
+selection, focus in a body, the built stylesheets, compact no worse than default, and an
+asserted bound after a shorter head. Its one interaction suspicion is the slot-only theme row,
+refuted in Chromium.
+
 ## Library behavior versus application fit
 
 The fixtures prove the compositions, their bounds and their fallback. They do not prove that any
 g-label-manager screen fits 1280×720: the consumer measurements in the issue comments (#307, #315,
-#317, #318, #320, #321) were not reproduced here, and #158's compact spacing is separate.
+#317, #318, #320, #321) were not reproduced here. The compact outcomes under *Integration with
+#158 and #160* are fixture outcomes as well, not application fit.
 
 ## Residual issues and gaps
 

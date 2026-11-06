@@ -47,12 +47,22 @@ export interface ISliderProps {
   onInput$: Subject<number>;
   /**
    * Always rendered as a visible label associated with the control, the way `Input`'s is (#112);
-   * it doubles as the accessible name.
+   * it is the accessible name, and stays exactly that while a `visibleValue` is shown.
    */
   label: string;
   /**
+   * The current value shown beside the label, in the consumer's wording ("$3,542", "34 %"). The
+   * consumer formats it and passes new wording with each new `value`; Slider generates none. It
+   * shares the label's row when both fit and wraps below it when they do not. It never joins the
+   * accessible name and is not announced a second time: assistive technology hears it through
+   * `aria-valuetext`, which carries this wording whenever `valueText` is left out. Left out, only
+   * the label is shown.
+   */
+  visibleValue?: string;
+  /**
    * How the value is announced, in the consumer's wording ("$60 a week"). Left out, assistive
-   * technology reads the bare number: the library ships no wording of its own.
+   * technology reads `visibleValue`, or the bare number without one: the library ships no
+   * wording of its own.
    */
   valueText?: string;
   /** The explicit non-operable state: native disabled conduct, no emissions, disabled paint. */
@@ -88,11 +98,11 @@ const assertOperatingRange = (
 /**
  * A control that sets one numeric value by moving one thumb along a fixed, visible operating
  * range. Controlled: the consumer holds the value and passes it back in, and a value it does not
- * pass back is never adopted. It renders the value nowhere - the consumer sets any figures beside
- * it with typography - and it fills its container's width the way `Input` does. Its label follows
- * `Input` too: visible, associated, and the only text the component renders (#112). It is still
- * a live control and not a form field, so none of Input's annotations - hint, error, optional
- * marker - come with it. `disabled` is the explicit non-operable state.
+ * pass back is never adopted. It fills its container's width the way `Input` does. Its label
+ * follows `Input` too: visible, associated, and the stable accessible name (#112). The only other
+ * text it renders is an optional `visibleValue` in the consumer's wording, beside the label (#160).
+ * It is still a live control and not a form field, so none of Input's annotations - hint, error,
+ * optional marker - come with it. `disabled` is the explicit non-operable state.
  *
  * An off-range value renders at the nearest bound through the native control. The consumer still
  * owns the value: the clamped position is not emitted on `onInput$` until the user moves the thumb.
@@ -104,22 +114,47 @@ export const Slider: FunctionComponent<ISliderProps> = ({
   value,
   onInput$,
   label,
+  visibleValue,
   valueText,
   disabled,
   testId,
 }) => {
   const controlId = `${useId()}-control`;
   assertOperatingRange({ min, max, step, value });
+  // The label declares its face and size on itself, never on the wrapper, which would hand them
+  // to the control too; `body` is the control's own role (docs/adr/0004, #90, #92).
+  const visibleLabel = (
+    <label
+      htmlFor={controlId}
+      className={'font-secondary font-medium text-body text-foreground'}
+    >
+      {label}
+    </label>
+  );
   return (
     <div className={'flex flex-col gap-[var(--space-stack)]'}>
-      {/* The label declares its face and size on itself, never on the wrapper, which would hand
-          them to the control too; `body` is the control's own role (docs/adr/0004, #90, #92). */}
-      <label
-        htmlFor={controlId}
-        className={'font-secondary font-medium text-body text-foreground'}
-      >
-        {label}
-      </label>
+      {visibleValue === undefined ? (
+        visibleLabel
+      ) : (
+        // The label's face, role and leading, so a shared line keeps the label-only height even
+        // under a consumer face. aria-hidden because the range already announces the value;
+        // wrap-anywhere lets overlong wording break instead of widening the holder.
+        <div
+          className={
+            'flex flex-wrap items-baseline justify-between gap-x-[var(--space-stack)]'
+          }
+        >
+          {visibleLabel}
+          <span
+            aria-hidden={true}
+            className={
+              'min-w-0 wrap-anywhere font-secondary text-body text-foreground'
+            }
+          >
+            {visibleValue}
+          </span>
+        </div>
+      )}
       <input
         id={controlId}
         type={'range'}
@@ -129,7 +164,7 @@ export const Slider: FunctionComponent<ISliderProps> = ({
         step={step}
         value={value}
         disabled={disabled}
-        aria-valuetext={valueText}
+        aria-valuetext={valueText ?? visibleValue}
         data-testid={testId}
         // React's onChange rides the native input event, so every movement emits through here.
         onChange={(event) => onInput$.next(event.currentTarget.valueAsNumber)}

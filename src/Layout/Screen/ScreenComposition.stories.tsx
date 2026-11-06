@@ -48,7 +48,7 @@ const meta: Meta<typeof Screen> = {
 
 **4 · Content-height columns** (*ContentColumns*). A Stack with no Pane fills one column beside a bounded Pane; *End* replaces the Pane with a content-height result block, so both columns are content height.
 
-**Fallback.** While everything fits, content-height regions stay in view and bounded bodies scroll on their own. When fixed content - a column head, a content-height column, the sole content - or a bounded area's usable body minimum no longer fits Screen's remainder, the whole content, Screen's heading included, takes its natural height and the Shell body scrolls it. Bounds return when room returns, with nothing remounted, refocused or measured by clipping. A long body that scrolls inside its bound is not itself a reason to release. *Longer head* adds fixed content in place to exercise the release and restoration; *Overflowing* fixtures carry content taller than the reference windows on purpose, to show the documented fallback rather than hide it.
+**Fallback.** While everything fits, content-height regions stay in view and bounded bodies scroll on their own. When fixed content - a column head, a content-height column, the sole content - or a bounded area's usable body minimum no longer fits Screen's remainder, the whole content, Screen's heading included, takes its natural height and the Shell body scrolls it. Bounds return when room returns, with nothing remounted, refocused or measured by clipping. A long body that scrolls inside its bound is not itself a reason to release. *Longer head* adds fixed content in place to exercise the release and restoration; *Compact spacing* switches the Screen to #158's compact console treatment in place, so every composition can be compared with it; *Overflowing* fixtures carry content taller than the reference windows on purpose, to show the documented fallback rather than hide it.
 
 \`scripts/browser/screen-composition.mjs\` records the geometry at 1920×1080 and 1280×720 in English and German, both themes and the built stylesheets. These fixtures establish library behavior for representative content, not any application's actual fit.`,
       },
@@ -70,6 +70,7 @@ const english = {
   workspace: 'Label console',
   translate: 'EN / DE',
   longer: 'Longer head',
+  compact: 'Compact spacing',
   body: 'Console body',
   sections: 'Sections',
   entries: ['Contracts', 'A&R', 'People', 'Markets'],
@@ -145,6 +146,7 @@ const german: typeof english = {
   workspace: 'Konsole für die Labelverwaltung',
   translate: 'EN / DE',
   longer: 'Längerer Kopf',
+  compact: 'Kompakter Abstand',
   body: 'Konsoleninhalt',
   sections: 'Bereiche',
   entries: ['Verträge', 'Talentsuche', 'Personen', 'Märkte'],
@@ -239,6 +241,8 @@ const Console: FunctionComponent<{
   children: ReactNode;
 }> = ({ copy, active, translate$, actions, heading, children }) => {
   const [navigate$] = useState(() => new Subject<string>());
+  // Every fixture can switch to #158's compact console treatment in place, nothing remounted.
+  const [isCompact, compact$] = useToggle(false);
   return (
     <div style={theme}>
       <Shell
@@ -251,6 +255,9 @@ const Console: FunctionComponent<{
               <Cluster>
                 <Button variant="plain" onClick$={translate$}>
                   {copy.translate}
+                </Button>
+                <Button variant="plain" onClick$={compact$}>
+                  {copy.compact}
                 </Button>
                 {actions}
               </Cluster>
@@ -270,7 +277,12 @@ const Console: FunctionComponent<{
             </Sidebar.Item>
           ))}
           <Sidebar.Content>
-            <Screen heading={heading}>{children}</Screen>
+            <Screen
+              heading={heading}
+              spacing={isCompact ? 'compact' : undefined}
+            >
+              {children}
+            </Screen>
           </Sidebar.Content>
         </Sidebar.Root>
       </Shell>

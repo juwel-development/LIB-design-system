@@ -9,9 +9,12 @@ import {
   useState,
 } from 'react';
 
-const pane = cva(
+// A Pane inside a compact Screen follows it; a Dialog's Pane is not one of its work areas (#158).
+const pane = cva([
   'box-border flex h-full min-h-0 min-w-0 flex-col gap-[var(--space-stack)] border border-solid border-border bg-surface text-foreground p-[var(--space-box-inset)] [overflow-wrap:anywhere]',
-);
+  '[[data-screen-spacing=compact]_&:not(dialog_*)]:gap-[var(--space-pane-slot-compact)]',
+  '[[data-screen-spacing=compact]_&:not(dialog_*)]:p-[max(var(--space-pane-inset-compact),calc(var(--focus-ring-width)+var(--focus-ring-offset)))]',
+]);
 const paneSection = cva('min-w-0 shrink-0');
 const paneBody = cva('min-h-0 min-w-0 flex-[0_1_auto]', {
   variants: {
@@ -273,6 +276,8 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  *   stretch: Foot follows it, with any unused height left in Root rather than inside Body.
  * - Root paints surface, foreground, border and box inset, square and without elevation.
  *   The stack space role separates slots; a non-empty name exposes a group, never a landmark.
+ *   Inside a Screen with spacing="compact", outside a Dialog, the inset and slot gaps follow
+ *   that Screen's compact treatment instead; Pane offers no selector of its own.
  * - Default Body is the sole scroll region: a named group and keyboard stop only while
  *   overflowing, retained while focused. It reserves the shared focus ring's room and leaves
  *   native focus reveal, scrolling and child keyboard interactions intact.

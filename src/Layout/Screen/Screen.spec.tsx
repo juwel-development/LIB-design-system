@@ -136,6 +136,110 @@ describe('Screen', () => {
       expect(screen.queryByRole('heading')).not.toBeInTheDocument();
     },
   );
+  it('renders an omitted spacing treatment exactly as the comfortable one', () => {
+    const composition = (spacing?: 'comfortable') => (
+      <Screen heading={<h1>Workspace</h1>} spacing={spacing}>
+        <Pane.Root name="Entries">
+          <Pane.Head>Facts</Pane.Head>
+          <Pane.Body ariaLabel="Entries">Rows</Pane.Body>
+          <Pane.Foot>Act</Pane.Foot>
+        </Pane.Root>
+      </Screen>
+    );
+    const omitted = render(composition()).container.innerHTML;
+    const comfortable = render(composition('comfortable')).container.innerHTML;
+    expect(comfortable).toBe(omitted);
+  });
+  it('keeps every mounted pane control, its focus, value and selection while the treatment changes', () => {
+    const composition = (spacing?: 'comfortable' | 'compact') => (
+      <Screen heading={<h1>Workspace</h1>} spacing={spacing}>
+        <Pane.Root name="Entries">
+          <Pane.Head>
+            <input aria-label="Search" defaultValue="written" />
+          </Pane.Head>
+          <Pane.Body ariaLabel="Entries">
+            <button type="button">Choose</button>
+          </Pane.Body>
+        </Pane.Root>
+      </Screen>
+    );
+    const { rerender } = render(composition());
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    const button = screen.getByRole('button');
+    const pane = screen.getByRole('group', { name: 'Entries' });
+    input.focus();
+    fireEvent.change(input, { target: { value: 'retained text' } });
+    input.setSelectionRange(2, 6);
+    for (const spacing of ['compact', 'comfortable', 'compact'] as const) {
+      rerender(composition(spacing));
+      expect(screen.getByRole('textbox')).toBe(input);
+      expect(screen.getByRole('button')).toBe(button);
+      expect(screen.getByRole('group', { name: 'Entries' })).toBe(pane);
+      expect(input).toHaveFocus();
+      expect(input).toHaveValue('retained text');
+      expect([input.selectionStart, input.selectionEnd]).toEqual([2, 6]);
+    }
+  });
+  it('keeps a column head, its pane and a content-height column mounted, and the release, through a treatment change', () => {
+    const composition = (spacing?: 'compact') => (
+      <Screen spacing={spacing}>
+        <ColumnLayout.Root fill>
+          <ColumnLayout.Column
+            weight={2}
+            minWidth="--main"
+            head={
+              <button type="button" data-testid="strip">
+                Artist
+              </button>
+            }
+          >
+            <Pane.Root name="Rounds">
+              <Pane.Body ariaLabel="Rounds">Rows</Pane.Body>
+            </Pane.Root>
+          </ColumnLayout.Column>
+          <ColumnLayout.Column weight={1} minWidth="--support">
+            <Stack testId="facts">Facts</Stack>
+          </ColumnLayout.Column>
+        </ColumnLayout.Root>
+      </Screen>
+    );
+    layOut(
+      { top: 0, height: 400 },
+      { strip: { top: 0, height: 40 }, facts: { top: 0, height: 500 } },
+    );
+    const { rerender } = render(composition());
+    const head = screen.getByRole('button', { name: 'Artist' });
+    const pane = screen.getByRole('group', { name: 'Rounds' });
+    const facts = screen.getByTestId('facts');
+    head.focus();
+    expect(isReleased()).toBe(true);
+    for (const spacing of ['compact', undefined, 'compact'] as const) {
+      rerender(composition(spacing));
+      expect(screen.getByRole('button', { name: 'Artist' })).toBe(head);
+      expect(screen.getByRole('group', { name: 'Rounds' })).toBe(pane);
+      expect(screen.getByTestId('facts')).toBe(facts);
+      expect(head).toHaveFocus();
+      expect(isReleased()).toBe(true);
+      expect(screen.getByRole('main').dataset.screenSpacing).toBe(spacing);
+    }
+    vi.restoreAllMocks();
+    layOut(
+      { top: 0, height: 400 },
+      { strip: { top: 0, height: 40 }, facts: { top: 0, height: 300 } },
+    );
+    resizeWindow();
+    expect(isReleased()).toBe(false);
+    expect(head).toHaveFocus();
+  });
+  it('rejects a spacing prop on Pane at compile time: Pane follows its Screen', () => {
+    render(
+      // @ts-expect-error Pane follows its Screen; it has no independent treatment.
+      <Pane.Root spacing="compact">
+        <Pane.Body ariaLabel="Entries">Rows</Pane.Body>
+      </Pane.Root>,
+    );
+    expect(screen.getByText('Rows')).toBeInTheDocument();
+  });
   it('does not infer the output of a custom heading component', () => {
     const Empty = () => null;
     render(

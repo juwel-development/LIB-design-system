@@ -707,6 +707,235 @@ for (const [theme, stylesheet] of [
   }
 }
 
+// 8 · #158's compact treatment over these compositions. Switching in place keeps every node,
+// focus and selection, never releases a bound the default holds, and switching back returns the
+// default geometry. Compact fixtures then fall back, restore and meet at one boundary as well.
+// Measured: compact holds every bound here, including four the default releases at 1280×720.
+const COMPACT = {
+  'contract-detail': { 1920: true, 1280: true },
+  'contract-detail-german': { 1920: true, 1280: true },
+  'head-above-pane': { 1920: true, 1280: true },
+  'head-above-pane-german': { 1920: true, 1280: true },
+  'focus-column': { 1920: true, 1280: true },
+  'focus-column-german': { 1920: true, 1280: true },
+  'profile-only': { 1920: true, 1280: true },
+  'profile-only-heading-german': { 1920: true, 1280: true },
+  'table-only-german': { 1920: true, 1280: true },
+  'content-columns': { 1920: true, 1280: true },
+  'content-columns-german': { 1920: true, 1280: true },
+};
+const compactLabel = (story) =>
+  story.includes('german') ? 'Kompakter Abstand' : 'Compact spacing';
+// Screen's air, heading gap and gutter, and the inset and slot gap of every Pane in the main.
+const spacingOf = () =>
+  page.evaluate(() => {
+    const main = document.querySelector('main');
+    const style = getComputedStyle(main);
+    return {
+      compact: main.dataset.screenSpacing === 'compact',
+      screen: Number.parseFloat(style.paddingTop),
+      heading: main.querySelector(':scope > header')
+        ? Number.parseFloat(style.rowGap)
+        : null,
+      gutter: style.paddingLeft,
+      panes: [...main.querySelectorAll('[data-height-bounded]')]
+        .filter((element) => element.classList.contains('bg-surface'))
+        .map((pane) => ({
+          inset: Number.parseFloat(getComputedStyle(pane).paddingTop),
+          gap: Number.parseFloat(getComputedStyle(pane).rowGap),
+        })),
+    };
+  });
+const assertCompact = (label, roomy, tight) => {
+  assert(tight.compact && !roomy.compact, `${label}: Screen marked compact`);
+  assert(tight.screen < roomy.screen, `${label}: Screen's air reduced`);
+  if (roomy.heading !== null)
+    assert(tight.heading < roomy.heading, `${label}: heading gap reduced`);
+  assert.equal(tight.gutter, roomy.gutter, `${label}: gutter unchanged`);
+  assert.equal(tight.panes.length, roomy.panes.length, `${label}: same Panes`);
+  for (const [index, pane] of roomy.panes.entries())
+    assert(
+      tight.panes[index].inset < pane.inset &&
+        tight.panes[index].gap < pane.gap,
+      `${label}: Pane ${index} inset and slot gap reduced`,
+    );
+};
+const sameHeights = (label, before, after) => {
+  for (const group of ['heads', 'foots', 'bodies', 'regions'])
+    for (const [id, box] of Object.entries(before[group]))
+      assert(
+        Math.abs(after[group][id].height - box.height) < 1 &&
+          Math.abs(after[group][id].top - box.top) < 1,
+        `${label}: ${id} back to its default geometry`,
+      );
+};
+// Keeps a control inside the content focused (a bounded body's, where there is one) and, on
+// the tabbed detail, the selected tab; both must survive every switch.
+const keep = () =>
+  page.evaluate(() => {
+    const main = document.querySelector('main');
+    window.keptNode = main.querySelector('[data-testid]');
+    window.keptFocus =
+      main.querySelector('[data-testid$="-body"] button') ??
+      main.querySelector('button');
+    window.keptFocus.focus({ preventScroll: true });
+    window.keptTab = main.querySelector('[role="tab"][aria-selected="true"]');
+  });
+const kept = () =>
+  page.evaluate(() => {
+    const main = document.querySelector('main');
+    return (
+      window.keptNode === main.querySelector('[data-testid]') &&
+      window.keptFocus === document.activeElement &&
+      window.keptTab ===
+        main.querySelector('[role="tab"][aria-selected="true"]')
+    );
+  });
+const compareCompact = async (story, width, height, options, prefix = '') => {
+  await open(story, options);
+  await resize(Number(width), height);
+  const label = `${prefix}${story} ${width} compact`;
+  if (story.startsWith('contract-detail') && Number(width) === 1280)
+    await page.getByRole('tab', { name: /^(Pool|Vorrat)$/ }).click();
+  await keep();
+  const comfortable = await geometry();
+  const roomy = await spacingOf();
+  const switching = await toggleAndSample(compactLabel(story), 30);
+  assert.deepEqual(
+    switching.flatMap((frame) => frame.clipped),
+    [],
+    `${label}: no region clipped while switching`,
+  );
+  const compact = await geometry();
+  const tight = await spacingOf();
+  record(label, { roomy, tight, compact });
+  assertCompact(label, roomy, tight);
+  assert(await kept(), `${label}: same nodes, focus and selection kept`);
+  if (!comfortable.released)
+    assert(!compact.released, `${label}: compact never loses a bound`);
+  if (COMPACT[story][width]) assertBounded(label, compact);
+  else await assertNatural(label, compact);
+  await toggleAndSample(compactLabel(story), 2);
+  await settle();
+  const back = await geometry();
+  assert.equal(back.released, comfortable.released, `${label}: state back`);
+  assert(await kept(), `${label}: still the same nodes after switching back`);
+  sameHeights(label, comfortable, back);
+};
+for (const story of Object.keys(COMPACT))
+  for (const [width, height] of Object.entries(WINDOWS))
+    await compareCompact(story, width, height);
+for (const [theme, stylesheet] of [
+  ['dark', undefined],
+  ['light', 'styles.css'],
+  ['dark', 'styles.dark.css'],
+  ['light', 'styles.light.css'],
+])
+  for (const story of [
+    'contract-detail-german',
+    'head-above-pane-german',
+    'content-columns',
+  ])
+    for (const [width, height] of Object.entries(WINDOWS))
+      await compareCompact(
+        story,
+        width,
+        height,
+        { theme, stylesheet },
+        `${theme} ${stylesheet ?? 'source'} `,
+      );
+const compactConsole = async (story) => {
+  await open(story);
+  await resize(1280, 720);
+  await toggleAndSample(compactLabel(story), 2);
+  await settle();
+};
+for (const story of [
+  'contract-detail-german',
+  'head-above-pane-german',
+  'content-columns-german',
+  'focus-column',
+]) {
+  await compactConsole(story);
+  const before = await geometry();
+  await resize(1280, 360);
+  await assertNatural(`${story} compact 1280x360`, await geometry());
+  await resize(1280, 720);
+  const restored = await geometry();
+  assertBounded(`${story} compact restored`, restored);
+  sameHeights(`${story} compact restored`, before, restored);
+}
+for (const [story, longerHead] of [
+  ['contract-detail-german', 'Längerer Kopf'],
+  ['content-columns', 'Longer head'],
+]) {
+  await compactConsole(story);
+  for (const [phase, expected] of [
+    ['longer', true],
+    ['shorter', false],
+  ]) {
+    const frames = await toggleAndSample(longerHead, 30);
+    assert.deepEqual(
+      frames.flatMap((frame) => frame.clipped),
+      [],
+      `${story} compact ${phase}: nothing clipped`,
+    );
+    assert.deepEqual(
+      [...new Set(frames.slice(5).map((frame) => frame.released))],
+      [expected],
+      `${story} compact ${phase}: holds`,
+    );
+    const settled = await geometry();
+    if (expected) await assertNatural(`${story} compact ${phase}`, settled);
+    else assertBounded(`${story} compact ${phase}`, settled);
+  }
+}
+// Compact releases no higher than the default, and meets its own restore height.
+for (const story of ['contract-detail-german', 'head-above-pane-german']) {
+  await open(story);
+  const roomy = await boundary(720);
+  await compactConsole(story);
+  const releasing = await boundary(720);
+  const restoring = await boundary(300);
+  record(`${story} compact boundary`, { roomy, releasing, restoring });
+  assert.deepEqual(
+    restoring,
+    releasing,
+    `${story} compact: release and restore meet`,
+  );
+  assert(releasing.low <= roomy.low, `${story}: compact releases no higher`);
+}
+// A theme whose compact tokens equal the defaults except the Pane slot gap: switching back to
+// default at the default's release height still releases (no Screen box resizes then).
+for (const story of ['contract-detail-german', 'head-above-pane-german']) {
+  const slotOnly = async () => {
+    await page.addStyleTag({
+      content:
+        ':root { --space-screen-region-compact: var(--space-region) !important; --space-pane-inset-compact: var(--space-box-inset) !important; }',
+    });
+    await settle();
+  };
+  await open(story);
+  await slotOnly();
+  const roomy = await boundary(720);
+  await resize(1280, roomy.low);
+  await open(story);
+  await slotOnly();
+  await toggleAndSample(compactLabel(story), 2);
+  await settle();
+  const compact = await geometry();
+  await toggleAndSample(compactLabel(story), 2);
+  await settle();
+  const back = await geometry();
+  record(`${story} slot-only theme`, {
+    height: roomy.low,
+    compact: compact.released,
+    back: back.released,
+  });
+  assert(!compact.released, `${story} slot-only: compact fits there`);
+  assert(back.released, `${story} slot-only: switching back releases`);
+}
+
 assert.deepEqual(errors, [], 'No page errors');
 process.stdout.write('PASS Screen composition browser acceptance\n');
 await browser.close();
