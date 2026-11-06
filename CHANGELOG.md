@@ -1,3 +1,30 @@
+# [4.3.0](https://github.com/juwel-development/LIB-design-system/compare/v4.2.1...v4.3.0) (2026-11-06)
+
+
+### Bug Fixes
+
+* **pane:** measure room again when content above it changes ([#159](https://github.com/juwel-development/LIB-design-system/issues/159)) ([b34f585](https://github.com/juwel-development/LIB-design-system/commit/b34f5856dbfd8bfac4281c1e4f22365fe4e8333d))
+* **pane:** watch only the boxes ahead of it for changes above ([#159](https://github.com/juwel-development/LIB-design-system/issues/159)) ([276adb3](https://github.com/juwel-development/LIB-design-system/commit/276adb352424f5e32ac7e10e662029f05df6de5f))
+* **screen:** tighten compact spacing review findings ([#158](https://github.com/juwel-development/LIB-design-system/issues/158)) ([510fb9f](https://github.com/juwel-development/LIB-design-system/commit/510fb9f8d845486a06604188a035d79350cec8e7))
+* **table:** keep a hidden caption inside the table's box ([#159](https://github.com/juwel-development/LIB-design-system/issues/159)) ([897caa0](https://github.com/juwel-development/LIB-design-system/commit/897caa0a420c0a4013608a9daa9d82a62941b9dd))
+
+
+### Features
+
+* **screen:** add compact console spacing treatment ([#158](https://github.com/juwel-development/LIB-design-system/issues/158)) ([24dd64e](https://github.com/juwel-development/LIB-design-system/commit/24dd64e16d19f7288ab9f9bc7620880922594ae4))
+* **screen:** support content-height regions beside and above bounded panes ([#159](https://github.com/juwel-development/LIB-design-system/issues/159)) ([18d504b](https://github.com/juwel-development/LIB-design-system/commit/18d504bc33aa4609053c93395266311df5ce15de))
+* **slider:** show optional consumer-worded value beside the label ([#160](https://github.com/juwel-development/LIB-design-system/issues/160)) ([7f0113c](https://github.com/juwel-development/LIB-design-system/commit/7f0113cae1d063bfb95ee86ed71a97ffdf4e9625))
+
+
+### NOTE
+
+* **screen:** Screen now releases its whole content into the Shell body when a content-height child is
+taller than its remainder: a Stack or unbounded Table as the sole content, a Stack in a filled
+ColumnLayout column, or a column head. Before, such content spilled past Screen's box while the
+Panes beside it stayed bounded.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
 ## [4.2.1](https://github.com/juwel-development/LIB-design-system/compare/v4.2.0...v4.2.1) (2026-11-05)
 
 
