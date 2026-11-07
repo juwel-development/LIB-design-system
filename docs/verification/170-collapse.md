@@ -32,14 +32,14 @@ stories import other components from `index`, as every story does.
   keyboard and assistive activation alike. If focus is inside the content at that moment, it moves
   to the summary. Reopening focuses nothing. A mutation that removes the handler fails the handoff
   test.
-- **The indicator is the summary's `::before`, and the summary holds only text.** WebKit 27.2 has a
-  defect: after a pointer click on an *element inside* a `summary`, Tab leaves focus on the summary.
-  Plain markup reproduces it (`<summary><span>…</span></summary>`: click the span, then Tab stays
-  on the summary). A click on summary text that is a direct child does not. The first version used
-  spans for the indicator and label and failed the runner's WebKit keyboard part (`keyboard stops
-  open: ["Filters"]`). With text only, the same part passes. The chevron is a rotated
-  `border-current` square, so it follows `currentColor` and forced colours. It turns between -45°
-  and 45° with no transition.
+- **The indicator is the native disclosure marker, and the summary holds only text.** WebKit 27.2
+  has a defect: after a pointer click on an *element inside* a `summary`, Tab leaves focus on the
+  summary. Plain markup reproduces it (`<summary><span>…</span></summary>`: click the span, then Tab
+  stays on the summary). A click on summary text that is a direct child does not. The first version
+  used spans for the indicator and label and failed the runner's WebKit keyboard part (`keyboard
+  stops open: ["Filters"]`). With text only, the same part passes. The marker is the summary's own
+  `list-item` marker (`disclosure-closed`/`disclosure-open`), drawn in the summary's type and
+  `currentColor`. Collapse sets none of its properties (see *Indicator geometry* below).
 - **Width.** The summary hugs its wording (`w-fit max-w-full`), so the shared focus ring outlines
   the control rather than the row. It wraps with `overflow-wrap: anywhere`, like Switch's label.
 
@@ -66,8 +66,7 @@ toggle on Enter or Space (probed). Hidden-content geometry, keyboard activation 
 are therefore proven in the browser below, not here.
 
 Full gates: `npm run lint`, `npm run typecheck` and `npm run test` (66 files, 1559 tests) are green.
-`npm run build` is green, including `check:build`. `dist/styles.css` carries the summary,
-`::before` and `[open]` rules.
+`npm run build` is green, including `check:build`. `dist/styles.css` carries the summary rules.
 
 ## Browser evidence
 
@@ -99,8 +98,8 @@ Each of the five stories ran at 1920×1080, 1280×720, 768×720 and 360×720. Th
   in the hidden content.
 - **Long wording:** the long English and German summaries and a 51-character German compound sit
   at full width and in 16rem and 10rem holders. Neither holder nor summary overflows, the summary
-  lies inside its holder, the indicator is painted, and the narrow German summary wraps onto
-  several lines.
+  lies inside its holder, its computed marker matches its state, the marker takes the summary's
+  first inline box, and the narrow German summary wraps onto several lines.
 
 user-event's `tab()` does not count a `summary` as tabbable, and its `click()` focuses `body`. The
 plays therefore assert only what that simulation can show. The runner proves real key presses and
@@ -111,7 +110,7 @@ real clicks.
 | Step | Chromium | Firefox | WebKit |
 | --- | --- | --- | --- |
 | Shift+Tab from the following button reaches the summary with a solid ring, collapsed | ✓ | ✓ | ✓ |
-| Enter opens it: focus stays, the content is 85px, the indicator turns from -45° to 45° | ✓ | ✓ | ✓ |
+| Enter opens it: focus stays, the content is 85px, the marker turns from `disclosure-closed` to `disclosure-open` | ✓ | ✓ | ✓ |
 | Space closes it: the content is 0px and the indicator returns | ✓ | ✓ | ✓ |
 | Tab stops while closed | Filters, After the filters | same | Filters |
 | Tab stops while open | Filters, Name contains, Genre, Minimum quality, After the filters | same | the same, minus the button |
@@ -196,7 +195,7 @@ corrections were made. The *RetainedFieldState* play no longer sleeps for 350ms;
 under the ordinary `waitFor` deadline, for the live subscription to update while the section is
 collapsed. The recipe comment no longer says the indicator's size and gap follow tokens: its
 size and placement follow the summary's type, and only the `--space-stack` part of its gap is a
-token. `npm run build` was green on the reviewed code. An earlier full `npm run test` showed 3
+token (superseded below: the indicator is now the native marker). `npm run build` was green on the reviewed code. An earlier full `npm run test` showed 3
 failures in unrelated FieldRow, MultiSelect and Table specs at load ~25; all 154 tests in those
 files passed when rerun alone. The commit hooks then ran lint, typecheck and all 1559 tests green
 on the corrections. The runner passed all five parts again in Chromium 156, Firefox 153 and
@@ -204,11 +203,42 @@ WebKit 27.2, with geometry matching the table above.
 
 Open, nonblocking:
 
-- The indicator's `0.5em` size, `0.25em` side margins, centring offset and 2px stroke are recipe
-  literals, not named tokens. Checklist's
-  tick and other markers name theirs (ADR 0004's test), but the brief asks for existing tokens.
-  Adding token names is a contract decision that this review leaves to the maintainer.
 - Focus leaves the content on the summary's click. A close that dispatches no click would bypass
   this; no such path is known in the three engines tested.
 - Test-first evidence is the 12/12 red import failure plus the mutation checks above. No
   behaviour-level red was recorded before the component existed.
+
+### Indicator geometry — resolved
+
+The review left one decision open: the hand-drawn `::before` chevron used recipe literals (`0.5em`
+size, `0.25em` margins, a `calc` offset and a 2px stroke). These did not comply.
+[ADR 0004](../adr/0004-typography-token-contract.md) sets the test, "whether the library *sets* the
+property": a value set on an element the consumer cannot reach "needs a name". `renderTokens.ts`
+applies that test to every library-drawn marker. Checklist's `::before` tick gets `--tick-length`
+and `--tick-thickness`; the others are `--step-marker-size`, `--tab-marker-thickness`,
+`--table-selection-marker-thickness`, `--slider-thumb-size`, `--switch-thumb-size` and
+`--choice-marker-size`. The brief allows "existing semantic tokens" only and no new public token.
+
+The chevron is now the native disclosure marker. The recipe drops `list-none`, the WebKit marker
+hiding, the flex row and every `::before` rule. Collapse then sets no property of the indicator,
+so under ADR 0004 "nothing is being fought and a name would be dead weight". The marker takes its
+size from `--text-body` and its colour from `text-foreground` through `currentColor`. No token
+was added.
+
+Test first: the *LongWording* play and the runner now assert `display: list-item` and the
+state's `disclosure-closed`/`disclosure-open` marker. Against the `::before` version they failed
+(`expected 'flex' to be 'list-item'`; keyboard indicator `none`). With the native marker, all five
+parts pass in Chromium 156, Firefox 153 and WebKit 27.2. Every composition, play and
+accessibility record matches the earlier run except the indicator value. The play also asserts
+that the marker is drawn: its `::marker` content is not `none`, and the wording starts after it or
+a line below. Two mutations fail that play in Chromium: `::marker { content: none }`, and a
+zero-size marker. Chromium's native tree
+still names the summary exactly "Filters": the marker adds no text.
+
+The WebKit Tab defect stays avoided because the summary still holds only text; the marker is a
+pseudo-element, not a child. The runner's WebKit keyboard part passes. A plain-markup probe also
+moves Tab into the content after a click on the summary in all three engines.
+
+Two things change visibly. The glyph's exact shape is now each engine's own. In a narrow holder
+the marker sits inline before the wording, so an unbreakable word can wrap below it. No holder or
+summary overflows, and the marker stays visible.

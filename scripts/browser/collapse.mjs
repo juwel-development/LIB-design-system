@@ -88,7 +88,7 @@ const disclosure = () =>
         summary.getBoundingClientRect().height,
       fieldVisible: content.querySelector('input').checkVisibility(),
       ring: getComputedStyle(summary).outlineStyle,
-      indicator: getComputedStyle(summary, '::before').rotate,
+      indicator: getComputedStyle(summary).listStyleType,
     };
   });
 
@@ -104,6 +104,7 @@ const keyboard = async () => {
   record('keyboard reached', reached);
   assert(reached.focused && reached.ring === 'solid' && !reached.open);
   assert.equal(reached.contentHeight, 0);
+  assert.equal(reached.indicator, 'disclosure-closed');
   assert.equal(reached.fieldVisible, false);
   await page.keyboard.press('Enter');
   await settle();
@@ -111,7 +112,7 @@ const keyboard = async () => {
   record('keyboard enter', entered);
   assert(entered.open && entered.focused && entered.fieldVisible);
   assert(entered.contentHeight > 0);
-  assert.notEqual(entered.indicator, reached.indicator, 'indicator turns');
+  assert.equal(entered.indicator, 'disclosure-open', 'indicator turns');
   await page.keyboard.press('Space');
   await settle();
   const spaced = await disclosure();

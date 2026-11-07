@@ -35,7 +35,7 @@ const meta: Meta<typeof Collapse> = {
 
 **Retained content.** Collapsed content takes no height and exposes no accessible content or tab stop, but stays mounted: its nodes, typed values, selections and subscriptions survive, and reopening shows the same content. This differs from Tabs, Stepper and Alternatives, which remove inactive views. Reopening restores no earlier focus; closing while focus is inside the content moves focus to the summary. A browser's find-in-page may open a collapsed section to show a match.
 
-**Layout.** The summary wraps long wording inside its container beside the indicator, and content keeps its own type and control sizes. Collapse adds no bound, scrollport or animation: content grows with its height, and an enclosing layout keeps ownership of overflow. In a Screen's Pane head, expanding re-measures the pane and may trigger Screen's whole-content fallback; collapsing restores the bound (see *Interaction/Collapse Composition*).
+**Layout.** The summary wraps long wording inside its container after the indicator, and content keeps its own type and control sizes. Collapse adds no bound, scrollport or animation: content grows with its height, and an enclosing layout keeps ownership of overflow. In a Screen's Pane head, expanding re-measures the pane and may trigger Screen's whole-content fallback; collapsing restores the bound (see *Interaction/Collapse Composition*).
 
 **Consumer obligations.** Word the summary, including any active-filter count, and keep actions out of it - it is a label and toggle. Whether hidden filter values stay applied is yours. Content inside a collapsed section is still in its form: reveal it before focusing or validating a control in it.`,
       },
@@ -231,7 +231,7 @@ const longWording = {
   word: 'Vertragsverlängerungsbenachrichtigungseinstellungen',
 };
 
-// The summary wraps inside its holder: no text overflows, the indicator stays in view.
+// The summary wraps inside its holder: no text overflows, and the native marker is drawn before it.
 const checkWording = async ({
   canvasElement,
 }: {
@@ -243,13 +243,29 @@ const checkWording = async ({
     if (!summary) throw new Error('No summary');
     const box = holder.getBoundingClientRect();
     const rect = summary.getBoundingClientRect();
-    const indicator = getComputedStyle(summary, '::before');
+    const indicator = getComputedStyle(summary);
     await expect(holder.scrollWidth).toBeLessThanOrEqual(holder.clientWidth);
     await expect(summary.scrollWidth).toBeLessThanOrEqual(summary.clientWidth);
     await expect(rect.left).toBeGreaterThanOrEqual(box.left - 0.5);
     await expect(rect.right).toBeLessThanOrEqual(box.right + 0.5);
-    await expect(indicator.borderRightStyle).toBe('solid');
-    await expect(Number.parseFloat(indicator.width)).toBeGreaterThan(0);
+    await expect(indicator.display).toBe('list-item');
+    await expect(indicator.listStyleType).toBe(
+      summary.parentElement?.hasAttribute('open')
+        ? 'disclosure-open'
+        : 'disclosure-closed',
+    );
+    await expect(getComputedStyle(summary, '::marker').content).not.toBe(
+      'none',
+    );
+    // The marker takes the summary's first inline box: the wording starts after it or a line below.
+    const wording = document.createRange();
+    wording.selectNodeContents(summary);
+    const [first] = wording.getClientRects();
+    const line = Number.parseFloat(indicator.lineHeight);
+    await expect(
+      (first?.left ?? rect.left) > rect.left + 1 ||
+        (first?.top ?? rect.top) > rect.top + line / 2,
+    ).toBe(true);
   }
   // The narrow German summary wraps onto several lines rather than clipping.
   const range = document.createRange();
