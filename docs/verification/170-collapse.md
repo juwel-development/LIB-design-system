@@ -188,3 +188,25 @@ identical to the first measurement. The typed value is kept throughout.
   screen, and filter wording and initial presentation belong to the consumer. Publication, the
   version number and notifying the Label Manager orchestrator are the coordinator's, after review
   and merge.
+
+## Independent review — 2026-11-07
+
+Separate Standards and Spec reviews of `322e898` against the brief found no blocker. Two
+corrections were made. The *RetainedFieldState* play no longer sleeps for 350ms; it now waits,
+under the ordinary `waitFor` deadline, for the live subscription to update while the section is
+collapsed. The recipe comment no longer says the indicator's size follows a token: it follows the
+summary's type, and only its gap is a token. After the corrections, lint, typecheck and
+`npm run build` were green. `npm run test` showed 3 failures in unrelated FieldRow, MultiSelect and
+Table specs at load ~25; all 154 tests in those files passed when rerun alone. The runner passed
+all five parts again in Chromium 156, Firefox 153 and WebKit 27.2, with geometry matching the
+table above.
+
+Open, nonblocking:
+
+- The indicator's `0.5em` size and 2px stroke are recipe literals, not named tokens. Checklist's
+  tick and other markers name theirs (ADR 0004's test), but the brief asks for existing tokens.
+  Adding token names is a contract decision that this review leaves to the maintainer.
+- Focus leaves the content on the summary's click. A close that dispatches no click would bypass
+  this; no such path is known in the three engines tested.
+- Test-first evidence is the 12/12 red import failure plus the mutation checks above. No
+  behaviour-level red was recorded before the component existed.

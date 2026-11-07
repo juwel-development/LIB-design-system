@@ -7,7 +7,7 @@ import {
 } from 'react';
 
 // Native details: closed content keeps its nodes but loses its box, accessibility and tab stops in
-// every engine. The marker is replaced so its size and gap follow tokens rather than each engine.
+// every engine. The marker is replaced so its size follows the summary's type and its gap a token.
 // The summary holds no element: after a click on a summary's child, WebKit 27.2 ignores Tab.
 const collapse = cva([
   'block min-w-0 text-foreground',

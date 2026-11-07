@@ -213,7 +213,7 @@ export const RetainedFieldState: Story = {
     await expect(content?.contains(document.activeElement)).toBe(false);
     const live = canvas.getByTestId('live');
     const before = live.textContent;
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    await waitFor(() => expect(live.textContent).not.toBe(before));
     await userEvent.click(summary);
     await expect(name).not.toHaveFocus();
     await expect(canvas.getByLabelText('Name contains')).toBe(name);
