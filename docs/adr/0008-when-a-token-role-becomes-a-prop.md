@@ -220,6 +220,32 @@ no component ships with it.
 
 ## Amendments
 
+**Optional bottom placement for a Pane foot — approved scope for #168 (2026-11-07).**
+The maintainer accepted an optional arrangement that places the foot at a bounded Pane's physical
+inner bottom, including when the body is short. The existing default remains: short Body content
+keeps its height and Foot follows it, leaving spare height in Root. The new choice governs the
+distribution of spare allocated height, so it is structural under this ADR rather than a choice
+among spacing tokens. The public name and mechanism remain implementation choices within the
+closed component surface.
+
+The trade-off is to add a supported arrangement for a final task action without changing #141's
+accepted default or forcing consumers to fabricate spacer content. Short content must not acquire
+overflow or a keyboard scroll stop merely to position the foot. Long content keeps its one named,
+consumer-selected scroll owner while the foot remains visible. Horizontal grouping and action
+wording stay consumer-owned; the motivating composition must place the final action itself at the
+physical inner bottom-right, not merely align an enclosing footer box.
+
+An unsized Pane still grows with its content. When fixed regions and the usable body minimum no
+longer fit, the existing whole-content fallback and restoration take precedence over anchoring;
+all actions remain reachable. Preserve focus room, reading order, retained element identity and
+#153's unmount/remount policy. No application-specific layout, general positioning API, new spacing
+scale, changed default, or optimization of #167 is authorized.
+
+This is approved scope pending implementation, review and browser verification, not a capability
+already shipped in 4.3.0. Triage confirmed the missing short-body placement through the existing
+public Pane stories at both reference windows. Actual Label Manager fit and adoption remain
+consumer-owned, and adoption requires an identified published release containing the capability.
+
 **ColumnLayout proportional arrangements ([#116](https://github.com/juwel-development/LIB-design-system/issues/116)).**
 The maintainer chose a separate Arrangement with a compound `Root`/`Column` contract rather than
 extending Stack. Each column supplies a positive relative weight and a consumer-defined CSS custom

@@ -263,6 +263,12 @@ explicit: the body either scrolls ordinary content or passes its bound to one ch
 scrolling, such as a bounded Table.
 _Avoid_: Scrolling Box, pinned column, nested panel, master-detail
 
+**Pane foot placement**:
+Where a pane's foot sits relative to spare allocated height: immediately after the body or at the
+physical inner bottom of the bounded enclosure. Placement is independent of body scroll ownership
+and the horizontal arrangement within the foot.
+_Avoid_: Sticky footer, page footer, body fill, spacer
+
 **Stack**:
 A vertical arrangement: children in a column, separated by one named space role and optionally bounded
 by the reading measure. One axis and one gap. It takes no outer space, so whatever holds it owns the
