@@ -35,6 +35,7 @@ export { Prose } from 'Display/Typography/Prose/Prose';
 export { Button } from 'Interaction/Button/Button';
 export { Choices } from 'Interaction/Choices/Choices';
 export { ChoicesCompositionError } from 'Interaction/Choices/ChoicesCompositionError';
+export { Collapse } from 'Interaction/Collapse/Collapse';
 export { Input } from 'Interaction/Input/Input';
 export { Link } from 'Interaction/Link/Link';
 export { MultiSelect } from 'Interaction/MultiSelect/MultiSelect';
