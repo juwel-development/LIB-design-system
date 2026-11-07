@@ -167,7 +167,8 @@ In every case:
   **not** restored (`""`). The remounted pane is at the corner (0).
 - **Alternatives:** after widening to 1920×1080, one arrangement (three columns) is mounted, with
   one Complete. The fixture has a single Complete button wired to one `Subject`. The runner checks
-  for hidden duplicates; it does not count emissions.
+  for hidden duplicates, then presses Complete once: the fixture's `complete$` count rises by
+  exactly 1.
 
 ### Omission baseline — 34/34 identical
 
@@ -220,10 +221,11 @@ that runner (52 each), so those lines are pre-existing.
   gap 0. The consumer theme's type and 1rem region space fit, as the reporter observed. Keeping
   the action on the foot's last line is horizontal composition, which the brief leaves with the
   consumer. The fixture therefore uses the consumer's theme values rather than invented wording.
-- **Anchoring in a stretched, released row.** In Screen fallback, a shorter Pane in a stretched
-  row can still have spare height. A bottom foot then sits at that Pane's bottom. Its content
-  remains reachable in the Shell scroll. No reference or fallback case above produced this, so it
-  is recorded as behaviour, not measured.
+- **No stretched released row.** An earlier draft supposed that a shorter Pane in a stretched,
+  released row could keep spare height. Review measured otherwise: ColumnLayout's row is
+  `items-start`, so in fallback the Release pane (479.5px) sits beside a 564.7px column at its
+  content height. In every fallback case the foot follows the body by exactly the slot gap, and the
+  runner now asserts that (see *Review*).
 
 ## Not verified here
 
@@ -232,4 +234,54 @@ that runner (52 each), so those lines are pre-existing.
   about the reported 389.78 / 416.97 / 27.38px gaps until the consumer measures again.
 - **Consumer adoption** needs a published release containing this change. None exists; nothing
   was pushed, merged or released.
-- **Other browsers:** only Chromium was run. Firefox and WebKit were not.
+- **Other browsers:** only the plays and reference cells ran in Firefox and WebKit (see *Review*).
+  The fallback, lifecycle and baseline parts ran in Chromium only.
+
+## Review
+
+This review was independent: separate Standards and Spec reviewers, on 2026-11-07, against
+merge-base `ddd821c` and the approved brief. The fixes it made:
+
+- **Comfortable cells could pass unasserted.** The reference matrix skipped every assertion for a
+  comfortable cell that was released. No cell was released (all four comfortable cells were
+  bounded at 0 / 0), but the skip could hide a regression. It is removed.
+- **Fallback precedence is asserted.** Every fallback case now asserts that the foot follows the
+  body by the slot gap (±1px), so the anchor yields wherever there is no spare height. All 14
+  cases measured 4 / 4. This assertion was not shown red, because no supported composition
+  produces the failing state.
+- **Emissions are counted.** The Release planning holder exposes its `complete$` count as
+  `data-completions`. One press after the Alternatives switch emits 1.
+- **Fixture provenance.** `planningTheme` reproduces the consumer's own values from
+  `packages/theme/theme.css` on Label Manager `feature/ticket-311`: type, `--space-region: 1rem`,
+  `--space-band` and the 24rem minima. The story now cites that file. The theme's fonts are macOS
+  system fonts, so the 0 / 0 corner result depends on those metrics. With default tokens the German
+  foot wraps (see *Findings*). Pane's `@CallerMustEnsure` now says that a wrapped foot keeps the
+  bottom but loses the right edge.
+- **Docs.** The *Layout/Pane* description names the option. The Pane recipe comment no longer
+  repeats the guarantees.
+
+These were reproduced independently, at load 9–15:
+
+- **Chromium.** `npm run build` passed. The full runner on Storybook port 6268, with
+  `FOOT_PLACEMENT_BASELINE` built from `ddd821c`, passed twice: before and after the fixes.
+  - Baseline: 34/34 identical.
+  - The stylesheet diff against `ddd821c` is the single `.mt-auto{margin-top:auto}` rule.
+- **Firefox 153 (firefox-1538) and WebKit 27.2 (webkit-2336).** The engines were launched through
+  `executablePath` from a scratch script, at both reference windows.
+  - The six FootAtBottom plays: no AssertionError.
+  - The four Release planning plays: no AssertionError; corner gap 0 / 0.
+  - The default-placement story: 461.15px (Firefox) and 461.64px (WebKit) at 1920×1080.
+  - WebKit fails the existing `LongBody` play, at both windows: `expected 0 to be greater than 0`.
+    That story and its CSS are unchanged by this branch, since only the unused `.mt-auto` rule was
+    added. It is recorded as a pre-existing WebKit observation, not investigated here.
+- **Dialog (scratch probe, not acceptance evidence).** The probe opened the four BoundedSummary
+  stories at 1920×1080, 1280×720, 1280×400 and 800×320. It set the summary Pane's foot to
+  `margin-top: auto`, the declaration `placement="bottom"` applies, and compared every rectangle in
+  the dialog: 0 changed, including Dialog's whole-task fallback. No library story renders a bottom
+  foot inside a Dialog.
+
+Still open after review:
+
+- Actual Label Manager verification and adoption remain consumer-owned and need a published release.
+- The fallback, lifecycle and baseline parts are Chromium only.
+

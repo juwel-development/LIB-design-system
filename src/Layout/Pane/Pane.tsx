@@ -16,8 +16,7 @@ const pane = cva([
   '[[data-screen-spacing=compact]_&:not(dialog_*)]:p-[max(var(--space-pane-inset-compact),calc(var(--focus-ring-width)+var(--focus-ring-offset)))]',
 ]);
 const paneSection = cva('min-w-0 shrink-0');
-// The auto margin takes only spare allocated height: Body keeps its content height and gains no
-// overflow, and with no spare height (overflow, content height, fallback) it resolves to zero.
+// The auto margin takes only spare allocated height, so it resolves to zero wherever there is none.
 const paneFoot = cva('min-w-0 shrink-0', {
   variants: { placement: { 'after-body': '', bottom: 'mt-auto' } },
   defaultVariants: { placement: 'after-body' },
@@ -316,7 +315,8 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  *   Do not nest panes. The consumer owns all wording, facts, actions and internal arrangement.
  * - Foot placement positions Foot's box only. For the final action itself to meet the inner
  *   bottom-right corner, compose it as the foot's last and lowest box, such as the Button ending
- *   a Cluster justify="between" whose groups stay on one line at the supported widths.
+ *   a Cluster justify="between" whose groups stay on one line at the supported widths. If the
+ *   foot wraps, the action's line still meets the bottom but no longer the right edge.
  * - Supply a finite parent height to bound a pane, and enough room for Head, Foot, inset and gaps.
  *   At smaller sizes use an unsized stacked arrangement in a scrolling page or Shell body.
  * - In child mode supply one child that accepts its parent's allocated height and handles its

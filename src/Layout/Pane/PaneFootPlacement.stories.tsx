@@ -58,8 +58,9 @@ type Language = 'en' | 'de';
 type Placement = 'after-body' | 'bottom';
 type Spacing = 'comfortable' | 'compact';
 
-// The reporting consumer's theme: its 24rem work-area minimum, type and region space. With the
-// default tokens the German foot needs 489px of a 488px foot at 1920x1080, so its Cluster wraps.
+// The reporting consumer's theme (g-label-manager packages/theme/theme.css on feature/ticket-311):
+// its 24rem work-area minimum, type and region space. With the default tokens the German foot
+// needs 489px of a 488px foot at 1920x1080, so its Cluster wraps.
 const planningTheme = {
   '--planning-area-min-width': '24rem',
   '--space-band': '1.5rem',
@@ -185,8 +186,13 @@ const ReleasePlanning: FunctionComponent<{
     title$: new Subject<string>(),
     complete$: new Subject<void>(),
   }));
+  // Counted so the browser runner can prove one press emits exactly once.
+  const [completions, setCompletions] = useState(0);
   useEffect(() => {
     const subscription = channels.select$.subscribe(setActive);
+    subscription.add(
+      channels.complete$.subscribe(() => setCompletions((count) => count + 1)),
+    );
     return () => subscription.unsubscribe();
   }, [channels]);
   const [lead, second, third] = text.recordings;
@@ -318,7 +324,7 @@ const ReleasePlanning: FunctionComponent<{
     </ColumnLayout.Column>
   );
   return (
-    <div style={planningTheme}>
+    <div style={planningTheme} data-completions={completions}>
       <Shell
         testId="shell"
         ariaLabel={text.body}

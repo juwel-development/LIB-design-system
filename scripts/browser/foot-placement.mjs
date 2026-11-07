@@ -258,7 +258,6 @@ const matrix = async () => {
             result.document[2] <= width,
           `${label}: no document scrolling`,
         );
-        if (spacing === 'comfortable' && result.released) continue;
         assert(!result.released, `${label}: bounded`);
         assert(result.shell[0] <= result.shell[1] + 1, `${label}: Shell still`);
         assert.deepEqual(result.hidden, [], `${label}: every fact in view`);
@@ -381,6 +380,12 @@ const fallback = async () => {
       // otherwise the content has been released to the enclosing scroll.
       if (result.shell[0] <= result.shell[1] + 1)
         assert(result.pane.actionVisible, `${label}: foot in view`);
+      // Every case here is released, stacked or overflowing: none leaves spare height, so the
+      // anchor yields to the fallback and the foot follows the body by the slot gap.
+      assert(
+        Math.abs(result.pane.bodyToFoot - result.pane.slotGap) <= 1,
+        `${label}: foot follows the body`,
+      );
       await resize(...room);
       const restored = await measure();
       record(`${label} restored`, restored);
@@ -469,7 +474,21 @@ const lifecycle = async () => {
   const wide = await measure();
   assert.equal(wide.arrangement, 'three columns');
   assert.equal(wide.completes, 1);
-  record('alternatives', { arrangement: wide.arrangement, completes: 1 });
+  // One press of the one mounted Complete emits exactly once.
+  const completions = () =>
+    page.evaluate(() =>
+      Number(document.querySelector('[data-completions]').dataset.completions),
+    );
+  const pressed = await completions();
+  await page.getByRole('button', { name: words.de.complete }).click();
+  await settle();
+  const emitted = (await completions()) - pressed;
+  record('alternatives', {
+    arrangement: wide.arrangement,
+    completes: 1,
+    emitted,
+  });
+  assert.equal(emitted, 1, 'One press emits once');
 };
 
 const baseline = async (dist) => {
