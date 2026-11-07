@@ -1,3 +1,4 @@
+import type { IPaneFootProps } from 'Layout/Pane/Pane';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Button,
@@ -47,7 +48,9 @@ Precedence: placement only distributes spare height. An unsized or stacked pane 
 
 The placement positions the foot's box. For the action itself to meet the corner, compose the foot so the action is its lowest, last box - for example a \`Cluster justify="between"\` with a one-line heading and count group first and the Button last, as below. The consumer owns the foot's wording, grouping and action behavior.
 
-The Release planning stories are a **representative reconstruction** of the Label Manager composition reported in issue #168 - Shell, Sidebar fill, Screen, ColumnLayout.Alternatives with three columns or filling Tabs beside the Sides - built from this library's components with that application's English and German wording. They are not the application's screen and do not establish that it fits; \`scripts/browser/foot-placement.mjs\` records their geometry at 1920×1080 and 1280×720, narrower widths and short heights. Use *Foot at bottom* and *Compact spacing* in the bar to switch either treatment on the mounted screen.`,
+The Release planning stories are a **representative reconstruction** of the Label Manager composition reported in issue #168 - Shell, Sidebar fill, Screen, ColumnLayout.Alternatives with three columns or filling Tabs beside the Sides - built from this library's components with that application's English and German wording. They are not the application's screen and do not establish that it fits; \`scripts/browser/foot-placement.mjs\` records their geometry at 1920×1080 and 1280×720, narrower widths and short heights.
+
+Theme prerequisite: the holder applies that application's theme values - its 24rem work-area minimum, \`--space-region: 1rem\` and its type scale and families. The bottom edge does not depend on them: the action meets the inner bottom at both reference windows under every theme measured. The right edge does. With the library's default type scale the German foot no longer fits one line, its Cluster wraps and Complete starts the second line at the left (about 250-285px from the right edge). With that application's type scale, the foot fits in every measured family (Avenir Next/Georgia, Trebuchet MS/Times New Roman, generic sans-serif/serif). Whether the consumer's own screen fits is for the consumer to measure. Use *Foot at bottom* and *Compact spacing* in the bar to switch either treatment on the mounted screen.`,
       },
     },
   },
@@ -55,7 +58,7 @@ The Release planning stories are a **representative reconstruction** of the Labe
 export default meta;
 type Story = StoryObj<typeof meta>;
 type Language = 'en' | 'de';
-type Placement = 'after-body' | 'bottom';
+type Placement = NonNullable<IPaneFootProps['placement']>;
 type Spacing = 'comfortable' | 'compact';
 
 // The reporting consumer's theme (g-label-manager packages/theme/theme.css on feature/ticket-311):
@@ -156,7 +159,7 @@ const copy = {
   },
 };
 
-const Switch: FunctionComponent<{
+const PressedToggle: FunctionComponent<{
   isPressed: boolean;
   onToggle: () => void;
   children: string;
@@ -333,7 +336,7 @@ const ReleasePlanning: FunctionComponent<{
             status={text.workspace}
             action={
               <Cluster gap="stack">
-                <Switch
+                <PressedToggle
                   isPressed={placement === 'bottom'}
                   onToggle={() =>
                     setPlacement(
@@ -342,8 +345,8 @@ const ReleasePlanning: FunctionComponent<{
                   }
                 >
                   Foot at bottom
-                </Switch>
-                <Switch
+                </PressedToggle>
+                <PressedToggle
                   isPressed={spacing === 'compact'}
                   onToggle={() =>
                     setSpacing(
@@ -352,7 +355,7 @@ const ReleasePlanning: FunctionComponent<{
                   }
                 >
                   Compact spacing
-                </Switch>
+                </PressedToggle>
               </Cluster>
             }
           />
@@ -427,7 +430,9 @@ const checkComplete = async ({
   const tab = canvas.queryByRole('tab', { name: /Release$/ });
   if (tab) tab.click();
   const action = await canvas.findByTestId('release-complete');
+  await expect(canvas.getAllByTestId('release-complete')).toHaveLength(1);
   const root = canvas.getByTestId('release-pane');
+  // The corner holds only while Screen keeps its bound; the runner asserts that bound per size.
   if (root.hasAttribute('data-screen-unusable')) return;
   const style = getComputedStyle(root);
   const box = root.getBoundingClientRect();
@@ -449,7 +454,6 @@ const checkComplete = async ({
         rect.right,
     ),
   ).toBeLessThanOrEqual(1);
-  await expect(canvas.getAllByTestId('release-complete')).toHaveLength(1);
 };
 
 /** Release planning (#168), compact spacing, foot at the bottom. */

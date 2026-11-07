@@ -4,16 +4,18 @@ import { readFileSync, realpathSync } from 'node:fs';
 import { createRequire } from 'node:module';
 
 // SCREEN_STORYBOOK_URL=http://localhost:6168 npm exec --yes --package=playwright@1.64.1 -- node scripts/browser/foot-placement.mjs
-// Optional FOOT_PLACEMENT_PART=plays|matrix|fallback|lifecycle|baseline runs one part.
+// Optional FOOT_PLACEMENT_PART=plays|matrix|fallback|lifecycle|dialog|baseline runs one part.
+// FOOT_PLACEMENT_ENGINE=firefox|webkit runs another engine; FOOT_PLACEMENT_EXECUTABLE names a build.
 // FOOT_PLACEMENT_BASELINE=<dir> names the dist folder built from the base revision; the baseline
 // part then proves an omitted placement lays out every element exactly as before.
 const executable = realpathSync(
   execFileSync('which', ['playwright'], { encoding: 'utf8' }).trim(),
 );
-const { chromium } = createRequire(executable)('playwright');
-// Scrollbars stay visible: Playwright hides them by default, which hides width feedback.
-const browser = await chromium.launch({
-  ignoreDefaultArgs: ['--hide-scrollbars'],
+const engine = process.env.FOOT_PLACEMENT_ENGINE ?? 'chromium';
+// Scrollbars stay visible: Playwright hides them in Chromium by default, which hides width feedback.
+const browser = await createRequire(executable)('playwright')[engine].launch({
+  executablePath: process.env.FOOT_PLACEMENT_EXECUTABLE,
+  ignoreDefaultArgs: engine === 'chromium' ? ['--hide-scrollbars'] : [],
 });
 const page = await browser.newPage();
 const base = process.env.SCREEN_STORYBOOK_URL ?? 'http://localhost:6168';
@@ -112,6 +114,9 @@ const plays = async () => {
       'layout-pane-foot-placement--release-planning-german',
       'layout-pane-foot-placement--release-planning-comfortable',
       'layout-pane-foot-placement--release-planning-comfortable-german',
+      'layout-dialog--bounded-summary-foot-at-bottom',
+      'layout-dialog--bounded-summary-short-foot-at-bottom',
+      'layout-dialog--bounded-summary-screen-short-foot-at-bottom',
     ]) {
       const before = failures.length;
       await resize(width, height);
@@ -491,6 +496,85 @@ const lifecycle = async () => {
   assert.equal(emitted, 1, 'One press emits once');
 };
 
+// The summary pane in a Dialog: a content-extent dialog has no spare height, so a bottom foot lays
+// out exactly as the default; a screen-tall one anchors it until Dialog's whole-task fallback.
+const summary = () =>
+  page.evaluate(() => {
+    const dialog = document.querySelector('dialog[open]');
+    const pane = document.querySelector('[data-testid="summary-pane"]');
+    const foot = document.querySelector('[data-testid="summary-foot"]');
+    const style = getComputedStyle(pane);
+    return {
+      dialog: [dialog.scrollHeight, dialog.clientHeight],
+      bodyToFoot:
+        foot.getBoundingClientRect().top -
+        pane.firstElementChild.getBoundingClientRect().bottom,
+      slotGap: Number.parseFloat(style.rowGap),
+      layout: [...dialog.querySelectorAll('*')].map((element) => {
+        const box = element.getBoundingClientRect();
+        return [box.left, box.top, box.width, box.height]
+          .map((value) => Math.round(value * 100) / 100)
+          .join(' ');
+      }),
+    };
+  });
+const dialog = async () => {
+  for (const [width, height] of [...REFERENCE, [1280, 300]])
+    for (const [story, original] of [
+      ['bounded-summary-foot-at-bottom', 'bounded-summary'],
+      ['bounded-summary-short-foot-at-bottom', 'bounded-summary-short'],
+    ]) {
+      await resize(width, height);
+      await open(`layout-dialog--${original}`);
+      await page.getByRole('button', { name: 'Review recordings' }).click();
+      await settle();
+      const before = await summary();
+      await open(`layout-dialog--${story}`);
+      const after = await summary();
+      const label = `dialog ${story} ${width}x${height}`;
+      record(label, { elements: after.layout.length, dialog: after.dialog });
+      assert.deepEqual(after.layout, before.layout, `${label}: as default`);
+    }
+  await resize(1280, 720);
+  await open('layout-dialog--bounded-summary-screen-short-foot-at-bottom');
+  await page.evaluate(() => {
+    window.retained = document.querySelector('[data-testid="summary-foot"]');
+  });
+  const anchored = await summary();
+  await resize(1280, 300);
+  const released = await summary();
+  const confirm = page.getByRole('button', { name: 'Leave Medium' });
+  await confirm.focus();
+  const revealed = await confirm.evaluate((button) => {
+    const box = button.getBoundingClientRect();
+    const clip = button.closest('dialog').getBoundingClientRect();
+    return box.top >= clip.top - 0.5 && box.bottom <= clip.bottom + 0.5;
+  });
+  await resize(1280, 720);
+  const restored = await summary();
+  const same = await page.evaluate(
+    () =>
+      window.retained ===
+      document.querySelector('[data-testid="summary-foot"]'),
+  );
+  record('dialog screen extent short', {
+    bodyToFoot: [anchored, released, restored].map((item) => item.bodyToFoot),
+    released: released.dialog,
+    revealed,
+    same,
+  });
+  assert(anchored.bodyToFoot > anchored.slotGap + 1, 'Anchored when bounded');
+  assert(released.dialog[0] > released.dialog[1], 'Whole dialog scrolls');
+  assert(
+    Math.abs(released.bodyToFoot - released.slotGap) <= 1,
+    'The anchor yields to the dialog fallback',
+  );
+  assert(revealed, 'Focus reveals the final action inside the dialog');
+  assert(restored.bodyToFoot > restored.slotGap + 1, 'Anchored again');
+  assert(restored.dialog[0] <= restored.dialog[1] + 1, 'Dialog still again');
+  assert(same, 'Same foot node after restoration');
+};
+
 const baseline = async (dist) => {
   const layout = () =>
     page.evaluate(() =>
@@ -534,11 +618,12 @@ const baseline = async (dist) => {
 };
 
 try {
-  record('runtime', { chromium: browser.version(), storybook: base });
+  record('runtime', { [engine]: browser.version(), storybook: base });
   if (!part || part === 'plays') await plays();
   if (!part || part === 'matrix') await matrix();
   if (!part || part === 'fallback') await fallback();
   if (!part || part === 'lifecycle') await lifecycle();
+  if (!part || part === 'dialog') await dialog();
   const dist = process.env.FOOT_PLACEMENT_BASELINE;
   if (dist && (!part || part === 'baseline')) await baseline(dist);
   assert.deepEqual(failures, [], 'No page or console errors');

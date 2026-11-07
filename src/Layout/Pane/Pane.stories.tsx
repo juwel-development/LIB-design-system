@@ -228,6 +228,31 @@ export const DynamicContent: Story = {
   },
 };
 
+const RosterTable = () => (
+  <Table.Root
+    bounded
+    caption="Artist roster"
+    columns={[{ weight: 2 }, { weight: 1 }]}
+  >
+    <Table.Head>
+      <Table.Row>
+        <Table.HeaderCell scope="col">Artist</Table.HeaderCell>
+        <Table.HeaderCell scope="col">Action</Table.HeaderCell>
+      </Table.Row>
+    </Table.Head>
+    <Table.Body>
+      {entries.map((entry) => (
+        <Table.Row key={entry}>
+          <Table.HeaderCell scope="row">Artist {entry}</Table.HeaderCell>
+          <Table.Cell>
+            <Button variant="plain">Open artist {entry}</Button>
+          </Table.Cell>
+        </Table.Row>
+      ))}
+    </Table.Body>
+  </Table.Root>
+);
+
 const RosterPane = () => (
   <Pane.Root name="Roster pane">
     <Pane.Head>
@@ -238,28 +263,7 @@ const RosterPane = () => (
       ariaLabel="Unused body name"
       testId="table-body"
     >
-      <Table.Root
-        bounded
-        caption="Artist roster"
-        columns={[{ weight: 2 }, { weight: 1 }]}
-      >
-        <Table.Head>
-          <Table.Row>
-            <Table.HeaderCell scope="col">Artist</Table.HeaderCell>
-            <Table.HeaderCell scope="col">Action</Table.HeaderCell>
-          </Table.Row>
-        </Table.Head>
-        <Table.Body>
-          {entries.map((entry) => (
-            <Table.Row key={entry}>
-              <Table.HeaderCell scope="row">Artist {entry}</Table.HeaderCell>
-              <Table.Cell>
-                <Button variant="plain">Open artist {entry}</Button>
-              </Table.Cell>
-            </Table.Row>
-          ))}
-        </Table.Body>
-      </Table.Root>
+      <RosterTable />
     </Pane.Body>
     <Pane.Foot>
       <Button>Confirm roster</Button>
@@ -590,26 +594,7 @@ export const FootAtBottomBoundedTable: Story = {
           ariaLabel="Unused body name"
           testId="table-body"
         >
-          <Table.Root bounded caption="Artist roster">
-            <Table.Head>
-              <Table.Row>
-                <Table.HeaderCell scope="col">Artist</Table.HeaderCell>
-                <Table.HeaderCell scope="col">Action</Table.HeaderCell>
-              </Table.Row>
-            </Table.Head>
-            <Table.Body>
-              {entries.map((entry) => (
-                <Table.Row key={entry}>
-                  <Table.HeaderCell scope="row">
-                    Artist {entry}
-                  </Table.HeaderCell>
-                  <Table.Cell>
-                    <Button variant="plain">Open artist {entry}</Button>
-                  </Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Root>
+          <RosterTable />
         </Pane.Body>
         <ActionFoot />
       </Pane.Root>

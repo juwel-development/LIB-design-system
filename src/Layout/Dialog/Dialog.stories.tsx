@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { Subject, type Subscription } from 'rxjs';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Dialog } from './Dialog';
 
 const meta: Meta<typeof Dialog.Root> = {
@@ -403,10 +404,12 @@ const BoundedSummaryExample = ({
   language = 'en',
   extent = 'content',
   initialCount = 33,
+  placement,
 }: {
   language?: 'en' | 'de';
   extent?: 'content' | 'screen';
   initialCount?: number;
+  placement?: 'bottom';
 }) => {
   const [locale, setLocale] = useState(language);
   const [count, setCount] = useState(initialCount);
@@ -493,7 +496,7 @@ const BoundedSummaryExample = ({
                 </Table.Body>
               </Table.Root>
             </Pane.Body>
-            <Pane.Foot>
+            <Pane.Foot placement={placement} testId="summary-foot">
               <P color="warning">
                 {count === 33 ? copy.warning : `${count} recordings`}
               </P>
@@ -535,6 +538,62 @@ export const BoundedSummaryShort: Story = {
 };
 export const BoundedSummaryEmpty: Story = {
   render: () => <BoundedSummaryExample initialCount={0} />,
+};
+
+// Dialog keeps its fallback ownership: a bottom foot takes only spare height inside the pane. A
+// content-extent dialog has none, so the foot still follows the body by the slot gap.
+const checkSummaryFootAtBottom =
+  (spare: boolean) =>
+  async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Review recordings' }),
+    );
+    const dialog = await canvas.findByRole('dialog');
+    await waitFor(() => expect(dialog).toBeVisible());
+    const pane = canvas.getByTestId('summary-pane');
+    const style = getComputedStyle(pane);
+    const innerBottom =
+      pane.getBoundingClientRect().bottom -
+      Number.parseFloat(style.borderBottomWidth) -
+      Number.parseFloat(style.paddingBottom);
+    const foot = canvas.getByTestId('summary-foot').getBoundingClientRect();
+    await expect(Math.abs(foot.bottom - innerBottom)).toBeLessThanOrEqual(1);
+    const bodyToFoot =
+      foot.top - (pane.firstElementChild?.getBoundingClientRect().bottom ?? 0);
+    const slotGap = Number.parseFloat(style.rowGap);
+    if (spare) await expect(bodyToFoot).toBeGreaterThan(slotGap + 1);
+    else await expect(Math.abs(bodyToFoot - slotGap)).toBeLessThanOrEqual(1);
+    const box = dialog.getBoundingClientRect();
+    for (const name of ['Cancel', 'Leave Medium']) {
+      const action = within(dialog)
+        .getByRole('button', { name })
+        .getBoundingClientRect();
+      await expect(action.bottom).toBeLessThanOrEqual(box.bottom + 1);
+    }
+  };
+
+/** Foot placement="bottom" in the bounded summary: Table alone scrolls, the summary stays fixed. */
+export const BoundedSummaryFootAtBottom: Story = {
+  render: () => <BoundedSummaryExample placement="bottom" />,
+  play: checkSummaryFootAtBottom(false),
+};
+/** Short content keeps the content-extent dialog's natural height; there is no spare height. */
+export const BoundedSummaryShortFootAtBottom: Story = {
+  render: () => <BoundedSummaryExample initialCount={2} placement="bottom" />,
+  play: checkSummaryFootAtBottom(false),
+};
+/** Screen extent with short content: the screen-tall dialog's spare height sits above the foot.
+ *  At insufficient height the whole dialog scrolls and the foot follows the table again. */
+export const BoundedSummaryScreenShortFootAtBottom: Story = {
+  render: () => (
+    <BoundedSummaryExample
+      extent="screen"
+      initialCount={2}
+      placement="bottom"
+    />
+  ),
+  play: checkSummaryFootAtBottom(true),
 };
 
 const ReplacementExample = () => {

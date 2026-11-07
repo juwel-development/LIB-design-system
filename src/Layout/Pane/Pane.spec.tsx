@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { Button, Pane, Screen, Table } from 'index';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { IPaneFootProps } from './Pane';
 
 describe('Pane', () => {
   afterEach(() => vi.restoreAllMocks());
@@ -339,7 +340,7 @@ describe('Pane', () => {
     expect(explicit).toBe(omitted);
   });
   it('keeps the foot, a typed value, its selection and focus when the placement switches', () => {
-    const pane = (placement: 'after-body' | 'bottom') => (
+    const pane = (placement: IPaneFootProps['placement']) => (
       <Pane.Root name="Release">
         <Pane.Head>
           <input aria-label="Release title" defaultValue="" />

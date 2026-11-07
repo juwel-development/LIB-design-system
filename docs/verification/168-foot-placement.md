@@ -71,7 +71,7 @@ no mocked geometry. The host was shared with other worktrees (load 15–35).
 "Corner gap" is Root's rectangle minus its computed bottom/right border and padding, minus the
 action Button's rectangle. 0 = the Button's own box is at the inner corner.
 
-### Plays — 32/32 pass
+### Plays — 38/38 pass (Chromium)
 
 Each story was run at 1920×1080 and 1280×720:
 
@@ -79,7 +79,8 @@ Each story was run at 1920×1080 and 1280×720:
   unsized);
 - the six existing Pane stories (short, long, child-owned, stacked, bounded Table and stepped
   bounded Table);
-- the four Release planning plays.
+- the four Release planning plays;
+- the three bottom-placement Dialog BoundedSummary plays, added in review (see *Review*).
 
 The new plays cover these points:
 
@@ -215,12 +216,23 @@ that runner (52 each), so those lines are pre-existing.
 
 ## Findings
 
-- **Default tokens wrap the German foot.** With the library's default type and `--space-region`,
-  the German foot needs 489px while the 1920×1080 three-column Release foot is 488px wide. The
-  Cluster then wraps, and Complete moves to a second line at the left: right gap 284.19px, bottom
-  gap 0. The consumer theme's type and 1rem region space fit, as the reporter observed. Keeping
-  the action on the foot's last line is horizontal composition, which the brief leaves with the
-  consumer. The fixture therefore uses the consumer's theme values rather than invented wording.
+- **The right edge depends on the theme's type scale.** Measured in Chromium at both reference
+  windows, in the four Release planning stories, with the theme overridden on the holder:
+
+  | Holder theme | Bottom gap | Right gap |
+  | --- | --- | --- |
+  | Consumer (`planningTheme`) | 0 everywhere | 0 everywhere |
+  | Consumer type scale with generic `serif`/`sans-serif` families | 0 everywhere | 0 everywhere |
+  | Consumer type scale with Times New Roman/Trebuchet MS | 0 everywhere | 0 everywhere |
+  | Library type scale and space, 24rem minima | 0 everywhere | German wraps: 284.19 / 270.19 (compact), 268.19 / 246 (comfortable) |
+  | Library type scale, `--space-region: 1rem`, 24rem minima | 0 everywhere | German wraps: 278.92 at 1280×720 compact, 276.19 / 254.73 comfortable |
+
+  With the library's type scale the German foot needs 489px of a 488px foot at 1920×1080. The
+  Cluster wraps and Complete starts the second line at the left. The bottom gap is the placement's
+  guarantee and holds under every theme. The right edge is horizontal composition, which the brief
+  leaves with the consumer, and Pane's `@CallerMustEnsure` states it. The fixture therefore uses
+  the consumer's own theme values (see *Review*). With the library type scale, comfortable spacing
+  at 1280×720 also releases Screen's bound. Corner results here are not a claim for other themes.
 - **No stretched released row.** An earlier draft supposed that a shorter Pane in a stretched,
   released row could keep spare height. Review measured otherwise: ColumnLayout's row is
   `items-start`, so in fallback the Release pane (479.5px) sits beside a 564.7px column at its
@@ -231,57 +243,95 @@ that runner (52 each), so those lines are pre-existing.
 
 - **Fixture versus consumer:** the reference matrix is a representative reconstruction. It is not
   the Label Manager screen, its data or its translations pipeline. Its corner gaps say nothing
-  about the reported 389.78 / 416.97 / 27.38px gaps until the consumer measures again.
+  about the reported 389.78 / 416.97 / 27.38px gaps until the consumer measures again. A consumer
+  can measure this candidate before a release by linking a local build. Supported adoption still
+  needs a published release containing it.
 - **Consumer adoption** needs a published release containing this change. None exists; nothing
   was pushed, merged or released.
-- **Other browsers:** only the plays and reference cells ran in Firefox and WebKit (see *Review*).
-  The fallback, lifecycle and baseline parts ran in Chromium only.
+- **Firefox and WebKit** are older cached builds (firefox-1538, webkit-2336), not the revisions
+  Playwright 1.64.1 pins. The omission baseline ran in Chromium only.
 
 ## Review
 
-This review was independent: separate Standards and Spec reviewers, on 2026-11-07, against
-merge-base `ddd821c` and the approved brief. The fixes it made:
+### First pass
+
+Separate Standards and Spec reviewers, on 2026-11-07, against merge-base `ddd821c` and the approved
+brief. The fixes it made:
 
 - **Comfortable cells could pass unasserted.** The reference matrix skipped every assertion for a
   comfortable cell that was released. No cell was released (all four comfortable cells were
   bounded at 0 / 0), but the skip could hide a regression. It is removed.
 - **Fallback precedence is asserted.** Every fallback case now asserts that the foot follows the
   body by the slot gap (±1px), so the anchor yields wherever there is no spare height. All 14
-  cases measured 4 / 4. This assertion was not shown red, because no supported composition
-  produces the failing state.
+  cases measured 4 / 4.
 - **Emissions are counted.** The Release planning holder exposes its `complete$` count as
   `data-completions`. One press after the Alternatives switch emits 1.
 - **Fixture provenance.** `planningTheme` reproduces the consumer's own values from
-  `packages/theme/theme.css` on Label Manager `feature/ticket-311`: type, `--space-region: 1rem`,
-  `--space-band` and the 24rem minima. The story now cites that file. The theme's fonts are macOS
-  system fonts, so the 0 / 0 corner result depends on those metrics. With default tokens the German
-  foot wraps (see *Findings*). Pane's `@CallerMustEnsure` now says that a wrapped foot keeps the
-  bottom but loses the right edge.
-- **Docs.** The *Layout/Pane* description names the option. The Pane recipe comment no longer
+  `packages/theme/theme.css` on Label Manager `feature/ticket-311`: type scale and families,
+  `--space-region: 1rem`, `--space-band` and the 24rem minima. The story cites that file.
+- **Docs.** Pane's `@CallerMustEnsure` says that a wrapped foot keeps the bottom but loses the right
+  edge. The *Layout/Pane* description names the option, and the Pane recipe comment no longer
   repeats the guarantees.
 
-These were reproduced independently, at load 9–15:
+### Second pass
 
-- **Chromium.** `npm run build` passed. The full runner on Storybook port 6268, with
-  `FOOT_PLACEMENT_BASELINE` built from `ddd821c`, passed twice: before and after the fixes.
-  - Baseline: 34/34 identical.
-  - The stylesheet diff against `ddd821c` is the single `.mt-auto{margin-top:auto}` rule.
-- **Firefox 153 (firefox-1538) and WebKit 27.2 (webkit-2336).** The engines were launched through
-  `executablePath` from a scratch script, at both reference windows.
-  - The six FootAtBottom plays: no AssertionError.
-  - The four Release planning plays: no AssertionError; corner gap 0 / 0.
-  - The default-placement story: 461.15px (Firefox) and 461.64px (WebKit) at 1920×1080.
-  - WebKit fails the existing `LongBody` play, at both windows: `expected 0 to be greater than 0`.
-    That story and its CSS are unchanged by this branch, since only the unused `.mt-auto` rule was
-    added. It is recorded as a pre-existing WebKit observation, not investigated here.
-- **Dialog (scratch probe, not acceptance evidence).** The probe opened the four BoundedSummary
-  stories at 1920×1080, 1280×720, 1280×400 and 800×320. It set the summary Pane's foot to
-  `margin-top: auto`, the declaration `placement="bottom"` applies, and compared every rectangle in
-  the dialog: 0 changed, including Dialog's whole-task fallback. No library story renders a bottom
-  foot inside a Dialog.
+- **Dialog story and check.** `BoundedSummaryFootAtBottom`, `BoundedSummaryShortFootAtBottom` and
+  `BoundedSummaryScreenShortFootAtBottom` render the summary Pane with `placement="bottom"`. Their
+  plays assert three things: the summary meets the pane's inner bottom, the body-to-foot distance
+  (the slot gap in a content-extent dialog, more in a screen-tall one), and Cancel and Leave Medium
+  inside the dialog. The runner's new `dialog` part runs at 1920×1080, 1280×720 and 1280×300:
+  - **Content extent:** every rectangle in the dialog is identical to the default-placement story
+    (118 and 25 elements), including Dialog's whole-task fallback.
+  - **Screen extent, short:** the body-to-foot distance is 202.56 → 8 → 202.56px across the resize
+    (bounded, whole-dialog scroll 477/252, restored). Focus reveals Leave Medium inside the dialog,
+    and the foot is the same node after restoration.
+- **Fallback assertion sensitivity (controlled negative).** A scratch copy of the runner injected
+  `[data-testid="release-pane"][data-screen-unusable]{min-height:700px}` after each shrink. That
+  gives a released pane spare height, which the bottom anchor then takes. The run failed with
+  `fallback en 1280x320: foot follows the body`. The control removed the anchor
+  (`[data-testid="release-foot"]{margin-top:0!important}`) on top of the same rule. Removing the
+  style before restoration, the whole fallback part passed. The committed runner, its deadlines and
+  its assertions are unchanged by the experiment.
+- **Cross-engine.** The runner gained `FOOT_PLACEMENT_ENGINE` and `FOOT_PLACEMENT_EXECUTABLE`. Each
+  part ran in Firefox 153 and WebKit 27.2. Where a part stopped early, a scratch copy with
+  non-throwing assertions classified every failure.
+  - **Firefox:** plays, matrix, lifecycle and dialog pass. Fallback fails only *every stop
+    revealed*, at 6–9 of 14 cases depending on the run (for example en 800×720: a Tabs panel and
+    *Remove Night Shift*). With the anchor removed, the same failures occur at the same or higher
+    frequency over three runs each. They are not caused by the placement. The fixture does not exist
+    on `ddd821c`, so this is a candidate-revision control, not a base run.
+  - **WebKit:** matrix, lifecycle and dialog pass every geometry, identity, emission and #153
+    assertion. Fallback fails only *Complete reachable by keyboard* (WebKit's Tab skips buttons by
+    default) and *every stop revealed* at 1280×320. That set of 16 failures is identical with the
+    anchor removed. Every corner, restoration, same-node and foot-follows assertion passes.
+  - **WebKit `ResizeObserver loop completed with undelivered notifications`** arrives as a page
+    error: 4 in matrix, 2 in lifecycle and 7 in fallback, in two runs each. The counts are identical
+    with the anchor removed.
+  - **WebKit Pane plays:** the existing `LongBody`, `ChildOwnedScroll` and `Stacked` plays fail with
+    `expected 0 to be greater than 0` at both reference windows. They fail identically on a
+    Storybook built from `ddd821c` (port 6269), so the failure is pre-existing. `BoundedTable`,
+    `SteppedBoundedTable` and every new play pass on both.
+- **Standards resolutions.**
+  - The bounded roster table is one `RosterTable` in *Layout/Pane*.
+  - The fixture's toggle is `PressedToggle`, not a second `Switch`.
+  - The fixture and spec derive `Placement` from `IPaneFootProps`.
+  - The Release planning play checks the single Complete before its bound guard.
+  - testing.md states the runner tier the repository already uses: no browser in the suite or
+    hooks; plays plus hand-run `scripts/browser` runners recorded here.
+- **Retained, with reason.**
+  - `IPaneFootProps` redeclares `placement` as `VariantProps<typeof paneFoot>['placement']`. The
+    vocabulary is still derived once from the recipe (design-system-components.md, *Props are
+    derived, then intersected*). The redeclaration only carries the prop's TSDoc, which coding.md
+    keeps as API documentation. ColumnLayout, Choices, Tabs and Sidebar do the same.
+  - The inner-corner arithmetic remains in each story file and in the runner. Stories are
+    colocated per component (architecture.md, coding.md), and no shared story module exists. A
+    helper beside the source would ship in the package's `src`. The runner's copy runs in
+    `page.evaluate` and cannot import.
+  - The Release planning composition is not shared with *Layout/Screen Console Spacing*. That would
+    need the same cross-file module and an unrelated edit to #158's stories.
 
-Still open after review:
+Reproduced at load 8–15: the full Chromium runner with baseline (38 plays, 34/34 identical), plus
+`dialog.mjs` and `roster.mjs` on the final tree.
 
-- Actual Label Manager verification and adoption remain consumer-owned and need a published release.
-- The fallback, lifecycle and baseline parts are Chromium only.
-
+Still open: actual Label Manager verification and adoption remain consumer-owned, and supported
+adoption needs a published release.

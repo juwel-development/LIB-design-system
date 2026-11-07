@@ -23,8 +23,12 @@ Vitest with `jsdom` and `globals: true`, `@testing-library/react` for rendering,
 | `npm run test` | The suite, once. |
 | `npm run test:coverage` | The same, with v8 coverage over `src`, excluding stories and specs. |
 
-There is **no browser-driver level here**. This package ships primitives, not flows; a real
-end-to-end test belongs in the application that consumes it.
+There is **no browser-driver level in the suite**: neither `npm run test` nor the hooks launch a
+browser. This package ships primitives, not flows; a real end-to-end test belongs in the application
+that consumes it. Layout the suite cannot see is proven by a story's `play`, with measured geometry.
+A browser acceptance runner, `scripts/browser/<feature>.mjs`, drives those stories through
+`npm exec --package=playwright@<version>`. It adds no dependency, runs by hand against a Storybook,
+and its results are recorded in `docs/verification/`.
 
 ## Location and naming
 
