@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Button,
+  Cluster,
   ColumnLayout,
   H2,
+  H3,
   Header,
   P,
   Pane,
@@ -420,5 +422,245 @@ export const SteppedBoundedTable: Story = {
     await userEvent.keyboard('{ArrowLeft}');
     await canvas.findByRole('table', { name: 'Artist roster' });
     await checkBoundedTable(context);
+  },
+};
+
+const ActionFoot = () => (
+  <Pane.Foot placement="bottom" testId="foot">
+    <Cluster gap="stack" justify="between">
+      <Cluster gap="stack">
+        <H3>Rules</H3>
+        <P>4 of 6 rules met</P>
+      </Cluster>
+      <Button>Complete the release</Button>
+    </Cluster>
+  </Pane.Foot>
+);
+
+// The action's own box, not only Foot's, meets Root's border-and-inset-free inner corner.
+const checkActionAtBottom = async (canvasElement: HTMLElement) => {
+  const canvas = within(canvasElement);
+  const root = await canvas.findByRole('group', { name: 'Release' });
+  const action = canvas
+    .getByRole('button', { name: 'Complete the release' })
+    .getBoundingClientRect();
+  const style = getComputedStyle(root);
+  const box = root.getBoundingClientRect();
+  const length = (value: string) => Number.parseFloat(value);
+  const innerBottom =
+    box.bottom - length(style.borderBottomWidth) - length(style.paddingBottom);
+  const innerRight =
+    box.right - length(style.borderRightWidth) - length(style.paddingRight);
+  await expect(Math.abs(action.bottom - innerBottom)).toBeLessThanOrEqual(1);
+  await expect(Math.abs(action.right - innerRight)).toBeLessThanOrEqual(1);
+  await expect(canvasElement.ownerDocument.scrollingElement?.scrollTop).toBe(0);
+  await expect(
+    canvasElement.ownerDocument.documentElement.scrollHeight,
+  ).toBeLessThanOrEqual(window.innerHeight);
+};
+
+const checkShortAtBottom = async ({
+  canvasElement,
+}: {
+  canvasElement: HTMLElement;
+}) => {
+  await checkActionAtBottom(canvasElement);
+  const canvas = within(canvasElement);
+  const body = canvas.getByTestId('body');
+  await expect(canvas.queryByRole('group', { name: 'Rules' })).toBeNull();
+  await expect(body).not.toHaveAttribute('tabindex');
+  await expect(body.scrollHeight).toBeLessThanOrEqual(body.clientHeight);
+  await expect(
+    canvas.getByTestId('foot').getBoundingClientRect().top -
+      body.getBoundingClientRect().bottom,
+  ).toBeGreaterThan(
+    Number.parseFloat(
+      getComputedStyle(canvas.getByRole('group', { name: 'Release' })).rowGap,
+    ),
+  );
+};
+
+export const FootAtBottom: Story = {
+  render: () => (
+    <Shell bar={bar} ariaLabel="Workspace body">
+      <Pane.Root name="Release">
+        <Pane.Head>
+          <H2>The Release</H2>
+        </Pane.Head>
+        <Pane.Body ariaLabel="Rules" testId="body">
+          <P>One rule is checked.</P>
+        </Pane.Body>
+        <ActionFoot />
+      </Pane.Root>
+    </Shell>
+  ),
+  play: checkShortAtBottom,
+};
+
+export const FootAtBottomEmptyBody: Story = {
+  render: () => (
+    <Shell bar={bar} ariaLabel="Workspace body">
+      <Pane.Root name="Release">
+        <Pane.Head>
+          <H2>The Release</H2>
+        </Pane.Head>
+        <Pane.Body ariaLabel="Rules" testId="body" />
+        <ActionFoot />
+      </Pane.Root>
+    </Shell>
+  ),
+  play: checkShortAtBottom,
+};
+
+const checkLongAtBottom = async ({
+  canvasElement,
+}: {
+  canvasElement: HTMLElement;
+}) => {
+  await checkActionAtBottom(canvasElement);
+  const canvas = within(canvasElement);
+  await expect(canvas.getAllByRole('group')).toHaveLength(2);
+  const action = canvas.getByRole('button', { name: 'Complete the release' });
+  const top = action.getBoundingClientRect().top;
+  canvas.getByRole('button', { name: 'Entry 60' }).focus();
+  await expect(action.getBoundingClientRect().top).toBe(top);
+  await checkActionAtBottom(canvasElement);
+};
+
+export const FootAtBottomLongBody: Story = {
+  render: () => (
+    <Shell bar={bar} ariaLabel="Workspace body">
+      <Pane.Root name="Release">
+        <Pane.Head>
+          <H2>Available entries</H2>
+        </Pane.Head>
+        <Pane.Body ariaLabel="Entries">
+          <Entries />
+        </Pane.Body>
+        <ActionFoot />
+      </Pane.Root>
+    </Shell>
+  ),
+  play: async (context) => {
+    await checkLongAtBottom(context);
+    const body = within(context.canvasElement).getByRole('group', {
+      name: 'Entries',
+    });
+    await expect(body).toHaveAttribute('tabindex', '0');
+    await expect(body.scrollTop).toBeGreaterThan(0);
+  },
+};
+
+export const FootAtBottomChildOwned: Story = {
+  render: () => (
+    <Shell bar={bar} ariaLabel="Workspace body">
+      <Pane.Root name="Release">
+        <Pane.Head>
+          <H2>Available entries</H2>
+        </Pane.Head>
+        <Pane.Body scrollOwner="child" ariaLabel="Unused" testId="body">
+          <ScrollContainer ariaLabel="Entries" axis="vertical">
+            <Entries />
+          </ScrollContainer>
+        </Pane.Body>
+        <ActionFoot />
+      </Pane.Root>
+    </Shell>
+  ),
+  play: async (context) => {
+    await checkLongAtBottom(context);
+    const canvas = within(context.canvasElement);
+    await expect(canvas.queryByRole('group', { name: 'Unused' })).toBeNull();
+    await expect(canvas.getByTestId('body')).not.toHaveAttribute('tabindex');
+    await expect(
+      canvas.getByRole('group', { name: 'Entries' }).scrollTop,
+    ).toBeGreaterThan(0);
+  },
+};
+
+export const FootAtBottomBoundedTable: Story = {
+  render: () => (
+    <Shell bar={bar} ariaLabel="Workspace body">
+      <Pane.Root name="Release">
+        <Pane.Head>
+          <H2>Available artists</H2>
+        </Pane.Head>
+        <Pane.Body
+          scrollOwner="child"
+          ariaLabel="Unused body name"
+          testId="table-body"
+        >
+          <Table.Root bounded caption="Artist roster">
+            <Table.Head>
+              <Table.Row>
+                <Table.HeaderCell scope="col">Artist</Table.HeaderCell>
+                <Table.HeaderCell scope="col">Action</Table.HeaderCell>
+              </Table.Row>
+            </Table.Head>
+            <Table.Body>
+              {entries.map((entry) => (
+                <Table.Row key={entry}>
+                  <Table.HeaderCell scope="row">
+                    Artist {entry}
+                  </Table.HeaderCell>
+                  <Table.Cell>
+                    <Button variant="plain">Open artist {entry}</Button>
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table.Root>
+        </Pane.Body>
+        <ActionFoot />
+      </Pane.Root>
+    </Shell>
+  ),
+  play: async ({ canvasElement }) => {
+    await checkActionAtBottom(canvasElement);
+    const canvas = within(canvasElement);
+    const wrapper = canvas.getByRole('group', { name: 'Artist roster' });
+    const header = canvas.getByRole('columnheader', { name: 'Artist' });
+    const last = canvas.getByRole('button', { name: 'Open artist 60' });
+    last.focus();
+    await waitFor(() => expect(wrapper.scrollTop).toBeGreaterThan(0));
+    await expect(last.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      header.getBoundingClientRect().bottom,
+    );
+    await expect(header.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      wrapper.getBoundingClientRect().top,
+    );
+    await expect(
+      canvas.queryByRole('group', { name: 'Unused body name' }),
+    ).toBeNull();
+    await checkActionAtBottom(canvasElement);
+  },
+};
+
+export const FootAtBottomUnsized: Story = {
+  render: () => (
+    <Shell mode="page" bar={bar} ariaLabel="Workspace body">
+      <Stack>
+        <Pane.Root name="Release">
+          <Pane.Body ariaLabel="Rules" testId="body">
+            <P>One rule is checked.</P>
+          </Pane.Body>
+          <ActionFoot />
+        </Pane.Root>
+        <P>Content after the pane.</P>
+      </Stack>
+    </Shell>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const root = await canvas.findByRole('group', { name: 'Release' });
+    const body = canvas.getByTestId('body').getBoundingClientRect();
+    const foot = canvas.getByTestId('foot').getBoundingClientRect();
+    await expect(foot.top - body.bottom).toBeCloseTo(
+      Number.parseFloat(getComputedStyle(root).rowGap),
+      0,
+    );
+    await expect(
+      canvas.getByText('Content after the pane.').getBoundingClientRect().top,
+    ).toBeLessThan(window.innerHeight / 2);
   },
 };

@@ -16,6 +16,12 @@ const pane = cva([
   '[[data-screen-spacing=compact]_&:not(dialog_*)]:p-[max(var(--space-pane-inset-compact),calc(var(--focus-ring-width)+var(--focus-ring-offset)))]',
 ]);
 const paneSection = cva('min-w-0 shrink-0');
+// The auto margin takes only spare allocated height: Body keeps its content height and gains no
+// overflow, and with no spare height (overflow, content height, fallback) it resolves to zero.
+const paneFoot = cva('min-w-0 shrink-0', {
+  variants: { placement: { 'after-body': '', bottom: 'mt-auto' } },
+  defaultVariants: { placement: 'after-body' },
+});
 const paneBody = cva('min-h-0 min-w-0 flex-[0_1_auto]', {
   variants: {
     scrollOwner: {
@@ -74,6 +80,15 @@ export interface IPaneRootProps {
 }
 export interface IPaneSectionProps {
   children?: ReactNode;
+  testId?: string;
+}
+export interface IPaneFootProps extends VariantProps<typeof paneFoot> {
+  children?: ReactNode;
+  /**
+   * `after-body` (the default) follows the body, leaving spare height in Root. `bottom` places
+   * the foot at Root's physical inner bottom whenever Root has spare allocated height.
+   */
+  placement?: VariantProps<typeof paneFoot>['placement'];
   testId?: string;
 }
 export interface IPaneBodyProps extends VariantProps<typeof paneBody> {
@@ -234,8 +249,12 @@ const Head: FunctionComponent<IPaneSectionProps> = ({ children, testId }) => (
     {children}
   </div>
 );
-const Foot: FunctionComponent<IPaneSectionProps> = ({ children, testId }) => (
-  <div className={paneSection()} data-testid={testId}>
+const Foot: FunctionComponent<IPaneFootProps> = ({
+  children,
+  placement,
+  testId,
+}) => (
+  <div className={paneFoot({ placement })} data-testid={testId}>
     {children}
   </div>
 );
@@ -274,6 +293,12 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  *   parent height it grows with content; a stacked parent or enclosing body owns scrolling.
  * - Head and Foot never shrink. Body scrolls both axes as needed and short content does not
  *   stretch: Foot follows it, with any unused height left in Root rather than inside Body.
+ * - Foot placement="bottom" moves that unused height above Foot instead, so Foot's bottom edge
+ *   meets Root's inner bottom. Body still keeps its content height, gains no overflow, group or
+ *   keyboard stop, and scrolls exactly as before once it overflows. Without spare height - an
+ *   unsized Root, an overflowing Body, a content-height Dialog or Screen's whole-content
+ *   fallback - it has no effect: those fallbacks take precedence and decide as before.
+ *   Switching it keeps every node, focus, value and selection.
  * - Root paints surface, foreground, border and box inset, square and without elevation.
  *   The stack space role separates slots; a non-empty name exposes a group, never a landmark.
  *   Inside a Screen with spacing="compact", outside a Dialog, the inset and slot gaps follow
@@ -289,6 +314,9 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  * @CallerMustEnsure
  * - Compose at most one Head, Body and Foot, in that order, directly inside Root; all are optional.
  *   Do not nest panes. The consumer owns all wording, facts, actions and internal arrangement.
+ * - Foot placement positions Foot's box only. For the final action itself to meet the inner
+ *   bottom-right corner, compose it as the foot's last and lowest box, such as the Button ending
+ *   a Cluster justify="between" whose groups stay on one line at the supported widths.
  * - Supply a finite parent height to bound a pane, and enough room for Head, Foot, inset and gaps.
  *   At smaller sizes use an unsized stacked arrangement in a scrolling page or Shell body.
  * - In child mode supply one child that accepts its parent's allocated height and handles its

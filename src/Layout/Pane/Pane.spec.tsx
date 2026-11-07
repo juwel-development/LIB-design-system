@@ -323,4 +323,87 @@ describe('Pane', () => {
       'data-screen-unusable',
     );
   });
+
+  it('renders an omitted foot placement exactly as the after-body default', () => {
+    const pane = (placement?: 'after-body') => (
+      <Pane.Root name="Release">
+        <Pane.Head>Facts</Pane.Head>
+        <Pane.Body ariaLabel="Rules">One rule</Pane.Body>
+        <Pane.Foot placement={placement}>
+          <button type="button">Complete</button>
+        </Pane.Foot>
+      </Pane.Root>
+    );
+    const omitted = render(pane()).container.innerHTML;
+    const explicit = render(pane('after-body')).container.innerHTML;
+    expect(explicit).toBe(omitted);
+  });
+  it('keeps the foot, a typed value, its selection and focus when the placement switches', () => {
+    const pane = (placement: 'after-body' | 'bottom') => (
+      <Pane.Root name="Release">
+        <Pane.Head>
+          <input aria-label="Release title" defaultValue="" />
+        </Pane.Head>
+        <Pane.Body ariaLabel="Rules">One rule</Pane.Body>
+        <Pane.Foot placement={placement} testId="foot">
+          <button type="button">Complete</button>
+        </Pane.Foot>
+      </Pane.Root>
+    );
+    const { rerender } = render(pane('after-body'));
+    const foot = screen.getByTestId('foot');
+    const input = screen.getByRole<HTMLInputElement>('textbox');
+    fireEvent.input(input, { target: { value: 'Night Drive' } });
+    input.focus();
+    input.setSelectionRange(2, 6);
+    for (const placement of ['bottom', 'after-body', 'bottom'] as const) {
+      rerender(pane(placement));
+      expect(screen.getByTestId('foot')).toBe(foot);
+      expect(screen.getByRole('textbox')).toBe(input);
+      expect(input).toHaveFocus();
+      expect(input).toHaveValue('Night Drive');
+      expect([input.selectionStart, input.selectionEnd]).toEqual([2, 6]);
+    }
+  });
+  it('keeps a short body inert when the foot sits at the bottom', () => {
+    render(
+      <Pane.Root testId="pane">
+        <Pane.Body ariaLabel="Rules" testId="body">
+          One rule
+        </Pane.Body>
+        <Pane.Foot placement="bottom">
+          <button type="button">Complete</button>
+        </Pane.Foot>
+      </Pane.Root>,
+    );
+    expect(screen.queryByRole('group')).not.toBeInTheDocument();
+    expect(screen.getByTestId('body')).not.toHaveAttribute('tabindex');
+    expect(screen.getByTestId('pane')).toHaveTextContent('One ruleComplete');
+  });
+  it('keeps one named stop for an overflowing body when the foot sits at the bottom', () => {
+    vi.spyOn(Element.prototype, 'clientHeight', 'get').mockReturnValue(200);
+    vi.spyOn(Element.prototype, 'scrollHeight', 'get').mockReturnValue(800);
+    render(
+      <Pane.Root>
+        <Pane.Body ariaLabel="Rules">Long content</Pane.Body>
+        <Pane.Foot placement="bottom">Act</Pane.Foot>
+      </Pane.Root>,
+    );
+    expect(screen.getByRole('group', { name: 'Rules' })).toHaveAttribute(
+      'tabindex',
+      '0',
+    );
+    expect(screen.getAllByRole('group')).toHaveLength(1);
+  });
+  it('offers foot placement only as a closed choice', () => {
+    render(
+      <Pane.Root>
+        {/* @ts-expect-error placement is a closed choice, not a CSS value */}
+        <Pane.Foot placement="flex-end">Act</Pane.Foot>
+        {/* @ts-expect-error Head has no placement */}
+        <Pane.Head placement="bottom">Facts</Pane.Head>
+      </Pane.Root>,
+    );
+    expect(screen.getByText('Act')).toBeInTheDocument();
+  });
 });
