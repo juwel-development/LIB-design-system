@@ -1,3 +1,10 @@
+# [4.4.0](https://github.com/juwel-development/LIB-design-system/compare/v4.3.0...v4.4.0) (2026-11-07)
+
+
+### Features
+
+* **pane:** add optional bottom placement for the foot ([#168](https://github.com/juwel-development/LIB-design-system/issues/168)) ([f15dd23](https://github.com/juwel-development/LIB-design-system/commit/f15dd232b49520a1829d0fa75b5e008f49188a93))
+
 # [4.3.0](https://github.com/juwel-development/LIB-design-system/compare/v4.2.1...v4.3.0) (2026-11-06)
 
 
