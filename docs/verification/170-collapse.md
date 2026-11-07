@@ -194,16 +194,18 @@ identical to the first measurement. The typed value is kept throughout.
 Separate Standards and Spec reviews of `322e898` against the brief found no blocker. Two
 corrections were made. The *RetainedFieldState* play no longer sleeps for 350ms; it now waits,
 under the ordinary `waitFor` deadline, for the live subscription to update while the section is
-collapsed. The recipe comment no longer says the indicator's size follows a token: it follows the
-summary's type, and only its gap is a token. After the corrections, lint, typecheck and
-`npm run build` were green. `npm run test` showed 3 failures in unrelated FieldRow, MultiSelect and
-Table specs at load ~25; all 154 tests in those files passed when rerun alone. The runner passed
-all five parts again in Chromium 156, Firefox 153 and WebKit 27.2, with geometry matching the
-table above.
+collapsed. The recipe comment no longer says the indicator's size and gap follow tokens: its
+size and placement follow the summary's type, and only the `--space-stack` part of its gap is a
+token. `npm run build` was green on the reviewed code. An earlier full `npm run test` showed 3
+failures in unrelated FieldRow, MultiSelect and Table specs at load ~25; all 154 tests in those
+files passed when rerun alone. The commit hooks then ran lint, typecheck and all 1559 tests green
+on the corrections. The runner passed all five parts again in Chromium 156, Firefox 153 and
+WebKit 27.2, with geometry matching the table above.
 
 Open, nonblocking:
 
-- The indicator's `0.5em` size and 2px stroke are recipe literals, not named tokens. Checklist's
+- The indicator's `0.5em` size, `0.25em` side margins, centring offset and 2px stroke are recipe
+  literals, not named tokens. Checklist's
   tick and other markers name theirs (ADR 0004's test), but the brief asks for existing tokens.
   Adding token names is a contract decision that this review leaves to the maintainer.
 - Focus leaves the content on the summary's click. A close that dispatches no click would bypass
