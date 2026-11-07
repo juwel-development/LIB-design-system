@@ -301,12 +301,13 @@ brief. The fixes it made:
     revealed*, at 6–9 of 14 cases depending on the run (for example en 800×720: a Tabs panel and
     *Remove Night Shift*). With the anchor removed, the same failures occur at the same or higher
     frequency over three runs each, so the placement does not cause them. The fixture does not exist
-    on `ddd821c`. The runner's own walk was therefore run, from a scratch script, on #158's
+    on `ddd821c`. One run of the runner's walk, from an uncommitted scratch script, covered #158's
     *Layout/Screen Console Spacing* Release planning stories at the same seven sizes. It ran on a
-    Storybook built from `ddd821c` and on this branch. Both show the same Firefox reveal misses:
-    English *Placed recordings* at 1280×480, and *Complete release* / *Veröffentlichung abschließen*
-    at 1920×360. That makes them pre-existing Firefox behaviour of the library's composition, not
-    of #168. They are not investigated here.
+    Storybook built from `ddd821c` and on this branch. Both had Firefox reveal misses: English
+    *Placed recordings* at 1280×480, and *Complete release* / *Veröffentlichung abschließen* at
+    1920×360. Those are different stops and sizes from this fixture's misses, so they show that
+    Firefox reveal misses already exist on `ddd821c` in a sibling composition. They do not prove
+    that this fixture's own misses are pre-existing. None of them is investigated here.
   - **WebKit:** matrix, lifecycle and dialog pass every geometry, identity, emission and #153
     assertion. Fallback fails only *Complete reachable by keyboard* (WebKit's Tab skips buttons by
     default) and *every stop revealed* at 1280×320. That set of 16 failures is identical with the
