@@ -1,3 +1,16 @@
+# [4.5.0](https://github.com/juwel-development/LIB-design-system/compare/v4.4.0...v4.5.0) (2026-11-07)
+
+
+### Bug Fixes
+
+* **collapse:** use the native disclosure marker as the indicator ([#170](https://github.com/juwel-development/LIB-design-system/issues/170)) ([2829d09](https://github.com/juwel-development/LIB-design-system/commit/2829d09eea4e1adab42f768184135198c0dae8dd))
+* **collapse:** wait for the live update instead of sleeping ([#170](https://github.com/juwel-development/LIB-design-system/issues/170)) ([c4f4319](https://github.com/juwel-development/LIB-design-system/commit/c4f43195dff6b6b02cd007f05391d8b70dabb1cb))
+
+
+### Features
+
+* **collapse:** add a named disclosure for retained content ([#170](https://github.com/juwel-development/LIB-design-system/issues/170)) ([322e898](https://github.com/juwel-development/LIB-design-system/commit/322e898b45f1a117bfcb36e83a1af26311d4cb12))
+
 # [4.4.0](https://github.com/juwel-development/LIB-design-system/compare/v4.3.0...v4.4.0) (2026-11-07)
 
 
