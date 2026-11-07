@@ -451,6 +451,12 @@ The corner treatment of a Dialog's floating surface, independent of a control's 
 extents share it, while other structure remains square.
 _Avoid_: Structure radius, modal radius, radius size
 
+**Collapse**:
+A named disclosure whose summary remains visible while its content is expanded or collapsed by
+the user. Collapsing conceals content without discarding its current state; the consumer owns the
+content, summary wording and any meaning of the hidden content.
+_Avoid_: Accordion group, filter panel, modal, removed view
+
 **Dismissal**:
 The user's departure from a Dialog without completing its task, whether through an explicit control,
 Escape or the Scrim. It ends the presentation but remains distinct from programmatic hiding and is
