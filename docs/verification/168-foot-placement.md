@@ -279,12 +279,14 @@ brief. The fixes it made:
   `BoundedSummaryScreenShortFootAtBottom` render the summary Pane with `placement="bottom"`. Their
   plays assert three things: the summary meets the pane's inner bottom, the body-to-foot distance
   (the slot gap in a content-extent dialog, more in a screen-tall one), and Cancel and Leave Medium
-  inside the dialog. The runner's new `dialog` part runs at 1920×1080, 1280×720 and 1280×300:
+  within the dialog's top and bottom edges.
+  The runner's new `dialog` part runs at 1920×1080, 1280×720 and 1280×300:
   - **Content extent:** every rectangle in the dialog is identical to the default-placement story
     (118 and 25 elements), including Dialog's whole-task fallback.
   - **Screen extent, short:** the body-to-foot distance is 202.56 → 8 → 202.56px across the resize
-    (bounded, whole-dialog scroll 477/252, restored). Focus reveals Leave Medium inside the dialog,
-    and the foot is the same node after restoration.
+    (bounded, whole-dialog scroll 477/252, restored), and the foot meets the inner bottom (0 / 0 /
+    0). Focus reveals Leave Medium inside the dialog, and the foot is the same node after
+    restoration. This case runs only at 1280×720 ↔ 1280×300.
 - **Fallback assertion sensitivity (controlled negative).** A scratch copy of the runner injected
   `[data-testid="release-pane"][data-screen-unusable]{min-height:700px}` after each shrink. That
   gives a released pane spare height, which the bottom anchor then takes. The run failed with
@@ -298,8 +300,13 @@ brief. The fixes it made:
   - **Firefox:** plays, matrix, lifecycle and dialog pass. Fallback fails only *every stop
     revealed*, at 6–9 of 14 cases depending on the run (for example en 800×720: a Tabs panel and
     *Remove Night Shift*). With the anchor removed, the same failures occur at the same or higher
-    frequency over three runs each. They are not caused by the placement. The fixture does not exist
-    on `ddd821c`, so this is a candidate-revision control, not a base run.
+    frequency over three runs each, so the placement does not cause them. The fixture does not exist
+    on `ddd821c`. The runner's own walk was therefore run, from a scratch script, on #158's
+    *Layout/Screen Console Spacing* Release planning stories at the same seven sizes. It ran on a
+    Storybook built from `ddd821c` and on this branch. Both show the same Firefox reveal misses:
+    English *Placed recordings* at 1280×480, and *Complete release* / *Veröffentlichung abschließen*
+    at 1920×360. That makes them pre-existing Firefox behaviour of the library's composition, not
+    of #168. They are not investigated here.
   - **WebKit:** matrix, lifecycle and dialog pass every geometry, identity, emission and #153
     assertion. Fallback fails only *Complete reachable by keyboard* (WebKit's Tab skips buttons by
     default) and *every stop revealed* at 1280×320. That set of 16 failures is identical with the
@@ -317,7 +324,8 @@ brief. The fixes it made:
   - The fixture and spec derive `Placement` from `IPaneFootProps`.
   - The Release planning play checks the single Complete before its bound guard.
   - testing.md states the runner tier the repository already uses: no browser in the suite or
-    hooks; plays plus hand-run `scripts/browser` runners recorded here.
+    hooks; plays plus hand-run `scripts/browser` runners recorded here. This is a standards-doc
+    edit and needs the maintainer's acceptance when landing.
 - **Retained, with reason.**
   - `IPaneFootProps` redeclares `placement` as `VariantProps<typeof paneFoot>['placement']`. The
     vocabulary is still derived once from the recipe (design-system-components.md, *Props are
@@ -329,6 +337,16 @@ brief. The fixes it made:
     `page.evaluate` and cannot import.
   - The Release planning composition is not shared with *Layout/Screen Console Spacing*. That would
     need the same cross-file module and an unrelated edit to #158's stories.
+
+Independent Standards and Spec reviewers assessed `acf8bf8`. Neither found a blocker. The follow-up
+commit applies their judgement fixes:
+
+- the Dialog play takes a named `hasSpareHeight` and throws if the pane has no body;
+- the actions' top edges are checked;
+- the restoration re-measures the inner bottom;
+- the runner uses named scroll fields;
+- the theme measurements moved from the story docs to this note;
+- testing.md no longer implies every runner pins a version.
 
 Reproduced at load 8–15: the full Chromium runner with baseline (38 plays, 34/34 identical), plus
 `dialog.mjs` and `roster.mjs` on the final tree.

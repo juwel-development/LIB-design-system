@@ -505,11 +505,16 @@ const summary = () =>
     const foot = document.querySelector('[data-testid="summary-foot"]');
     const style = getComputedStyle(pane);
     return {
-      dialog: [dialog.scrollHeight, dialog.clientHeight],
+      dialog: { scroll: dialog.scrollHeight, client: dialog.clientHeight },
       bodyToFoot:
         foot.getBoundingClientRect().top -
         pane.firstElementChild.getBoundingClientRect().bottom,
       slotGap: Number.parseFloat(style.rowGap),
+      footToInnerBottom:
+        pane.getBoundingClientRect().bottom -
+        Number.parseFloat(style.borderBottomWidth) -
+        Number.parseFloat(style.paddingBottom) -
+        foot.getBoundingClientRect().bottom,
       layout: [...dialog.querySelectorAll('*')].map((element) => {
         const box = element.getBoundingClientRect();
         return [box.left, box.top, box.width, box.height]
@@ -545,34 +550,48 @@ const dialog = async () => {
   const released = await summary();
   const confirm = page.getByRole('button', { name: 'Leave Medium' });
   await confirm.focus();
-  const revealed = await confirm.evaluate((button) => {
+  const actionRevealed = await confirm.evaluate((button) => {
     const box = button.getBoundingClientRect();
     const clip = button.closest('dialog').getBoundingClientRect();
     return box.top >= clip.top - 0.5 && box.bottom <= clip.bottom + 0.5;
   });
   await resize(1280, 720);
   const restored = await summary();
-  const same = await page.evaluate(
+  const sameFoot = await page.evaluate(
     () =>
       window.retained ===
       document.querySelector('[data-testid="summary-foot"]'),
   );
   record('dialog screen extent short', {
     bodyToFoot: [anchored, released, restored].map((item) => item.bodyToFoot),
+    footToInnerBottom: [anchored, released, restored].map(
+      (item) => item.footToInnerBottom,
+    ),
     released: released.dialog,
-    revealed,
-    same,
+    actionRevealed,
+    sameFoot,
   });
   assert(anchored.bodyToFoot > anchored.slotGap + 1, 'Anchored when bounded');
-  assert(released.dialog[0] > released.dialog[1], 'Whole dialog scrolls');
+  assert(
+    released.dialog.scroll > released.dialog.client,
+    'Whole dialog scrolls',
+  );
   assert(
     Math.abs(released.bodyToFoot - released.slotGap) <= 1,
     'The anchor yields to the dialog fallback',
   );
-  assert(revealed, 'Focus reveals the final action inside the dialog');
+  assert(actionRevealed, 'Focus reveals the final action inside the dialog');
   assert(restored.bodyToFoot > restored.slotGap + 1, 'Anchored again');
-  assert(restored.dialog[0] <= restored.dialog[1] + 1, 'Dialog still again');
-  assert(same, 'Same foot node after restoration');
+  assert(
+    restored.dialog.scroll <= restored.dialog.client + 1,
+    'Dialog still again',
+  );
+  assert(sameFoot, 'Same foot node after restoration');
+  for (const item of [anchored, released, restored])
+    assert(
+      Math.abs(item.footToInnerBottom) <= 1,
+      'Foot meets the inner bottom',
+    );
 };
 
 const baseline = async (dist) => {
