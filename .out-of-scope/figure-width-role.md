@@ -1,7 +1,12 @@
 # Figure width role — bounding an image frame from inside the component
 
-`Figure` names no width role and takes no `width` prop. Its image frame fills whatever container it
-is placed in, and how wide that container is belongs to the page, not to the component. There is no
+> **Narrowed for artwork presentation by #172 (2026-11-15).** The maintainer approved a
+> consumer-supplied size token for an opt-in, uncropped artwork presentation. See the amendment below.
+
+The rejected proposal added a selectable display-width role to `Figure`. Its default image frame
+fills whatever container it is placed in, and how wide that container is belongs to the page,
+not to the component. The existing numeric `width` prop describes the source's intrinsic width,
+not a display-width role. There is no
 `--figure-width-column`, no `width?: 'column' | 'full'`, and no `max-width` anywhere in the recipe.
 
 ## Why this is out of scope
@@ -70,3 +75,20 @@ that ever becomes a role, it is likelier to be a page-level one than a `Figure` 
 
 - [#85](https://github.com/juwel-development/LIB-design-system/issues/85) — "Figure: no width bound
   and no overlay seam, so consumers rebuild it" (the width half only; the overlay half stayed open)
+
+## Amendment — consumer-owned artwork size (#172)
+
+For [#172](https://github.com/juwel-development/LIB-design-system/issues/172), the maintainer chose:
+"dont make it specific - instead allow the consumer to pass a size token". The earlier proposal to
+name library-owned inline, participant and profile sizes is superseded.
+
+The accepted capability is a generic opt-in artwork presentation that preserves the complete
+transparent artboard, uses contain fitting and takes one consumer-declared size token for its square
+display box. The consumer owns the token name and value. The motivating consumer needs 32px, 64px
+and 128px, but those are consumer fixtures, not library presets or a closed set of permitted sizes.
+
+This deliberately revises the earlier refusal for this presentation only. It does not establish a
+general-purpose width/max-width prop on the default Figure, accept raw lengths or CSS expressions
+as prop values, or introduce a library size ladder. The token-reference contract follows existing
+consumer-owned layout-token interfaces. See ADR 0008's #172 amendment for the decision boundary.
+This is accepted scope pending implementation and release, not a shipped capability.

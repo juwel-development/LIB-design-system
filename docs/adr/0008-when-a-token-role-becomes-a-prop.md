@@ -654,3 +654,28 @@ longer waits for publication. Publication still follows through the normal relea
 release that first contains the treatment is recorded when it is published. Until then no version
 is claimed to contain it. The obligations on residual fit stay: verified fit, measured residual
 overflow and unreproduced consumer cases are reported separately and tracked in linked issues.
+
+**Consumer-owned artwork size — maintainer decision for #172 (2026-11-15).**
+The maintainer accepted a transparent, uncropped artwork presentation and explicitly directed:
+"dont make it specific - instead allow the consumer to pass a size token". This supersedes the
+triage proposal for library-owned inline, participant and profile sizes. The 32px, 64px and 128px
+placements in the motivating consumer are examples to verify, not a library size vocabulary.
+
+Figure gains an opt-in artwork presentation whose square display extent is selected by a
+consumer-declared CSS custom property name. The consumer owns the token name and its positive
+definite length; the library owns resolving it as both display dimensions, preserving the full
+transparent artboard with contain fitting and preventing flex shrink or responsive expansion.
+Native width/height remain intrinsic source dimensions. The default Figure presentation and its
+crop, backing, caption, overlay, delivery and accessibility contracts remain supported.
+
+This is a deliberate exception to the earlier Figure-width rejection: the product owns artwork
+placement size rather than selecting from library-authored size roles. Existing consumer-owned
+minimum-width token interfaces establish the reference convention, but do not by themselves
+authorize this new position; the maintainer's decision does. The trade-off is to admit consumer
+token names at this specific boundary instead of fixing a library roster of image sizes.
+
+The public size input accepts a token name only, not a number, raw length, var() expression or
+arbitrary style/className bag. This decision adds no library size ladder, arbitrary bounds on the
+default Figure, general token passthrough on other components, or game-specific Face primitive.
+The prior rejection record is narrowed accordingly. This records accepted scope pending
+implementation, independent review and publication; it does not claim a released capability.

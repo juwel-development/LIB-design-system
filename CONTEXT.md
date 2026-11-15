@@ -627,6 +627,11 @@ where the subject sits — a face held high, a horizon held low — never as a l
 and meaningful only where a frame crops at all.
 _Avoid_: Object position, alignment, anchor, image position, crop origin
 
+**Artwork presentation**:
+An image presented as its complete artboard, preserving transparency and proportions without a crop
+or backing. Its displayed extent belongs to the consuming product's theme.
+_Avoid_: Avatar size, person portrait, image size ladder
+
 **Brandmark**:
 A product's mark — text that has stopped being text. Because it is drawn rather than set, it carries
 no name of its own and must be given one. The library names a mark and never hosts one: an asset
