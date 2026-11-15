@@ -1,3 +1,10 @@
+# [4.6.0](https://github.com/juwel-development/LIB-design-system/compare/v4.5.0...v4.6.0) (2026-11-15)
+
+
+### Features
+
+* **figure:** add token-sized artwork presentation ([#172](https://github.com/juwel-development/LIB-design-system/issues/172)) ([ae3b09b](https://github.com/juwel-development/LIB-design-system/commit/ae3b09b553b9a35dcbc1f99ac12951353a8669fc))
+
 # [4.5.0](https://github.com/juwel-development/LIB-design-system/compare/v4.4.0...v4.5.0) (2026-11-07)
 
 
