@@ -34,6 +34,8 @@ excluded because it is generated.
 - **Props are the exception**: a component's props type is an `interface` named
   `I<Component>Props`, exported alongside the component. It is a data shape, and it is the one
   data shape that has to be part of the public API.
+  Figure's `IFigureProps` is the narrow exception: a discriminated union enforces #172's
+  required artwork size and mutually exclusive crop controls. Its branch interfaces stay local.
 - **Interfaces are prefixed `I`** — `IClock`, not `Clock`. The name still reads as a capability.
 - **Enums are prefixed `E`** — `EDirection`, not `Direction`.
 - **Consumers own boundary interfaces** — a consumer declares the interface for what it needs and

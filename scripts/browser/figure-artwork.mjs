@@ -214,6 +214,62 @@ try {
     assert.equal(framed.position, '50% 0%');
     assert.notEqual(framed.background, 'rgba(0, 0, 0, 0)');
 
+    result.reflow = evaluate(() =>
+      ['roomy', 'constrained'].map((layout) => {
+        const row = document.querySelector(
+          `[data-layout="${layout}"] [data-size="large"]`,
+        );
+        const image = row.querySelector('img').getBoundingClientRect();
+        const text = row.querySelector('span');
+        const neighbor = text.getBoundingClientRect();
+        return {
+          layout,
+          image: {
+            x: image.x,
+            y: image.y,
+            right: image.right,
+            bottom: image.bottom,
+          },
+          text: {
+            x: neighbor.x,
+            y: neighbor.y,
+            width: neighbor.width,
+            height: neighbor.height,
+          },
+          readable: text.scrollWidth <= text.clientWidth && neighbor.height > 0,
+        };
+      }),
+    );
+    const [roomyReflow, constrainedReflow] = result.reflow;
+    assert.ok(roomyReflow.text.x > roomyReflow.image.right);
+    assert.equal(roomyReflow.text.y, roomyReflow.image.y);
+    assert.ok(constrainedReflow.text.y > constrainedReflow.image.bottom);
+    for (const row of result.reflow) assert.equal(row.readable, true);
+
+    result.lengths = evaluate(() => {
+      const gallery = document.querySelector('[data-testid="artwork-gallery"]');
+      const image = gallery.querySelector('[data-testid="live-artwork"]');
+      const original = gallery.style.getPropertyValue('--fixture-artwork-live');
+      const measurements = ['2.5rem', '7.25em', 'calc(50px + 9px)', '10vw'].map(
+        (length) => {
+          gallery.style.setProperty('--fixture-artwork-live', length);
+          const rectangle = image.getBoundingClientRect();
+          return { length, width: rectangle.width, height: rectangle.height };
+        },
+      );
+      gallery.style.setProperty('--fixture-artwork-live', original);
+      return measurements;
+    });
+    assert.deepEqual(
+      result.lengths.map(({ width, height }) => [width, height]),
+      [
+        [40, 40],
+        [116, 116],
+        [59, 59],
+        [110, 110],
+      ],
+    );
+
     result.pressure = evaluate(() => {
       const constrained = document.querySelector('[data-layout="constrained"]');
       constrained.style.width = '160px';

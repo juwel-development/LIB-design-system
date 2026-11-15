@@ -1,8 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { IFigureFramedProps } from './Figure';
+import type { ComponentProps } from 'react';
 import { Figure } from './Figure';
 
-const meta: Meta<IFigureFramedProps> = {
+type FramedProps = Exclude<
+  ComponentProps<typeof Figure>,
+  { presentation: 'artwork' }
+>;
+
+const meta: Meta<FramedProps> = {
   title: 'Display/Figure',
   component: Figure,
   parameters: {
@@ -12,7 +17,7 @@ const meta: Meta<IFigureFramedProps> = {
 };
 
 export default meta;
-type Story = StoryObj<IFigureFramedProps>;
+type Story = StoryObj<FramedProps>;
 
 const portrait = 'https://picsum.photos/id/1005/720/900';
 const square = 'https://picsum.photos/id/1025/600/600';

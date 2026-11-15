@@ -53,14 +53,14 @@ interface IFigureSourceProps {
   testId?: string;
 }
 
-export interface IFigureFramedProps
+interface IFigureFramedProps
   extends IFigureSourceProps,
     Omit<VariantProps<typeof figure>, 'presentation'> {
   presentation?: Extract<VariantProps<typeof figure>['presentation'], 'framed'>;
   size?: never;
 }
 
-export interface IFigureArtworkProps extends IFigureSourceProps {
+interface IFigureArtworkProps extends IFigureSourceProps {
   presentation: Extract<VariantProps<typeof figure>['presentation'], 'artwork'>;
   /** A consumer-declared custom property holding a positive definite CSS length. */
   size: `--${string}`;
@@ -161,9 +161,7 @@ export const Figure: FunctionComponent<IFigureProps> = ({
     />
   );
 
-  // The positioning context exists only where there is something to position, so an overlay-less
-  // `Figure` renders exactly what it rendered before this slot existed - which matters most in the
-  // caption-less shape, where the image itself is the flex or grid item its container sees.
+  // Without an overlay, preserve the image itself as the caption-less flex or grid item.
   // Artwork wrappers derive their width from the image: a token declared on the image itself does
   // not inherit upwards. Resolving it again on a wrapper expanded that wrapper to its holder (#172).
   const frame = !hasOverlay ? (

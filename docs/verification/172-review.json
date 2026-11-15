@@ -1,0 +1,1987 @@
+{
+	"started": "2026-11-15T20:26:19.314Z",
+	"finished": "2026-11-15T20:26:39.591Z",
+	"story": {
+		"phase": "finished",
+		"scale": 1,
+		"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.7871.250 Safari/537.36"
+	},
+	"passed": true,
+	"base": "be0effae1683a81a5ff2e89c95cbd61149951507",
+	"implementation": "ae3b09b",
+	"viewport": {
+		"width": 1100,
+		"height": 1000,
+		"scale": 1
+	},
+	"cases": [
+		{
+			"stylesheet": "styles.css",
+			"theme": "light",
+			"source": "dist/styles.css",
+			"sha256": "4cccc6195b6dba2a94df42f2b8eafbf4149315a82fe37344bcfe3f73da748cd2",
+			"installed": {
+				"rules": 52,
+				"stylesheets": 1
+			},
+			"reflow": [
+				{
+					"image": {
+						"bottom": -92,
+						"right": 144,
+						"x": 16,
+						"y": -220
+					},
+					"layout": "roomy",
+					"readable": true,
+					"text": {
+						"height": 24,
+						"width": 500,
+						"x": 156,
+						"y": -220
+					}
+				},
+				{
+					"image": {
+						"bottom": 461,
+						"right": 144,
+						"x": 16,
+						"y": 333
+					},
+					"layout": "constrained",
+					"readable": true,
+					"text": {
+						"height": 72,
+						"width": 220,
+						"x": 16,
+						"y": 473
+					}
+				}
+			],
+			"lengths": [
+				{
+					"height": 40,
+					"length": "2.5rem",
+					"width": 40
+				},
+				{
+					"height": 116,
+					"length": "7.25em",
+					"width": 116
+				},
+				{
+					"height": 59,
+					"length": "calc(50px + 9px)",
+					"width": 59
+				},
+				{
+					"height": 110,
+					"length": "10vw",
+					"width": 110
+				}
+			],
+			"pressure": {
+				"measurements": [
+					{
+						"height": 32,
+						"size": "constrained-small",
+						"width": 32
+					},
+					{
+						"height": 64,
+						"size": "constrained-medium",
+						"width": 64
+					},
+					{
+						"height": 128,
+						"size": "constrained-large",
+						"width": 128
+					},
+					{
+						"height": 93,
+						"size": "constrained-fourth",
+						"width": 93
+					}
+				],
+				"wrappers": [
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "IMG",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "DIV",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					}
+				]
+			},
+			"live": {
+				"before": [64, 64],
+				"changed": [117, 117],
+				"narrowerThanImage": [32, 64, 128, 93],
+				"pixelSizes": [32, 64, 128, 93],
+				"restored": [64, 64],
+				"retained": true,
+				"rootChanged": [117, 117],
+				"widened": [32, 64, 128, 93]
+			},
+			"wrappers": [
+				{
+					"alt": "Square edge artwork",
+					"caption": null,
+					"hookCount": 1,
+					"id": "bare-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 16,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": null,
+					"tag": "IMG"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(100, 116, 139)",
+						"fits": true,
+						"height": 97.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "caption-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 168,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [150, 300],
+					"overlay": null,
+					"tag": "FIGURE"
+				},
+				{
+					"alt": "Wide artwork with overlay",
+					"caption": null,
+					"hookCount": 1,
+					"id": "overlay-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [300, 150],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"tag": "DIV"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(100, 116, 139)",
+						"fits": true,
+						"height": 58.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "both-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"tag": "FIGURE"
+				}
+			],
+			"imageOnlyTokens": [
+				{
+					"id": "bare-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "caption-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "overlay-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "both-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				}
+			],
+			"paintedPixelProbes": 22,
+			"imageCount": 14,
+			"allImagesLoaded": true,
+			"screenshotSha256": "7f0b052cf477fe249d75903c3fd24c7eaa2d2e48c835f288dc5ce6188b8ee3d0"
+		},
+		{
+			"stylesheet": "styles.css",
+			"theme": "dark",
+			"source": "dist/styles.css",
+			"sha256": "4cccc6195b6dba2a94df42f2b8eafbf4149315a82fe37344bcfe3f73da748cd2",
+			"installed": {
+				"rules": 52,
+				"stylesheets": 1
+			},
+			"reflow": [
+				{
+					"image": {
+						"bottom": -459,
+						"right": 144,
+						"x": 16,
+						"y": -587
+					},
+					"layout": "roomy",
+					"readable": true,
+					"text": {
+						"height": 24,
+						"width": 500,
+						"x": 156,
+						"y": -587
+					}
+				},
+				{
+					"image": {
+						"bottom": 94,
+						"right": 144,
+						"x": 16,
+						"y": -34
+					},
+					"layout": "constrained",
+					"readable": true,
+					"text": {
+						"height": 72,
+						"width": 220,
+						"x": 16,
+						"y": 106
+					}
+				}
+			],
+			"lengths": [
+				{
+					"height": 40,
+					"length": "2.5rem",
+					"width": 40
+				},
+				{
+					"height": 116,
+					"length": "7.25em",
+					"width": 116
+				},
+				{
+					"height": 59,
+					"length": "calc(50px + 9px)",
+					"width": 59
+				},
+				{
+					"height": 110,
+					"length": "10vw",
+					"width": 110
+				}
+			],
+			"pressure": {
+				"measurements": [
+					{
+						"height": 32,
+						"size": "constrained-small",
+						"width": 32
+					},
+					{
+						"height": 64,
+						"size": "constrained-medium",
+						"width": 64
+					},
+					{
+						"height": 128,
+						"size": "constrained-large",
+						"width": 128
+					},
+					{
+						"height": 93,
+						"size": "constrained-fourth",
+						"width": 93
+					}
+				],
+				"wrappers": [
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "IMG",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "DIV",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					}
+				]
+			},
+			"live": {
+				"before": [64, 64],
+				"changed": [117, 117],
+				"narrowerThanImage": [32, 64, 128, 93],
+				"pixelSizes": [32, 64, 128, 93],
+				"restored": [64, 64],
+				"retained": true,
+				"rootChanged": [117, 117],
+				"widened": [32, 64, 128, 93]
+			},
+			"wrappers": [
+				{
+					"alt": "Square edge artwork",
+					"caption": null,
+					"hookCount": 1,
+					"id": "bare-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 16,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": null,
+					"tag": "IMG"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(148, 163, 184)",
+						"fits": true,
+						"height": 97.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "caption-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 168,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [150, 300],
+					"overlay": null,
+					"tag": "FIGURE"
+				},
+				{
+					"alt": "Wide artwork with overlay",
+					"caption": null,
+					"hookCount": 1,
+					"id": "overlay-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [300, 150],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"tag": "DIV"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(148, 163, 184)",
+						"fits": true,
+						"height": 58.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "both-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"tag": "FIGURE"
+				}
+			],
+			"imageOnlyTokens": [
+				{
+					"id": "bare-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "caption-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "overlay-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "both-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				}
+			],
+			"paintedPixelProbes": 22,
+			"imageCount": 14,
+			"allImagesLoaded": true,
+			"screenshotSha256": "21703dd770a206dd882171720d0074af5280284231e2771d0e041831974b6233"
+		},
+		{
+			"stylesheet": "styles.light.css",
+			"theme": "light",
+			"source": "dist/styles.light.css",
+			"sha256": "1aeadcd30230393e3759071e22c6b9010304a6f9f515af338a98462dbec3a145",
+			"installed": {
+				"rules": 50,
+				"stylesheets": 1
+			},
+			"reflow": [
+				{
+					"image": {
+						"bottom": -459,
+						"right": 144,
+						"x": 16,
+						"y": -587
+					},
+					"layout": "roomy",
+					"readable": true,
+					"text": {
+						"height": 24,
+						"width": 500,
+						"x": 156,
+						"y": -587
+					}
+				},
+				{
+					"image": {
+						"bottom": 94,
+						"right": 144,
+						"x": 16,
+						"y": -34
+					},
+					"layout": "constrained",
+					"readable": true,
+					"text": {
+						"height": 72,
+						"width": 220,
+						"x": 16,
+						"y": 106
+					}
+				}
+			],
+			"lengths": [
+				{
+					"height": 40,
+					"length": "2.5rem",
+					"width": 40
+				},
+				{
+					"height": 116,
+					"length": "7.25em",
+					"width": 116
+				},
+				{
+					"height": 59,
+					"length": "calc(50px + 9px)",
+					"width": 59
+				},
+				{
+					"height": 110,
+					"length": "10vw",
+					"width": 110
+				}
+			],
+			"pressure": {
+				"measurements": [
+					{
+						"height": 32,
+						"size": "constrained-small",
+						"width": 32
+					},
+					{
+						"height": 64,
+						"size": "constrained-medium",
+						"width": 64
+					},
+					{
+						"height": 128,
+						"size": "constrained-large",
+						"width": 128
+					},
+					{
+						"height": 93,
+						"size": "constrained-fourth",
+						"width": 93
+					}
+				],
+				"wrappers": [
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "IMG",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "DIV",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					}
+				]
+			},
+			"live": {
+				"before": [64, 64],
+				"changed": [117, 117],
+				"narrowerThanImage": [32, 64, 128, 93],
+				"pixelSizes": [32, 64, 128, 93],
+				"restored": [64, 64],
+				"retained": true,
+				"rootChanged": [117, 117],
+				"widened": [32, 64, 128, 93]
+			},
+			"wrappers": [
+				{
+					"alt": "Square edge artwork",
+					"caption": null,
+					"hookCount": 1,
+					"id": "bare-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 16,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": null,
+					"tag": "IMG"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(100, 116, 139)",
+						"fits": true,
+						"height": 97.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "caption-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 168,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [150, 300],
+					"overlay": null,
+					"tag": "FIGURE"
+				},
+				{
+					"alt": "Wide artwork with overlay",
+					"caption": null,
+					"hookCount": 1,
+					"id": "overlay-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [300, 150],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"tag": "DIV"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(100, 116, 139)",
+						"fits": true,
+						"height": 58.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "both-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"tag": "FIGURE"
+				}
+			],
+			"imageOnlyTokens": [
+				{
+					"id": "bare-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "caption-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "overlay-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "both-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				}
+			],
+			"paintedPixelProbes": 22,
+			"imageCount": 14,
+			"allImagesLoaded": true,
+			"screenshotSha256": "7f0b052cf477fe249d75903c3fd24c7eaa2d2e48c835f288dc5ce6188b8ee3d0"
+		},
+		{
+			"stylesheet": "styles.dark.css",
+			"theme": "dark",
+			"source": "dist/styles.dark.css",
+			"sha256": "719f154ddeab558410b2468aa6384413643ca275adc89a8447b76b6b438d3173",
+			"installed": {
+				"rules": 50,
+				"stylesheets": 1
+			},
+			"reflow": [
+				{
+					"image": {
+						"bottom": -459,
+						"right": 144,
+						"x": 16,
+						"y": -587
+					},
+					"layout": "roomy",
+					"readable": true,
+					"text": {
+						"height": 24,
+						"width": 500,
+						"x": 156,
+						"y": -587
+					}
+				},
+				{
+					"image": {
+						"bottom": 94,
+						"right": 144,
+						"x": 16,
+						"y": -34
+					},
+					"layout": "constrained",
+					"readable": true,
+					"text": {
+						"height": 72,
+						"width": 220,
+						"x": 16,
+						"y": 106
+					}
+				}
+			],
+			"lengths": [
+				{
+					"height": 40,
+					"length": "2.5rem",
+					"width": 40
+				},
+				{
+					"height": 116,
+					"length": "7.25em",
+					"width": 116
+				},
+				{
+					"height": 59,
+					"length": "calc(50px + 9px)",
+					"width": 59
+				},
+				{
+					"height": 110,
+					"length": "10vw",
+					"width": 110
+				}
+			],
+			"pressure": {
+				"measurements": [
+					{
+						"height": 32,
+						"size": "constrained-small",
+						"width": 32
+					},
+					{
+						"height": 64,
+						"size": "constrained-medium",
+						"width": 64
+					},
+					{
+						"height": 128,
+						"size": "constrained-large",
+						"width": 128
+					},
+					{
+						"height": 93,
+						"size": "constrained-fourth",
+						"width": 93
+					}
+				],
+				"wrappers": [
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "IMG",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "DIV",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					}
+				]
+			},
+			"live": {
+				"before": [64, 64],
+				"changed": [117, 117],
+				"narrowerThanImage": [32, 64, 128, 93],
+				"pixelSizes": [32, 64, 128, 93],
+				"restored": [64, 64],
+				"retained": true,
+				"rootChanged": [117, 117],
+				"widened": [32, 64, 128, 93]
+			},
+			"wrappers": [
+				{
+					"alt": "Square edge artwork",
+					"caption": null,
+					"hookCount": 1,
+					"id": "bare-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 16,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": null,
+					"tag": "IMG"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(148, 163, 184)",
+						"fits": true,
+						"height": 97.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "caption-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 168,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [150, 300],
+					"overlay": null,
+					"tag": "FIGURE"
+				},
+				{
+					"alt": "Wide artwork with overlay",
+					"caption": null,
+					"hookCount": 1,
+					"id": "overlay-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [300, 150],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"tag": "DIV"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(148, 163, 184)",
+						"fits": true,
+						"height": 58.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "both-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"tag": "FIGURE"
+				}
+			],
+			"imageOnlyTokens": [
+				{
+					"id": "bare-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "caption-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "overlay-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "both-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				}
+			],
+			"paintedPixelProbes": 22,
+			"imageCount": 14,
+			"allImagesLoaded": true,
+			"screenshotSha256": "21703dd770a206dd882171720d0074af5280284231e2771d0e041831974b6233"
+		},
+		{
+			"stylesheet": "tokens.css + Tailwind host",
+			"theme": "light",
+			"source": "src/styles.css",
+			"sha256": "4844a31833ba24d6eebeed787ee5af1f1b95c1ddd159aee061ebd908fd7bb697",
+			"installed": {
+				"rules": 53,
+				"stylesheets": 1
+			},
+			"reflow": [
+				{
+					"image": {
+						"bottom": -459,
+						"right": 144,
+						"x": 16,
+						"y": -587
+					},
+					"layout": "roomy",
+					"readable": true,
+					"text": {
+						"height": 24,
+						"width": 500,
+						"x": 156,
+						"y": -587
+					}
+				},
+				{
+					"image": {
+						"bottom": 94,
+						"right": 144,
+						"x": 16,
+						"y": -34
+					},
+					"layout": "constrained",
+					"readable": true,
+					"text": {
+						"height": 72,
+						"width": 220,
+						"x": 16,
+						"y": 106
+					}
+				}
+			],
+			"lengths": [
+				{
+					"height": 40,
+					"length": "2.5rem",
+					"width": 40
+				},
+				{
+					"height": 116,
+					"length": "7.25em",
+					"width": 116
+				},
+				{
+					"height": 59,
+					"length": "calc(50px + 9px)",
+					"width": 59
+				},
+				{
+					"height": 110,
+					"length": "10vw",
+					"width": 110
+				}
+			],
+			"pressure": {
+				"measurements": [
+					{
+						"height": 32,
+						"size": "constrained-small",
+						"width": 32
+					},
+					{
+						"height": 64,
+						"size": "constrained-medium",
+						"width": 64
+					},
+					{
+						"height": 128,
+						"size": "constrained-large",
+						"width": 128
+					},
+					{
+						"height": 93,
+						"size": "constrained-fourth",
+						"width": 93
+					}
+				],
+				"wrappers": [
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "IMG",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "DIV",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					}
+				]
+			},
+			"live": {
+				"before": [64, 64],
+				"changed": [117, 117],
+				"narrowerThanImage": [32, 64, 128, 93],
+				"pixelSizes": [32, 64, 128, 93],
+				"restored": [64, 64],
+				"retained": true,
+				"rootChanged": [117, 117],
+				"widened": [32, 64, 128, 93]
+			},
+			"wrappers": [
+				{
+					"alt": "Square edge artwork",
+					"caption": null,
+					"hookCount": 1,
+					"id": "bare-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 16,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": null,
+					"tag": "IMG"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(100, 116, 139)",
+						"fits": true,
+						"height": 97.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "caption-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 168,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [150, 300],
+					"overlay": null,
+					"tag": "FIGURE"
+				},
+				{
+					"alt": "Wide artwork with overlay",
+					"caption": null,
+					"hookCount": 1,
+					"id": "overlay-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [300, 150],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"tag": "DIV"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(100, 116, 139)",
+						"fits": true,
+						"height": 58.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "both-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"tag": "FIGURE"
+				}
+			],
+			"imageOnlyTokens": [
+				{
+					"id": "bare-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "caption-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "overlay-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "both-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				}
+			],
+			"paintedPixelProbes": 22,
+			"imageCount": 14,
+			"allImagesLoaded": true,
+			"screenshotSha256": "7f0b052cf477fe249d75903c3fd24c7eaa2d2e48c835f288dc5ce6188b8ee3d0"
+		},
+		{
+			"stylesheet": "tokens.css + Tailwind host",
+			"theme": "dark",
+			"source": "src/styles.css",
+			"sha256": "4844a31833ba24d6eebeed787ee5af1f1b95c1ddd159aee061ebd908fd7bb697",
+			"installed": {
+				"rules": 53,
+				"stylesheets": 1
+			},
+			"reflow": [
+				{
+					"image": {
+						"bottom": -459,
+						"right": 144,
+						"x": 16,
+						"y": -587
+					},
+					"layout": "roomy",
+					"readable": true,
+					"text": {
+						"height": 24,
+						"width": 500,
+						"x": 156,
+						"y": -587
+					}
+				},
+				{
+					"image": {
+						"bottom": 94,
+						"right": 144,
+						"x": 16,
+						"y": -34
+					},
+					"layout": "constrained",
+					"readable": true,
+					"text": {
+						"height": 72,
+						"width": 220,
+						"x": 16,
+						"y": 106
+					}
+				}
+			],
+			"lengths": [
+				{
+					"height": 40,
+					"length": "2.5rem",
+					"width": 40
+				},
+				{
+					"height": 116,
+					"length": "7.25em",
+					"width": 116
+				},
+				{
+					"height": 59,
+					"length": "calc(50px + 9px)",
+					"width": 59
+				},
+				{
+					"height": 110,
+					"length": "10vw",
+					"width": 110
+				}
+			],
+			"pressure": {
+				"measurements": [
+					{
+						"height": 32,
+						"size": "constrained-small",
+						"width": 32
+					},
+					{
+						"height": 64,
+						"size": "constrained-medium",
+						"width": 64
+					},
+					{
+						"height": 128,
+						"size": "constrained-large",
+						"width": 128
+					},
+					{
+						"height": 93,
+						"size": "constrained-fourth",
+						"width": 93
+					}
+				],
+				"wrappers": [
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "IMG",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "DIV",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					}
+				]
+			},
+			"live": {
+				"before": [64, 64],
+				"changed": [117, 117],
+				"narrowerThanImage": [32, 64, 128, 93],
+				"pixelSizes": [32, 64, 128, 93],
+				"restored": [64, 64],
+				"retained": true,
+				"rootChanged": [117, 117],
+				"widened": [32, 64, 128, 93]
+			},
+			"wrappers": [
+				{
+					"alt": "Square edge artwork",
+					"caption": null,
+					"hookCount": 1,
+					"id": "bare-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 16,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": null,
+					"tag": "IMG"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(148, 163, 184)",
+						"fits": true,
+						"height": 97.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "caption-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 168,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [150, 300],
+					"overlay": null,
+					"tag": "FIGURE"
+				},
+				{
+					"alt": "Wide artwork with overlay",
+					"caption": null,
+					"hookCount": 1,
+					"id": "overlay-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [300, 150],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"tag": "DIV"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(148, 163, 184)",
+						"fits": true,
+						"height": 58.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "both-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"tag": "FIGURE"
+				}
+			],
+			"imageOnlyTokens": [
+				{
+					"id": "bare-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "caption-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "overlay-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "both-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				}
+			],
+			"paintedPixelProbes": 22,
+			"imageCount": 14,
+			"allImagesLoaded": true,
+			"screenshotSha256": "21703dd770a206dd882171720d0074af5280284231e2771d0e041831974b6233"
+		},
+		{
+			"stylesheet": "tokens.light.css + Tailwind host",
+			"theme": "light",
+			"source": "src/styles.light.css",
+			"sha256": "13f3d04f21e85efb53ca5f286f7846573d5b242a0dfcd81a6b0536d587e3353e",
+			"installed": {
+				"rules": 51,
+				"stylesheets": 1
+			},
+			"reflow": [
+				{
+					"image": {
+						"bottom": -459,
+						"right": 144,
+						"x": 16,
+						"y": -587
+					},
+					"layout": "roomy",
+					"readable": true,
+					"text": {
+						"height": 24,
+						"width": 500,
+						"x": 156,
+						"y": -587
+					}
+				},
+				{
+					"image": {
+						"bottom": 94,
+						"right": 144,
+						"x": 16,
+						"y": -34
+					},
+					"layout": "constrained",
+					"readable": true,
+					"text": {
+						"height": 72,
+						"width": 220,
+						"x": 16,
+						"y": 106
+					}
+				}
+			],
+			"lengths": [
+				{
+					"height": 40,
+					"length": "2.5rem",
+					"width": 40
+				},
+				{
+					"height": 116,
+					"length": "7.25em",
+					"width": 116
+				},
+				{
+					"height": 59,
+					"length": "calc(50px + 9px)",
+					"width": 59
+				},
+				{
+					"height": 110,
+					"length": "10vw",
+					"width": 110
+				}
+			],
+			"pressure": {
+				"measurements": [
+					{
+						"height": 32,
+						"size": "constrained-small",
+						"width": 32
+					},
+					{
+						"height": 64,
+						"size": "constrained-medium",
+						"width": 64
+					},
+					{
+						"height": 128,
+						"size": "constrained-large",
+						"width": 128
+					},
+					{
+						"height": 93,
+						"size": "constrained-fourth",
+						"width": 93
+					}
+				],
+				"wrappers": [
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "IMG",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "DIV",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					}
+				]
+			},
+			"live": {
+				"before": [64, 64],
+				"changed": [117, 117],
+				"narrowerThanImage": [32, 64, 128, 93],
+				"pixelSizes": [32, 64, 128, 93],
+				"restored": [64, 64],
+				"retained": true,
+				"rootChanged": [117, 117],
+				"widened": [32, 64, 128, 93]
+			},
+			"wrappers": [
+				{
+					"alt": "Square edge artwork",
+					"caption": null,
+					"hookCount": 1,
+					"id": "bare-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 16,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": null,
+					"tag": "IMG"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(100, 116, 139)",
+						"fits": true,
+						"height": 97.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "caption-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 168,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [150, 300],
+					"overlay": null,
+					"tag": "FIGURE"
+				},
+				{
+					"alt": "Wide artwork with overlay",
+					"caption": null,
+					"hookCount": 1,
+					"id": "overlay-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [300, 150],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"tag": "DIV"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(100, 116, 139)",
+						"fits": true,
+						"height": 58.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "both-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"tag": "FIGURE"
+				}
+			],
+			"imageOnlyTokens": [
+				{
+					"id": "bare-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "caption-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "overlay-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "both-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				}
+			],
+			"paintedPixelProbes": 22,
+			"imageCount": 14,
+			"allImagesLoaded": true,
+			"screenshotSha256": "7f0b052cf477fe249d75903c3fd24c7eaa2d2e48c835f288dc5ce6188b8ee3d0"
+		},
+		{
+			"stylesheet": "tokens.dark.css + Tailwind host",
+			"theme": "dark",
+			"source": "src/styles.dark.css",
+			"sha256": "431d829de2e29ba66829f7f74c073163c5dd4322ce0ac8f326a94b76da171b78",
+			"installed": {
+				"rules": 51,
+				"stylesheets": 1
+			},
+			"reflow": [
+				{
+					"image": {
+						"bottom": -459,
+						"right": 144,
+						"x": 16,
+						"y": -587
+					},
+					"layout": "roomy",
+					"readable": true,
+					"text": {
+						"height": 24,
+						"width": 500,
+						"x": 156,
+						"y": -587
+					}
+				},
+				{
+					"image": {
+						"bottom": 94,
+						"right": 144,
+						"x": 16,
+						"y": -34
+					},
+					"layout": "constrained",
+					"readable": true,
+					"text": {
+						"height": 72,
+						"width": 220,
+						"x": 16,
+						"y": 106
+					}
+				}
+			],
+			"lengths": [
+				{
+					"height": 40,
+					"length": "2.5rem",
+					"width": 40
+				},
+				{
+					"height": 116,
+					"length": "7.25em",
+					"width": 116
+				},
+				{
+					"height": 59,
+					"length": "calc(50px + 9px)",
+					"width": 59
+				},
+				{
+					"height": 110,
+					"length": "10vw",
+					"width": 110
+				}
+			],
+			"pressure": {
+				"measurements": [
+					{
+						"height": 32,
+						"size": "constrained-small",
+						"width": 32
+					},
+					{
+						"height": 64,
+						"size": "constrained-medium",
+						"width": 64
+					},
+					{
+						"height": 128,
+						"size": "constrained-large",
+						"width": 128
+					},
+					{
+						"height": 93,
+						"size": "constrained-fourth",
+						"width": 93
+					}
+				],
+				"wrappers": [
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "IMG",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "DIV",
+						"width": 128
+					},
+					{
+						"imageWidth": 128,
+						"shrink": "0",
+						"tag": "FIGURE",
+						"width": 128
+					}
+				]
+			},
+			"live": {
+				"before": [64, 64],
+				"changed": [117, 117],
+				"narrowerThanImage": [32, 64, 128, 93],
+				"pixelSizes": [32, 64, 128, 93],
+				"restored": [64, 64],
+				"retained": true,
+				"rootChanged": [117, 117],
+				"widened": [32, 64, 128, 93]
+			},
+			"wrappers": [
+				{
+					"alt": "Square edge artwork",
+					"caption": null,
+					"hookCount": 1,
+					"id": "bare-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 16,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": null,
+					"tag": "IMG"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(148, 163, 184)",
+						"fits": true,
+						"height": 97.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "caption-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 168,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [150, 300],
+					"overlay": null,
+					"tag": "FIGURE"
+				},
+				{
+					"alt": "Wide artwork with overlay",
+					"caption": null,
+					"hookCount": 1,
+					"id": "overlay-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [300, 150],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 320,
+						"y": 383
+					},
+					"tag": "DIV"
+				},
+				{
+					"alt": "",
+					"caption": {
+						"color": "rgb(148, 163, 184)",
+						"fits": true,
+						"height": 58.5,
+						"top": 519,
+						"width": 128
+					},
+					"hookCount": 1,
+					"id": "both-artwork",
+					"imageBox": {
+						"height": 128,
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"inventedName": false,
+					"natural": [200, 200],
+					"overlay": {
+						"height": 128,
+						"hidden": "true",
+						"position": "absolute",
+						"width": 128,
+						"x": 472,
+						"y": 383
+					},
+					"tag": "FIGURE"
+				}
+			],
+			"imageOnlyTokens": [
+				{
+					"id": "bare-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "caption-artwork",
+					"imageWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "overlay-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				},
+				{
+					"id": "both-artwork",
+					"imageWidth": 128,
+					"overlayWidth": 128,
+					"width": 128
+				}
+			],
+			"paintedPixelProbes": 22,
+			"imageCount": 14,
+			"allImagesLoaded": true,
+			"screenshotSha256": "21703dd770a206dd882171720d0074af5280284231e2771d0e041831974b6233"
+		}
+	]
+}

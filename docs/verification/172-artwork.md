@@ -4,7 +4,8 @@ Authority: the latest [Agent Brief](https://github.com/juwel-development/LIB-des
 which supersedes the original fixed-size roster. Base: `be0effa`, including the approved
 `CONTEXT.md`, ADR 0008 and `.out-of-scope/figure-width-role.md` amendments; all are preserved.
 This is an implementation on `feature/ticket-172`, not a published capability or version.
-The coordinator supplies a separate fresh Codex review; no review worker was dispatched here.
+The subsequent independent Codex review, fixes and fresh checks are recorded in
+[172-review.md](172-review.md).
 
 ## Public contract
 
@@ -154,7 +155,8 @@ with exit 0. This does not replace or suppress any geometry or pixel assertion.
 
 ## Remaining workflow
 
-Separate fresh Codex review, landing and normal release publication remain with the
-coordinator/maintainer. No push, merge, release, version change or consumer-repository
+Independent Codex review and its fixes are complete; see [172-review.md](172-review.md).
+Landing and normal release publication remain with the coordinator/maintainer.
+No push, merge, release, version change or consumer-repository
 edit was performed. The actual released version must be recorded after publication;
 this implementation does not claim one.

@@ -267,7 +267,10 @@ Standards axis.
 
 ## Known deviations
 
-**None.**
+**Figure's mutually exclusive presentations (#172).** `IFigureProps` is a discriminated union
+instead of an interface, so artwork requires a size token and excludes framed crop controls.
+Its branch interfaces remain local; consumers still derive props from the component. Variant
+values continue to derive from its one recipe. This exception does not reopen the prop surface.
 
 `Button` used to extend `PropsWithChildren` against §1. That was settled in favour of the standard:
 `IButtonProps` now declares `children?: ReactNode` itself, §1 keeps its clause, and every primitive

@@ -1,10 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Figure } from 'index';
-import { type CSSProperties, useState } from 'react';
+import { type ComponentProps, type CSSProperties, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
-import type { IFigureArtworkProps } from './Figure';
 
-const meta: Meta<IFigureArtworkProps> = {
+type ArtworkProps = Extract<
+  ComponentProps<typeof Figure>,
+  { presentation: 'artwork' }
+>;
+
+const meta: Meta<ArtworkProps> = {
   title: 'Display/Figure/Artwork',
   component: Figure,
   tags: ['autodocs'],
@@ -35,7 +39,7 @@ The image and any caption/overlay wrappers do not shrink in flex or expand to th
   },
 };
 export default meta;
-type Story = StoryObj<IFigureArtworkProps>;
+type Story = StoryObj<ArtworkProps>;
 
 type FixtureTheme = CSSProperties & Record<`--${string}`, string>;
 
