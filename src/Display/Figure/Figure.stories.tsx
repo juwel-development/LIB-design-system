@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { IFigureFramedProps } from './Figure';
 import { Figure } from './Figure';
 
-const meta: Meta<typeof Figure> = {
+const meta: Meta<IFigureFramedProps> = {
   title: 'Display/Figure',
   component: Figure,
   parameters: {
@@ -11,7 +12,7 @@ const meta: Meta<typeof Figure> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<IFigureFramedProps>;
 
 const portrait = 'https://picsum.photos/id/1005/720/900';
 const square = 'https://picsum.photos/id/1025/600/600';

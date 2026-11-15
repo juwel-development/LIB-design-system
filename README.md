@@ -45,6 +45,42 @@ on an ancestor re-points every token underneath it.
 A product re-themes the whole system by supplying its own values for the same role
 names, which is what lets one design system serve several brands.
 
+### Consumer-owned artwork size tokens
+
+Figure's opt-in artwork presentation reads a custom property declared by the consumer:
+
+```css
+.catalog { --catalog-artwork-size: 64px; }
+```
+
+```tsx
+<div className="catalog">
+  <Figure presentation="artwork" size="--catalog-artwork-size"
+    src="/illustration.svg" alt="An illustrated compass" width={600} height={300} />
+</div>
+```
+
+Declare the token on the image or an ancestor with a **positive definite CSS length**.
+Any such length works; the library supplies no names, presets or fallback sizes for
+undeclared tokens, and does not validate computed values. The token resolves live to
+both dimensions of a square box without remounting. Pixel values stay fixed when the
+holder or root font changes; relative lengths follow their CSS units. Numeric
+`width`/`height` remain the source's intrinsic dimensions.
+
+`size` takes only a token name (`--${string}`), never a number, raw length, `var()` or
+expression. Malformed names throw the exported `FigureConfigurationError`. Artwork
+centers and contain-fits the whole transparent artboard, without backing, border or
+mask. The typed contract excludes `ratio` and `focus`; these crop controls remain
+available on the default framed presentation. Required `alt` (including `alt=""`),
+delivery, caption, overlay and outermost `testId` semantics are retained. A caption
+sits outside the square; an unmodified overlay is positioned against it.
+
+The image and its wrappers do not flex-shrink or expand to the holder. Give the box
+enough room or let the surrounding composition reflow; a holder narrower than the
+fixed box is not promised to fit it. See **Display/Figure/Artwork** in Storybook for
+wrapping compositions, a fourth token value and a live token update. Omitting
+`presentation` retains full-width, backed cover fitting and the existing defaults.
+
 ### Single-theme builds
 
 `styles.css` and `tokens.css` carry both colour sets, so a product that ships only one

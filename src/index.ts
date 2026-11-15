@@ -14,6 +14,7 @@ export { Collection } from 'Display/Collection/Collection';
 export { DefinitionList } from 'Display/DefinitionList/DefinitionList';
 export { DefinitionListConfigurationError } from 'Display/DefinitionList/DefinitionListConfigurationError';
 export { Figure } from 'Display/Figure/Figure';
+export { FigureConfigurationError } from 'Display/Figure/FigureConfigurationError';
 export { Icon } from 'Display/Icon/Icon';
 export { Meter } from 'Display/Meter/Meter';
 export { MeterConfigurationError } from 'Display/Meter/MeterConfigurationError';

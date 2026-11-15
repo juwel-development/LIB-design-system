@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { FigureConfigurationError } from 'index';
+import type { ComponentProps } from 'react';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { Figure } from './Figure';
 
 const source = '/portrait.avif';
@@ -10,6 +12,171 @@ const classesOf = (element: Element): string[] =>
 const overlayNode = <span data-testid={'ring'}>ring</span>;
 
 describe('Figure', () => {
+  it.each([
+    '--',
+    '32px',
+    'var(--size)',
+    '--size, 32px',
+    '--size name',
+    '--size)',
+    '--size;',
+    '--size\n',
+    '--size\r',
+  ])(
+    'rejects the malformed artwork token name %s with the public configuration error',
+    (size) => {
+      expect(() =>
+        render(
+          <Figure
+            src={source}
+            alt={''}
+            width={720}
+            height={900}
+            presentation={'artwork'}
+            size={size as `--${string}`}
+          />,
+        ),
+      ).toThrow(FigureConfigurationError);
+    },
+  );
+
+  it('accepts artwork only with a size token and without crop controls or styling passthrough', () => {
+    type Props = ComponentProps<typeof Figure>;
+    const artwork: Props = {
+      src: source,
+      alt: '',
+      width: 720,
+      height: 900,
+      presentation: 'artwork',
+      size: '--consumer-artwork-size',
+    };
+    // @ts-expect-error Artwork requires a size token.
+    const _missing: Props = {
+      src: source,
+      alt: '',
+      width: 720,
+      height: 900,
+      presentation: 'artwork',
+    };
+    // @ts-expect-error Numbers describe source dimensions, never display size.
+    const _numeric: Props = { ...artwork, size: 32 };
+    // @ts-expect-error A raw CSS length is not a token name.
+    const _length: Props = { ...artwork, size: '32px' };
+    const _expression: Props = {
+      ...artwork,
+      // @ts-expect-error CSS expressions are not token names.
+      size: 'var(--consumer-artwork-size)',
+    };
+    // @ts-expect-error Artwork still requires an explicit text alternative.
+    const _unnamed: Props = {
+      src: source,
+      width: 720,
+      height: 900,
+      presentation: 'artwork',
+      size: '--consumer-artwork-size',
+    };
+    // @ts-expect-error Artwork preserves the full artboard and cannot select a crop ratio.
+    const _cropped: Props = { ...artwork, ratio: 'square' };
+    // @ts-expect-error Artwork is always centered and cannot select a crop focal point.
+    const _focused: Props = { ...artwork, focus: 'top' };
+    // @ts-expect-error Size is scoped to artwork.
+    const _defaultSize: Props = {
+      src: source,
+      alt: '',
+      width: 720,
+      height: 900,
+      size: '--consumer-artwork-size',
+    };
+    expectTypeOf<Props>().not.toHaveProperty('className');
+    expectTypeOf<Props>().not.toHaveProperty('style');
+    expectTypeOf<typeof Figure>().toBeCallableWith(artwork);
+  });
+
+  it.each([
+    { caption: undefined, overlay: undefined, tag: 'IMG' },
+    { caption: 'A named illustration', overlay: undefined, tag: 'FIGURE' },
+    { caption: undefined, overlay: overlayNode, tag: 'DIV' },
+    { caption: 'A named illustration', overlay: overlayNode, tag: 'FIGURE' },
+  ])(
+    'retains artwork delivery, intrinsic dimensions and the outermost test hook on $tag with caption=$caption',
+    ({ caption, overlay, tag }) => {
+      const { container } = render(
+        <Figure
+          src={source}
+          alt={''}
+          width={720}
+          height={900}
+          presentation={'artwork'}
+          size={'--consumer-artwork-size'}
+          caption={caption}
+          overlay={overlay}
+          testId={'artwork'}
+          priority
+          responsive={{
+            srcSet: '/small.avif 320w, /large.avif 1280w',
+            sizes: '128px',
+          }}
+        />,
+      );
+      const outermost = screen.getByTestId('artwork');
+      const image = container.querySelector('img');
+      expect(outermost.tagName).toBe(tag);
+      expect(
+        container.querySelectorAll('[data-testid="artwork"]'),
+      ).toHaveLength(1);
+      expect(image).toHaveAttribute('alt', '');
+      expect(image).not.toHaveAttribute('aria-label');
+      expect(screen.queryByRole('img')).not.toBeInTheDocument();
+      expect(image).toHaveAttribute('width', '720');
+      expect(image).toHaveAttribute('height', '900');
+      expect(image).toHaveAttribute(
+        'srcset',
+        '/small.avif 320w, /large.avif 1280w',
+      );
+      expect(image).toHaveAttribute('sizes', '128px');
+      expect(image).toHaveAttribute('loading', 'eager');
+      expect(image).toHaveAttribute('fetchpriority', 'high');
+      expect(image).toHaveAttribute('decoding', 'async');
+      expect(container.querySelector('figcaption')?.textContent).toBe(caption);
+      if (overlay !== undefined) {
+        expect(screen.getByTestId('ring').outerHTML).toBe(
+          '<span data-testid="ring">ring</span>',
+        );
+      }
+    },
+  );
+
+  it('retains an informative artwork image across token-name changes with default lazy delivery', () => {
+    const { rerender } = render(
+      <Figure
+        src={source}
+        alt={'An informative illustration'}
+        width={720}
+        height={900}
+        presentation={'artwork'}
+        size={'--consumer-artwork-size'}
+      />,
+    );
+    const image = screen.getByRole('img', {
+      name: 'An informative illustration',
+    });
+    expect(image).toHaveAttribute('loading', 'lazy');
+    expect(image).not.toHaveAttribute('fetchpriority');
+    rerender(
+      <Figure
+        src={source}
+        alt={'An informative illustration'}
+        width={720}
+        height={900}
+        presentation={'artwork'}
+        size={'--another-consumer-token'}
+      />,
+    );
+    expect(
+      screen.getByRole('img', { name: 'An informative illustration' }),
+    ).toBe(image);
+  });
+
   it('renders a figure wrapping the image and a figcaption when a caption is given', () => {
     const { container } = render(
       <Figure

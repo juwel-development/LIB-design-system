@@ -1,14 +1,16 @@
 import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
-import type { FunctionComponent, ReactNode } from 'react';
+import type { CSSProperties, FunctionComponent, ReactNode } from 'react';
+import { FigureConfigurationError } from './FigureConfigurationError';
 
-// One recipe, on the `img` - the only element that varies. The wrapper `figure` and the `figcaption`
-// carry literal class strings in JSX (the Input pattern, not the compound namespace: there is nothing
-// here to compose). `ratio` has no default, so an omitted ratio emits no aspect-* class and the image
-// keeps its intrinsic shape; `focus` defaults to center and is inert without a ratio, since object-*
-// has nothing to crop in the base. Colours are semantic tokens re-pointed by `.dark`, so no `dark:`.
-const figure = cva('block w-full object-cover bg-backing', {
+// One recipe on the image; wrappers carry only structure. max-w-none overrides the image preflight
+// ceiling: an artwork box must retain its token extent even in a narrower holder (#172).
+const figure = cva('block', {
   variants: {
+    presentation: {
+      framed: 'w-full object-cover bg-backing',
+      artwork: 'max-w-none shrink-0 object-contain',
+    },
     ratio: {
       portrait: 'aspect-portrait',
       square: 'aspect-square',
@@ -23,10 +25,10 @@ const figure = cva('block w-full object-cover bg-backing', {
       right: 'object-right',
     },
   },
-  defaultVariants: { focus: 'center' },
+  defaultVariants: { presentation: 'framed', focus: 'center' },
 });
 
-export interface IFigureProps extends VariantProps<typeof figure> {
+interface IFigureSourceProps {
   /** The image source. Produce it through the consuming build's image pipeline - see @UXGuidelines. */
   src: string;
   /** The image's text alternative. Empty string when the image is decorative, or when `caption`
@@ -51,6 +53,23 @@ export interface IFigureProps extends VariantProps<typeof figure> {
   testId?: string;
 }
 
+export interface IFigureFramedProps
+  extends IFigureSourceProps,
+    Omit<VariantProps<typeof figure>, 'presentation'> {
+  presentation?: Extract<VariantProps<typeof figure>['presentation'], 'framed'>;
+  size?: never;
+}
+
+export interface IFigureArtworkProps extends IFigureSourceProps {
+  presentation: Extract<VariantProps<typeof figure>['presentation'], 'artwork'>;
+  /** A consumer-declared custom property holding a positive definite CSS length. */
+  size: `--${string}`;
+  ratio?: never;
+  focus?: never;
+}
+
+export type IFigureProps = IFigureFramedProps | IFigureArtworkProps;
+
 /**
  * An aspect-locked image frame with a focal point and an optional caption. The caption decides the
  * element: with one, the image is wrapped in a `figure` with a `figcaption`; without one, the image
@@ -65,11 +84,16 @@ export interface IFigureProps extends VariantProps<typeof figure> {
  *   `lazy` otherwise), so an above-the-fold hero is never deferred.
  * - A `figure` element appears only where there is a caption.
  * - `srcset` never ships without `sizes`: `responsive` bundles the two so one cannot go without the other.
- * - An `overlay` renders unmodified: the component adds no class and no ARIA attribute to it, strips
- *   nothing from it, and paints nothing on the frame - the wrapper it renders carries the positioning
- *   context and no other property, so the image fills its container exactly as it does without one.
+ * - Artwork requires a consumer-owned size token name. It resolves live to a non-shrinking square,
+ *   centered contain fitting without backing. Crop ratio/focus are excluded for artwork.
+ * - Malformed artwork token names throw the public FigureConfigurationError.
+ * - An `overlay` renders unmodified against the image box, outside the caption. Artwork wrappers
+ *   retain the token width; the overlay's positioning context retains the square height as well.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - Declare the artwork size token on the image or an ancestor as a positive definite CSS length.
+ *   There is no computed-value validation or fallback size. Provide enough room or reflow the
+ *   surrounding composition: a fixed artwork box is not promised to fit a narrower holder.
  * - A decorative overlay carries the consumer's own `aria-hidden="true"`. The library will not add it:
  *   a slot it modifies is no longer a slot.
  *
@@ -90,6 +114,8 @@ export const Figure: FunctionComponent<IFigureProps> = ({
   alt,
   width,
   height,
+  presentation,
+  size,
   ratio,
   focus,
   responsive,
@@ -98,6 +124,18 @@ export const Figure: FunctionComponent<IFigureProps> = ({
   priority,
   testId,
 }) => {
+  if (
+    presentation === 'artwork' &&
+    (typeof size !== 'string' || !/^--[A-Za-z0-9_-]+$/.test(size))
+  ) {
+    throw new FigureConfigurationError(
+      `size must name a CSS custom property such as --consumer-artwork-size, got ${JSON.stringify(size)}`,
+    );
+  }
+  const isArtwork = presentation === 'artwork';
+  const artworkSquare: CSSProperties | undefined = isArtwork
+    ? { width: `var(${size})`, height: `var(${size})` }
+    : undefined;
   // Absence, not falsiness, and not `undefined` alone: `overlay={showRing && <Ring />}` hands over
   // `false` when the decoration is off, and that consumer asked for no overlay - wrapping anyway
   // would put a `div` where their flex or grid item used to be, which is the one thing this slot
@@ -112,7 +150,8 @@ export const Figure: FunctionComponent<IFigureProps> = ({
       alt={alt}
       width={width}
       height={height}
-      className={figure({ ratio, focus })}
+      className={figure({ presentation, ratio, focus })}
+      style={artworkSquare}
       srcSet={responsive?.srcSet}
       sizes={responsive?.sizes}
       loading={priority ? 'eager' : 'lazy'}
@@ -125,11 +164,13 @@ export const Figure: FunctionComponent<IFigureProps> = ({
   // The positioning context exists only where there is something to position, so an overlay-less
   // `Figure` renders exactly what it rendered before this slot existed - which matters most in the
   // caption-less shape, where the image itself is the flex or grid item its container sees.
+  // Artwork wrappers derive their width from the image: a token declared on the image itself does
+  // not inherit upwards. Resolving it again on a wrapper expanded that wrapper to its holder (#172).
   const frame = !hasOverlay ? (
     image
   ) : (
     <div
-      className={'relative'}
+      className={isArtwork ? 'relative w-fit shrink-0 self-start' : 'relative'}
       data-testid={caption === undefined ? testId : undefined}
     >
       {image}
@@ -143,12 +184,20 @@ export const Figure: FunctionComponent<IFigureProps> = ({
 
   return (
     <figure
-      className={'flex flex-col gap-[var(--space-stack)]'}
+      className={
+        isArtwork
+          ? 'flex flex-col gap-[var(--space-stack)] w-min shrink-0 self-start'
+          : 'flex flex-col gap-[var(--space-stack)]'
+      }
       data-testid={testId}
     >
       {frame}
       <figcaption
-        className={'font-secondary text-label tracking-label text-muted'}
+        className={
+          isArtwork
+            ? 'font-secondary text-label tracking-label text-muted wrap-anywhere'
+            : 'font-secondary text-label tracking-label text-muted'
+        }
       >
         {caption}
       </figcaption>
