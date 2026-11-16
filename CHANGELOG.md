@@ -1,3 +1,12 @@
+# Unreleased
+
+### Features
+
+* **choices:** accept rich labels, name dash options with `Choice.name`, and arrange image galleries
+  in equal-width `tiles` controlled by the theme's `--choice-tile-min-width` token
+  ([#173](https://github.com/juwel-development/LIB-design-system/issues/173)). This additive minor
+  feature preserves existing string labels, vertical/wrapping arrangements and selection semantics.
+
 # [4.6.0](https://github.com/juwel-development/LIB-design-system/compare/v4.5.0...v4.6.0) (2026-11-15)
 
 

@@ -35,3 +35,22 @@ assert.doesNotMatch(
 process.stdout.write(
   'PASS dist/design-system.js: starts with "use client"; no CSS import\n',
 );
+
+// Pin the declarations consumers reach through the existing Choices namespace export (#173).
+const choicesDeclarations = readFileSync(
+  new URL('../dist/types/Interaction/Choices/Choices.d.ts', import.meta.url),
+  'utf8',
+);
+assert.equal(
+  choicesDeclarations,
+  readFileSync(
+    new URL('./snapshots/choices.d.ts.snap', import.meta.url),
+    'utf8',
+  ),
+  'the Choices declaration snapshot must match its published contract',
+);
+assert.match(
+  readFileSync(new URL('../dist/types/index.d.ts', import.meta.url), 'utf8'),
+  /export \{ Choices \} from ['"]Interaction\/Choices\/Choices['"]/,
+);
+process.stdout.write('PASS Choices public export and declaration snapshot\n');

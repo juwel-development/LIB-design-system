@@ -1,0 +1,116 @@
+# #173 Choices image tiles
+
+Contract: the issue's **Agent Brief**, read with `gh issue view 173 --comments`, rather than the
+original whole-screen request. Implemented on `ticket-173`; no publication, push or merge.
+
+## Public decisions
+
+- `Choice.children` accepts `ReactNode`. Existing string labels retain their markup and naming.
+  Rich labels must be non-interactive phrasing content valid inside a button. Consumers mark
+  decoration with `alt=""` / `aria-hidden`. Caption-less, overlay-less Figure artwork renders
+  a bare `img`, so it qualifies and is the documented intended image source. Neither Figure
+  nor Tabs changes.
+- `Choice.name?: string` supplies the option's accessible name. It replaces the label association
+  with `aria-label`; the visible dash is retained, and descriptions remain `aria-describedby`.
+  `name` expresses the glossary's **option name**, independently of the visible **label** and
+  `Root.label` (group name). It does not affect the supplied identity, `value`.
+- `--choice-tile-min-width` names the width floor of an individual choice tile, like the existing
+  `--choice-marker-size` names that choice's marker. It is a role, not a size scale or preset list.
+  The renderer declares the default `9rem` in all three token deliveries; a consumer theme can
+  redeclare a positive definite length. `tiles` uses equal `1fr` tracks with auto-fill, falling
+  back to one fitting column below the floor. The container decides the number of columns, per
+  ADR 0008. Fixed artwork must fit within the tile content width; Choices never crops it or
+  changes Figure's fixed-size contract.
+
+Component documentation is in `Choices.stories.tsx`'s
+`parameters.docs.description.component`. No README changes. Unreleased changelog describes the
+additive minor feature. The existing public `Choices` namespace exposes the new interface without
+adding barrel exports; `check:build` checks its public export and emitted declaration snapshot at
+`scripts/snapshots/choices.d.ts.snap`.
+
+## Acceptance evidence
+
+| Agent Brief criterion | Evidence |
+| --- | --- |
+| String and rich labels | Existing string-label tests unchanged; new DOM test names rich meaningful text and excludes empty-alt and aria-hidden decoration; typecheck accepts ReactNode through the public component |
+| Separate accessible option name | New dash DOM test checks `No beard`, retained dash and accessible description; play checks named dash choices with no img in Beard and Headwear inventories |
+| Equal tiles, container/token-driven count | Play computes expected track count from measured group width, gap and theme floor, checks equal measured widths and changes the theme floor from 9rem to 13rem using a consumer control |
+| Selection without colour, accessible state, stable geometry | Play checks aria-checked and the marker after keyboard selection; compares all tile widths/heights/relative positions before and after selection |
+| Full interactive workload | One gallery at a time: 14 Hairstyles (named image-bearing Bald), 11 Hair colours, 7 Beards, 5 Headwear, 6 Eyes; long English/German and unbroken names; two dash choices; external control updates image sources in place without requesting selection |
+| Native keyboard and controlled conduct | Play uses storybook/test user-event Tab, arrows in both directions with wraparound and every declared row, checks Tab re-entry at a selected last tile, focus-visible/solid nontransparent ring/positive width and offset, verifies supplied request identities in order, exercises native Enter/Space, and checks that renders/current-choice activation/ignored requests do not select or emit extra requests |
+| 1280 / 1024 / 684 geometry | Every inventory is measured at every requested viewport: equal widths, 64px artwork boxes with decoded 2:1 and 1:2 sources and object-fit contain, image bounds inside tiles, text below art, visible overflow/no clip path and no horizontal group/page overflow |
+| Existing arrangements | Original vertical and wrapping tests/stories retained; existing unit tests pass, and inert tests additionally run for tiles |
+| Public declarations / release notes | Build checks existing namespace export and declaration snapshot; Unreleased changelog records additive minor feature |
+
+The new behavior was driven at the agreed seams: the first rich-label fixture failed typecheck
+against string children; the named-dash DOM test failed before the name prop; the tile play failed
+with “expected flex to be grid” and typecheck rejected `tiles` before the arrangement existed.
+
+## Verification
+
+Required command chain: `npm run build && npm run lint && npm run typecheck && npm run test`.
+All passed: build includes JS, three CSS deliveries, declarations and snapshot; lint reports no
+issues; typecheck exits zero; the full suite has **66 passing files / 1,584 passing tests**.
+Storybook's production build also passes. Unit-suite logs: `/tmp/choices-173-final-test.log`;
+Storybook build: `/tmp/choices-173-build-storybook.log`.
+
+Browser reproduction:
+
+```sh
+npm run build
+npm run build-storybook
+python3 -m http.server 6174 --directory storybook-static
+# In another terminal:
+CHOICES_STORYBOOK_URL=http://localhost:6174 npm exec --yes --package=playwright@1.64.1 -- node scripts/browser/choices-tiles.mjs
+```
+
+The harness only creates a viewport, installs a theme/stylesheet, invokes the Storybook play and
+captures its output/screenshots. **All assertions live in the story's `storybook/test` play**;
+there are no Playwright driver tests. The play asserts the actual surface colour, so a mislabeled
+theme case fails. Orca's embedded browser was tried first, but its background surface reported
+`document.hasFocus() === false` and did not paint `:focus-visible`; it cannot exercise this focus
+criterion. The fallback uses focused headless Chromium, preserving the focus-visible assertion.
+No project dependency is added.
+
+Browser matrix: source CSS light/dark, compiled combined CSS light/dark, compiled light-only CSS,
+and compiled dark-only CSS, each at 1920×1080, 1280×720, 1024×720 and 684×720. This is **24 plays**,
+each exercising all five complete inventories against the built Storybook. Chromium version and measured values are retained
+in [the raw results](173-choices/results.json); the terminal log is `/tmp/choices-173-browser.log`.
+Runtime: Chromium **156.0.8078.4**; no cross-engine claim is made.
+
+With the fixture's 16px root font and 8px gap:
+
+| Viewport width | Group width | 9rem floor: tracks / tile width | 13rem floor: tracks |
+| --- | --- | --- | --- |
+| 1920 | 1888 | 12 / 150px | 8 |
+| 1280 | 1248 | 8 / 149px | 5 |
+| 1024 | 992 | 6 / approximately 158.66px | 4 |
+| 684 | 652 | 4 / 157px | 3 |
+
+Track counts describe available grid tracks; inventories shorter than that occupy fewer tracks.
+Screenshots show all four edge marks on contain-fitted wide/tall artboards and wrapped names:
+[1280 light](173-choices/light-1280.png), [1280 dark](173-choices/dark-1280.png),
+[1024 light](173-choices/light-1024.png), [684 light](173-choices/light-684.png),
+[684 dark](173-choices/dark-684.png), [1920 light](173-choices/light-1920.png).
+
+## Remaining ownership
+
+No Agent Brief criterion is intentionally deferred. Independent review is assigned separately;
+this worker does not run `/code-review` or move the ticket to In Review. Consumer whole-screen
+no-scroll layout, category columns, reduced preview, eligible Person choices and Face composition
+are explicitly out of scope. Landing and publication of a compatible release remain with the
+coordinator/maintainer; this branch is not an installed release.
+
+
+## Changed files
+
+- `src/Interaction/Choices/Choices.tsx`: rich-label/name props and tile recipe; selection logic unchanged.
+- `src/Interaction/Choices/Choices.spec.tsx`: rich/dash naming and inert coverage in all arrangements.
+- `src/Interaction/Choices/Choices.stories.tsx`: component docs and arrangement control vocabulary.
+- `src/Interaction/Choices/ChoicesTiles.stories.tsx`: full-workload interactive fixture and all browser assertions.
+- `src/Theme/renderTokens.ts`, `src/Theme/renderTokens.spec.ts`: tile width role and delivery contract.
+- `src/tokens.css`, `src/tokens.light.css`, `src/tokens.dark.css`: regenerated token declarations.
+- `scripts/check-build.ts`, `scripts/snapshots/choices.d.ts.snap`: published namespace/declaration check.
+- `scripts/browser/choices-tiles.mjs`: browser setup, play invocation and evidence capture only.
+- `CHANGELOG.md`: Unreleased minor feature note.
+- `docs/verification/173-choices.md`, `docs/verification/173-choices/`: this report, measured JSON and six screenshots.

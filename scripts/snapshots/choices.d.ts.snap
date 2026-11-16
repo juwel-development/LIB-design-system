@@ -1,0 +1,95 @@
+import { type VariantProps } from 'class-variance-authority';
+import { type FunctionComponent, type ReactNode } from 'react';
+import type { Subject } from 'rxjs';
+declare const choicesGroup: (props?: ({
+    arrangement?: "vertical" | "wrapping" | "tiles" | null | undefined;
+} & import("class-variance-authority/types").ClassProp) | undefined) => string;
+export interface IChoicesRootProps extends VariantProps<typeof choicesGroup> {
+    /** Full-width vertical rows by default; wrapping uses content-sized choices that flow onto
+     *  further lines. Tiles share equal columns using the themed minimum tile width.
+     *  All arrangements keep declared-order keyboard movement. */
+    arrangement?: VariantProps<typeof choicesGroup>['arrangement'];
+    /** The key of the selected choice. Must name a declared choice; the consumer owns it. */
+    selected: string;
+    /** Emits a choice's key when an available non-selected row is activated by pointer or arrow
+     *  keys. The selected row, an inert group and every render emit nothing. */
+    onSelect$: Subject<string>;
+    /** The radio group's accessible name. */
+    label: string;
+    /** Present with its retained selection and every supplied description visible, but unavailable:
+     *  semantically disabled, skipped by Tab, and deaf to pointer and keyboard input. */
+    inert?: boolean;
+    children: ReactNode;
+    testId?: string;
+}
+export interface IChoicesChoiceProps {
+    /** The stable identity `selected` names and selection requests emit. Not React's `key`, and
+     *  never inferred from the name or the position. */
+    value: string;
+    /** Visible text naming the option, optionally with non-interactive decoration. */
+    children: ReactNode;
+    /** The option's accessible name when its visible label does not name it, such as a dash. */
+    name?: string;
+    /** Optional visible text under the name, exposed as the choice's accessible description. */
+    description?: string;
+    testId?: string;
+}
+/**
+ * A single selection from a small set of named options with optional descriptions: choice rows,
+ * exactly one selected, following the WAI-ARIA radio-group pattern. Controlled - the consumer owns
+ * the selected key and every word; Choices owns the rows, the marker and the highlight. Composed
+ * from two members: `Root` carries the contract, `Choice` one row.
+ *
+ * @Guarantees — enforced on every render
+ * - Renders `role="radiogroup"` named by `label`, with each row a `role="radio"` button carrying
+ *   `aria-checked`, its `name` (when supplied) or visible label text as accessible name, and its
+ *   description as accessible description when supplied; omitted or empty descriptions render no content or association.
+ *   Ids are minted per row, so two groups on a page cannot collide.
+ * - Selection is the value of `selected`, nothing else: activating an available non-selected row
+ *   emits its key on `onSelect$`; the selected row, an unanswered request and every render emit
+ *   nothing, and no fallback selection is invented - ever.
+ * - Activating any part of an available row - its name and description text included - requests
+ *   that row. Exactly the row `selected` names shows the marker dot and the `foreground` boundary,
+ *   so selection survives without colour perception; keyboard focus is the separate shared ring.
+ * - Down/Right move focus to the next row and Up/Left to the previous, wrapping at either end,
+ *   requesting selection as focus moves. Roving tabindex: Tab enters the group at the selected row.
+ * - An inert group keeps the selected marker, highlight and every name and description visible,
+ *   mutes only the names' ink, exposes `aria-disabled` on the group with every row disabled, adds
+ *   no Tab stop, and emits nothing for any pointer or keyboard input.
+ * - `arrangement="vertical"` (the default) gives every choice the group's width. `wrapping`
+ *   sizes choices to content without sharing surplus width and flows whole choices onto further
+ *   lines. Names, unbroken words and supplied descriptions wrap within the available group width.
+ * - `tiles` shares equal-width columns according to available width and
+ *   `--choice-tile-min-width`, stacking each label's image above its text. A narrower group
+ *   fits one column; long and unbroken labels wrap. Selection changes no tile geometry.
+ * - Arrow order is declared order even across visual line breaks, never spatial row navigation.
+ *
+ * @CallerMustEnsure — the component cannot see these and does not check them
+ * - Labels contain visible text naming the option, optionally with decorative content. Supply
+ *   `name` when the visible label does not name the option (for example a dash for "No beard").
+ *   Decorative images carry `alt=""` and other decoration `aria-hidden`; nothing is interactive
+ *   or focusable, since the row is the control. All content must be phrasing content valid inside
+ *   a button. Figure artwork without caption or overlay renders an img and is the intended source.
+ * - Declare `--choice-tile-min-width` as a positive definite CSS length. Ensure fixed artwork
+ *   fits inside the tile's content width (including when the group is narrower than the minimum);
+ *   artwork retains its own size/contain contract and is never cropped by Choices.
+ * - Choice rows are direct children of `Root` (arrays and fragments are supported), each `value`
+ *   unique and stable, and `selected` names a declared row. Invalid input is a contract violation,
+ *   not a request for a fallback.
+ * - An update removing the selected row supplies a valid replacement `selected` in the same update.
+ * - Answering `onSelect$` by rerendering with the new `selected` is what changes the selection;
+ *   a consumer that ignores a request has decided the selection stays.
+ *
+ * @UXGuidelines
+ * - Names are short nouns for options and optional descriptions one or two sentences under them; the
+ *   consuming app words and translates both - the library ships no text of its own.
+ * - This is not a form field: no `<label>` pairing, no validation, no submission. Wire `onSelect$`
+ *   to whatever owns the selected key and pass that key back in.
+ * - Availability is the group's, not a row's: there is no per-row disabled. A choice that cannot
+ *   be offered is left out by the caller.
+ */
+export declare const Choices: {
+    readonly Root: FunctionComponent<IChoicesRootProps>;
+    readonly Choice: FunctionComponent<IChoicesChoiceProps>;
+};
+export {};
