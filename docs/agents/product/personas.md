@@ -28,7 +28,7 @@ every API decision is made for her first.
 - **Frustrations** — component libraries whose escape hatches (`className`, `...rest`) mean every
   team styles the same button five ways; props that take raw pixels and hexes, so nothing is
   consistent; a variant that exists but is documented nowhere.
-- **What this means for the API** — the closed prop surface is *for her*. A prop she cannot pass
+- **What this means for the API** — the closed prop surface is _for her_. A prop she cannot pass
   is a decision she does not have to make, and the reason her screens match everyone else's.
 
 ## Secondary — Tomas, the Design-System Maintainer

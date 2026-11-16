@@ -50,14 +50,22 @@ names, which is what lets one design system serve several brands.
 Consumers can declare their own size token for Figure's artwork presentation:
 
 ```css
-.catalog { --catalog-artwork-size: 64px; }
+.catalog {
+	--catalog-artwork-size: 64px;
+}
 ```
 
 ```tsx
 <div className="catalog">
-  <Figure presentation="artwork" size="--catalog-artwork-size"
-    src="/illustration.svg" alt="An illustrated compass" width={600} height={300} />
-</div>
+  <Figure
+    presentation="artwork"
+    size="--catalog-artwork-size"
+    src="/illustration.svg"
+    alt="An illustrated compass"
+    width={600}
+    height={300}
+  />
+</div>;
 ```
 
 Declare a **positive definite CSS length** on the image or an ancestor; the library

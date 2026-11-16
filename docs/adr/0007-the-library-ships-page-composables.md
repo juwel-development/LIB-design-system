@@ -5,7 +5,7 @@ status: accepted
 # The library ships page composables
 
 The package is a full design system, not only a set of primitives and the token layer they are
-styled from. **Page composables** — components that own an *arrangement* of primitives rather than a
+styled from. **Page composables** — components that own an _arrangement_ of primitives rather than a
 single element — are in scope. A composable is held to the same contract as a primitive: a closed
 prop surface, design-system vocabulary only, styled from tokens, on a closed roster reviewed per
 entry.
@@ -23,8 +23,8 @@ The change widens what may be built. It does **not** widen the standard it is bu
 ## The trade-off is real, not nominal
 
 A primitive owns an element; a composable owns an arrangement — and arrangement is the thing brands
-differ in most. A header that fixes *"three nav items, and no CTA button"*, an index rail that
-*"numbers 02–06 and has no 01"* because that product's hero is a poster: each is a single brand's
+differ in most. A header that fixes _"three nav items, and no CTA button"_, an index rail that
+_"numbers 02–06 and has no 01"_ because that product's hero is a poster: each is a single brand's
 furniture wearing a component's clothes. A composable that fixes an arrangement is therefore
 materially harder to make brand-neutral than a primitive, because the arrangement itself is the
 opinion.
@@ -39,7 +39,7 @@ Widening scope to arrangement does **not** admit brand assets. A wordmark, a log
 named person cannot carry a second brand at all — there is no variant or token that makes one
 product's logo serve another's page. Hosting one product's asset in a library several products share
 remains wrong for the same reason it always was, and this ADR does not change it. The brand-neutral
-*general* versions of those needs (a slot a consumer fills, a role rather than an image) are pursued
+_general_ versions of those needs (a slot a consumer fills, a role rather than an image) are pursued
 separately as their own components; the asset itself stays with the consumer.
 
 ## Considered options
@@ -60,7 +60,7 @@ carry a second brand, so it cannot live in a shared library.
 
 ## Consequences
 
-- **The roster stays closed and is still reviewed per entry.** Widening the *kind* of thing that may
+- **The roster stays closed and is still reviewed per entry.** Widening the _kind_ of thing that may
   join it does not open it: a composable is added deliberately, argued on its own, or hand-rolled in
   the product instead — never both.
 - **Each blocked proposal owes a conversion pass.** Its single-brand rules become variants or tokens

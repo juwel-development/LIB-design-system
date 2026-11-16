@@ -329,37 +329,34 @@ export const FitBoundary: Story = {
   },
 };
 
+const Themed: FunctionComponent = () => {
+  const [isRoomy, setIsRoomy] = useState(false);
+  const [toggle$] = useState(() => new Subject<void>());
+  useEffect(() => {
+    const subscription = toggle$.subscribe(() => setIsRoomy((value) => !value));
+    return () => subscription.unsubscribe();
+  }, [toggle$]);
+  return (
+    <Stack gap={'region'}>
+      <Button variant={'plain'} onClick$={toggle$}>
+        Re-point the minimum
+      </Button>
+      <Holder
+        width={'40rem'}
+        style={{ '--work-area-min-width': isRoomy ? '16rem' : '10rem' }}
+        testId={'holder'}
+      >
+        <WorkAreas />
+      </Holder>
+    </Stack>
+  );
+};
+
 /** The holder keeps its width; only the theme changes. Re-pointing the minimum from 10rem to 16rem
  *  moves the three-area threshold past the holder, and the tab group is mounted - no resize, no
  *  rerender of the declarations. */
 export const TokenChange: Story = {
-  render: () => {
-    const Themed: FunctionComponent = () => {
-      const [isRoomy, setIsRoomy] = useState(false);
-      const [toggle$] = useState(() => new Subject<void>());
-      useEffect(() => {
-        const subscription = toggle$.subscribe(() =>
-          setIsRoomy((value) => !value),
-        );
-        return () => subscription.unsubscribe();
-      }, [toggle$]);
-      return (
-        <Stack gap={'region'}>
-          <Button variant={'plain'} onClick$={toggle$}>
-            Re-point the minimum
-          </Button>
-          <Holder
-            width={'40rem'}
-            style={{ '--work-area-min-width': isRoomy ? '16rem' : '10rem' }}
-            testId={'holder'}
-          >
-            <WorkAreas />
-          </Holder>
-        </Stack>
-      );
-    };
-    return <Themed />;
-  },
+  render: () => <Themed />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const holder = canvas.getByTestId('holder');
@@ -438,66 +435,65 @@ const MountCount: FunctionComponent<{ area: string }> = ({ area }) => {
 // Outlives every mount on purpose: it is the consumer-side record of how often an area mounted.
 const mounts: Record<string, number> = {};
 
+const Resizable: FunctionComponent = () => {
+  const [width, setWidth] = useState('40rem');
+  const [draft, setDraft] = useState('Untitled');
+  const [narrow$] = useState(() => new Subject<void>());
+  const [widen$] = useState(() => new Subject<void>());
+  const [title$] = useState(() => new Subject<string>());
+  useEffect(() => {
+    const subscriptions = [
+      narrow$.subscribe(() => setWidth('26rem')),
+      widen$.subscribe(() => setWidth('40rem')),
+      title$.subscribe(setDraft),
+    ];
+    return () => {
+      for (const subscription of subscriptions) subscription.unsubscribe();
+    };
+  }, [narrow$, widen$, title$]);
+  return (
+    <Stack gap={'region'}>
+      <Cluster>
+        <Button variant={'plain'} onClick$={narrow$}>
+          Narrow the holder
+        </Button>
+        <Button variant={'plain'} onClick$={widen$}>
+          Widen the holder
+        </Button>
+      </Cluster>
+      <Holder width={width} testId={'holder'}>
+        <WorkAreas
+          pool={<MountCount area={'pool'} />}
+          board={
+            <>
+              <MountCount area={'board'} />
+              <Input label={'Board note'} name={'note'} />
+            </>
+          }
+          summary={
+            <>
+              <MountCount area={'summary'} />
+              <Input
+                label={'Title'}
+                name={'title'}
+                defaultValue={draft}
+                onInput$={title$}
+              />
+            </>
+          }
+        />
+      </Holder>
+    </Stack>
+  );
+};
+
 /** What a selection change does to content. The board is declared under the key `board` in both
  *  arrangements, so it stays mounted: its note keeps its text and its focus. The pool and the
  *  summary move into tab panels, so they are removed and mount fresh; the summary's title comes
  *  back only because the consumer owns the draft and supplies it again, and nothing gives it its
  *  focus back. */
 export const Lifecycle: Story = {
-  render: () => {
-    const Resizable: FunctionComponent = () => {
-      const [width, setWidth] = useState('40rem');
-      const [draft, setDraft] = useState('Untitled');
-      const [narrow$] = useState(() => new Subject<void>());
-      const [widen$] = useState(() => new Subject<void>());
-      const [title$] = useState(() => new Subject<string>());
-      useEffect(() => {
-        const subscriptions = [
-          narrow$.subscribe(() => setWidth('26rem')),
-          widen$.subscribe(() => setWidth('40rem')),
-          title$.subscribe(setDraft),
-        ];
-        return () => {
-          for (const subscription of subscriptions) subscription.unsubscribe();
-        };
-      }, [narrow$, widen$, title$]);
-      return (
-        <Stack gap={'region'}>
-          <Cluster>
-            <Button variant={'plain'} onClick$={narrow$}>
-              Narrow the holder
-            </Button>
-            <Button variant={'plain'} onClick$={widen$}>
-              Widen the holder
-            </Button>
-          </Cluster>
-          <Holder width={width} testId={'holder'}>
-            <WorkAreas
-              pool={<MountCount area={'pool'} />}
-              board={
-                <>
-                  <MountCount area={'board'} />
-                  <Input label={'Board note'} name={'note'} />
-                </>
-              }
-              summary={
-                <>
-                  <MountCount area={'summary'} />
-                  <Input
-                    label={'Title'}
-                    name={'title'}
-                    defaultValue={draft}
-                    onInput$={title$}
-                  />
-                </>
-              }
-            />
-          </Holder>
-        </Stack>
-      );
-    };
-    return <Resizable />;
-  },
+  render: () => <Resizable />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const holder = canvas.getByTestId('holder');
@@ -556,52 +552,48 @@ const Overflowing: FunctionComponent<{
   return <P>Taller than the scroll body can show.</P>;
 };
 
+const Scrolled: FunctionComponent = () => {
+  const [offered, setOffered] = useState(33);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [mountsOfThree, setMountsOfThree] = useState(0);
+  const [present$] = useState(() => new BehaviorSubject(false));
+  const [widen$] = useState(() => new Subject<void>());
+  useLayoutEffect(() => {
+    const subscriptions = [
+      present$.subscribe((isPresent) => {
+        setIsOverflowing(isPresent);
+        setMountsOfThree((count) => count + Number(isPresent));
+      }),
+      widen$.subscribe(() => setOffered((rem) => rem + 1)),
+    ];
+    return () => {
+      for (const subscription of subscriptions) subscription.unsubscribe();
+    };
+  }, [present$, widen$]);
+  return (
+    <Stack gap={'region'}>
+      <Cluster>
+        <Button variant={'plain'} onClick$={widen$}>
+          Offer one rem more
+        </Button>
+        <Note>
+          {offered}rem offered, three areas mounted {mountsOfThree} time(s)
+        </Note>
+      </Cluster>
+      <Holder width={`${offered - Number(isOverflowing)}rem`} testId={'holder'}>
+        <WorkAreas summary={<Overflowing present$={present$} />} />
+      </Holder>
+    </Stack>
+  );
+};
+
 /** A holder that loses width to what is mounted in it. The three areas fit the 33rem offered
  *  exactly, but mounted they cost the holder 1rem - a scrollbar - and no longer fit; the tab group
  *  gives the rem back. After two such round trips the tab group stays and the lost rem is held
  *  back from then on: with one rem more offered the three areas return, once, and hold their
  *  row at the 33rem they leave. */
 export const WidthFeedback: Story = {
-  render: () => {
-    const Scrolled: FunctionComponent = () => {
-      const [offered, setOffered] = useState(33);
-      const [isOverflowing, setIsOverflowing] = useState(false);
-      const [mountsOfThree, setMountsOfThree] = useState(0);
-      const [present$] = useState(() => new BehaviorSubject(false));
-      const [widen$] = useState(() => new Subject<void>());
-      useLayoutEffect(() => {
-        const subscriptions = [
-          present$.subscribe((isPresent) => {
-            setIsOverflowing(isPresent);
-            setMountsOfThree((count) => count + Number(isPresent));
-          }),
-          widen$.subscribe(() => setOffered((rem) => rem + 1)),
-        ];
-        return () => {
-          for (const subscription of subscriptions) subscription.unsubscribe();
-        };
-      }, [present$, widen$]);
-      return (
-        <Stack gap={'region'}>
-          <Cluster>
-            <Button variant={'plain'} onClick$={widen$}>
-              Offer one rem more
-            </Button>
-            <Note>
-              {offered}rem offered, three areas mounted {mountsOfThree} time(s)
-            </Note>
-          </Cluster>
-          <Holder
-            width={`${offered - Number(isOverflowing)}rem`}
-            testId={'holder'}
-          >
-            <WorkAreas summary={<Overflowing present$={present$} />} />
-          </Holder>
-        </Stack>
-      );
-    };
-    return <Scrolled />;
-  },
+  render: () => <Scrolled />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const holder = canvas.getByTestId('holder');

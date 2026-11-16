@@ -1,7 +1,7 @@
 # Coding standard
 
 How we write TypeScript. Companion to the [architecture standard](./architecture.md): that one
-says *where* code lives, this one says *how* it reads. Component authoring has its own, stricter
+says _where_ code lives, this one says _how_ it reads. Component authoring has its own, stricter
 standard on top of this one — see [design-system-components.md](./design-system-components.md).
 
 ## The stance
@@ -67,18 +67,18 @@ Names replace comments.
 - Methods are verbs, classes/fields are nouns, booleans read as assertions (`isActive`).
 - **Observable-valued props and fields end in `$`** — `onClick$`. See [Asynchrony](#asynchrony).
 
-| Kind | Case | Example |
-|---|---|---|
-| Component | `PascalCase` | `Button` |
-| Props interface | `I` + component + `Props` | `IButtonProps` |
-| Other interface | `I` + `PascalCase` | `IClock` |
-| Enum | `E` + `PascalCase` | `EDirection` |
-| Function, field, local | `camelCase` | `renderTokens` |
-| CVA recipe | `camelCase`, named for its component | `const button = cva(…)` |
-| Global constant | `SCREAMING_SNAKE_CASE` | `GENERATED_HEADER` |
-| Local constant | `camelCase` | `startingBudget` |
-| File | matches its component, class, interface, or enum | `Button.tsx`, `IClock.ts` |
-| Test / story | the component plus a suffix | `Button.spec.tsx`, `Button.stories.tsx` |
+| Kind                   | Case                                             | Example                                 |
+| ---------------------- | ------------------------------------------------ | --------------------------------------- |
+| Component              | `PascalCase`                                     | `Button`                                |
+| Props interface        | `I` + component + `Props`                        | `IButtonProps`                          |
+| Other interface        | `I` + `PascalCase`                               | `IClock`                                |
+| Enum                   | `E` + `PascalCase`                               | `EDirection`                            |
+| Function, field, local | `camelCase`                                      | `renderTokens`                          |
+| CVA recipe             | `camelCase`, named for its component             | `const button = cva(…)`                 |
+| Global constant        | `SCREAMING_SNAKE_CASE`                           | `GENERATED_HEADER`                      |
+| Local constant         | `camelCase`                                      | `startingBudget`                        |
+| File                   | matches its component, class, interface, or enum | `Button.tsx`, `IClock.ts`               |
+| Test / story           | the component plus a suffix                      | `Button.spec.tsx`, `Button.stories.tsx` |
 
 ## Error handling
 

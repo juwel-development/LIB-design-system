@@ -8,7 +8,7 @@ The library declares sixteen typographic tokens — two family roles, six type r
 leading, a reading measure in two widths, and two tracking roles — and reads none of them yet. Six
 proposals are specified in a vocabulary the token layer could not previously speak: it declared
 colour, motion, focus-ring and radius and nothing typographic, so a proposal whose central
-requirement is *"size is a token reference, never a local choice"* could only be approximated. The
+requirement is _"size is a token reference, never a local choice"_ could only be approximated. The
 contract exists so those components can be built against a name rather than a hard-coded literal — the
 defect [ADR 0001](./0001-motion-token-contract.md) and [ADR 0003](./0003-radius-token-contract.md)
 removed for motion and radius, applied before rather than after the fact.
@@ -19,7 +19,7 @@ resolves to whatever the consumer already had, not a choice made on their behalf
 
 ## Where the type-agnostic line falls
 
-The test is whether the library *sets* the property. Where it does — size, leading, tracking, measure,
+The test is whether the library _sets_ the property. Where it does — size, leading, tracking, measure,
 all set per element inside a sealed CVA recipe with no `className` reachable from outside — a consumer
 overriding it has to fight a utility class on an element they cannot reach, so the value needs a name.
 Where it does not, nothing is being fought and a name would be dead weight. Family is the one case the
@@ -27,9 +27,9 @@ library chooses whether to set at all; it sets it, so it names it (see below).
 
 ## Roles, not rungs
 
-[ADR 0003](./0003-radius-token-contract.md) rejected a radius scale because *"a scale invites each
+[ADR 0003](./0003-radius-token-contract.md) rejected a radius scale because _"a scale invites each
 component to pick a rung, which is how a library ends up with five corner radii and no rule about which
-one means what."* That argument is not discharged by typography needing more than one value — it is
+one means what."_ That argument is not discharged by typography needing more than one value — it is
 discharged by these naming **roles, not sizes**. `--text-display` is not "the big one", it is the
 page's single scale event; `--text-label` is the letter-spaced eyebrow device. There is exactly one
 role per job, so a component has nothing to choose between: it asks for what its text **is**, the same
@@ -48,11 +48,11 @@ implementation was faithful to the contract as filed; the contract was what chan
 with no size prop, and depot-tracker demonstrates three distinct heading steps above body (`6xl` /
 `4xl` / `2xl` against a `base` body) for levels one to three; the contract declared two. Levels four
 to six do not need roles — they share the body size and separate by weight — so this is one new role,
-not three. It is not a re-opening of *roles, not rungs*: `subtitle` names a job the way `display` and
+not three. It is not a re-opening of _roles, not rungs_: `subtitle` names a job the way `display` and
 `title` do, there is still one role per job, and no component gains a choice between them.
 
 `--text-display` held `clamp(2.25rem, 5vw, 4.25rem)` — which is
-[#18](https://github.com/juwel-development/LIB-design-system/issues/18)'s measured *subpage head*, a
+[#18](https://github.com/juwel-development/LIB-design-system/issues/18)'s measured _subpage head_, a
 value that must never out-scale the homepage hero. It sat one rung too high. So `display`, the hero,
 moves up to `clamp(3rem, 7vw, 6rem)`; the old `display` value drops to `--text-title`
 (`--leading-title` tightening from `1.15` to `1.1`); and everything the old `title` described moves
@@ -68,7 +68,7 @@ opening paragraph of a measure-bounded reading block
 than `body`'s `1.6`, but not a heading's `1.2` — it is a multi-line paragraph, not a head.
 
 Reusing `subtitle` was available and free, and rejected. This contract binds every size to its
-leading, so borrowing `subtitle`'s size welds the lede to H3's *and* applies a heading's `1.2` leading
+leading, so borrowing `subtitle`'s size welds the lede to H3's _and_ applies a heading's `1.2` leading
 to running text. It is a role, not a rung, by this ADR's own test: a lede is a job — the one opening
 paragraph of a reading block — so there is still one role per job and no component gains a choice
 between them. Recorded here, in place, rather than as a new ADR, following the `subtitle` precedent
@@ -100,7 +100,7 @@ a correction that does and is meaningless on its own. This is [ADR 0002](./0002-
 run in reverse — there four ring tokens collapsed to one because they encoded a distinction that did
 not exist; here one property carries two quantities that do, and the fix is to name both.
 
-*(This token shipped as `--tracking-display` and was renamed in the amendment below.)*
+_(This token shipped as `--tracking-display` and was renamed in the amendment below.)_
 
 ## Amended: the correction is size-scoped, and its name now says so
 
@@ -108,8 +108,8 @@ The section above named the correction after the `display` role and left **who c
 Nothing then carried it, and the gap closed the worst way: `PageHead` shipped with the correction on
 its `title`-role heading while `H1`, the largest type in the system, went without — inverting the
 correction's own logic and rendering one type role two ways, since `H2` binds to `title` too. It
-reached `main` through a clause in an agent brief, which is precisely the *"settled as a side effect of
-one component's recipe"* outcome [#57](https://github.com/juwel-development/LIB-design-system/issues/57)
+reached `main` through a clause in an agent brief, which is precisely the _"settled as a side effect of
+one component's recipe"_ outcome [#57](https://github.com/juwel-development/LIB-design-system/issues/57)
 was filed to prevent.
 
 **The correction is scoped by size, not by role.** It is carried by the `title` role and above — `H1`,
@@ -125,7 +125,7 @@ are what the tests now pin:
 **The token is renamed `--tracking-optical`.** Naming it for the `display` role was accurate while
 nothing used it and became under-inclusive the moment the scope was settled — a name saying `display`
 while the token serves `title` invites exactly the drift the section above warns about. `optical` names
-the *kind* of quantity instead, so the pair reads as **a style and a correction** without the ADR in
+the _kind_ of quantity instead, so the pair reads as **a style and a correction** without the ADR in
 hand, which is the distinction the whole section exists to protect. `--tracking-tight` was rejected: it
 names the effect and loses the reason.
 
@@ -136,18 +136,18 @@ scope, in the one place in this contract where a name being read carelessly has 
 
 ## Amended: `display ≥ title` is a default, not a contract on the consumer
 
-The amendment above moved `--text-display` up off *"a value that must never out-scale the homepage
-hero"*. That phrasing, read out of context, sounds like a rule binding any page's tokens. It is not.
+The amendment above moved `--text-display` up off _"a value that must never out-scale the homepage
+hero"_. That phrasing, read out of context, sounds like a rule binding any page's tokens. It is not.
 It describes the relationship the library's own default values hold, and the test that guards it in
-`renderTokens.spec.ts` checks only those shipped values — *"enforced against the library's own
-values, never against a consumer's"*, the shape every constraint in this contract takes. No
+`renderTokens.spec.ts` checks only those shipped values — _"enforced against the library's own
+values, never against a consumer's"_, the shape every constraint in this contract takes. No
 component compares the two tokens at runtime: `H1` reads `--text-display`, `H2` and `PageHead` read
 `--text-title`, each independently, so nothing breaks when their order is reversed.
 
 `display ≥ title` holds because the hero is assumed to be a **text** scale event, and a text-led
 hero should out-scale a subpage head. That assumption is a consumer's to make, not the library's. On
 a site whose first-screen scale event is a **drawn mark** — an inline-SVG wordmark, not text — the
-largest *text* on the home page is deliberately small: a one-line lead that must not compete with the
+largest _text_ on the home page is deliberately small: a one-line lead that must not compete with the
 mark, ~31px, while the subpage head (the `title` role) is that page's single scale event, set larger,
 up to ~68px. Such a consumer re-points `--text-display` **below** `--text-title` on purpose. That is
 sanctioned: it inverts a default, not a contract, and breaks nothing.
@@ -164,7 +164,7 @@ nothing recorded that as a decision. The consequence surfaced in the shell
 label role, so its nav's line box — the height of the whole bar — was **inherited from the consuming
 document**. The bar therefore varied by consumer as well as by route, and the one number a consumer
 needed in order to pin the standing slot beside that nav was a number the library could not state,
-because it did not own it. A contract whose test is *"whether the library sets the property"* had a role
+because it did not own it. A contract whose test is _"whether the library sets the property"_ had a role
 setting size and leaving leading to whoever it landed in.
 
 So `--leading-label: 1.5` is declared and `Header` reads it. Reading it is the load-bearing half: the
@@ -182,7 +182,7 @@ somebody makes rather than a default that spread.
 **This is not a leading scale.** It is one role acquiring the leading its siblings already had, so the
 count of roles is unchanged and no component gains anything to choose between: a component set at the
 label role either owns its line box or inherits it, and there is exactly one value it can own. The
-rung-picking *Roles, not rungs* forbids would be `--leading-label-tight` beside it, and there is none.
+rung-picking _Roles, not rungs_ forbids would be `--leading-label-tight` beside it, and there is none.
 `--text-small` is in the same position and is deliberately **not** named here — the same argument
 probably reaches it, but that is a decision about a different role and it is out of scope in #81.
 
@@ -198,13 +198,13 @@ assignment is fixed by the library. Both default to `inherit`, which is what mak
 nothing: `font-family: inherit` is a genuine no-op against not setting it, so a one-face consumer sees
 exactly what they see today, and a two-face consumer re-points two names and the split lands
 everywhere at once. Reading both is what makes the pair live rather than decorative — a contract naming
-only the departing face would strand the consumer whose *body* is the labelling face and who wants
+only the departing face would strand the consumer whose _body_ is the labelling face and who wants
 content set in the other one.
 
 **Considered and rejected: a `font` prop** (`<SpecTable valueFont="secondary" />`). It passes the
 component-authoring standard's §2 literally, since `"secondary"` is a token name, but fails the stance
-underneath it: `CONTEXT.md` opens with *"every look-and-feel decision is addressable by the consuming
-product"* — through the theme, once, for the whole system. A prop makes it addressable per instance,
+underneath it: `CONTEXT.md` opens with _"every look-and-feel decision is addressable by the consuming
+product"_ — through the theme, once, for the whole system. A prop makes it addressable per instance,
 so two tables on one page could disagree about which face their values take and the theme would have no
 say. Which face a value cell takes is a property of the design system, not of the individual table —
 the shape [ADR 0002](./0002-focus-ring-token-contract.md) rejected for per-variant rings. The token
@@ -212,8 +212,8 @@ gives the consumer the same control system-wide, which is the stronger version.
 
 **Considered and rejected: one token for the departing face only** (`--font-label`). Tighter, and the
 better name — one role owning `--text-label` and `--tracking-label` too. Rejected for the stranding
-case: it can express *"labels depart from the body face"* and cannot express *"content departs from the
-body face"*, and nothing about a two-face system says which a given product is doing.
+case: it can express _"labels depart from the body face"_ and cannot express _"content departs from the
+body face"_, and nothing about a two-face system says which a given product is doing.
 
 `primary`/`secondary` are ordinal where the rest of the contract is purposive, which is the honest
 objection to them. It is answered by the palette already carrying `--color-primary`/`--color-secondary`
@@ -223,7 +223,7 @@ two tokens whose names are lies.
 
 ## Amended: the rule that decides which face, stated so an element cannot fall through it
 
-*"`--font-primary` is the face content is set in, `--font-secondary` the face labels are set in"*
+_"`--font-primary` is the face content is set in, `--font-secondary` the face labels are set in"_
 names the two roles and does not decide a case. It failed on the whole of `Interaction` and on
 `Layout`'s `Form`: `Button`, `Input`, `Link`, `TextArea` and `Form` shipped declaring **no** family at all
 ([#90](https://github.com/juwel-development/LIB-design-system/issues/90)), which on the library's own
@@ -241,23 +241,23 @@ The operative rule, which is descriptive of what the library already does:
 
 **Actions are `primary`.** `Button` is the only instance in the library and the clause most likely to
 be rediscovered wrongly, because a button's text reads like a label in the ordinary sense. It is not
-one: a viewer came to a form to *submit* it, so the action is the thing itself and not the apparatus
+one: a viewer came to a form to _submit_ it, so the action is the thing itself and not the apparatus
 naming it. The face sits in `Button`'s recipe base, so no variant can disagree.
 
 **Why the header cell and the term sort differently.** The rule does not ask whether a string names
 its neighbour — both of those do — it asks which of the two the visitor came for. A table's figures
 are what was come for and the header cell is the apparatus routing the eye down a column, so the cell
-is `secondary` and the value `primary`. A definition list's *term* is what was come for: the term and
+is `secondary` and the value `primary`. A definition list's _term_ is what was come for: the term and
 its description are together the reading matter, with no apparatus around them, so both are
 `primary`. The old wording could not express this because "label" describes a string's grammar; this
 one describes its job on the page.
 
 **Why one note is `secondary` and another `primary`.** The same question, put to the word this
 amendment most often turns on, since "annotation" above would otherwise sweep up four elements that
-do not all sort the same way. `Form`'s note and `Table`'s note stand *beside* the thing they annotate
+do not all sort the same way. `Form`'s note and `Table`'s note stand _beside_ the thing they annotate
 — the form the visitor came to submit, the figures they came to read — so they are apparatus and take
 `secondary`. `Prose`'s tail and `PageHead`'s intro are stepped down to the same `small` role but sit
-*inside* the reading matter, as its closing and opening paragraphs, so they are what was come for and
+_inside_ the reading matter, as its closing and opening paragraphs, so they are what was come for and
 stay `primary`. Size is not the test and neither is the word: position relative to the thing come for
 is.
 
@@ -279,13 +279,13 @@ and is unchanged; what changes is that five components that assigned none now do
 
 ## Amended: the size those same five elements name, which is a different question
 
-The amendment above settled the *face* of the five components that declared none. Auditing it found
+The amendment above settled the _face_ of the five components that declared none. Auditing it found
 the same elements declaring no **type role** either
 ([#92](https://github.com/juwel-development/LIB-design-system/issues/92)), and that gap is not the
 same gap. Family is invisible on the library's own values, because both roles default to `inherit`;
 size is not. `Input`'s and `TextArea`'s `<label>`s and controls, and `Button`'s text, rendered at
-whatever size they inherited, so a component's type changed with where it was placed. *Roles, not
-rungs* says a component asks for what its text **is**; these five asked for nothing, which is a
+whatever size they inherited, so a component's type changed with where it was placed. _Roles, not
+rungs_ says a component asks for what its text **is**; these five asked for nothing, which is a
 different way of failing the same rule — the answer came from the page instead of from a rung, and
 either way it was not the component's.
 
@@ -296,7 +296,7 @@ component cannot honour while the quantity driving its height belongs to somebod
 
 **All three take `body`.** The control takes it because of the floor recorded below — it is the one
 role clearing 16px. The `<label>` takes the control's role, because a field's label and its value
-should read as one thing; the label's *naming* signal is already carried by the `secondary` face the
+should read as one thing; the label's _naming_ signal is already carried by the `secondary` face the
 amendment above gave it, so the size does not need to repeat it. `label` was the tempting answer and
 is wrong twice over: `--text-label` is 13px, which would set a field's label **smaller than its own
 hint and error message** at `small`'s 15px, and every use of the label role in this library pairs it
@@ -312,8 +312,8 @@ is that the label above them stopped being sized by the page.
 **`Link` still declares no type role, in any treatment, and that is not the same omission.** The
 face is constant across placements and the size is not, which is the whole reason the two questions
 sort differently. `prose` sits in running text by definition; `graphic`'s child is not text;
-[ADR 0006](./0006-link-treatment-contract.md) already settles `label-link` — *"sets no size,
-tracking or face"*; and `quiet` **cannot** take one role without breaking a placement, since its two
+[ADR 0006](./0006-link-treatment-contract.md) already settles `label-link` — _"sets no size,
+tracking or face"_; and `quiet` **cannot** take one role without breaking a placement, since its two
 documented homes set different sizes on their own roots, `Header` at the label role and `Footer` at
 `small`. That is why `quiet` carries a face and no size. The recipe says so, so the silence is not
 rediscovered as this amendment's gap.
@@ -330,7 +330,7 @@ The two amendments above put the content face and the `body` size in `Button`'s 
 variant can disagree". The maintainer then accepted a variant that must
 ([#114](https://github.com/juwel-development/LIB-design-system/issues/114)): `variant="plain"`, a
 plain action - an operable, focusable button presented in the typography and colour of the content
-around it. A sortable column header is the case that forced it: the action *is* the header's label,
+around it. A sortable column header is the case that forced it: the action _is_ the header's label,
 so a button there set at the content face and `body` size would put a 17px serif action inside a
 13px tracked grotesk label row. The rule the face amendment stated still sorts it correctly - the
 visitor came to a table for its figures, and a header that happens to be operable is still the
@@ -367,9 +367,9 @@ from its placement.
 
 ## Amended: heading, body and control family roles, resolved where the text is
 
-[ADR 0005](./0005-heading-level-fixes-type-role.md) closed with *"Headings and body copy share a face
+[ADR 0005](./0005-heading-level-fixes-type-role.md) closed with _"Headings and body copy share a face
 … A consumer wanting a grotesk display face over a serif reading face cannot express it without a
-third family role, which was declined for want of a demonstrated need."* The need arrived as
+third family role, which was declined for want of a demonstrated need."_ The need arrived as
 [#120](https://github.com/juwel-development/LIB-design-system/issues/120): a product whose headings
 are serif and whose body and controls are sans-serif, with the theme keeping ownership of which face is
 which. Under two roles that product has one move — re-point `primary` to the serif — and it moves every
@@ -396,7 +396,7 @@ still ships no face: `primary` is `inherit`, as it was, and the three roles reso
 `--font-primary` is kept declared and re-pointable — it is the one name a theme sets to move all
 three — rather than retired, so nothing a consumer wrote stops working.
 
-**Where the fallback resolves, which is the load-bearing decision.** The three roles are *not* theme
+**Where the fallback resolves, which is the load-bearing decision.** The three roles are _not_ theme
 variables with a value at `:root`. A custom property's `var()` substitutes on the element declaring it,
 so `--font-heading: var(--font-primary)` on `:root` would resolve against the root's `primary` and
 never against a wrapper's: a theme that re-points `--font-primary` on a wrapper element — a supported
@@ -406,7 +406,9 @@ existing theme, and the first draft of this amendment shipped it as a documented
 reviewed out. Instead each role is a utility carrying the fallback, read where the text is:
 
 ```css
-@utility font-heading { font-family: var(--font-heading, var(--font-primary)); }
+@utility font-heading {
+	font-family: var(--font-heading, var(--font-primary));
+}
 ```
 
 Nothing declares a value for `--font-heading`, `--font-body` or `--font-control`, so the fallback stays
@@ -425,7 +427,7 @@ any treatment, and a plain action inside a heading or paragraph follows that con
 moves.
 
 **Considered and rejected: a heading role only.** The consumer's shape — serif headings over a
-sans body *and* sans controls — needs just the heading role, and two more names were not free. Body
+sans body _and_ sans controls — needs just the heading role, and two more names were not free. Body
 is added because without a name of its own the reading matter can only move by moving `primary`,
 which moves the two roles that fall back to it; control is added because the box a viewer operates is
 already a named role in the domain model (`Control`), its face is set by the library on an element a
@@ -466,7 +468,7 @@ token, enforced against the library's own values, never against a consumer's.
   `--font-body` where a theme sets it, `--font-primary` otherwise. The constraint follows the role,
   not the legacy name, because a theme re-pointing `--font-body` bypasses `primary` entirely.
   `font-variant-numeric` and `font-variant-caps` are inert on a face without the feature and fail
-  *silently* — figures do not line up, capitals are synthesised. The library ships no face, so these
+  _silently_ — figures do not line up, capitals are synthesised. The library ships no face, so these
   are constraints on the consumer's binary, stated on the token and not checkable here — a `token
   constraint the library can only state` in the domain model's terms.
 
@@ -488,7 +490,6 @@ tokens take role names rather than reusing `sans` and `serif`.
 
 **No component consumes it in this ticket.** `Button`, `Input` and `TextArea` are unchanged; this is
 the foundation the six blocked proposals are written against, laid before they are built.
-
 
 ## Amended: visual strong weight for body copy and annotations (#135)
 

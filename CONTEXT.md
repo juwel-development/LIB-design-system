@@ -12,7 +12,7 @@ host one product's furniture (see [ADR 0007](docs/adr/0007-the-library-ships-pag
 ### Tokens
 
 **Token**:
-A named value the library declares and a consuming product may re-declare. Names a *role*
+A named value the library declares and a consuming product may re-declare. Names a _role_
 (`primary`, `hover`), never a shade or a measurement.
 _Avoid_: Variable, setting, theme value
 
@@ -31,7 +31,7 @@ reach.
 _Avoid_: Guideline, recommendation, best practice
 
 **Role**:
-What a token is *for*, which is what a token name states. `primary` is a role; `violet-500` is a
+What a token is _for_, which is what a token name states. `primary` is a role; `violet-500` is a
 shade, and naming a shade is what the token layer exists to prevent.
 _Avoid_: Semantic name, alias
 
@@ -74,7 +74,7 @@ _Avoid_: Background, backing, border, rule
 ### Typography
 
 **Type role**:
-What a piece of text *is* — a page's one scale event, a title, running body copy, a label. The
+What a piece of text _is_ — a page's one scale event, a title, running body copy, a label. The
 library names and sizes text by role and never by measurement, so a component asks for the role its
 text fills rather than picking a step on a ramp. There is exactly one role per job, which is what
 leaves a component nothing to choose between.
@@ -87,14 +87,14 @@ headings; reading content does not become a heading because it shares a heading'
 _Avoid_: Font size, type scale step
 
 **Heading level**:
-A heading's position in the document outline, `h1` through `h6`. The level *fixes* the type role
+A heading's position in the document outline, `h1` through `h6`. The level _fixes_ the type role
 rather than defaulting it: a level-2 heading is the title role and cannot be asked to render as
 anything else. The scale hierarchy therefore holds by construction, across routes as well as down a
 page, instead of depending on every caller getting it right.
 _Avoid_: Heading size, heading variant, heading scale
 
 **Eyebrow**:
-A short line of small, tracked, muted type standing above the thing it files, set at the *label* type
+A short line of small, tracked, muted type standing above the thing it files, set at the _label_ type
 role — and the primitive that renders it, a `p` muted by default. Named apart from "label" on purpose:
 "label" already means the HTML `<label>` a text control renders, the required `label` prop on that
 control, and the label type role the device reads. An Eyebrow carries no `htmlFor` and names no
@@ -104,7 +104,7 @@ component owns that element.
 _Avoid_: Label, kicker, overline, Caption, small-caps
 
 **Note**:
-A short annotation at the *small* type role in the secondary family — a routing line above a submit
+A short annotation at the _small_ type role in the secondary family — a routing line above a submit
 button, a privacy line at the point of submission, a line beside a control. It is not reading
 matter: it takes no measure and sits in no reading column, which is what separates it from
 `Prose.Tail` at the same size, and by default it carries neither the tracking nor the weight that make an
@@ -147,7 +147,7 @@ Any change the library animates over time rather than applying instantly.
 **Motion the library performs**:
 Motion originating in a library component. The boundary of what the token contract may govern —
 the library declares tokens for motion it performs, and stays out of motion it does not. A page
-transition is motion the *consumer* performs, so it has no token here.
+transition is motion the _consumer_ performs, so it has no token here.
 _Avoid_: Our animations, library motion
 
 **Colour transition**:
@@ -163,9 +163,9 @@ _Avoid_: Motion off, a11y motion mode
 
 **Elevation**:
 The appearance of something being raised off the surface — a shadow, or a press that shifts
-geometry. On a *control* it is decoration and the library performs none, because a
+geometry. On a _control_ it is decoration and the library performs none, because a
 raised-and-depressing material is one brand's opinion rather than a role any brand can re-point. On
-a *Floating Layer* it is a shared depth cue rather than decoration.
+a _Floating Layer_ it is a shared depth cue rather than decoration.
 _Avoid_: Depth, shadow, lift
 
 **Floating Layer**:
@@ -180,7 +180,7 @@ The one mark the library draws to show which primitive holds keyboard focus. It 
 position and nothing else — never the importance of the thing it surrounds — so it is one role
 across every focusable primitive rather than one per variant, and it follows focusability rather
 than control-ness: a primitive the viewer can tab to takes it whether or not it is a control. It is
-also the *only* thing that changes on focus: a boundary, fill and geometry hold still, so focus
+also the _only_ thing that changes on focus: a boundary, fill and geometry hold still, so focus
 reads as a mark appearing rather than as the thing thickening.
 _Avoid_: Focus state, focus highlight, per-variant ring
 
@@ -207,20 +207,20 @@ and scrolling contracts, with minimum widths governing selection rather than for
 _Avoid_: Automatic layout ranking
 
 **Primitive**:
-A component on the roster that owns a single *element* — a button, an input, an eyebrow. Its props
+A component on the roster that owns a single _element_ — a button, an input, an eyebrow. Its props
 are its entire contract — there is no `className` or `style` escape hatch, so anything a consumer
 needs to change must exist as a token or a variant.
 _Avoid_: Widget, element
 
 **Composable**:
-A component on the roster that owns an *arrangement* of primitives rather than a single element — a
+A component on the roster that owns an _arrangement_ of primitives rather than a single element — a
 section, a header, a footer. It is held to the primitive's contract exactly: a closed prop surface,
 tokens and variants only, no escape hatch. What sets it apart is that its subject is arrangement, and
 arrangement is where brands differ most, so a composable's single-brand rules must be converted into
 variants or tokens before it ships. Brand assets stay out of it: a wordmark or a named person's
 photograph cannot carry a second brand, so it belongs to the consumer, never here (see
 [ADR 0007](docs/adr/0007-the-library-ships-page-composables.md)). A component that owns an arrangement
-and *no* page job is an Arrangement rather than a composable — the conversion pass is what separates
+and _no_ page job is an Arrangement rather than a composable — the conversion pass is what separates
 them, so the two are different kinds and not degrees of the same one.
 _Avoid_: Layout, template, section wrapper, molecule
 
@@ -424,7 +424,7 @@ _Avoid_: Warning tone, danger threshold, low state, red mode
 **Roster**:
 The closed set of components the library offers — primitives, composables and arrangements alike. A
 genuinely new need is added to the roster, never hand-rolled as a styled element in a consuming
-product. Widening it to hold composables, and again to hold arrangements, widened the *kind* of entry
+product. Widening it to hold composables, and again to hold arrangements, widened the _kind_ of entry
 allowed, not the door: the set stays closed and each entry is still reviewed on its own.
 _Avoid_: Catalogue, component list
 
@@ -559,7 +559,7 @@ _Avoid_: Radio button, option, item, entry
 
 **Field**:
 The label, control and messages a form control renders as one unit. Not a primitive — `Input`,
-`TextArea`, `Select` and `NumberInput` each *are* a field, and the library offers no wrapper for
+`TextArea`, `Select` and `NumberInput` each _are_ a field, and the library offers no wrapper for
 composing one.
 _Avoid_: Field wrapper, form group, form row
 
@@ -599,12 +599,12 @@ _Avoid_: Validation rule, constraint, restriction, character limit
 ### Links
 
 **Treatment**:
-Which of `Link`'s fixed modes an anchor is rendered in. The set is *closed* and each entry is argued
+Which of `Link`'s fixed modes an anchor is rendered in. The set is _closed_ and each entry is argued
 on its own merits: `prose` for running text, `quiet` for standing navigation, `label-link` for a link
 acting as a letter-spaced label, and `graphic` for an anchor whose child is not text. A treatment is
 not a style knob — there is no colour, size or decoration prop on a link, and a genuinely new need
 becomes a new treatment rather than an escape hatch (see
-[ADR 0006](docs/adr/0006-link-treatment-contract.md)). A treatment is named for the *job* it serves
+[ADR 0006](docs/adr/0006-link-treatment-contract.md)). A treatment is named for the _job_ it serves
 rather than the appearance it produces, which is what keeps "the one that paints nothing" from
 becoming that hatch by another route.
 _Avoid_: Variant, style, kind, link type, link style
@@ -619,7 +619,7 @@ is a figure, and a thumbnail, a logo or a decorative plate is not one.
 _Avoid_: Image, media, thumbnail, photo, picture
 
 **Aspect role**:
-What shape a frame is *for* — a portrait, a square, a landscape, a wide strip — named rather than
+What shape a frame is _for_ — a portrait, a square, a landscape, a wide strip — named rather than
 measured, so a brand re-points the shape and no component ever picks a number. Distinct shapes with
 distinct jobs, not steps on a scale: there is no ordering, so unlike a radius or spacing ladder there
 is no rung to pick and no question of which one means what.
@@ -682,7 +682,7 @@ _Avoid_: Document scrolling, unbounded page
 
 **Standing link**:
 The link that names where you are — a place name, a mark, or a home link. It sits in the shell and
-never in the nav, which is what *standing* says: it does not change as the visitor moves through the
+never in the nav, which is what _standing_ says: it does not change as the visitor moves through the
 site. What fills it belongs to the consumer, a mark being a brand asset and a place name a product's
 own word.
 _Avoid_: Logo link, home link, brand link, masthead
@@ -709,7 +709,7 @@ is a composable of the page rather than a container of its contents.
 _Avoid_: Block, panel, container, band, row
 
 **Join**:
-The hairline between two abutting sections. It *is* the separation, and sections never gap: on a page
+The hairline between two abutting sections. It _is_ the separation, and sections never gap: on a page
 with nothing borrowed to show, a gap between blocks reads as missing content while air inside the
 type reads as care. So the levers on a page's rhythm are measure, leading and the air within a
 section, never a space between them. Drawn only between two sections, so whatever precedes the first
@@ -764,9 +764,9 @@ _Avoid_: Hidden entry, absent section
 
 **Index**:
 The standing marker naming where you are in a long page — a filing numeral and the section's name, set
-*beside* the section rather than above it and staying with it while it scrolls. The staying is what
+_beside_ the section rather than above it and staying with it while it scrolls. The staying is what
 makes it an index: a marker that scrolls away at the top of its section is a heading that happens to
-sit beside the text. It *files* a section without *heading* it — the section's own heading stays in its
+sit beside the text. It _files_ a section without _heading_ it — the section's own heading stays in its
 matter and the index repeats that name — so it is a visual device and says nothing of its own to a
 screen reader.
 _Avoid_: Sidebar, aside, table of contents, section nav, breadcrumb

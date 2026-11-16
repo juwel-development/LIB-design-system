@@ -2,26 +2,26 @@
 
 The library does not reinforce a control's boundary on focus, and declares no token for doing so.
 The focus ring is the only thing that changes when a primitive takes focus. A theme that wants a
-focused control to read more strongly raises the *ring*, not the edge.
+focused control to read more strongly raises the _ring_, not the edge.
 
 ## Why this is out of scope
 
 **The rule is a definition, not an inference.** `CONTEXT.md`'s **Focus ring** entry states it
 outright:
 
-> It is also the *only* thing that changes on focus: a boundary, fill and geometry hold still, so
+> It is also the _only_ thing that changes on focus: a boundary, fill and geometry hold still, so
 > focus reads as a mark appearing rather than as the thing thickening.
 
 This is worth being precise about, because the request that prompted the entry argued — correctly —
 that [ADR 0002](../docs/adr/0002-focus-ring-token-contract.md) does not cover the case. ADR 0002 is
 about the ring: one ring, one token set, drawn as an `outline`. "The border never changes on focus"
-is a reasonable reading of its *spirit* and nothing more. But the rule does not rest on that reading.
+is a reasonable reading of its _spirit_ and nothing more. But the rule does not rest on that reading.
 It is stated as part of what the focus ring **is**, one level up in the domain model, and a proposal
 to add a second focus affordance is a proposal to change that definition.
 
 **A second affordance is the drift ADR 0002 exists to stop.** That ADR's finding was not that a
-colour had been chosen badly but that *"four values with no stated rule is four chances to get it
-wrong."* A focused control whose edge also changes has two marks answering one question, and the
+colour had been chosen badly but that _"four values with no stated rule is four chances to get it
+wrong."_ A focused control whose edge also changes has two marks answering one question, and the
 second one is per-component by construction — a `Link` has no box to reinforce, so the affordance
 could never be the one thing every focusable primitive shares. "One value with a stated rule" stops
 being true the moment there are two.
@@ -30,15 +30,15 @@ being true the moment there are two.
 is the part worth keeping, and it generalises past the request that produced it.
 
 The complaint is that a focused control's own edge is the weakest line in the group, so the eye reads
-the ring as floating *near* the field rather than around it. But that ordering — ring stronger than
+the ring as floating _near_ the field rather than around it. But that ordering — ring stronger than
 edge, separated by a transparent `--focus-ring-offset` gap — is the library's own, at nearly the same
 ratio in both shipped themes:
 
-| Theme | control border | focus ring | ring / border |
-| ----- | -------------- | ---------- | ------------- |
-| light (`#ffffff`) | 4.76:1 | 7.58:1 | 1.59 |
-| dark (`#0f172a`) | 6.96:1 | 12.02:1 | 1.73 |
-| the reporting theme (`#f5eee0`) | 3.04:1 | 4.75:1 | 1.56 |
+| Theme                           | control border | focus ring | ring / border |
+| ------------------------------- | -------------- | ---------- | ------------- |
+| light (`#ffffff`)               | 4.76:1         | 7.58:1     | 1.59          |
+| dark (`#0f172a`)                | 6.96:1         | 12.02:1    | 1.73          |
+| the reporting theme (`#f5eee0`) | 3.04:1         | 4.75:1     | 1.56          |
 
 The arrangement is identical. What differs is **absolute magnitude**: the library's own neutrals sit
 1.6–2.3× above the [SC 1.4.11](https://www.w3.org/TR/WCAG22/#non-text-contrast) 3:1 floor, and the
@@ -58,9 +58,9 @@ the resting appearance, and on this ground it cannot pass roughly 4.75:1 without
 theme's own ring and making the edge the strongest line in the group — the reported problem,
 inverted.
 
-**The rule that generalises:** *the ring is what carries a focused control, so a ring must be raised
+**The rule that generalises:** _the ring is what carries a focused control, so a ring must be raised
 against its ground rather than left near the floor. A theme that sets its whole neutral set at 3:1
-will read as a floating ring with nothing failing a check* — `Palette.spec.ts` asserts each token
+will read as a floating ring with nothing failing a check_ — `Palette.spec.ts` asserts each token
 against `surface` independently, and a theme at 3.04:1 and 4.75:1 passes every assertion the library
 makes.
 
@@ -76,7 +76,7 @@ colour changes on focus, so `transition-colors` has nothing to animate and the r
 instant. That is [ADR 0001](../docs/adr/0001-motion-token-contract.md)'s structural discharge, and it
 holds on the controls and not only on `Button`.
 
-The fade the reporting consumer saw was its *own* border-colour change fading. It exists only as a
+The fade the reporting consumer saw was its _own_ border-colour change fading. It exists only as a
 consequence of the affordance rejected above, and it goes away with it.
 
 ## What would change this
@@ -89,7 +89,7 @@ satisfied both absolute floors while collapsing the relationship between them. T
 to ADR 0002's constraint, and it would make the finding above enforceable instead of merely recorded.
 It is not a new token, so it does not reopen this file.
 
-What *would* reopen it is a case where raising the ring is not available — a focusable primitive whose
+What _would_ reopen it is a case where raising the ring is not available — a focusable primitive whose
 ring cannot carry the job on some ground, argued from a site rather than from symmetry. The rejection
 is of a second focus affordance, not of the observation that a low-contrast ground asks more of a
 theme.

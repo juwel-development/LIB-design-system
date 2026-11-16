@@ -18,14 +18,14 @@ radius.
 **Two amendments to that contract are outstanding**, because this decision was taken after it
 shipped. `--text-subtitle` and `--leading-subtitle` do not exist yet — a three-step heading ladder
 needs a third role above body, where the contract declares two. And `--text-display` currently holds
-`clamp(2.25rem, 5vw, 4.25rem)`, which is the *subpage* head's measured size and belongs one rung down
+`clamp(2.25rem, 5vw, 4.25rem)`, which is the _subpage_ head's measured size and belongs one rung down
 at `--text-title`; the hero role needs a value clearing it. The heading primitives cannot be built
 until both land.
 
 ## Why this, and not the flexibility that came before
 
 The design this replaces is depot-tracker's, where `size` is a free nine-rung variant (`sm` … `6xl`)
-and each heading merely *defaults* to a step. That lets an `H1` render at `text-sm` and an `H3` at
+and each heading merely _defaults_ to a step. That lets an `H1` render at `text-sm` and an `H3` at
 `6xl`, with nothing stating which pairings are legitimate.
 
 The freedom was measured before it was removed. Across ~162 call sites of `H1`/`H2`/`H3`/`P`, **six**
@@ -42,8 +42,8 @@ removes the inversion.
 **A bounded `role` prop** — keeping a prop but restricting its values to role names rather than
 rungs. Rejected. It is a smaller version of the same hole: the freedom that lets a caller pick a
 role is exactly the freedom that lets a subpage head out-scale the homepage hero, which the page-head
-proposal names as *"the single easiest place for that to happen — because a subpage's largest element
-is judged against the rest of that page, where it looks correct."* A cross-route constraint cannot be
+proposal names as _"the single easiest place for that to happen — because a subpage's largest element
+is judged against the rest of that page, where it looks correct."_ A cross-route constraint cannot be
 enforced by a per-call-site prop.
 
 **One `Heading` primitive taking `level` and `role` separately** — the textbook decoupling, and
@@ -58,25 +58,25 @@ there is no evidence for a fourth or fifth step, and the component-authoring sta
 nothing speculative.
 
 **Tokenising the weights** that separate levels four to six. Rejected in favour of literals plus this
-prose, on the precedent that structure being square is *"a decision the library makes and states in
-prose, not a token it exposes"* ([ADR 0003](./0003-radius-token-contract.md)). The consequence is
+prose, on the precedent that structure being square is _"a decision the library makes and states in
+prose, not a token it exposes"_ ([ADR 0003](./0003-radius-token-contract.md)). The consequence is
 recorded below rather than hidden.
 
 ## Amended: one escape valve, not two — the hero's `h1` is `H1`
 
 This ADR was written **waiting on** the two amendments its own text calls outstanding, and the
-consequence below was reasoned from the contract as it stood *before* they landed. One of them landed
+consequence below was reasoned from the contract as it stood _before_ they landed. One of them landed
 and dissolved half of it.
 
-At the time, `--text-display` held `clamp(2.25rem, 5vw, 4.25rem)` — the *subpage* head's measured size
+At the time, `--text-display` held `clamp(2.25rem, 5vw, 4.25rem)` — the _subpage_ head's measured size
 — so `H1` rendered at the subpage head's scale and a poster hero genuinely had nowhere to go. That is
 why two composite primitives were promised. [ADR 0004](./0004-typography-token-contract.md)'s amendment
 then moved `display` up to `clamp(3rem, 7vw, 6rem)` and **named it the hero**, which is the value this
-ADR asked for when it said *"the hero role needs a value clearing it."*
+ADR asked for when it said _"the hero role needs a value clearing it."_
 
 So **a poster hero's lead is a plain `<H1>`.** The two `h1` treatments at that point were `H1` itself
 and `PageHead` ([#18](https://github.com/juwel-development/LIB-design-system/issues/18)), which
-renders an `h1` at the `title` role — the role this ADR binds to level *two*. `PageHead` was then the
+renders an `h1` at the `title` role — the role this ADR binds to level _two_. `PageHead` was then the
 only escape valve; Dialog adds the independent case recorded below.
 
 The poster hero shipped instead as `Hero`
@@ -111,9 +111,9 @@ subpage head at the `title` role; `Dialog.Title` renders the independent Dialog 
 `H1` the generic primitive remains for ordinary page titles and heroes, which share the `display`
 role. Neither composable exposes level or role selection, so the exceptions stay closed. The cost is
 that there is more than one way to render an `h1`, so the by-construction guarantee covers the ladder
-rather than every heading in the codebase. *(As first written this described **two** treatments in
+rather than every heading in the codebase. _(As first written this described **two** treatments in
 **composite primitives**, then one treatment after the first amendment; "composite primitive"
-predates the **Composable** term [ADR 0007](./0007-the-library-ships-page-composables.md) introduced.)*
+predates the **Composable** term [ADR 0007](./0007-the-library-ships-page-composables.md) introduced.)_
 
 **A `font-*` weight literal is permitted where a `text-*` size literal is not.** This is a deliberate
 asymmetry, not an oversight, and it is written down so a later reviewer does not "fix" it. Size is
@@ -127,14 +127,14 @@ tell apart in practice at the best of times. Accepted as the price of not growin
 
 **Tailwind's preflight makes the weights load-bearing.** It resets `h1`–`h6` to
 `font-weight: inherit`, so a heading that sets no weight is not bold — it is whatever the body is.
-Levels four to six therefore *must* state their weight explicitly or render identically to a
+Levels four to six therefore _must_ state their weight explicitly or render identically to a
 paragraph. This is the reason the weight lever runs out at level six and a seventh level would have
 nothing left to distinguish it.
 
 **Headings and body copy share a face by default, and no longer by construction.** As first written
-this paragraph read *"Both read the primary family role … a consumer wanting a grotesk display face
+this paragraph read _"Both read the primary family role … a consumer wanting a grotesk display face
 over a serif reading face cannot express it without a third family role, which was declined for want
-of a demonstrated need."* The need was demonstrated by
+of a demonstrated need."_ The need was demonstrated by
 [#120](https://github.com/juwel-development/LIB-design-system/issues/120), and
 [ADR 0004](./0004-typography-token-contract.md)'s amendment adds `--font-heading`, read by every
 level and by the two `h1` treatments outside `H1`, falling back to the primary face on the element

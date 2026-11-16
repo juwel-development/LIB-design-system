@@ -77,8 +77,8 @@ scripts/
 `tsconfig.json` maps `"*": ["./src/*"]`, so a module is addressed by its path under `src`:
 
 ```ts
-import { Button } from 'Interaction/Button/Button';   // ✅
-import { Button } from '../../Interaction/Button/Button';   // ❌
+import { Button } from 'Interaction/Button/Button'; // ✅
+import { Button } from '../../Interaction/Button/Button'; // ❌
 ```
 
 Three tools have to agree on that mapping and all three read the tsconfig: `vite.config.ts` and
@@ -109,14 +109,14 @@ a component, and not a numeric ramp step.
 
 ## The build
 
-| Command | What it produces |
-|---|---|
-| `npm run build:tokens` | `src/tokens.css` from the palette |
-| `npm run build:components` | `dist/design-system.js` — vite library mode, ESM only |
-| `npm run build:styles` | `dist/styles.css`, `dist/styles.light.css`, `dist/styles.dark.css` — Vite + Tailwind, precompiled |
-| `npm run build:types` | `dist/types/` — `tsc --emitDeclarationOnly` |
-| `npm run check:build` | verifies published CSS and JS delivery contracts; also runs in CI through `build` |
-| `npm run build` | components + styles + types + smoke check (**not** tokens; regenerate those deliberately) |
+| Command                    | What it produces                                                                                  |
+| -------------------------- | ------------------------------------------------------------------------------------------------- |
+| `npm run build:tokens`     | `src/tokens.css` from the palette                                                                 |
+| `npm run build:components` | `dist/design-system.js` — vite library mode, ESM only                                             |
+| `npm run build:styles`     | `dist/styles.css`, `dist/styles.light.css`, `dist/styles.dark.css` — Vite + Tailwind, precompiled |
+| `npm run build:types`      | `dist/types/` — `tsc --emitDeclarationOnly`                                                       |
+| `npm run check:build`      | verifies published CSS and JS delivery contracts; also runs in CI through `build`                 |
+| `npm run build`            | components + styles + types + smoke check (**not** tokens; regenerate those deliberately)         |
 
 The JavaScript bundle starts with `"use client"` and imports no CSS; hosts explicitly import
 one of the three `styles*.css` exports, all of which resolve to self-contained files in `dist`.
@@ -156,20 +156,20 @@ down. Each note is also published prefixed with its **commit's** scope, so a com
 several components — the catch-up commit above spans three — is better left scopeless.
 
 **The guard, which is the sharp edge of this design.** The commit analyser and the notes generator
-parse every commit *independently*, each with its own parser options. `NOTE` is a keyword of the
-notes generator only, and the analyser's default rules promote to major when a commit has *any*
-parsed note at all — so the note publishes precisely *because* the analyser cannot see it. The
+parse every commit _independently_, each with its own parser options. `NOTE` is a keyword of the
+notes generator only, and the analyser's default rules promote to major when a commit has _any_
+parsed note at all — so the note publishes precisely _because_ the analyser cannot see it. The
 consequence runs both ways: **any keyword added to the notes generator is invisible to versioning
 by construction.** A keyword that should affect the version must never be added there alone.
 Concretely, do not add the hyphenated `BREAKING-CHANGE` spelling to the notes generator: it would
 publish a breaking-change note while shipping a patch. If that spelling is ever wanted, it belongs
-in *both* plugins' parser options or in neither. The commit analyser's entry in `.releaserc.js`
+in _both_ plugins' parser options or in neither. The commit analyser's entry in `.releaserc.js`
 carries no options at all, and that is load-bearing rather than incidental.
 
 **Why the config is JavaScript.** The notes generator's entry carries a `writerOpts.transform`,
 which JSON cannot hold, so `.releaserc.json` became `.releaserc.js`. That transform is a wrapper
 around the preset's own: the copy of `conventional-changelog-angular` the generator loads (8.3.1,
-nested inside the plugin — the copy hoisted to the root belongs to commitlint) titles *every* note
+nested inside the plugin — the copy hoisted to the root belongs to commitlint) titles _every_ note
 `BREAKING CHANGES` unconditionally, so without the wrapper a `NOTE:` footer would publish under a
 breaking-change heading on a patch release. Version 9 of that preset uppercases the keyword itself
 instead, in a `noteTitle` the wrapper is a backport of. **So before deciding the wrapper is dead
@@ -177,5 +177,5 @@ code, check which version the generator resolves** — `npm ls conventional-chan
 is a no-op only once that copy is 9 or newer.
 
 `release-notes.spec.ts` pins all of the above by running both plugins over commit messages: what a
-note publishes, what it does *not* bump, and that a commit with no footer renders byte-for-byte
+note publishes, what it does _not_ bump, and that a commit with no footer renders byte-for-byte
 what it rendered before any of this existed.

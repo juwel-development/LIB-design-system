@@ -14,7 +14,7 @@ re-theme the corner without reaching into a component.
 ## Considered options
 
 **A generic token for structure** (`--radius-none: 0`, for frames, tables and sections), as the
-originating issue proposed. Rejected, and recorded here as an explicit no. A token names a *role*
+originating issue proposed. Rejected, and recorded here as an explicit no. A token names a _role_
 whose value a consumer may re-declare; `none` names its own value, so a consumer who sets
 `--radius-none: 4px` holds a token whose name is a lie. Dialog does not reverse this decision: it is
 a specific floating-surface role with an evidenced theming need, while ordinary structure remains
@@ -42,7 +42,7 @@ a hard `8px` would silently drop that scaling for anyone who has enlarged their 
 
 **A published value constraint,** to match the two contracts before this one. Rejected, and the
 absence is deliberate. The focus-ring and motion contracts publish numeric rules because a bad value
-makes the component *incorrect* — a zero-width ring is no indicator, a sub-3:1 ring fails WCAG.
+makes the component _incorrect_ — a zero-width ring is no indicator, a sub-3:1 ring fails WCAG.
 Radius has no such threshold: CSS ignores a negative value, clamps an oversized one to a pill, the
 focus-ring outline takes radius-plus-offset and stays correct at every value, and nothing clips
 because the component sets no `overflow`. A rule like "keep it under half the control height" would
@@ -60,7 +60,7 @@ is the wrong home for the same reason: it maps every entry into `@theme inline`.
 **Base placement is mildly one-way.** With no class-merge utility and no `className` passthrough, a
 `rounded-*` in the base cannot be cleanly overridden by a single variant later — two `rounded-*`
 classes on one element leave CSS source order to pick the winner. If a future variant ever needs its
-own corner, the correct move is to relocate radius into the variants map for *every* variant, never
+own corner, the correct move is to relocate radius into the variants map for _every_ variant, never
 to override it in one.
 
 **`ghost` gains a corner it never had.** Its box is transparent, so the fill shows no difference;
@@ -81,7 +81,7 @@ component-authoring standard's enforcement table records that.
 maintainer accepted `Button variant="plain"`: a plain action, operable and focusable, presented in
 the typography of the content around it with no face, fill, padding or corner of its own. A corner
 on it would paint nothing - the box is the text - and it is the one accepted exception to the rule
-above. The *Base placement* consequence foresaw this: a variant needing its own corner relocates the
+above. The _Base placement_ consequence foresaw this: a variant needing its own corner relocates the
 radius out of the base rather than overriding it, and that is what was done. The radius now lives in
 the face string the three faced variants share verbatim, so `primary`, `secondary` and `ghost` still
 cannot disagree, and `plain` carries no `rounded-*` at all - which the source-scan test still

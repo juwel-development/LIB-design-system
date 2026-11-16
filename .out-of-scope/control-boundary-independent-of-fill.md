@@ -1,7 +1,7 @@
 # Control boundary independent of the fill — an edge on a filled Button
 
 > **Narrowed by the maintainer in the #119 triage — see [Amendments](#amendments).** The rejection
-> now covers exactly what its title says: an edge on a *filled* Button. An opt-in unfilled variant
+> now covers exactly what its title says: an edge on a _filled_ Button. An opt-in unfilled variant
 > that trades the fill for an edge is accepted and shipped as `variant="outlined"`.
 
 A filled `Button` draws no boundary. Its fill is the only thing separating it from the surface, and
@@ -41,9 +41,9 @@ revisiting it should have the strongest version of the case:
 **The fill constraint excludes most of the colour wheel.** Stock Tailwind 500-step hues against
 white, against the 3:1 fill rule:
 
-| | hues |
-| --- | --- |
-| pass | violet 4.23, red 3.76, blue 3.68, pink 3.53 |
+|      | hues                                                                                         |
+| ---- | -------------------------------------------------------------------------------------------- |
+| pass | violet 4.23, red 3.76, blue 3.68, pink 3.53                                                  |
 | fail | sky 2.77, emerald 2.54, teal 2.49, cyan 2.43, green 2.28, amber 2.15, lime 1.98, yellow 1.92 |
 
 Eight of twelve. So the library's answer to a brand built on amber, yellow, lime, green, teal or cyan
@@ -52,8 +52,8 @@ darken it until it is no longer the brand's colour. For a library whose stated p
 component set carrying several brands, that is a real limitation and it should not be pretended
 otherwise.
 
-**A boundary would have discharged it completely.** SC 1.4.11 requires 3:1 for *"visual information
-required to identify user interface components"*. A boundary at 3:1 **is** that information, and the
+**A boundary would have discharged it completely.** SC 1.4.11 requires 3:1 for _"visual information
+required to identify user interface components"_. A boundary at 3:1 **is** that information, and the
 fill then owes the surface nothing. For the consumer that prompted this — `F-mix-your-tracks`, brand
 amber `#e7a61c` on ground `#f5eee0` at 1.84:1 — `controlBorder` measures 4.12:1 on that ground, so an
 edge would have identified the control, and with the dark ink [#93](https://github.com/juwel-development/LIB-design-system/issues/93)'s
@@ -62,7 +62,7 @@ completely and legally. It does not, and that is the cost being accepted here.
 
 **Triage got as far as deleting the fill rule before reversing.** The reasoning had reached the point
 of removing #78's constraint entirely, on the grounds that an unconditional boundary makes it
-unnecessary — which would have left a *shorter* contract, not a more conditional one. That is
+unnecessary — which would have left a _shorter_ contract, not a more conditional one. That is
 recorded because it is the shape the request should take if it ever returns: not "add a border prop"
 but "the boundary identifies the control and the fill rule goes away."
 
@@ -72,8 +72,8 @@ Nothing the library provides. A product whose brand fill cannot clear 3:1 either
 value for the CTA, or draws its own edge against the rendered element:
 
 ```css
-.request-form [type='submit'] {
-  border: 1px solid var(--color-control-border);
+.request-form [type="submit"] {
+	border: 1px solid var(--color-control-border);
 }
 ```
 
@@ -95,7 +95,7 @@ about what every consumer's buttons would have to look like.
 
 **A separate primitive rather than a change to `Button`.** The rejection is of an edge on the filled
 `Button` every product already uses. An unfilled control that a low-contrast brand reaches for
-*instead* imposes nothing on anyone else, and was noted in triage without being costed. It is a new
+_instead_ imposes nothing on anyone else, and was noted in triage without being costed. It is a new
 component question, not this one.
 
 ## What this rejection is not
@@ -121,10 +121,10 @@ its border, and that half is a separate complaint that has never been triaged.
 ([#119](https://github.com/juwel-development/LIB-design-system/issues/119), triage).** The original
 text refused three things in one breath: an always-on edge on the filled Button, a `bordered` prop,
 and "any variant that trades the fill for an outline". The maintainer kept the first two and
-released the third. The reasoning above never reached it — every argument here is about what *every
-consumer's* filled buttons would have to look like, and an opt-in variant imposes nothing on a
-button that does not ask for it. *What would change this* already named the shape: "an unfilled
-control that a low-contrast brand reaches for *instead* imposes nothing on anyone else". The brief
+released the third. The reasoning above never reached it — every argument here is about what _every
+consumer's_ filled buttons would have to look like, and an opt-in variant imposes nothing on a
+button that does not ask for it. _What would change this_ already named the shape: "an unfilled
+control that a low-contrast brand reaches for _instead_ imposes nothing on anyone else". The brief
 made it a `Button` variant rather than a separate primitive, because it is the same action in a
 quieter register and shares the faced variants' inset, height and minimum width.
 
@@ -135,7 +135,7 @@ the neutral `controlBorder` ring on a saturated fill that this file refuses. The
 untouched — [`focus-boundary-reinforcement.md`](./focus-boundary-reinforcement.md) still holds, and
 the outlined edge does not change on focus.
 
-The consumer override recorded under *What the consumer does instead* also set `min-width: 0`, and
+The consumer override recorded under _What the consumer does instead_ also set `min-width: 0`, and
 that half is now triaged too: #119 keeps the shared floor on the four faced variants and lets it
 yield to a holder narrower than it, so a button in a tight cell shrinks and wraps instead of
 overflowing. No content-sizing prop was added for it.
