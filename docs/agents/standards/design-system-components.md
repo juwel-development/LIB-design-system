@@ -81,7 +81,7 @@ recipe. A prop never takes a raw hex, a pixel number, or free-form CSS.
 <Stack gap={16} />         // ❌ a raw literal
 ```
 
-Because the variant values live in the recipe and the prop type is *derived from* the recipe (see
+Because the variant values live in the recipe and the prop type is _derived from_ the recipe (see
 below), a raw value is a **TypeScript error**, not merely a convention. That derivation is the
 real guard — see the [enforcement note](#enforcement-scope) on why biome cannot
 express "is this a token?".
@@ -104,21 +104,26 @@ single recipe, and defaults move **out of the destructure and into `defaultVaria
 source the type also reads from.
 
 ```ts
-import { cva, type VariantProps } from 'class-variance-authority'
+import { cva, type VariantProps } from 'class-variance-authority';
 
-const button = cva('inline-flex items-center justify-center rounded-md border font-medium', {
-  variants: {
-    variant: {
-      primary: 'bg-primary text-primary-foreground border-primary hover:opacity-90',
-      secondary: 'bg-surface text-foreground border-border hover:border-muted',
+const button = cva(
+  'inline-flex items-center justify-center rounded-md border font-medium',
+  {
+    variants: {
+      variant: {
+        primary:
+          'bg-primary text-primary-foreground border-primary hover:opacity-90',
+        secondary:
+          'bg-surface text-foreground border-border hover:border-muted',
+      },
+      size: {
+        small: 'px-3 py-1 text-small',
+        medium: 'px-4 py-2 text-body',
+      },
     },
-    size: {
-      small: 'px-3 py-1 text-small',
-      medium: 'px-4 py-2 text-body',
-    },
+    defaultVariants: { variant: 'primary', size: 'medium' },
   },
-  defaultVariants: { variant: 'primary', size: 'medium' },
-})
+);
 ```
 
 Style with **semantic token utilities only** (`bg-surface`, `text-foreground`, …), never a raw
@@ -135,10 +140,10 @@ which this does not reintroduce.
 
 ```ts
 export interface IButtonProps extends VariantProps<typeof button> {
-  children: React.ReactNode
-  testId?: string
-  onClick$?: Subject<void>
-  disabled?: boolean
+  children: React.ReactNode;
+  testId?: string;
+  onClick$?: Subject<void>;
+  disabled?: boolean;
 }
 ```
 
@@ -172,7 +177,7 @@ export const Button: FunctionComponent<IButtonProps> = ({
   >
     {children}
   </button>
-)
+);
 ```
 
 A component that renders two elements simply applies each element's own recipe to its own
@@ -195,8 +200,8 @@ module-level `const` above it.
 never its props interface**:
 
 ```ts
-export type { IFigureProps } from 'Display/Figure/Figure'   // ❌ not the barrel's job
-export { Figure } from 'Display/Figure/Figure'              // ✅ one line per component
+export type { IFigureProps } from 'Display/Figure/Figure'; // ❌ not the barrel's job
+export { Figure } from 'Display/Figure/Figure'; // ✅ one line per component
 ```
 
 A consumer that needs to name the type of a prop it forwards **derives it from the component** —
@@ -248,15 +253,15 @@ enforced from its first commit. `npm run lint` runs it, and so does the `pre-com
 
 What is machine-enforced (in `biome.json`) versus reviewed:
 
-| Rule | Enforcement |
-|---|---|
-| No `HTMLAttributes<>` / `*HTMLAttributes<>` extension | **biome** — `noRestrictedTypes` |
-| No `{...rest}` spread onto a host element | **biome** — `no-jsx-spread.grit` plugin |
-| No `className` / `style` **prop** on a props type | **biome** — `no-classname-style-prop.grit` plugin |
-| No raw non-token prop values | **CVA variant types** + review — biome has no token model |
-| No built-in user-visible text | review — biome cannot tell a viewer-facing string from a class |
-| Closed roster | review — biome cannot see the consumers |
-| No props interface in the barrel | review — biome cannot tell a props type from a theme type |
+| Rule                                                  | Enforcement                                                    |
+| ----------------------------------------------------- | -------------------------------------------------------------- |
+| No `HTMLAttributes<>` / `*HTMLAttributes<>` extension | **biome** — `noRestrictedTypes`                                |
+| No `{...rest}` spread onto a host element             | **biome** — `no-jsx-spread.grit` plugin                        |
+| No `className` / `style` **prop** on a props type     | **biome** — `no-classname-style-prop.grit` plugin              |
+| No raw non-token prop values                          | **CVA variant types** + review — biome has no token model      |
+| No built-in user-visible text                         | review — biome cannot tell a viewer-facing string from a class |
+| Closed roster                                         | review — biome cannot see the consumers                        |
+| No props interface in the barrel                      | review — biome cannot tell a props type from a theme type      |
 
 The two grit plugins are scoped to `src/**/*.tsx` and skip `*.stories.tsx`, where a story
 legitimately spreads args into the component under demonstration.

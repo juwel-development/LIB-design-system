@@ -24,12 +24,12 @@ accumulate; satisfying one use does not discharge another.
 
 The light palette moves the roles that do not meet the text floor to darker values:
 
-| Role | Previous | New | Contrast against light `surface` |
-| --- | --- | --- | --- |
-| `success` | `#10b981` | `#047857` | 5.484:1 |
-| `warning` | `#f59e0b` | `#b45309` | 5.022:1 |
-| `error` | `#d63384` | unchanged | 4.501:1 |
-| `info` | `#06b6d4` | `#0e7490` | 5.358:1 |
+| Role      | Previous  | New       | Contrast against light `surface` |
+| --------- | --------- | --------- | -------------------------------- |
+| `success` | `#10b981` | `#047857` | 5.484:1                          |
+| `warning` | `#f59e0b` | `#b45309` | 5.022:1                          |
+| `error`   | `#d63384` | unchanged | 4.501:1                          |
+| `info`    | `#06b6d4` | `#0e7490` | 5.358:1                          |
 
 The dark values stay unchanged; all four already exceed 8:1 against the dark surface.
 
@@ -82,7 +82,7 @@ optional in `PaletteTokens` so an existing palette object keeps compiling; the s
 their defaults, which pair with the shipped `error`.
 
 This does not re-open the `warningForeground` rejection above. That role was refused because no
-warning *fill* existed; an error fill now does, and the ink follows the fill. `success`, `warning`
+warning _fill_ existed; an error fill now does, and the ink follows the fill. `success`, `warning`
 and `info` gain no companion roles, and the general rule holds: using the tone changes colour only.
 The destructive variant adds no ARIA role, no confirmation and no wording, and its label - or the
 accessible name of a symbol-only button - is what states the consequence.

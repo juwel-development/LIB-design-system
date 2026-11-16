@@ -449,6 +449,7 @@ describe('ColumnLayout', () => {
   });
 
   it('redistributes when a column is inserted later, keeping the retained column mounted with its focus and state', () => {
+    // biome-ignore lint/correctness/noComponentHookFactories: This fixture is created once per test, outside React rendering.
     const Screen: FunctionComponent = () => {
       const [hasSummary, setHasSummary] = useState(false);
       return (
@@ -565,6 +566,7 @@ describe('ColumnLayout', () => {
   });
 
   it('throws when a column reaches Root through a wrapping component, since Root could not count it', () => {
+    // biome-ignore lint/correctness/noComponentHookFactories: This fixture is created once per test, outside React rendering.
     const Summary: FunctionComponent = () => (
       <ColumnLayout.Column weight={1} minWidth={'--support'}>
         Summary

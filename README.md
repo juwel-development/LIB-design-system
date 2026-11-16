@@ -50,14 +50,22 @@ names, which is what lets one design system serve several brands.
 Consumers can declare their own size token for Figure's artwork presentation:
 
 ```css
-.catalog { --catalog-artwork-size: 64px; }
+.catalog {
+	--catalog-artwork-size: 64px;
+}
 ```
 
 ```tsx
 <div className="catalog">
-  <Figure presentation="artwork" size="--catalog-artwork-size"
-    src="/illustration.svg" alt="An illustrated compass" width={600} height={300} />
-</div>
+  <Figure
+    presentation="artwork"
+    size="--catalog-artwork-size"
+    src="/illustration.svg"
+    alt="An illustrated compass"
+    width={600}
+    height={300}
+  />
+</div>;
 ```
 
 Declare a **positive definite CSS length** on the image or an ancestor; the library
@@ -115,6 +123,21 @@ npm run test           # vitest
 npm run lint           # biome (use lint:fix to apply)
 npm run typecheck      # tsc
 npm run build          # library bundle + type declarations
+```
+
+### Fallow
+
+`npm run fallow:agent -- --base <commit>` reviews changes against a fixed commit.
+Fallow 3.43.2 moved its type-aware analysis into the separate `fallow-type-aware`
+companion. The lockfile refresh in #174 preserves `package.json`, so that companion
+is not installed: the configured type-aware pass warns and falls back to syntactic
+analysis. To get checker-backed results without changing the manifest or lockfile,
+run the matching pair with an explicit companion path (npm otherwise prefers the
+project's local Fallow executable):
+
+```bash
+npm exec --package=fallow@3.43.2 --package=fallow-type-aware@3.43.2 -- \
+  sh -c 'FALLOW_TYPE_AWARE_BIN="$(command -v fallow-type-aware)" fallow review --brief --base "$1"' -- <commit>
 ```
 
 ### Structure

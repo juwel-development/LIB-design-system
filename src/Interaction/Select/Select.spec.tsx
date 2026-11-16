@@ -53,6 +53,7 @@ describe('Select', () => {
   });
 
   it('renders consumer components, fragments, arrays and conditional options as native choices', () => {
+    // biome-ignore lint/correctness/noComponentHookFactories: This fixture is created once per test, outside React rendering.
     const EuropeanMarkets = () => (
       <>
         <Select.Option value={'de'} testId={'german-market'}>

@@ -11,9 +11,9 @@ covered by this rejection.
 
 **A content rule is the consumer's domain knowledge.** "The Label name is at most 40 characters" is
 a fact about one product, which is exactly why it arrives as a parameter — a number to compare, a
-pattern to match. The library states what a field *is* (its kind, and whether the submission
+pattern to match. The library states what a field _is_ (its kind, and whether the submission
 contract requires it — `variant`, `name`, `required`) and never carries a predicate about its value.
-The tell is the prop's value: if the value *is* the rule, the prop is refused.
+The tell is the prop's value: if the value _is_ the rule, the prop is refused.
 
 **The headline request was also refusal-shaped.** Native `maxLength` doesn't flag an over-length
 value — it prevents one from existing: keystrokes past the cap die silently and a 60-character paste
@@ -47,14 +47,14 @@ paints a server-rendered invalid state identically to a browser-flagged one. And
 an invalid value cannot get through lives at the product's own boundary, the only place it could
 ever be a guarantee: no browser-side attribute stops a crafted request. A spec written as "an
 over-length value must not be able to exist in the field" is better rewritten as "must not be able
-to be *submitted*".
+to be _submitted_".
 
 ## What would change this
 
 Little, deliberately — the refusal is by design, not by evidence, so more call sites wanting caps or
 patterns change nothing. What it does **not** cover: `variant: 'email' | 'url'` naming a field's
-kind (the kind's native format check comes bundled with what the field *is* — see the ADR), and any
-future *visual device* such as a live character counter, which would be its own proposal argued on
+kind (the kind's native format check comes bundled with what the field _is_ — see the ADR), and any
+future _visual device_ such as a live character counter, which would be its own proposal argued on
 its own consumer evidence. It also does not cover `min`/`max`/`step` when they map a bounded control's
 position and movement to values rather than judge freely entered content. Reversing the validation
 rule itself means amending ADR 0009.

@@ -15,19 +15,19 @@ constitutes another control's interaction geometry is not such a predicate.
 
 [#95](https://github.com/juwel-development/LIB-design-system/issues/95) asked `Input` for
 `maxLength?: number`, mapped to the native attribute, on consumer evidence: a Label Setup screen
-caps the Label name at 40 characters, and its spec demanded that an over-length value *must not be
-able to exist in the field*. The proposal argued the prop is a content constraint like `required` or
+caps the Label name at 40 characters, and its spec demanded that an over-length value _must not be
+able to exist in the field_. The proposal argued the prop is a content constraint like `required` or
 `name` — no token, no visual value — so ADR 0008's tests do not reach it. That much is true, which
-is exactly why this ADR exists: ADR 0008 governs when a *token role* becomes a prop and says nothing
+is exactly why this ADR exists: ADR 0008 governs when a _token role_ becomes a prop and says nothing
 about constraint attributes, so #95 would otherwise have been decided by whoever triaged it.
 
 ## The rule
 
 Two questions separated during triage, and the line between them is the decision.
 
-**Presence is form structure; content is domain.** Whether a field must hold *something* is a fact
+**Presence is form structure; content is domain.** Whether a field must hold _something_ is a fact
 about the form's submission contract — every driver needs it, the no-JS round-trip included, and the
-accessibility tree announces it. Whether *forty-one characters is too many* is knowledge about one
+accessibility tree announces it. Whether _forty-one characters is too many_ is knowledge about one
 product's domain. The library owns the form's structure and does not know the consumer's domain, so
 `required` ships and `maxLength` does not — they were never the same kind of thing, however alike
 they look as attributes on the same element.
@@ -35,7 +35,7 @@ they look as attributes on the same element.
 **A kind is universal; a rule is parameterized.** `variant: 'email'` makes the browser judge the
 value's shape, which looks like contraband under this rule. It is not, and the distinction is worth
 stating: an email address has one definition everywhere, carried by the platform — naming the
-field's kind states what the field *is*, and the kind's native conduct (its keyboard, its autofill,
+field's kind states what the field _is_, and the kind's native conduct (its keyboard, its autofill,
 its format check) comes bundled with what it is. A content rule is the opposite: it arrives as a
 parameter (`40`, a regex) precisely because no two products share it. The library may name a kind;
 it never carries a predicate.
@@ -47,7 +47,7 @@ it never carries a predicate.
 - No-JS round-trip: the server judges on submit and re-renders the field `invalid`; the recipe
   already paints a server-rendered invalid state identically to a browser-flagged one
   (docs/adr/0002-adjacent comment in `Input`'s recipe).
-- The hard guarantee — *an over-length value cannot get through* — lives at the product's boundary,
+- The hard guarantee — _an over-length value cannot get through_ — lives at the product's boundary,
   the only place it could ever be a guarantee: no browser-side attribute stops a crafted request.
 
 A spec that says an invalid value "must not be able to exist in the field" is asking for refusal;
@@ -57,13 +57,13 @@ boundary doing its ordinary job.
 ## Considered options
 
 **`maxLength` as filed.** Rejected on conduct before ownership: the native attribute is
-*refusal-shaped*. The browser eats keystrokes at the cap and silently truncates pastes — a
+_refusal-shaped_. The browser eats keystrokes at the cap and silently truncates pastes — a
 screen-reader user gets no announcement, a pasting user submits a value they never saw, and no error
 message can ever explain, because the invalid state has been made unrepresentable. The library's
 controls flag states; they do not eat input. And admitting it opens a category — `minLength`,
 `pattern`, `min`/`max`/`step` — with no principle to stop at.
 
-**"Flag, never refuse" as the rule.** Rejected as the *rule*, though its UX argument stands above.
+**"Flag, never refuse" as the rule.** Rejected as the _rule_, though its UX argument stands above.
 It tests the mechanism where the real question is ownership: `minLength` and `pattern` are
 flag-shaped — any value can exist and gets marked `:user-invalid` at submit — so the mechanism test
 admits them, and they are content rules all the same. Judging content is the consumer's job
@@ -104,7 +104,7 @@ presence/content line keeps `required` for a stated reason, not by seniority.
 
 **A ranged control's operating domain is outside this decision.** During triage of
 [#104](https://github.com/juwel-development/LIB-design-system/issues/104), the original wording was
-found to overreach: it refused `min`/`max`/`step` on *any future control*, although the case and the
+found to overreach: it refused `min`/`max`/`step` on _any future control_, although the case and the
 decision concern validation of freely entered field content. On a Slider, bounds map position to
 value and the increment defines what movement produces; without them the control has no operating
 geometry. They may therefore constitute a ranged control while remaining refused as validation

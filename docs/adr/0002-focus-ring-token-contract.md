@@ -16,7 +16,7 @@ colour was.
 `--color-secondary-ring` and `--color-ring`. Nothing constrained their contrast, and the library's
 own light theme failed WCAG 2.2 SC 1.4.11 on all three: 2.72:1, 2.14:1 and 2.56:1 against
 `surface`. The tint-of-the-brand pattern guaranteed it — `--color-primary-ring` `#a78bfa` is a
-*lighter* step of `--color-primary` `#8b5cf6`, so on a light surface the ring was the least visible
+_lighter_ step of `--color-primary` `#8b5cf6`, so on a light surface the ring was the least visible
 thing on the control at the moment it had to be the most.
 
 Four values with no stated rule is four chances to get it wrong. One value with a stated rule is
@@ -55,7 +55,7 @@ top of the contrast one. `outline` is retained and forced to the system highligh
 Rejected as a consequence of the above: with a transparent gap there is no band to colour.
 
 **Deleting the three old tokens outright.** Rejected in favour of a fallback, though the argument is
-closer than it looks. These tokens are *inputs* — the consumer writes them and the library reads
+closer than it looks. These tokens are _inputs_ — the consumer writes them and the library reads
 them — so nothing can be aliased in the usual sense, and neither deleting nor deprecating produces
 an error, because CSS variables never error. Both options are silent. The fallback
 (`var(--color-ring, …)`) is the one mechanism that actually keeps a consumer's existing value
@@ -87,7 +87,7 @@ ever covered the ring's inner edge. The first primitive that paints its own back
 question.
 
 **The constraints are stated, not enforced.** The test in `Palette.spec.ts` computes the ratio for
-both themes and fails below 3:1, which stops *the library* regressing its own palette. Nothing can
+both themes and fails below 3:1, which stops _the library_ regressing its own palette. Nothing can
 fail a consumer's build for choosing a bad value — that is why the constraint is published
 numerically in the token's documentation rather than left to the test to imply.
 

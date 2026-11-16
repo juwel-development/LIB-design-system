@@ -375,6 +375,7 @@ describe('ColumnLayout.Alternatives', () => {
 
   it('shows a consumer-owned draft again on return, without restoring the interaction around it', () => {
     const layout = installLayout({ layout: [true, true] });
+    // biome-ignore lint/correctness/noComponentHookFactories: This fixture is created once per test, outside React rendering.
     const Editor: FunctionComponent = () => {
       const [draft, setDraft] = useState('Untitled');
       return (
@@ -565,6 +566,7 @@ describe('ColumnLayout.Alternatives', () => {
 
   it('rejects an arrangement that reaches it through a wrapping component, since it could not be measured', () => {
     installLayout({ layout: [true] });
+    // biome-ignore lint/correctness/noComponentHookFactories: This fixture is created once per test, outside React rendering.
     const Wrapped: FunctionComponent = () => (
       <ColumnLayout.Root>{area('Sides')}</ColumnLayout.Root>
     );

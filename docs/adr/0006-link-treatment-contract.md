@@ -12,14 +12,14 @@ thickens on hover instantly.
 
 ## What the treatments are
 
-| Treatment | Colour | Decoration | Used by |
-|---|---|---|---|
-| `prose` | `link` | underline at `--underline-thickness`, `--underline-thickness-hover` on hover | running text |
-| `quiet` | `muted` → `foreground` on hover | none at rest, underline at `--underline-thickness` on hover | header nav, footer, a standing link filled with text |
-| `label-link` | inherits `foreground` | none at rest, underline at `--underline-thickness` on hover | a link acting as a letter-spaced label |
-| `graphic` | inherits, and sets none of its own | none, at rest or on hover | an anchor whose child is not text — a mark, an icon, a figure; a standing link filled with a mark |
+| Treatment    | Colour                             | Decoration                                                                   | Used by                                                                                           |
+| ------------ | ---------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `prose`      | `link`                             | underline at `--underline-thickness`, `--underline-thickness-hover` on hover | running text                                                                                      |
+| `quiet`      | `muted` → `foreground` on hover    | none at rest, underline at `--underline-thickness` on hover                  | header nav, footer, a standing link filled with text                                              |
+| `label-link` | inherits `foreground`              | none at rest, underline at `--underline-thickness` on hover                  | a link acting as a letter-spaced label                                                            |
+| `graphic`    | inherits, and sets none of its own | none, at rest or on hover                                                    | an anchor whose child is not text — a mark, an icon, a figure; a standing link filled with a mark |
 
-They genuinely behave differently — the split *is* the proposal. Collapsing them into one component
+They genuinely behave differently — the split _is_ the proposal. Collapsing them into one component
 with a colour prop would ask the consuming product to set each by hand on one page and would lose the
 two rules below, which are not style preferences.
 
@@ -39,7 +39,7 @@ transition allowlist that [ADR 0001](./0001-motion-token-contract.md) settled on
 (`transition-colors` is the only permitted transition utility, which cannot express thickness at
 all). Animating thickness animates a size, which the allowlist exists to prevent. The recipe sets no
 `transition-*` on the decoration, so the change is instant by construction. The same holds for the
-underlines that *appear* on hover under `quiet` and `label-link`: `text-decoration-line` is not on the
+underlines that _appear_ on hover under `quiet` and `label-link`: `text-decoration-line` is not on the
 allowlist either, so those lines arrive instantly for the same reason and by the same construction.
 
 ## Amended: a fourth treatment, and the underline becomes the library's
@@ -47,18 +47,18 @@ allowlist either, so those lines arrive instantly for the same reason and by the
 This ADR first shipped **three** treatments and said they were the whole contract. It is now **four**,
 and the underline tokens are no longer prose's alone. The grilling on
 [#50](https://github.com/juwel-development/LIB-design-system/issues/50) settled both. The title above
-dropped its count in the process: what is load-bearing is that the set is *closed*, not the number it
+dropped its count in the process: what is load-bearing is that the set is _closed_, not the number it
 happens to hold, and the table is where the number is checked.
 
 ### `quiet` underlines on hover, everywhere
 
 [#15](https://github.com/juwel-development/LIB-design-system/issues/15) asked for a footer link that
 keeps `quiet`'s colour and adds `label-link`'s hover underline, arguing that the footer is the one
-place a quiet link should underline *"because there is no surrounding prose to distinguish them
-from"*. The argument is right and the scoping was wrong. `quiet`'s two placements are header nav and
+place a quiet link should underline _"because there is no surrounding prose to distinguish them
+from"_. The argument is right and the scoping was wrong. `quiet`'s two placements are header nav and
 footer links, and **neither sits in running prose** — so the job the underline does there is the same
-job in both. In `prose` an underline says *this is a link, not the text around it*. Where there is no
-running text it says something else: *this is operable at all*, in a region a visitor scans rather
+job in both. In `prose` an underline says _this is a link, not the text around it_. Where there is no
+running text it says something else: _this is operable at all_, in a region a visitor scans rather
 than reads. That second job is not the footer's alone.
 
 So `quiet` gains a hover underline unconditionally. No treatment was added for it and the hybrid #15
@@ -67,7 +67,7 @@ a side effect.
 
 ### The underline tokens are the library's, not prose's
 
-`--underline-offset` and `--underline-thickness` arrived as the *prose* link's dimensions and
+`--underline-offset` and `--underline-thickness` arrived as the _prose_ link's dimensions and
 `tokens.css` said so. Three underlines shipped in the library and only one read the tokens:
 `label-link` and `Button`'s `ghost` both used a plain `hover:underline` at browser defaults. That was
 invisible while `prose` was the only tokenised line and the others never appeared in the same
@@ -76,7 +76,7 @@ which is a defect rather than an inconsistency.
 
 `quiet`'s new underline is therefore tokenised, and `label-link` migrates onto the tokens with it.
 Both take **`--underline-thickness`**, never `--underline-thickness-hover`: their lines are
-*appearing*, not thickening. The pair of thickness tokens names a rest state and a thickened state of
+_appearing_, not thickening. The pair of thickness tokens names a rest state and a thickened state of
 a line already on screen, and only `prose` has one. Borrowing the hover token here would take a number
 whose name does not describe the job.
 
@@ -90,7 +90,7 @@ re-reading this document.
 [#16](https://github.com/juwel-development/LIB-design-system/issues/16) surfaced a placement none of
 the three treatments could serve: a brand mark in a header's standing link is an `<a>` wrapping an SVG
 rather than text. `quiet` sets `text-muted`, which greys a `currentColor` mark; `label-link`
-underlines it on hover; `prose` recolours *and* underlines it outright. What the placement needs is
+underlines it on hover; `prose` recolours _and_ underlines it outright. What the placement needs is
 the focus ring and nothing else.
 
 Two alternatives were weighed and declined. **The placing composable styling its descendants** —
@@ -103,7 +103,7 @@ is two components under one name.
 
 `graphic` sets `text-inherit no-underline` explicitly rather than carrying no class at all. The
 empty-variant shape has precedent in `Brandmark`'s `cut`, but that precedent does not transfer:
-`cut`'s options are empty *by design*, existing to force a call-site decision and read back from
+`cut`'s options are empty _by design_, existing to force a call-site decision and read back from
 `data-cut`. `graphic` is meant to **paint nothing**, which is a different claim — and one that holds
 under a decorating ancestor only if it is stated, since a bare variant would inherit that ancestor's
 line. A guarantee conditional on the consumer's DOM is not a guarantee.
@@ -119,8 +119,8 @@ itself, and a mixed-content case arriving is a reason to revisit it, not a gap t
 
 ### What this costs
 
-The claim that three treatments were *the whole contract* is spent. It was always qualified — *"a
-genuinely new need is a new treatment argued on its own, not an escape hatch"* — and #50 is that
+The claim that three treatments were _the whole contract_ is spent. It was always qualified — _"a
+genuinely new need is a new treatment argued on its own, not an escape hatch"_ — and #50 is that
 argument, made once and recorded here rather than exercised quietly. But the set is thinner than it
 was: `graphic` is `label-link` without its hover underline, and `quiet` and `label-link` now differ
 only in whether colour is imposed or inherited. The split still holds, because the **jobs** are
@@ -142,9 +142,9 @@ which ADR 0001's allowlist forbids, and `transition-colors` cannot express it re
 
 **A per-instance colour, size or decoration prop.** Rejected as out of scope: the roster is closed and
 the treatments are the whole contract. A genuinely new need is a new treatment argued on its own, not
-an escape hatch. As filed, this option also bundled in *"or a fourth treatment"*; splitting the two
+an escape hatch. As filed, this option also bundled in _"or a fourth treatment"_; splitting the two
 apart is the honest record, because the prop is still rejected and a fourth treatment was not — it was
-admitted through this clause, which is the only door there is. See *Amended* above.
+admitted through this clause, which is the only door there is. See _Amended_ above.
 
 **A radius on the link**, to match the other controls. Rejected, and it is the case that split the
 Control term (CONTEXT.md): a link is operated and focusable but has no box of its own, so a radius

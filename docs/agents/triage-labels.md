@@ -10,10 +10,10 @@ is applied as a GitHub label of the same name.
 
 ## Category roles
 
-| Canonical role | GitHub label | Color     |
-| -------------- | ------------ | --------- |
-| `bug`          | `bug`        | `#d73a4a` |
-| `enhancement`  | `enhancement`| `#a2eeef` |
+| Canonical role | GitHub label  | Color     |
+| -------------- | ------------- | --------- |
+| `bug`          | `bug`         | `#d73a4a` |
+| `enhancement`  | `enhancement` | `#a2eeef` |
 
 ## State roles
 
@@ -31,14 +31,14 @@ Every triaged issue carries exactly one category label and one state label.
 
 Not triage roles — listed so nobody re-invents them under another name.
 
-| Label | Owner | Meaning |
-| ----- | ----- | ------- |
-| `spec` | `/to-spec` | A published spec (PRD). Carries `enhancement` too, never `ready-for-agent`. |
-| `wayfinder:map` | `/wayfinder` | The root planning issue whose body is the map. |
-| `wayfinder:research` | `/wayfinder` | Decision ticket, AFK — the one type that closes straight to `Done`. |
-| `wayfinder:prototype` | `/wayfinder` | Decision ticket, HITL. |
-| `wayfinder:grilling` | `/wayfinder` | Decision ticket, HITL. |
-| `wayfinder:task` | `/wayfinder` | Decision ticket, HITL or AFK. |
+| Label                 | Owner        | Meaning                                                                     |
+| --------------------- | ------------ | --------------------------------------------------------------------------- |
+| `spec`                | `/to-spec`   | A published spec (PRD). Carries `enhancement` too, never `ready-for-agent`. |
+| `wayfinder:map`       | `/wayfinder` | The root planning issue whose body is the map.                              |
+| `wayfinder:research`  | `/wayfinder` | Decision ticket, AFK — the one type that closes straight to `Done`.         |
+| `wayfinder:prototype` | `/wayfinder` | Decision ticket, HITL.                                                      |
+| `wayfinder:grilling`  | `/wayfinder` | Decision ticket, HITL.                                                      |
+| `wayfinder:task`      | `/wayfinder` | Decision ticket, HITL or AFK.                                               |
 
 A `wayfinder:*` issue is **never picked up as agent work**, even one carrying `ready-for-agent` —
 those tickets are human-owned, and the label there means the resolution was reached AFK, not that
@@ -46,10 +46,10 @@ an implementation agent should take the ticket.
 
 ## Repository-native labels
 
-The repository also carries `component-proposal` (*"Proposed for the shared system; needs
-triage"*) and `semantic-release` (*"Automated release failure reported by semantic-release"*),
+The repository also carries `component-proposal` (_"Proposed for the shared system; needs
+triage"_) and `semantic-release` (_"Automated release failure reported by semantic-release"_),
 which predate these skills. `component-proposal` is a **category** in the same sense as `bug` and
-`enhancement` — a request to add a primitive to the roster — so a triaged one takes it *instead*
+`enhancement` — a request to add a primitive to the roster — so a triaged one takes it _instead_
 of `enhancement`, plus a state label as usual. `semantic-release` is machine-applied and is not
 triaged by hand.
 

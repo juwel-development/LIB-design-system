@@ -499,6 +499,7 @@ describe('Dialog Component', () => {
     // With the opener gone the component invents no fallback; the consumer focuses its own stable
     // destination and the Dialog must not fight it.
     const showDialog$ = new Subject<boolean>();
+    // biome-ignore lint/correctness/noComponentHookFactories: This fixture is created once per test, outside React rendering.
     const Harness: FunctionComponent = () => {
       const [hasOpener, setHasOpener] = useState(true);
       return (

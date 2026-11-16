@@ -1,7 +1,7 @@
 # Testing standard
 
 How we test the design system. Companion to the [coding standard](./coding.md): that one says
-*how* code reads, this one says *how we prove it works*.
+_how_ code reads, this one says _how we prove it works_.
 
 ## The stance
 
@@ -18,9 +18,9 @@ Vitest with `jsdom` and `globals: true`, `@testing-library/react` for rendering,
 `@testing-library/jest-dom` matchers registered in `vitest.setup.ts` (the `/vitest` entry point, so
 `toBeInTheDocument` type-checks as well as runs).
 
-| Command | What it does |
-|---|---|
-| `npm run test` | The suite, once. |
+| Command                 | What it does                                                        |
+| ----------------------- | ------------------------------------------------------------------- |
+| `npm run test`          | The suite, once.                                                    |
 | `npm run test:coverage` | The same, with v8 coverage over `src`, excluding stories and specs. |
 
 There is **no browser-driver level in the suite**: neither `npm run test` nor the hooks launch a

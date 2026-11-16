@@ -15,12 +15,12 @@ wants no motion has no way to reach in and say so.
 **Re-pointing Tailwind's `--default-transition-duration` / `--default-transition-timing-function`**
 instead of declaring our own. Rejected. It lets a component write a bare `transition-colors`, which
 is genuinely tidier, but those variables are the global default for every `transition` utility in
-the compiled stylesheet — a consumer importing our stylesheet would find every transition in *their*
+the compiled stylesheet — a consumer importing our stylesheet would find every transition in _their_
 application silently running at our speed, and our reduced-motion rule zeroing animations we never
 performed.
 
 **A page-transition token** (`--motion-duration-page`), as originally proposed. Rejected: the
-library ships primitives, not a router, so a cross-document transition is motion the *consumer*
+library ships primitives, not a router, so a cross-document transition is motion the _consumer_
 performs. Declaring it here forces a choice between governing motion we don't perform and shipping a
 motion token we decline to make accessible.
 
@@ -42,7 +42,7 @@ machine-enforceable, and it already includes properties the hand-written list ha
 ## Consequences
 
 The value `150ms` is identical to Tailwind's own default, so the token changes nothing visually. Its
-entire purpose is to *have a name* that a consumer theme and the reduced-motion query can reach — it
+entire purpose is to _have a name_ that a consumer theme and the reduced-motion query can reach — it
 is not redundant, and should not be deleted as dead weight.
 
 Because the token is not a colour, it cannot be carried by the palette module or mapped into
