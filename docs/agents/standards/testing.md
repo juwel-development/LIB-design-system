@@ -27,8 +27,8 @@ There is **no browser-driver level in the suite**: neither `npm run test` nor th
 browser. This package ships primitives, not flows; a real end-to-end test belongs in the application
 that consumes it. Layout the suite cannot see is proven by a story's `play`, with measured geometry.
 A browser acceptance runner, `scripts/browser/<feature>.mjs`, drives those stories with Playwright
-through `npm exec`, pinning the version where it can. It adds no dependency, runs by hand against a
-Storybook, and its results are recorded in `docs/verification/`.
+through `npm exec`, pinning the version where it can. It adds no dependency and runs by hand
+against a Storybook.
 
 ## Location and naming
 

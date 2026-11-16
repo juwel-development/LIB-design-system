@@ -29,7 +29,7 @@ const meta: Meta<typeof Collapse> = {
 
 Collapsed, the head holds the heading and the summary, and the table keeps the rest of the pane's height as its one scroll owner. Expanding grows the head by the filter rows; the pane re-measures without any registration, and the table shrinks. Where the head, foot and one readable table row no longer fit - a short or narrow holder with the filters open - Screen's existing whole-content fallback releases the bound, so everything grows into the Shell body, which becomes the only scroll owner. Collapsing again restores the bound. Neither direction remounts the fields or the table, so typed filter values and focus survive.
 
-\`scripts/browser/collapse.mjs\` records this geometry at 1920×1080, 1280×720 and narrower holders; \`docs/verification/170-collapse.md\` holds the results.`,
+\`scripts/browser/collapse.mjs\` records this geometry at 1920×1080, 1280×720 and narrower holders.`,
       },
     },
   },
