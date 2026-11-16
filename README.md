@@ -125,6 +125,21 @@ npm run typecheck      # tsc
 npm run build          # library bundle + type declarations
 ```
 
+### Fallow
+
+`npm run fallow:agent -- --base <commit>` reviews changes against a fixed commit.
+Fallow 3.43.2 moved its type-aware analysis into the separate `fallow-type-aware`
+companion. The lockfile refresh in #174 preserves `package.json`, so that companion
+is not installed: the configured type-aware pass warns and falls back to syntactic
+analysis. To get checker-backed results without changing the manifest or lockfile,
+run the matching pair with an explicit companion path (npm otherwise prefers the
+project's local Fallow executable):
+
+```bash
+npm exec --package=fallow@3.43.2 --package=fallow-type-aware@3.43.2 -- \
+  sh -c 'FALLOW_TYPE_AWARE_BIN="$(command -v fallow-type-aware)" fallow review --brief --base "$1"' -- <commit>
+```
+
 ### Structure
 
 Components are grouped by what they do, one folder each:

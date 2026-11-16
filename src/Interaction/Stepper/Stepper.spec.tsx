@@ -39,6 +39,7 @@ describe('Stepper', () => {
     const active$ = new BehaviorSubject('form');
     const saved$ = new BehaviorSubject('Original');
     const onSelect$ = new Subject<string>();
+    // biome-ignore lint/correctness/noComponentHookFactories: This fixture is created once per test, outside React rendering.
     const Field = () => (
       <Input
         label="Session"

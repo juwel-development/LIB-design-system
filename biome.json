@@ -65,16 +65,6 @@
 	],
 	"overrides": [
 		{
-			"includes": ["**/*.spec.tsx"],
-			"linter": {
-				"rules": {
-					"correctness": {
-						"noComponentHookFactories": "off"
-					}
-				}
-			}
-		},
-		{
 			"includes": ["**/src/Display/Table/Table.tsx"],
 			"linter": {
 				"rules": {

@@ -241,6 +241,7 @@ describe('Screen', () => {
     expect(screen.getByText('Rows')).toBeInTheDocument();
   });
   it('does not infer the output of a custom heading component', () => {
+    // biome-ignore lint/correctness/noComponentHookFactories: This fixture is created once per test, outside React rendering.
     const Empty = () => null;
     render(
       <Screen heading={<Empty />}>

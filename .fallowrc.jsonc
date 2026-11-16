@@ -47,13 +47,9 @@
   //
   // Turning the rule off would hide it.
 
-  // Resolve member references through the type checker rather than syntactically. Without it a
-  // call whose receiver fallow cannot type by inspection alone reads as a member nobody calls.
-  // The sidecar builds the tsconfig with its own TypeScript, which has removed `baseUrl` — this
-  // repo already maps source-rooted specifiers with `paths` instead, so it parses clean.
-  //
-  // Turn this off first if `npm run fallow` ever starts erroring on the tsconfig rather than
-  // reporting on the code; the syntactic mode still works.
+  // Fallow 3.43.2 split its type-aware sidecar into fallow-type-aware at the same version.
+  // #174 preserves package.json, so a clean install warns and falls back to syntactic analysis.
+  // README.md#fallow documents how to run both packages without changing the manifest.
   "typeAware": { "enabled": true },
 
   // `semantic` blinds identifiers and literals, so two components with the same structure and
