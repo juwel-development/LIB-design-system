@@ -126,8 +126,8 @@ npm run build          # library bundle + type declarations
 ```
 
 The jsdom 31 test environment requires Node `^22.22.2 || ^24.15.0 || >=26.0.0`.
-CI tests the latest releases on the Node 22, 24 and 26 lines; these selectors do
-not pin the minimum patch versions.
+CI tests those exact minimum versions as well as the latest releases on the
+Node 22, 24 and 26 lines.
 
 jsdom's `@napi-rs/canvas` peer is optional and is not installed: the test suite
 does not use canvas APIs and passes without it.
