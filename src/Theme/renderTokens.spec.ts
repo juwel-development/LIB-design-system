@@ -811,3 +811,16 @@ it('ships Switch geometry in every theme entry point', () => {
     expect(css).toContain('--switch-track-inset: 0.125rem;');
   }
 });
+
+describe('renderTokens choice tile contract', () => {
+  it.each([renderTokens, renderLightTokens, renderDarkTokens])(
+    'declares the themeable positive tile width floor in each token delivery',
+    (render) => {
+      const css = render();
+      expect(css).toMatch(/:root\s*\{[^}]*--choice-tile-min-width: 9rem;/);
+      expect(css.match(/@theme[^}]*}/g)?.join('')).not.toContain(
+        'choice-tile-min-width',
+      );
+    },
+  );
+});

@@ -10,11 +10,19 @@ import {
 import type { Subject } from 'rxjs';
 import { ChoicesCompositionError } from './ChoicesCompositionError';
 
-const choicesGroup = cva('flex min-w-0 gap-[var(--space-stack)]', {
+const choicesGroup = cva('min-w-0 gap-[var(--space-stack)]', {
   variants: {
     arrangement: {
-      vertical: 'flex-col [&>[role=radio]]:w-full',
-      wrapping: 'flex-row flex-wrap items-start',
+      vertical: 'flex flex-col [&>[role=radio]]:w-full',
+      wrapping: 'flex flex-row flex-wrap items-start',
+      tiles: [
+        'grid grid-cols-[repeat(auto-fill,minmax(min(100%,var(--choice-tile-min-width)),1fr))]',
+        '[&>[role=radio]]:relative [&>[role=radio]]:flex-col [&>[role=radio]]:items-stretch [&>[role=radio]]:text-center',
+        '[&>[role=radio]]:pt-[calc(var(--choice-marker-size)+1rem)]',
+        '[&_[data-choice-marker]]:absolute [&_[data-choice-marker]]:top-2 [&_[data-choice-marker]]:left-3 [&_[data-choice-marker]]:mt-0',
+        '[&_[data-choice-label]]:flex [&_[data-choice-label]]:flex-col [&_[data-choice-label]]:items-center [&_[data-choice-label]]:gap-2',
+        '[&_[data-choice-label]>:not(img)]:max-w-full',
+      ].join(' '),
     },
   },
   defaultVariants: { arrangement: 'vertical' },
@@ -78,7 +86,8 @@ const ARROW_STEP: Record<string, 1 | -1> = {
 
 export interface IChoicesRootProps extends VariantProps<typeof choicesGroup> {
   /** Full-width vertical rows by default; wrapping uses content-sized choices that flow onto
-   *  further lines. Both arrangements keep declared-order keyboard movement. */
+   *  further lines. Tiles share equal columns using the themed minimum tile width.
+   *  All arrangements keep declared-order keyboard movement. */
   arrangement?: VariantProps<typeof choicesGroup>['arrangement'];
   /** The key of the selected choice. Must name a declared choice; the consumer owns it. */
   selected: string;
@@ -98,8 +107,10 @@ export interface IChoicesChoiceProps {
   /** The stable identity `selected` names and selection requests emit. Not React's `key`, and
    *  never inferred from the name or the position. */
   value: string;
-  /** The visible name. Text only - no icons, no per-row markup. */
-  children: string;
+  /** Visible text naming the option, optionally with non-interactive decoration. */
+  children: ReactNode;
+  /** The option's accessible name when its visible label does not name it, such as a dash. */
+  name?: string;
   /** Optional visible text under the name, exposed as the choice's accessible description. */
   description?: string;
   testId?: string;
@@ -132,6 +143,7 @@ const ChoicesRoot: FunctionComponent<IChoicesRootProps> = ({
 const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
   value,
   children,
+  name,
   description,
   testId,
 }) => {
@@ -168,7 +180,8 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
       type={'button'}
       role={'radio'}
       aria-checked={isSelected}
-      aria-labelledby={nameId}
+      aria-label={name}
+      aria-labelledby={name === undefined ? nameId : undefined}
       aria-describedby={description ? descriptionId : undefined}
       tabIndex={isSelected && !inert ? 0 : -1}
       disabled={inert}
@@ -185,6 +198,8 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
       {/* mt-[0.3rem] seats the marker on the optical middle of the name's line box - the
           Checklist chevron's technique - since items-start alone tops it out. */}
       <span
+        data-choice-marker
+        aria-hidden={true}
         className={
           'mt-[0.3rem] flex size-[var(--choice-marker-size)] shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-solid border-control-border'
         }
@@ -206,6 +221,7 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
             the way Sidebar's inert entry and a disabled Input do. */}
         <span
           id={nameId}
+          data-choice-label
           className={
             'font-secondary font-medium text-body text-foreground group-disabled/choice:text-muted'
           }
@@ -233,8 +249,8 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
  *
  * @Guarantees — enforced on every render
  * - Renders `role="radiogroup"` named by `label`, with each row a `role="radio"` button carrying
- *   `aria-checked`, its visible name as accessible name and its description as accessible
- *   description when supplied; omitted or empty descriptions render no content or association.
+ *   `aria-checked`, its `name` (when supplied) or visible label text as accessible name, and its
+ *   description as accessible description when supplied; omitted or empty descriptions render no content or association.
  *   Ids are minted per row, so two groups on a page cannot collide.
  * - Selection is the value of `selected`, nothing else: activating an available non-selected row
  *   emits its key on `onSelect$`; the selected row, an unanswered request and every render emit
@@ -250,9 +266,20 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
  * - `arrangement="vertical"` (the default) gives every choice the group's width. `wrapping`
  *   sizes choices to content without sharing surplus width and flows whole choices onto further
  *   lines. Names, unbroken words and supplied descriptions wrap within the available group width.
+ * - `tiles` shares equal-width columns according to available width and
+ *   `--choice-tile-min-width`, stacking each label's image above its text. A narrower group
+ *   fits one column; long and unbroken labels wrap. Selection changes no tile geometry.
  * - Arrow order is declared order even across visual line breaks, never spatial row navigation.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
+ * - Labels contain visible text naming the option, optionally with decorative content. Supply
+ *   `name` when the visible label does not name the option (for example a dash for "No beard").
+ *   Decorative images carry `alt=""` and other decoration `aria-hidden`; nothing is interactive
+ *   or focusable, since the row is the control. All content must be phrasing content valid inside
+ *   a button. Figure artwork without caption or overlay renders an img and is the intended source.
+ * - Declare `--choice-tile-min-width` as a positive definite CSS length. Ensure fixed artwork
+ *   fits inside the tile's content width (including when the group is narrower than the minimum);
+ *   artwork retains its own size/contain contract and is never cropped by Choices.
  * - Choice rows are direct children of `Root` (arrays and fragments are supported), each `value`
  *   unique and stable, and `selected` names a declared row. Invalid input is a contract violation,
  *   not a request for a fallback.

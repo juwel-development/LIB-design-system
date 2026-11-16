@@ -14,14 +14,27 @@ const meta: Meta<typeof Choices.Root> = {
   component: Choices.Root,
   parameters: {
     layout: 'padded',
+    docs: {
+      description: {
+        component: `Choices is a controlled single selection. Compose direct DOM children (arrays/fragments supported) from stable, unique Choice values; selected must name a supplied value. onSelect$ requests that value; only a consumer render changes selection. Rendering, selecting the current choice and ignored requests never invent selection. Inert keeps the selection and wording visible, disables every choice and skips the group in Tab order.
+
+Choice children accept a plain string or rich ReactNode: visible text naming the option, optionally with decorative, non-interactive phrasing content valid inside a button. Do not nest links, buttons, inputs or focusable content. Decorative images need alt="" and other decoration aria-hidden="true"; the library cannot infer that. Without name the visible label's accessible text names the choice. Set Choice name="No beard" for a visible dash (–): name is the option's accessible name, separate from Root.label (the group's name) and the visible label. The optional description remains an accessible description.
+
+Figure presentation="artwork" without caption **and without overlay** renders a bare img, so it is valid phrasing content and the intended decorative image source. Its size prop names a consumer-declared positive definite length token; it centers and contains the whole artboard, preserving transparency and proportions. Caption creates a figure and overlay creates a div, so omit both inside Choice. Put image then text in the rich label; tiles stack them in that order.
+
+arrangement="vertical" (default) keeps full-width rows; "wrapping" keeps content-sized rows; "tiles" shares equal-width grid columns according to available width. Tiles read **--choice-tile-min-width**, a positive definite CSS length (default 9rem). A consumer theme can redeclare it, for example :root { --choice-tile-min-width: 11rem; }, without a CSS/class prop or column-count setting. A group narrower than the minimum fits one column. The container decides column count (ADR 0008). Fixed artwork must fit the tile's content width, including below the minimum; Choices does not shrink or crop it. Long and unbroken names wrap, never truncate.
+
+Every arrangement keeps the marker as a non-colour selection cue, aria-checked, unchanged selection geometry and the shared focus-visible ring. Tab enters at the selected choice. Down/Right advance and Up/Left retreat in declared order with wraparound, including across visual rows; activation follows focus. Subjects and all wording/translation, eligible choices and image updates remain consumer-owned. The Tiles/Full Inventory story demonstrates inventories of 14, 11, 7, 5 and 6, translated long names, named dash choices, live art and theme token updates.`,
+      },
+    },
   },
   tags: ['autodocs'],
   argTypes: {
     arrangement: {
       control: { type: 'select' },
-      options: ['vertical', 'wrapping'],
+      options: ['vertical', 'wrapping', 'tiles'],
       description:
-        'Full-width vertical rows (default), or content-sized choices flowing onto further lines',
+        'Full-width vertical rows (default), content-sized wrapping rows, or equal-width image tiles',
     },
     selected: {
       control: false,

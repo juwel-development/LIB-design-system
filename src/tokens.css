@@ -370,6 +370,10 @@
 }
 
 :root {
+  --choice-tile-min-width: 9rem;
+}
+
+:root {
   --switch-thumb-size: 1rem;
   --switch-track-inset: 0.125rem;
 }

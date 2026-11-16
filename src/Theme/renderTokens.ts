@@ -375,6 +375,12 @@ const SWITCH = `:root {
   --switch-track-inset: 0.125rem;
 }`;
 
+/* Equal choice tiles share the available width above this positive definite length. The
+   consumer theme owns the length; a group narrower than it falls back to one fitting column. */
+const CHOICE_TILES = `:root {
+  --choice-tile-min-width: 9rem;
+}`;
+
 /* The choice marker's two dimensions are not colours: like the tick they live in :root only,
    never @theme inline, so a brand re-points the marker without Choices gaining a prop. Sized in
    rem like the tick and the slider thumb. Constraints: both > 0 (a zero dot erases the one cue
@@ -523,6 +529,8 @@ ${SLIDER}
 
 /* The choice marker's dimensions are not colours either, and sit in :root beside the slider block. */
 ${CHOICE_MARKER}
+
+${CHOICE_TILES}
 
 ${SWITCH}
 

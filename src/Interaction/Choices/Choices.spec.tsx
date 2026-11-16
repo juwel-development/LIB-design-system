@@ -17,7 +17,7 @@ const cadenceChoices = (
   selected: string,
   onSelect$: Subject<string>,
   inert?: boolean,
-  arrangement?: 'vertical' | 'wrapping',
+  arrangement?: 'vertical' | 'wrapping' | 'tiles',
 ): ReactNode => (
   <Choices.Root
     selected={selected}
@@ -86,6 +86,45 @@ const roleChoices = (
 );
 
 describe('Choices Component', () => {
+  it('uses the separate option name instead of the visible dash and retains its description', () => {
+    render(
+      <Choices.Root
+        selected="none"
+        onSelect$={new Subject<string>()}
+        label="Beard"
+      >
+        <Choices.Choice
+          value="none"
+          name="No beard"
+          description="Leave the face clear."
+        >
+          –
+        </Choices.Choice>
+      </Choices.Root>,
+    );
+    const choice = screen.getByRole('radio', { name: 'No beard' });
+    expect(choice).toHaveTextContent('–');
+    expect(choice).toHaveAccessibleDescription('Leave the face clear.');
+    expect(screen.queryByRole('radio', { name: '–' })).not.toBeInTheDocument();
+  });
+
+  it('names rich labels from meaningful text and excludes consumer decoration', () => {
+    render(
+      <Choices.Root
+        selected="bald"
+        onSelect$={new Subject<string>()}
+        label="Hair"
+      >
+        <Choices.Choice value="bald">
+          <img src="/bald.svg" alt="" />
+          <span aria-hidden="true">Decorative star</span>
+          <strong>Bald</strong>
+        </Choices.Choice>
+      </Choices.Root>,
+    );
+    expect(screen.getByRole('radio', { name: 'Bald' })).toBeChecked();
+  });
+
   it('keeps array and fragment choices keyboard reachable in declared order with wraparound', () => {
     render(roleChoices('all', new Subject<string>()));
     const all = screen.getByRole('radio', { name: 'All' });
@@ -184,7 +223,7 @@ describe('Choices Component', () => {
     expect(otherRequests).not.toHaveBeenCalled();
   });
 
-  it.each(['vertical', 'wrapping'] as const)(
+  it.each(['vertical', 'wrapping', 'tiles'] as const)(
     'omits absent description content and association in the %s arrangement',
     (arrangement) => {
       render(
@@ -437,7 +476,7 @@ describe('Choices Component', () => {
     }
   });
 
-  it.each(['vertical', 'wrapping'] as const)(
+  it.each(['vertical', 'wrapping', 'tiles'] as const)(
     'exposes an inert group as unavailable, with every row disabled and no Tab stop (%s)',
     (arrangement) => {
       render(
@@ -464,7 +503,7 @@ describe('Choices Component', () => {
     ).toBeVisible();
   });
 
-  it.each(['vertical', 'wrapping'] as const)(
+  it.each(['vertical', 'wrapping', 'tiles'] as const)(
     'permits no selection change through pointer input while inert (%s)',
     (arrangement) => {
       const onSelect$ = new Subject<string>();
@@ -479,7 +518,7 @@ describe('Choices Component', () => {
     },
   );
 
-  it.each(['vertical', 'wrapping'] as const)(
+  it.each(['vertical', 'wrapping', 'tiles'] as const)(
     'permits no selection change through keyboard input while inert (%s)',
     (arrangement) => {
       const onSelect$ = new Subject<string>();
