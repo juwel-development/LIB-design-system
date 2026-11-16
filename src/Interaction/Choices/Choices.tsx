@@ -18,6 +18,7 @@ const choicesGroup = cva('min-w-0 gap-[var(--space-stack)]', {
       tiles: [
         'grid grid-cols-[repeat(auto-fill,minmax(min(100%,var(--choice-tile-min-width)),1fr))]',
         '[&>[role=radio]]:relative [&>[role=radio]]:flex-col [&>[role=radio]]:items-stretch [&>[role=radio]]:text-center',
+        '[&>[role=radio]]:pt-[calc(var(--choice-marker-size)+1rem)]',
         '[&_[data-choice-marker]]:absolute [&_[data-choice-marker]]:top-2 [&_[data-choice-marker]]:left-3 [&_[data-choice-marker]]:mt-0',
         '[&_[data-choice-label]]:flex [&_[data-choice-label]]:flex-col [&_[data-choice-label]]:items-center [&_[data-choice-label]]:gap-2',
         '[&_[data-choice-label]>:not(img)]:max-w-full',

@@ -2,6 +2,35 @@
 	"browser": "156.0.8078.4",
 	"cases": [
 		{
+			"story": "narrow-tiles",
+			"delivery": "source",
+			"theme": "light",
+			"width": 1920,
+			"height": 1080,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "source-light-1920-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "source",
 			"theme": "light",
 			"width": 1920,
@@ -46,6 +75,35 @@
 			"screenshot": "source-light-1920.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "source",
+			"theme": "light",
+			"width": 1280,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "source-light-1280-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "source",
 			"theme": "light",
 			"width": 1280,
@@ -90,6 +148,35 @@
 			"screenshot": "source-light-1280.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "source",
+			"theme": "light",
+			"width": 1024,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "source-light-1024-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "source",
 			"theme": "light",
 			"width": 1024,
@@ -134,6 +221,35 @@
 			"screenshot": "source-light-1024.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "source",
+			"theme": "light",
+			"width": 684,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "source-light-684-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "source",
 			"theme": "light",
 			"width": 684,
@@ -178,6 +294,35 @@
 			"screenshot": "source-light-684.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "source",
+			"theme": "dark",
+			"width": 1920,
+			"height": 1080,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "source-dark-1920-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "source",
 			"theme": "dark",
 			"width": 1920,
@@ -222,6 +367,35 @@
 			"screenshot": "source-dark-1920.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "source",
+			"theme": "dark",
+			"width": 1280,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "source-dark-1280-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "source",
 			"theme": "dark",
 			"width": 1280,
@@ -266,6 +440,35 @@
 			"screenshot": "source-dark-1280.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "source",
+			"theme": "dark",
+			"width": 1024,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "source-dark-1024-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "source",
 			"theme": "dark",
 			"width": 1024,
@@ -310,6 +513,35 @@
 			"screenshot": "source-dark-1024.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "source",
+			"theme": "dark",
+			"width": 684,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "source-dark-684-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "source",
 			"theme": "dark",
 			"width": 684,
@@ -354,6 +586,35 @@
 			"screenshot": "source-dark-684.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.css",
+			"theme": "light",
+			"width": 1920,
+			"height": 1080,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.css-light-1920-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.css",
 			"theme": "light",
 			"width": 1920,
@@ -398,6 +659,35 @@
 			"screenshot": "styles.css-light-1920.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.css",
+			"theme": "light",
+			"width": 1280,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.css-light-1280-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.css",
 			"theme": "light",
 			"width": 1280,
@@ -442,6 +732,35 @@
 			"screenshot": "styles.css-light-1280.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.css",
+			"theme": "light",
+			"width": 1024,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.css-light-1024-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.css",
 			"theme": "light",
 			"width": 1024,
@@ -486,6 +805,35 @@
 			"screenshot": "styles.css-light-1024.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.css",
+			"theme": "light",
+			"width": 684,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.css-light-684-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.css",
 			"theme": "light",
 			"width": 684,
@@ -530,6 +878,35 @@
 			"screenshot": "styles.css-light-684.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.css",
+			"theme": "dark",
+			"width": 1920,
+			"height": 1080,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.css-dark-1920-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.css",
 			"theme": "dark",
 			"width": 1920,
@@ -574,6 +951,35 @@
 			"screenshot": "styles.css-dark-1920.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.css",
+			"theme": "dark",
+			"width": 1280,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.css-dark-1280-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.css",
 			"theme": "dark",
 			"width": 1280,
@@ -618,6 +1024,35 @@
 			"screenshot": "styles.css-dark-1280.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.css",
+			"theme": "dark",
+			"width": 1024,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.css-dark-1024-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.css",
 			"theme": "dark",
 			"width": 1024,
@@ -662,6 +1097,35 @@
 			"screenshot": "styles.css-dark-1024.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.css",
+			"theme": "dark",
+			"width": 684,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.css-dark-684-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.css",
 			"theme": "dark",
 			"width": 684,
@@ -706,6 +1170,35 @@
 			"screenshot": "styles.css-dark-684.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.light.css",
+			"theme": "light",
+			"width": 1920,
+			"height": 1080,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.light.css-light-1920-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.light.css",
 			"theme": "light",
 			"width": 1920,
@@ -750,6 +1243,35 @@
 			"screenshot": "styles.light.css-light-1920.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.light.css",
+			"theme": "light",
+			"width": 1280,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.light.css-light-1280-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.light.css",
 			"theme": "light",
 			"width": 1280,
@@ -794,6 +1316,35 @@
 			"screenshot": "styles.light.css-light-1280.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.light.css",
+			"theme": "light",
+			"width": 1024,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.light.css-light-1024-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.light.css",
 			"theme": "light",
 			"width": 1024,
@@ -838,6 +1389,35 @@
 			"screenshot": "styles.light.css-light-1024.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.light.css",
+			"theme": "light",
+			"width": 684,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.light.css-light-684-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.light.css",
 			"theme": "light",
 			"width": 684,
@@ -882,6 +1462,35 @@
 			"screenshot": "styles.light.css-light-684.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.dark.css",
+			"theme": "dark",
+			"width": 1920,
+			"height": 1080,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.dark.css-dark-1920-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.dark.css",
 			"theme": "dark",
 			"width": 1920,
@@ -926,6 +1535,35 @@
 			"screenshot": "styles.dark.css-dark-1920.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.dark.css",
+			"theme": "dark",
+			"width": 1280,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.dark.css-dark-1280-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.dark.css",
 			"theme": "dark",
 			"width": 1280,
@@ -970,6 +1608,35 @@
 			"screenshot": "styles.dark.css-dark-1280.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.dark.css",
+			"theme": "dark",
+			"width": 1024,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.dark.css-dark-1024-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.dark.css",
 			"theme": "dark",
 			"width": 1024,
@@ -1014,6 +1681,35 @@
 			"screenshot": "styles.dark.css-dark-1024.png"
 		},
 		{
+			"story": "narrow-tiles",
+			"delivery": "styles.dark.css",
+			"theme": "dark",
+			"width": 684,
+			"height": 720,
+			"measurements": [
+				{
+					"left": 0,
+					"top": 0,
+					"width": 100,
+					"height": 283
+				},
+				{
+					"left": 0,
+					"top": 291,
+					"width": 100,
+					"height": 236.5
+				},
+				{
+					"left": 0,
+					"top": 535.5,
+					"width": 100,
+					"height": 83.5
+				}
+			],
+			"screenshot": "styles.dark.css-dark-684-narrow.png"
+		},
+		{
+			"story": "full-inventory",
 			"delivery": "styles.dark.css",
 			"theme": "dark",
 			"width": 684,

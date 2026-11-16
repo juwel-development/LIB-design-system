@@ -26,59 +26,62 @@ try {
     ['styles.dark.css', 'dark'],
   ]) {
     for (const width of [1920, 1280, 1024, 684]) {
-      const height = width === 1920 ? 1080 : 720;
-      const page = await browser.newPage({ viewport: { width, height } });
-      // embed disables automatic playback, so setup finishes before invoking exactly one play.
-      await page.goto(
-        `${base}/iframe.html?id=interaction-choices-tiles--full-inventory&viewMode=story&embed=true&globals=theme:${theme}`,
-      );
-      await page.waitForSelector('[role=radiogroup]');
-      await page.evaluate(
-        (theme) =>
-          document.documentElement.classList.toggle('dark', theme === 'dark'),
-        theme,
-      );
-      if (delivery !== 'source') {
-        await page.evaluate(() => {
-          document
-            .querySelectorAll('style,link[rel=stylesheet]')
-            .forEach((element) => {
-              element.remove();
-            });
+      for (const story of ['narrow-tiles', 'full-inventory']) {
+        const height = width === 1920 ? 1080 : 720;
+        const page = await browser.newPage({ viewport: { width, height } });
+        // embed disables automatic playback, so setup finishes before invoking exactly one play.
+        await page.goto(
+          `${base}/iframe.html?id=interaction-choices-tiles--${story}&viewMode=story&embed=true&globals=theme:${theme}`,
+        );
+        await page.waitForSelector('[role=radiogroup]');
+        await page.evaluate(
+          (theme) =>
+            document.documentElement.classList.toggle('dark', theme === 'dark'),
+          theme,
+        );
+        if (delivery !== 'source') {
+          await page.evaluate(() => {
+            document
+              .querySelectorAll('style,link[rel=stylesheet]')
+              .forEach((element) => {
+                element.remove();
+              });
+          });
+          await page.addStyleTag({
+            content: readFileSync('.storybook/storybook.css', 'utf8'),
+          });
+          await page.addStyleTag({
+            content: readFileSync(`dist/${delivery}`, 'utf8'),
+          });
+        }
+        const measurements = await page.evaluate(async (theme) => {
+          await document.fonts.ready;
+          const canvasElement = document.querySelector('#storybook-root');
+          await window.__STORYBOOK_PREVIEW__.currentRender.story.playFunction({
+            canvasElement,
+            globals: { theme },
+          });
+          return JSON.parse(canvasElement.dataset.tileMeasurements);
+        }, theme);
+        const screenshot = `${delivery}-${theme}-${width}${story === 'full-inventory' ? '' : '-narrow'}.png`;
+        await page.screenshot({
+          path: `${evidence}/${screenshot}`,
+          fullPage: true,
         });
-        await page.addStyleTag({
-          content: readFileSync('.storybook/storybook.css', 'utf8'),
+        report.cases.push({
+          story,
+          delivery,
+          theme,
+          width,
+          height,
+          measurements,
+          screenshot,
         });
-        await page.addStyleTag({
-          content: readFileSync(`dist/${delivery}`, 'utf8'),
-        });
+        process.stdout.write(
+          `PASS ${delivery} ${theme} ${width}×${height}: ${story} play\n`,
+        );
+        await page.close();
       }
-      const measurements = await page.evaluate(async (theme) => {
-        await document.fonts.ready;
-        const canvasElement = document.querySelector('#storybook-root');
-        await window.__STORYBOOK_PREVIEW__.currentRender.story.playFunction({
-          canvasElement,
-          globals: { theme },
-        });
-        return JSON.parse(canvasElement.dataset.tileMeasurements);
-      }, theme);
-      const screenshot = `${delivery}-${theme}-${width}.png`;
-      await page.screenshot({
-        path: `${evidence}/${screenshot}`,
-        fullPage: true,
-      });
-      report.cases.push({
-        delivery,
-        theme,
-        width,
-        height,
-        measurements,
-        screenshot,
-      });
-      process.stdout.write(
-        `PASS ${delivery} ${theme} ${width}×${height}: full-inventory play\n`,
-      );
-      await page.close();
     }
   }
   writeFileSync(

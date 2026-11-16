@@ -23,7 +23,8 @@ Implementation commit: `5b0be5e45be3c5ca4f5e9ed48d6ce17c13e6640a`.
   redeclare a positive definite length. `tiles` uses equal `1fr` tracks with auto-fill, falling
   back to one fitting column below the floor. The container decides the number of columns, per
   ADR 0008. Fixed artwork must fit within the tile content width; Choices never crops it or
-  changes Figure's fixed-size contract.
+  changes Figure's fixed-size contract. Tile padding reserves the themed marker height above the
+  label so the marker cannot cover art or wording, including below the minimum tile width.
 
 Component documentation is in `Choices.stories.tsx`'s
 `parameters.docs.description.component`. No README changes. Unreleased changelog describes the
@@ -76,8 +77,9 @@ criterion. The fallback uses focused headless Chromium, preserving the focus-vis
 No project dependency is added.
 
 Browser matrix: source CSS light/dark, compiled combined CSS light/dark, compiled light-only CSS,
-and compiled dark-only CSS, each at 1920×1080, 1280×720, 1024×720 and 684×720. This is **24 plays**,
-each exercising all five complete inventories against the built Storybook. Chromium version and measured values are retained
+and compiled dark-only CSS, each at 1920×1080, 1280×720, 1024×720 and 684×720. After review this is
+**48 plays**: 24 exercising all five complete inventories and 24 exercising a 100px container with
+a 32px themed marker, image/text/dash labels, and no marker/content overlap. Chromium version and measured values are retained
 in [the raw results](173-choices/results.json); the terminal log is `/tmp/choices-173-browser.log`.
 Runtime: Chromium **156.0.8078.4**; no cross-engine claim is made.
 
@@ -98,11 +100,75 @@ Screenshots show all four edge marks on contain-fitted wide/tall artboards and w
 
 ## Remaining ownership
 
-No Agent Brief criterion is intentionally deferred. Independent review is assigned separately;
-this worker does not run `/code-review` or move the ticket to In Review. Consumer whole-screen
+No Agent Brief criterion is intentionally deferred. The review below covers both axes and keeps
+the ticket In Review. Consumer whole-screen
 no-scroll layout, category columns, reduced preview, eligible Person choices and Face composition
 are explicitly out of scope. Landing and publication of a compatible release remain with the
 coordinator/maintainer; this branch is not an installed release.
+
+## Review of issue #173
+
+Reviewed `git diff b185ca857e0aa64b585635ac4930a0997d8e1d03...HEAD`, pinned from
+`git merge-base HEAD main`, with implementation commits `5b0be5e` and `50b0a2d`.
+The Agent Brief in the issue comment is the spec. The dispatched worker reviewed both axes
+itself, as instructed, without helper workers.
+
+### Standards
+
+No confirmed documented-standard violations or actionable baseline smells. Sources:
+`docs/agents/standards/coding.md`, `architecture.md`, `testing.md`, and
+`design-system-components.md`, plus the review skill's smell baseline.
+
+Rejected fallow candidates:
+
+- Unused tests, manual browser harness and props interfaces: these are Vitest/manual entry points
+  and module-level public props required by the standards, not dead production code.
+- Token drift on the tile grid: the arbitrary grid expression reads the named theme token; the
+  component standard explicitly permits token-backed CVA styling. Marker classes predate this diff.
+- Duplicate generated theme entries and component-local navigation/context code: theme deliveries
+  are deliberately generated together; navigation/context code is unchanged, and the architecture
+  forbids importing sibling component internals to unify it.
+- Changed renderer contract: additive token output, unchanged function signatures, and regenerated
+  files remain pinned by the token tests; no breaking caller change.
+- Large story play / possible Divergent Change: the fixture demonstrates one gallery contract;
+  named geometry functions already separate the reusable measurement behavior. No unrelated work
+  or speculative API warrants splitting it further in this ticket.
+
+### Spec
+
+**Confirmed and fixed (medium): selection marker can obscure label content.** The brief requires
+"Show every supplied choice, its image and full translated name" and a marker as the non-colour
+selection cue. The new tile recipe positioned the marker absolutely over label content without
+reserving space. A valid 100px tile containing 64px artwork (which fits its content width), long
+text or a dash, with the supported 32px marker theme, reproduces the overlap.
+
+The regression was added first as `NarrowTiles.play`; before the fix it failed with
+`expected 57 to be less than or equal to 25` (marker bottom versus label top), recorded in
+`/tmp/choices-173-review-red.log`. Tile top padding now includes `--choice-marker-size` plus the
+existing spacing, keeping the full label below the marker. Shared play measurements require the
+marker to stay above every label in both stories; the narrow story also checks the themed marker
+size and the below-minimum single-column fallback. Selection code and existing arrangement recipes
+are untouched. [Narrow regression screenshot](173-choices/narrow-light-1280.png).
+
+Rejected spec candidates:
+
+- Missing whole-screen no-scroll/Face/category-column example: explicitly consumer-owned in the
+  Agent Brief's Out of scope section.
+- No new barrel name: the existing public Choices namespace exposes the additions; its emitted
+  declarations and unchanged namespace export are checked by `check:build`.
+- Square image element boxes: Figure's documented fixed box uses `object-fit: contain`, preserving
+  the decoded 2:1 and 1:2 artboards. This is not cropping or an aspect-ratio regression.
+
+Summary: Standards 0 confirmed findings (none outstanding); Spec 1 medium finding, fixed and
+covered by a failing-then-passing geometry play.
+
+Review validation: `npm run build && npm run lint && npm run typecheck && npm run test` passes
+(66 files, 1,584 tests), and the production Storybook build passes. All 48 tile plays pass against
+that build across the six theme/CSS deliveries and four viewport widths. The unchanged
+`scripts/browser/choices.mjs` acceptance harness also passes for vertical/wrapping arrangements,
+long labels/descriptions, native keyboard movement, inert groups, ignored requests and form safety.
+Logs: `/tmp/choices-173-review-test.log`, `/tmp/choices-173-review-build-storybook.log`,
+`/tmp/choices-173-review-browser.log`, `/tmp/choices-173-review-existing.log`.
 
 
 ## Changed files

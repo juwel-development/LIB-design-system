@@ -180,6 +180,12 @@ const measureGallery = async (group: HTMLElement): Promise<number> => {
     await expect(box.left).toBeGreaterThanOrEqual(bounds.left - 1);
     await expect(box.right).toBeLessThanOrEqual(bounds.right + 1);
     await expect(tile.scrollWidth).toBeLessThanOrEqual(tile.clientWidth + 1);
+    const marker = tile.querySelector('[data-choice-marker]');
+    const label = tile.querySelector('[data-choice-label]');
+    if (!marker || !label) throw new Error('A tile needs its marker and label');
+    await expect(marker.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      label.getBoundingClientRect().top,
+    );
     for (const image of tile.querySelectorAll('img')) {
       await image.decode();
       const art = image.getBoundingClientRect();
@@ -214,6 +220,59 @@ const tileGeometry = (group: HTMLElement) => {
         height: box.height,
       };
     });
+};
+
+export const NarrowTiles: Story = {
+  render: () => (
+    <div
+      style={
+        {
+          width: 100,
+          maxWidth: '100%',
+          '--choice-marker-size': '2rem',
+          '--gallery-artwork-size': '64px',
+        } as GalleryTheme
+      }
+    >
+      <Choices.Root
+        arrangement="tiles"
+        label="Narrow choices with a larger marker"
+        selected="image"
+        onSelect$={new Subject<string>()}
+      >
+        <Choices.Choice value="image">
+          <Figure
+            presentation="artwork"
+            size="--gallery-artwork-size"
+            src={artworkSource(0, false)}
+            alt=""
+            width={240}
+            height={120}
+            priority
+          />
+          <span>Long flowing waves swept over the shoulder</span>
+        </Choices.Choice>
+        <Choices.Choice value="text">
+          Donaudampfschifffahrtsgesellschaftskapitänsanwärterauswahl
+        </Choices.Choice>
+        <Choices.Choice value="none" name="No beard">
+          –
+        </Choices.Choice>
+      </Choices.Root>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const group = within(canvasElement).getByRole('radiogroup');
+    await expect(await measureGallery(group)).toBe(1);
+    for (const tile of within(group).getAllByRole('radio')) {
+      const marker = tile.querySelector('[data-choice-marker]');
+      await expect(marker?.getBoundingClientRect().height).toBe(32);
+    }
+    canvasElement.dataset.tileMeasurements = JSON.stringify(
+      tileGeometry(group),
+    );
+    canvasElement.dataset.tilePlay = 'passed';
+  },
 };
 
 export const FullInventory: Story = {

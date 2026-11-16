@@ -6,6 +6,7 @@
   in equal-width `tiles` controlled by the theme's `--choice-tile-min-width` token
   ([#173](https://github.com/juwel-development/LIB-design-system/issues/173)). This additive minor
   feature preserves existing string labels, vertical/wrapping arrangements and selection semantics.
+  Tiles reserve space for the themed selection marker so it cannot cover images or names.
 
 # [4.6.0](https://github.com/juwel-development/LIB-design-system/compare/v4.5.0...v4.6.0) (2026-11-15)
 
