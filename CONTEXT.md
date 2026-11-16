@@ -518,9 +518,10 @@ A submitted selection belongs to a checkbox in a Form, and described alternative
 _Avoid_: Toggle button, checkbox, segmented control
 
 **Choices**:
-A single selection from a small set of named options with optional descriptions, presented as
-vertical rows or a wrapping row with exactly one selected. The consumer owns the selection and
-wording; an inert group remains visible with its selection and supplied descriptions, but unavailable.
+A single selection from a set of named options with optional descriptions, presented as
+vertical rows, a wrapping row or a gallery of equal tiles, with exactly one selected. A tile shows
+its label's image above its text, and as many tiles share a line as the space allows. The consumer
+owns the selection and wording; an inert group remains visible with its selection and supplied descriptions, but unavailable.
 _Avoid_: Radio group, radio buttons, option list, picker
 
 **Select**:
@@ -545,8 +546,11 @@ The consumer owns the options, selection, wording and meaning of the selected se
 _Avoid_: Topic filter, multi-choice, checkbox list
 
 **Choice row**:
-One option within Choices - a stable key, a visible name and an optional description, selectable by
-activating any part of the row, its text included. The selected row is told apart by the marker
+One option within Choices - a stable key, a visible label and an optional description, selectable by
+activating any part of the row, its text included. The label is text naming the option, optionally
+with decorative content beside it such as an image; nothing in it is interactive, since the row is
+the control. The option is named by its label's text, unless the label does not name it - a dash
+standing for "no beard" - in which case the option carries a name of its own. The selected row is told apart by the marker
 and highlight rather than by colour alone. Availability belongs to the group: there is no per-row
 inert, and an option that cannot be offered is left out by the caller.
 _Avoid_: Radio button, option, item, entry
