@@ -1,3 +1,15 @@
+# [4.7.0](https://github.com/juwel-development/LIB-design-system/compare/v4.6.0...v4.7.0) (2026-11-16)
+
+
+### Bug Fixes
+
+* **choices:** keep tile markers clear of labels ([5c4abef](https://github.com/juwel-development/LIB-design-system/commit/5c4abef57bc136de1917d3a7c405c20ba4be741f))
+
+
+### Features
+
+* **choices:** add rich labels and image tiles ([#173](https://github.com/juwel-development/LIB-design-system/issues/173)) ([5b0be5e](https://github.com/juwel-development/LIB-design-system/commit/5b0be5e45be3c5ca4f5e9ed48d6ce17c13e6640a))
+
 # Unreleased
 
 ### Features
