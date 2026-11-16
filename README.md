@@ -125,6 +125,13 @@ npm run typecheck      # tsc
 npm run build          # library bundle + type declarations
 ```
 
+The jsdom 31 test environment requires Node `^22.22.2 || ^24.15.0 || >=26.0.0`.
+CI tests the latest releases on the Node 22, 24 and 26 lines; these selectors do
+not pin the minimum patch versions.
+
+jsdom's `@napi-rs/canvas` peer is optional and is not installed: the test suite
+does not use canvas APIs and passes without it.
+
 ### Fallow
 
 `npm run fallow:agent -- --base <commit>` reviews changes against a fixed commit.

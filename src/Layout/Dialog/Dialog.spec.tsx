@@ -484,15 +484,31 @@ describe('Dialog Component', () => {
     expect(opener).not.toHaveFocus();
   });
 
-  it('captures no opener when nothing was focused on opening, so closing never focuses body', async () => {
-    render(confirmation(new Subject<void>()));
-    const dialog = visibleDialog();
-    screen.getByRole('button', { name: 'Cancel' }).focus();
+  it('captures no opener when nothing was focused on opening, so closing never explicitly focuses body', async () => {
+    // jsdom 31 resets activeElement to body when a hidden descendant loses focus during rendering.
+    // Observe focus events instead; tabindex makes an erroneous body.focus() observable too.
+    const bodyFocusEvents: FocusEvent[] = [];
+    const recordBodyFocus = (event: FocusEvent): void => {
+      bodyFocusEvents.push(event);
+    };
+    document.body.tabIndex = -1;
+    document.body.addEventListener('focus', recordBodyFocus);
+    try {
+      render(confirmation(new Subject<void>()));
+      const dialog = visibleDialog();
+      screen.getByRole('button', { name: 'Cancel' }).focus();
 
-    fireEvent(dialog, new Event('cancel', { cancelable: true }));
-    await nativeCloseSettled();
+      fireEvent(dialog, new Event('cancel', { cancelable: true }));
+      await nativeCloseSettled();
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve()),
+      );
 
-    expect(document.body).not.toHaveFocus();
+      expect(bodyFocusEvents).toEqual([]);
+    } finally {
+      document.body.removeEventListener('focus', recordBodyFocus);
+      document.body.removeAttribute('tabindex');
+    }
   });
 
   it('leaves the consumer-owned completion focus alone when confirmation removed the opener', async () => {
