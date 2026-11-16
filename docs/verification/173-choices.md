@@ -1,7 +1,10 @@
 # #173 Choices image tiles
 
 Contract: the issue's **Agent Brief**, read with `gh issue view 173 --comments`, rather than the
-original whole-screen request. Implemented on `ticket-173`; no publication, push or merge.
+original whole-screen request. Implemented in the `ticket-173` worktree on the existing
+`feature/ticket-173` branch; no branch switch, publication, push or merge.
+
+Implementation commit: `5b0be5e45be3c5ca4f5e9ed48d6ce17c13e6640a`.
 
 ## Public decisions
 
