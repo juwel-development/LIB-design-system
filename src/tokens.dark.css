@@ -334,6 +334,7 @@
 }
 
 :root {
+  --choice-column-min-width: 12rem;
   --choice-tile-min-width: 9rem;
 }
 

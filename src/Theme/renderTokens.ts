@@ -375,9 +375,10 @@ const SWITCH = `:root {
   --switch-track-inset: 0.125rem;
 }`;
 
-/* Equal choice tiles share the available width above this positive definite length. The
-   consumer theme owns the length; a group narrower than it falls back to one fitting column. */
-const CHOICE_TILES = `:root {
+/* Text columns and image tiles have independent positive definite width floors. The
+   consumer theme owns both; a narrower group falls back to one fitting column. */
+const CHOICE_COLUMNS = `:root {
+  --choice-column-min-width: 12rem;
   --choice-tile-min-width: 9rem;
 }`;
 
@@ -530,7 +531,7 @@ ${SLIDER}
 /* The choice marker's dimensions are not colours either, and sit in :root beside the slider block. */
 ${CHOICE_MARKER}
 
-${CHOICE_TILES}
+${CHOICE_COLUMNS}
 
 ${SWITCH}
 

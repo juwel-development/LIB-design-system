@@ -17,7 +17,7 @@ const cadenceChoices = (
   selected: string,
   onSelect$: Subject<string>,
   inert?: boolean,
-  arrangement?: 'vertical' | 'wrapping' | 'tiles',
+  arrangement?: 'vertical' | 'wrapping' | 'columns' | 'tiles',
 ): ReactNode => (
   <Choices.Root
     selected={selected}
@@ -108,22 +108,30 @@ describe('Choices Component', () => {
     expect(screen.queryByRole('radio', { name: '–' })).not.toBeInTheDocument();
   });
 
-  it('names rich labels from meaningful text and excludes consumer decoration', () => {
-    render(
-      <Choices.Root
-        selected="bald"
-        onSelect$={new Subject<string>()}
-        label="Hair"
-      >
-        <Choices.Choice value="bald">
-          <img src="/bald.svg" alt="" />
-          <span aria-hidden="true">Decorative star</span>
-          <strong>Bald</strong>
-        </Choices.Choice>
-      </Choices.Root>,
-    );
-    expect(screen.getByRole('radio', { name: 'Bald' })).toBeChecked();
-  });
+  it.each(['vertical', 'wrapping', 'columns', 'tiles'] as const)(
+    'names rich labels from meaningful text and excludes consumer decoration (%s)',
+    (arrangement) => {
+      render(
+        <Choices.Root
+          arrangement={arrangement}
+          selected="bald"
+          onSelect$={new Subject<string>()}
+          label="Hair"
+        >
+          <Choices.Choice value="bald">
+            <Fragment key="artwork">
+              <img src="/bald.svg" alt="" />
+              <span aria-hidden="true">Decorative star</span>
+            </Fragment>
+            <Fragment key="name">
+              <strong>Bald</strong>
+            </Fragment>
+          </Choices.Choice>
+        </Choices.Root>,
+      );
+      expect(screen.getByRole('radio', { name: 'Bald' })).toBeChecked();
+    },
+  );
 
   it('keeps array and fragment choices keyboard reachable in declared order with wraparound', () => {
     render(roleChoices('all', new Subject<string>()));
@@ -223,7 +231,7 @@ describe('Choices Component', () => {
     expect(otherRequests).not.toHaveBeenCalled();
   });
 
-  it.each(['vertical', 'wrapping', 'tiles'] as const)(
+  it.each(['vertical', 'wrapping', 'columns', 'tiles'] as const)(
     'omits absent description content and association in the %s arrangement',
     (arrangement) => {
       render(
@@ -476,7 +484,7 @@ describe('Choices Component', () => {
     }
   });
 
-  it.each(['vertical', 'wrapping', 'tiles'] as const)(
+  it.each(['vertical', 'wrapping', 'columns', 'tiles'] as const)(
     'exposes an inert group as unavailable, with every row disabled and no Tab stop (%s)',
     (arrangement) => {
       render(
@@ -503,7 +511,7 @@ describe('Choices Component', () => {
     ).toBeVisible();
   });
 
-  it.each(['vertical', 'wrapping', 'tiles'] as const)(
+  it.each(['vertical', 'wrapping', 'columns', 'tiles'] as const)(
     'permits no selection change through pointer input while inert (%s)',
     (arrangement) => {
       const onSelect$ = new Subject<string>();
@@ -518,7 +526,7 @@ describe('Choices Component', () => {
     },
   );
 
-  it.each(['vertical', 'wrapping', 'tiles'] as const)(
+  it.each(['vertical', 'wrapping', 'columns', 'tiles'] as const)(
     'permits no selection change through keyboard input while inert (%s)',
     (arrangement) => {
       const onSelect$ = new Subject<string>();

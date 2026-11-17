@@ -824,3 +824,16 @@ describe('renderTokens choice tile contract', () => {
     },
   );
 });
+
+describe('renderTokens choice column contract', () => {
+  it.each([renderTokens, renderLightTokens, renderDarkTokens])(
+    'declares a separate positive column width floor in each token delivery',
+    (render) => {
+      const css = render();
+      expect(css).toMatch(/:root\s*\{[^}]*--choice-column-min-width: 12rem;/);
+      expect(css.match(/@theme[^}]*}/g)?.join('')).not.toContain(
+        'choice-column-min-width',
+      );
+    },
+  );
+});

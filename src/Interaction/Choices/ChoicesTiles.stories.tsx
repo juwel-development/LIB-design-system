@@ -183,9 +183,14 @@ const measureGallery = async (group: HTMLElement): Promise<number> => {
     const marker = tile.querySelector('[data-choice-marker]');
     const label = tile.querySelector('[data-choice-label]');
     if (!marker || !label) throw new Error('A tile needs its marker and label');
-    await expect(marker.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-      label.getBoundingClientRect().top,
-    );
+    const name = label.querySelector('span') ?? label;
+    const nameRange = document.createRange();
+    nameRange.selectNodeContents(name);
+    const nameBox = nameRange.getBoundingClientRect();
+    const markerBox = marker.getBoundingClientRect();
+    await expect(markerBox.right).toBeLessThanOrEqual(nameBox.left);
+    await expect(markerBox.top).toBeGreaterThanOrEqual(nameBox.top);
+    await expect(markerBox.top).toBeLessThan(nameBox.bottom);
     for (const image of tile.querySelectorAll('img')) {
       await image.decode();
       const art = image.getBoundingClientRect();
@@ -193,7 +198,13 @@ const measureGallery = async (group: HTMLElement): Promise<number> => {
       await expect(art.height).toBe(64);
       await expect(art.left).toBeGreaterThanOrEqual(box.left);
       await expect(art.right).toBeLessThanOrEqual(box.right);
-      await expect(art.top).toBeGreaterThanOrEqual(box.top);
+      await expect(art.top).toBeCloseTo(
+        box.top +
+          parseFloat(getComputedStyle(tile).borderTopWidth) +
+          parseFloat(getComputedStyle(tile).paddingTop),
+        1,
+      );
+      await expect(markerBox.top).toBeGreaterThanOrEqual(art.bottom);
       await expect(art.bottom).toBeLessThanOrEqual(box.bottom);
       await expect(getComputedStyle(image).objectFit).toBe('contain');
       const ratio = image.naturalWidth / image.naturalHeight;
@@ -267,6 +278,64 @@ export const NarrowTiles: Story = {
     for (const tile of within(group).getAllByRole('radio')) {
       const marker = tile.querySelector('[data-choice-marker]');
       await expect(marker?.getBoundingClientRect().height).toBe(32);
+    }
+    canvasElement.dataset.tileMeasurements = JSON.stringify(
+      tileGeometry(group),
+    );
+    canvasElement.dataset.tilePlay = 'passed';
+  },
+};
+
+export const InlineNames: Story = {
+  render: () => (
+    <div
+      style={
+        {
+          width: 400,
+          maxWidth: '100%',
+          '--choice-tile-min-width': '20rem',
+        } as GalleryTheme
+      }
+    >
+      <Choices.Root
+        arrangement="tiles"
+        label="Inline tile names"
+        selected="image"
+        onSelect$={new Subject<string>()}
+      >
+        <Choices.Choice value="image" description="Complete artwork and name.">
+          <img src={artworkSource(0, false)} alt="" width={64} height={64} />
+          Long <strong>flowing</strong> waves
+        </Choices.Choice>
+        <Choices.Choice value="text" description="A text-only choice.">
+          Long <strong>flowing</strong> waves
+        </Choices.Choice>
+      </Choices.Root>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const group = within(canvasElement).getByRole('radiogroup');
+    for (const tile of within(group).getAllByRole('radio')) {
+      await expect(tile).toHaveAccessibleName('Long flowing waves');
+      const label = tile.querySelector('[data-choice-label]');
+      const marker = tile.querySelector('[data-choice-marker]');
+      if (!label || !marker)
+        throw new Error('A tile needs its name and marker');
+      const text = document.createTreeWalker(label, NodeFilter.SHOW_TEXT);
+      const textBoxes: DOMRect[] = [];
+      while (text.nextNode()) {
+        const range = document.createRange();
+        range.selectNodeContents(text.currentNode);
+        textBoxes.push(range.getBoundingClientRect());
+      }
+      const nameTop = textBoxes[0]?.top ?? 0;
+      for (const box of textBoxes) {
+        await expect(box.top).toBeCloseTo(nameTop, 0);
+        await expect(box.left).toBeGreaterThanOrEqual(
+          marker.getBoundingClientRect().right,
+        );
+      }
+      await expect(tile.scrollWidth).toBeLessThanOrEqual(tile.clientWidth);
     }
     canvasElement.dataset.tileMeasurements = JSON.stringify(
       tileGeometry(group),
