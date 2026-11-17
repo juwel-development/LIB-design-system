@@ -10,6 +10,7 @@
 			"!**/src/tokens.css",
 			"!**/src/tokens.light.css",
 			"!**/src/tokens.dark.css",
+			"!**/CHANGELOG.md",
 			"!**/.claude",
 			"!**/*.grit",
 			"!**/.fallowrc.jsonc"
