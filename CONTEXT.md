@@ -484,7 +484,8 @@ _Avoid_: Truncation, ellipsis, responsive tabs, collapsing tabs, multi-row tabs
 
 **Stepper**:
 A connected row of numbered form steps with one current panel, each step presenting its name,
-status and consumer-supplied value text. The consumer owns navigation, validation and persistent
+status and consumer-supplied value text. Steps are stacked, marker above the text, or inline, marker
+beside it; stacked suits many steps in a narrow row, inline a few steps in a wide one. The consumer owns navigation, validation and persistent
 state; leaving a panel unmounts its content, and visiting a step does not complete it.
 _Avoid_: Wizard, progress bar, automatic workflow
 
