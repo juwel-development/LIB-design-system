@@ -4,16 +4,16 @@ import { type CSSProperties, useEffect, useState } from 'react';
 import { Subject } from 'rxjs';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-const meta: Meta<typeof Choices.Root> = {
+const META: Meta<typeof Choices.Root> = {
   title: 'Interaction/Choices/Columns',
   component: Choices.Root,
   parameters: { layout: 'padded' },
 };
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default META;
+type Story = StoryObj<typeof META>;
 type ChoicesTheme = CSSProperties & Record<`--${string}`, string>;
 
-const categories = [
+const CATEGORIES = [
   'Hair',
   'Hair colour',
   'Long flowing hair and shoulder-length accessories',
@@ -30,7 +30,7 @@ const categories = [
 ];
 const categoryId = (index: number): string => `category-${index}`;
 const hairstyleId = (index: number): string => `hairstyle-${index}`;
-const artwork = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="240"><path d="M0 0h120v240H0Z" fill="#146ac8"/><path d="M0 0h12v12H0Zm108 0h12v12h-12ZM0 228h12v12H0Zm108 0h12v12h-12Z" fill="#d7263d"/></svg>')}`;
+const ARTWORK = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="240"><path d="M0 0h120v240H0Z" fill="#146ac8"/><path d="M0 0h12v12H0Zm108 0h12v12h-12ZM0 228h12v12H0Zm108 0h12v12h-12Z" fill="#d7263d"/></svg>')}`;
 
 const ColumnsAndGallery = () => {
   const [selected, setSelected] = useState(categoryId(3));
@@ -41,6 +41,7 @@ const ColumnsAndGallery = () => {
   const [requests, setRequests] = useState<string[]>([]);
   const [onSelect$] = useState(() => new Subject<string>());
   const [onHairstyle$] = useState(() => new Subject<string>());
+  const [onComparison$] = useState(() => new Subject<string>());
   useEffect(() => {
     const subscription = onSelect$.subscribe((value) => {
       setRequests((previous) => [...previous, value]);
@@ -100,7 +101,7 @@ const ColumnsAndGallery = () => {
             selected={selected}
             onSelect$={onSelect$}
           >
-            {categories.map((name, index) => (
+            {CATEGORIES.map((name, index) => (
               <Choices.Choice key={name} value={categoryId(index)}>
                 {name}
               </Choices.Choice>
@@ -112,7 +113,7 @@ const ColumnsAndGallery = () => {
             <Choices.Root
               label="Vertical comparison"
               selected="other"
-              onSelect$={onSelect$}
+              onSelect$={onComparison$}
             >
               <Choices.Choice value="hair">Hair</Choices.Choice>
               <Choices.Choice value="other">Other</Choices.Choice>
@@ -121,7 +122,7 @@ const ColumnsAndGallery = () => {
               arrangement="wrapping"
               label="Wrapping comparison"
               selected="other"
-              onSelect$={onSelect$}
+              onSelect$={onComparison$}
             >
               <Choices.Choice value="hair">Hair</Choices.Choice>
               <Choices.Choice value="other">Other</Choices.Choice>
@@ -149,7 +150,7 @@ const ColumnsAndGallery = () => {
                     <Figure
                       presentation="artwork"
                       size="--workload-artwork-size"
-                      src={artwork}
+                      src={ARTWORK}
                       alt=""
                       width={120}
                       height={240}
@@ -157,9 +158,9 @@ const ColumnsAndGallery = () => {
                     />
                     <span>
                       {index === 1
-                        ? categories[2]
+                        ? CATEGORIES[2]
                         : index === 2
-                          ? categories[3]
+                          ? CATEGORIES[3]
                           : `Hairstyle ${index}`}
                     </span>
                   </>
@@ -368,6 +369,15 @@ export const ConsumerWorkload: Story = {
     await expect(last).toBeChecked();
     await expect(first).not.toBeChecked();
     await expect(JSON.parse(requests.textContent ?? '[]')).toEqual(requested);
+    for (const name of ['Vertical comparison', 'Wrapping comparison']) {
+      await userEvent.click(
+        within(canvas.getByRole('radiogroup', { name })).getByRole('radio', {
+          name: 'Hair',
+        }),
+      );
+      await expect(last).toBeChecked();
+      await expect(JSON.parse(requests.textContent ?? '[]')).toEqual(requested);
+    }
     canvasElement.dataset.columnMeasurements = JSON.stringify({
       viewport: window.innerWidth,
       columns: await measureColumns(group),

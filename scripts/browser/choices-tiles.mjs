@@ -29,6 +29,7 @@ try {
       for (const story of [
         'tiles--narrow-tiles',
         'tiles--full-inventory',
+        'tiles--inline-names',
         'columns--consumer-workload',
       ]) {
         const height = width === 1920 ? 1080 : 720;

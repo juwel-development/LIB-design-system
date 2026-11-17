@@ -108,22 +108,30 @@ describe('Choices Component', () => {
     expect(screen.queryByRole('radio', { name: '–' })).not.toBeInTheDocument();
   });
 
-  it('names rich labels from meaningful text and excludes consumer decoration', () => {
-    render(
-      <Choices.Root
-        selected="bald"
-        onSelect$={new Subject<string>()}
-        label="Hair"
-      >
-        <Choices.Choice value="bald">
-          <img src="/bald.svg" alt="" />
-          <span aria-hidden="true">Decorative star</span>
-          <strong>Bald</strong>
-        </Choices.Choice>
-      </Choices.Root>,
-    );
-    expect(screen.getByRole('radio', { name: 'Bald' })).toBeChecked();
-  });
+  it.each(['vertical', 'wrapping', 'columns', 'tiles'] as const)(
+    'names rich labels from meaningful text and excludes consumer decoration (%s)',
+    (arrangement) => {
+      render(
+        <Choices.Root
+          arrangement={arrangement}
+          selected="bald"
+          onSelect$={new Subject<string>()}
+          label="Hair"
+        >
+          <Choices.Choice value="bald">
+            <Fragment key="artwork">
+              <img src="/bald.svg" alt="" />
+              <span aria-hidden="true">Decorative star</span>
+            </Fragment>
+            <Fragment key="name">
+              <strong>Bald</strong>
+            </Fragment>
+          </Choices.Choice>
+        </Choices.Root>,
+      );
+      expect(screen.getByRole('radio', { name: 'Bald' })).toBeChecked();
+    },
+  );
 
   it('keeps array and fragment choices keyboard reachable in declared order with wraparound', () => {
     render(roleChoices('all', new Subject<string>()));

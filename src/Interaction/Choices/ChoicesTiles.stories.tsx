@@ -286,6 +286,64 @@ export const NarrowTiles: Story = {
   },
 };
 
+export const InlineNames: Story = {
+  render: () => (
+    <div
+      style={
+        {
+          width: 400,
+          maxWidth: '100%',
+          '--choice-tile-min-width': '20rem',
+        } as GalleryTheme
+      }
+    >
+      <Choices.Root
+        arrangement="tiles"
+        label="Inline tile names"
+        selected="image"
+        onSelect$={new Subject<string>()}
+      >
+        <Choices.Choice value="image" description="Complete artwork and name.">
+          <img src={artworkSource(0, false)} alt="" width={64} height={64} />
+          Long <strong>flowing</strong> waves
+        </Choices.Choice>
+        <Choices.Choice value="text" description="A text-only choice.">
+          Long <strong>flowing</strong> waves
+        </Choices.Choice>
+      </Choices.Root>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const group = within(canvasElement).getByRole('radiogroup');
+    for (const tile of within(group).getAllByRole('radio')) {
+      await expect(tile).toHaveAccessibleName('Long flowing waves');
+      const label = tile.querySelector('[data-choice-label]');
+      const marker = tile.querySelector('[data-choice-marker]');
+      if (!label || !marker)
+        throw new Error('A tile needs its name and marker');
+      const text = document.createTreeWalker(label, NodeFilter.SHOW_TEXT);
+      const textBoxes: DOMRect[] = [];
+      while (text.nextNode()) {
+        const range = document.createRange();
+        range.selectNodeContents(text.currentNode);
+        textBoxes.push(range.getBoundingClientRect());
+      }
+      const nameTop = textBoxes[0]?.top ?? 0;
+      for (const box of textBoxes) {
+        await expect(box.top).toBeCloseTo(nameTop, 0);
+        await expect(box.left).toBeGreaterThanOrEqual(
+          marker.getBoundingClientRect().right,
+        );
+      }
+      await expect(tile.scrollWidth).toBeLessThanOrEqual(tile.clientWidth);
+    }
+    canvasElement.dataset.tileMeasurements = JSON.stringify(
+      tileGeometry(group),
+    );
+    canvasElement.dataset.tilePlay = 'passed';
+  },
+};
+
 export const FullInventory: Story = {
   render: () => <Gallery />,
   play: async ({ canvasElement, globals }) => {

@@ -1,7 +1,10 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import {
+  Children,
   createContext,
+  Fragment,
   type FunctionComponent,
+  isValidElement,
   type KeyboardEvent,
   type ReactNode,
   useContext,
@@ -24,7 +27,7 @@ const choicesGroup = cva('min-w-0 gap-[var(--space-stack)]', {
         '[&>[role=radio]]:grid [&>[role=radio]]:grid-cols-[var(--choice-marker-size)_minmax(0,1fr)] [&>[role=radio]]:content-start [&>[role=radio]]:gap-y-2',
         '[&_[data-choice-content]]:contents [&_[data-choice-label]]:contents',
         '[&_[data-choice-label]>img]:order-first [&_[data-choice-label]>img]:col-span-2 [&_[data-choice-label]>img]:justify-self-center',
-        '[&_[data-choice-label]>:not(img)]:col-start-2 [&_[data-choice-label]>:not(img)]:max-w-full',
+        '[&_[data-choice-name]]:col-start-2 [&_[data-choice-name]]:min-w-0',
         '[&_[data-choice-description]]:col-start-2',
       ].join(' '),
     },
@@ -48,6 +51,7 @@ const choicesChoice = cva(
 );
 
 type ChoicesContract = {
+  arrangement: IChoicesRootProps['arrangement'];
   selected: string;
   onSelect$: Subject<string>;
   inert: boolean;
@@ -86,6 +90,28 @@ const ARROW_STEP: Record<string, 1 | -1> = {
   ArrowRight: 1,
   ArrowUp: -1,
   ArrowLeft: -1,
+};
+
+const labelNodes = (children: ReactNode): ReactNode[] =>
+  Children.map(children, (child) =>
+    isValidElement<{ children?: ReactNode }>(child) && child.type === Fragment
+      ? labelNodes(child.props.children)
+      : child,
+  ) ?? [];
+
+const tileLabel = (children: ReactNode): ReactNode => {
+  const nodes = labelNodes(children);
+  // Image sources cover native images and caller components such as Figure without importing them.
+  // Keep the remaining inline content together: each unwrapped text run becomes its own grid item.
+  const isArtwork = (node: ReactNode): boolean =>
+    isValidElement<{ src?: string }>(node) &&
+    (node.type === 'img' || node.props.src !== undefined);
+  return (
+    <>
+      {nodes.filter(isArtwork)}
+      <span data-choice-name>{nodes.filter((node) => !isArtwork(node))}</span>
+    </>
+  );
 };
 
 export interface IChoicesRootProps extends VariantProps<typeof choicesGroup> {
@@ -130,7 +156,7 @@ const ChoicesRoot: FunctionComponent<IChoicesRootProps> = ({
   testId,
 }) => (
   <ChoicesContext.Provider
-    value={{ selected, onSelect$, inert: inert === true }}
+    value={{ arrangement, selected, onSelect$, inert: inert === true }}
   >
     <div
       role={'radiogroup'}
@@ -151,7 +177,8 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
   description,
   testId,
 }) => {
-  const { selected, onSelect$, inert } = useChoicesContract('Choice');
+  const { arrangement, selected, onSelect$, inert } =
+    useChoicesContract('Choice');
   const isSelected = selected === value;
   const id = useId();
   const nameId = `${id}-name`;
@@ -230,7 +257,7 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
             'font-secondary font-medium text-body text-foreground group-disabled/choice:text-muted'
           }
         >
-          {children}
+          {arrangement === 'tiles' ? tileLabel(children) : children}
         </span>
         {description && (
           <span
