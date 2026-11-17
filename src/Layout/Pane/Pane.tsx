@@ -10,11 +10,27 @@ import {
 } from 'react';
 
 // A Pane inside a compact Screen follows it; a Dialog's Pane is not one of its work areas (#158).
-const pane = cva([
-  'box-border flex h-full min-h-0 min-w-0 flex-col gap-[var(--space-stack)] border border-solid border-border bg-surface text-foreground p-[var(--space-box-inset)] [overflow-wrap:anywhere]',
-  '[[data-screen-spacing=compact]_&:not(dialog_*)]:gap-[var(--space-pane-slot-compact)]',
-  '[[data-screen-spacing=compact]_&:not(dialog_*)]:p-[max(var(--space-pane-inset-compact),calc(var(--focus-ring-width)+var(--focus-ring-offset)))]',
-]);
+const pane = cva(
+  [
+    'box-border flex h-full min-h-0 min-w-0 flex-col gap-[var(--space-stack)] bg-surface text-foreground [overflow-wrap:anywhere]',
+    '[[data-screen-spacing=compact]_&:not(dialog_*)]:gap-[var(--space-pane-slot-compact)]',
+  ],
+  {
+    variants: {
+      frame: {
+        panel: [
+          'border border-solid border-border p-[var(--space-box-inset)]',
+          '[[data-screen-spacing=compact]_&:not(dialog_*)]:p-[max(var(--space-pane-inset-compact),calc(var(--focus-ring-width)+var(--focus-ring-offset)))]',
+        ],
+        page: [
+          '[&>[data-pane-foot]]:border-t [&>[data-pane-foot]]:border-solid [&>[data-pane-foot]]:border-rule [&>[data-pane-foot]]:pt-[var(--space-stack)] [&>[data-pane-foot]]:forced-colors:border-[CanvasText]',
+          '[[data-screen-spacing=compact]_&:not(dialog_*)>[data-pane-foot]]:pt-[var(--space-pane-slot-compact)]',
+        ],
+      },
+    },
+    defaultVariants: { frame: 'panel' },
+  },
+);
 const paneSection = cva('min-w-0 shrink-0');
 // The auto margin takes only spare allocated height, so it resolves to zero wherever there is none.
 const paneFoot = cva('min-w-0 shrink-0', {
@@ -71,7 +87,9 @@ const useOverflow = (
   return isScrollable;
 };
 
-export interface IPaneRootProps {
+export interface IPaneRootProps extends VariantProps<typeof pane> {
+  /** A panel is enclosed; a page is flush with its holder, with only a rule before a present Foot. */
+  frame?: NonNullable<VariantProps<typeof pane>['frame']>;
   children?: ReactNode;
   /** A non-empty name makes the enclosure an accessible group, as with Box. */
   name?: string;
@@ -224,6 +242,7 @@ const useScreenFallback = (root: {
 const Root: FunctionComponent<IPaneRootProps> = ({
   children,
   name,
+  frame,
   testId,
 }) => {
   const root = useRef<HTMLDivElement>(null);
@@ -234,7 +253,7 @@ const Root: FunctionComponent<IPaneRootProps> = ({
       ref={root}
       data-screen-unusable={isUnusable || undefined}
       data-height-bounded
-      className={pane()}
+      className={pane({ frame })}
       role={name ? 'group' : undefined}
       aria-label={name || undefined}
       data-testid={testId}
@@ -253,7 +272,11 @@ const Foot: FunctionComponent<IPaneFootProps> = ({
   placement,
   testId,
 }) => (
-  <div className={paneFoot({ placement })} data-testid={testId}>
+  <div
+    data-pane-foot=""
+    className={paneFoot({ placement })}
+    data-testid={testId}
+  >
     {children}
   </div>
 );
@@ -285,10 +308,10 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
 };
 
 /**
- * A parent-bounded enclosure with optional content-height Head and Foot around a shrinking Body.
+ * A parent-bounded region with optional content-height Head and Foot around a shrinking Body.
  *
  * @Guarantees
- * - Root fills the allocated height, including its border and box inset. Without a definite
+ * - Root fills the allocated height, including any frame border and inset. Without a definite
  *   parent height it grows with content; a stacked parent or enclosing body owns scrolling.
  * - Head and Foot never shrink. Body scrolls both axes as needed and short content does not
  *   stretch: Foot follows it, with any unused height left in Root rather than inside Body.
@@ -298,10 +321,14 @@ const Body: FunctionComponent<IPaneBodyProps> = ({
  *   unsized Root, an overflowing Body, a content-height Dialog or Screen's whole-content
  *   fallback - it has no effect: those fallbacks take precedence and decide as before.
  *   Switching it keeps every node, focus, value and selection.
- * - Root paints surface, foreground, border and box inset, square and without elevation.
- *   The stack space role separates slots; a non-empty name exposes a group, never a landmark.
- *   Inside a Screen with spacing="compact", outside a Dialog, the inset and slot gaps follow
- *   that Screen's compact treatment instead; Pane offers no selector of its own.
+ * - Root paints surface and foreground, square and without elevation. The default frame="panel"
+ *   adds border and box inset. frame="page" has neither: its content and border boxes coincide,
+ *   flush with its holder. Only a present Foot draws a rule-coloured, one-pixel top line.
+ *   Switching frame keeps every node, focus, value and selection.
+ * - The stack space role separates slots and a page Foot's rule from its content; a non-empty
+ *   name exposes a group, never a landmark. Inside a Screen with spacing="compact", outside a
+ *   Dialog, slot gaps and a panel's inset follow that Screen's compact treatment instead;
+ *   a page stays flush. Pane offers no spacing selector of its own.
  * - Default Body is the sole scroll region: a named group and keyboard stop only while
  *   overflowing, retained while focused. It reserves the shared focus ring's room and leaves
  *   native focus reveal, scrolling and child keyboard interactions intact.

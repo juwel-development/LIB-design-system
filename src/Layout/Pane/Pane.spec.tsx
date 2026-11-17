@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { Button, Pane, Screen, Table } from 'index';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { IPaneFootProps } from './Pane';
+import type { IPaneFootProps, IPaneRootProps } from './Pane';
 
 describe('Pane', () => {
   afterEach(() => vi.restoreAllMocks());
@@ -406,5 +406,48 @@ describe('Pane', () => {
       </Pane.Root>,
     );
     expect(screen.getByText('Act')).toBeInTheDocument();
+  });
+  it('keeps every slot, focus, typed value and selection when its frame changes', () => {
+    const example = (frame?: IPaneRootProps['frame']) => (
+      <Pane.Root frame={frame} name="Release">
+        <Pane.Head testId="head">Release</Pane.Head>
+        <Pane.Body ariaLabel="Rules" testId="body">
+          <input aria-label="Release title" defaultValue="" />
+        </Pane.Body>
+        <Pane.Foot placement="bottom" testId="foot">
+          Complete
+        </Pane.Foot>
+      </Pane.Root>
+    );
+    const { rerender } = render(example());
+    const nodes = ['head', 'body', 'foot'].map((id) => screen.getByTestId(id));
+    const root = screen.getByRole('group', { name: 'Release' });
+    const input = screen.getByRole<HTMLInputElement>('textbox');
+    fireEvent.input(input, { target: { value: 'Night Drive' } });
+    input.focus();
+    input.setSelectionRange(2, 6);
+    for (const frame of ['page', 'panel', 'page', undefined] as const) {
+      rerender(example(frame));
+      expect(screen.getByRole('group', { name: 'Release' })).toBe(root);
+      for (const [index, id] of ['head', 'body', 'foot'].entries())
+        expect(screen.getByTestId(id)).toBe(nodes[index]);
+      expect(screen.getByRole('textbox')).toBe(input);
+      expect(input).toHaveFocus();
+      expect(input).toHaveValue('Night Drive');
+      expect([input.selectionStart, input.selectionEnd]).toEqual([2, 6]);
+    }
+  });
+  it('offers a job-named frame only on Root as a closed choice', () => {
+    render(
+      <>
+        {/* @ts-expect-error frame is a closed choice, not a border treatment */}
+        <Pane.Root frame="none" />
+        {/* @ts-expect-error Body does not own the frame */}
+        <Pane.Body frame="page" ariaLabel="Entries">
+          Entries
+        </Pane.Body>
+      </>,
+    );
+    expect(screen.getByText('Entries')).toBeInTheDocument();
   });
 });
