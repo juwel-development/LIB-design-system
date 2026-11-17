@@ -183,9 +183,14 @@ const measureGallery = async (group: HTMLElement): Promise<number> => {
     const marker = tile.querySelector('[data-choice-marker]');
     const label = tile.querySelector('[data-choice-label]');
     if (!marker || !label) throw new Error('A tile needs its marker and label');
-    await expect(marker.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-      label.getBoundingClientRect().top,
-    );
+    const name = label.querySelector('span') ?? label;
+    const nameRange = document.createRange();
+    nameRange.selectNodeContents(name);
+    const nameBox = nameRange.getBoundingClientRect();
+    const markerBox = marker.getBoundingClientRect();
+    await expect(markerBox.right).toBeLessThanOrEqual(nameBox.left);
+    await expect(markerBox.top).toBeGreaterThanOrEqual(nameBox.top);
+    await expect(markerBox.top).toBeLessThan(nameBox.bottom);
     for (const image of tile.querySelectorAll('img')) {
       await image.decode();
       const art = image.getBoundingClientRect();
@@ -193,7 +198,13 @@ const measureGallery = async (group: HTMLElement): Promise<number> => {
       await expect(art.height).toBe(64);
       await expect(art.left).toBeGreaterThanOrEqual(box.left);
       await expect(art.right).toBeLessThanOrEqual(box.right);
-      await expect(art.top).toBeGreaterThanOrEqual(box.top);
+      await expect(art.top).toBeCloseTo(
+        box.top +
+          parseFloat(getComputedStyle(tile).borderTopWidth) +
+          parseFloat(getComputedStyle(tile).paddingTop),
+        1,
+      );
+      await expect(markerBox.top).toBeGreaterThanOrEqual(art.bottom);
       await expect(art.bottom).toBeLessThanOrEqual(box.bottom);
       await expect(getComputedStyle(image).objectFit).toBe('contain');
       const ratio = image.naturalWidth / image.naturalHeight;

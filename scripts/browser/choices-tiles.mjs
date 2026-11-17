@@ -26,12 +26,16 @@ try {
     ['styles.dark.css', 'dark'],
   ]) {
     for (const width of [1920, 1280, 1024, 684]) {
-      for (const story of ['narrow-tiles', 'full-inventory']) {
+      for (const story of [
+        'tiles--narrow-tiles',
+        'tiles--full-inventory',
+        'columns--consumer-workload',
+      ]) {
         const height = width === 1920 ? 1080 : 720;
         const page = await browser.newPage({ viewport: { width, height } });
         // embed disables automatic playback, so setup finishes before invoking exactly one play.
         await page.goto(
-          `${base}/iframe.html?id=interaction-choices-tiles--${story}&viewMode=story&embed=true&globals=theme:${theme}`,
+          `${base}/iframe.html?id=interaction-choices-${story}&viewMode=story&embed=true&globals=theme:${theme}`,
         );
         await page.waitForSelector('[role=radiogroup]');
         await page.evaluate(
@@ -61,9 +65,12 @@ try {
             canvasElement,
             globals: { theme },
           });
-          return JSON.parse(canvasElement.dataset.tileMeasurements);
+          return JSON.parse(
+            canvasElement.dataset.tileMeasurements ??
+              canvasElement.dataset.columnMeasurements,
+          );
         }, theme);
-        const screenshot = `${delivery}-${theme}-${width}${story === 'full-inventory' ? '' : '-narrow'}.png`;
+        const screenshot = `${delivery}-${theme}-${width}-${story}.png`;
         await page.screenshot({
           path: `${evidence}/${screenshot}`,
           fullPage: true,

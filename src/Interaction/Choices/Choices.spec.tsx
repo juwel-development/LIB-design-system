@@ -17,7 +17,7 @@ const cadenceChoices = (
   selected: string,
   onSelect$: Subject<string>,
   inert?: boolean,
-  arrangement?: 'vertical' | 'wrapping' | 'tiles',
+  arrangement?: 'vertical' | 'wrapping' | 'columns' | 'tiles',
 ): ReactNode => (
   <Choices.Root
     selected={selected}
@@ -223,7 +223,7 @@ describe('Choices Component', () => {
     expect(otherRequests).not.toHaveBeenCalled();
   });
 
-  it.each(['vertical', 'wrapping', 'tiles'] as const)(
+  it.each(['vertical', 'wrapping', 'columns', 'tiles'] as const)(
     'omits absent description content and association in the %s arrangement',
     (arrangement) => {
       render(
@@ -476,7 +476,7 @@ describe('Choices Component', () => {
     }
   });
 
-  it.each(['vertical', 'wrapping', 'tiles'] as const)(
+  it.each(['vertical', 'wrapping', 'columns', 'tiles'] as const)(
     'exposes an inert group as unavailable, with every row disabled and no Tab stop (%s)',
     (arrangement) => {
       render(
@@ -503,7 +503,7 @@ describe('Choices Component', () => {
     ).toBeVisible();
   });
 
-  it.each(['vertical', 'wrapping', 'tiles'] as const)(
+  it.each(['vertical', 'wrapping', 'columns', 'tiles'] as const)(
     'permits no selection change through pointer input while inert (%s)',
     (arrangement) => {
       const onSelect$ = new Subject<string>();
@@ -518,7 +518,7 @@ describe('Choices Component', () => {
     },
   );
 
-  it.each(['vertical', 'wrapping', 'tiles'] as const)(
+  it.each(['vertical', 'wrapping', 'columns', 'tiles'] as const)(
     'permits no selection change through keyboard input while inert (%s)',
     (arrangement) => {
       const onSelect$ = new Subject<string>();

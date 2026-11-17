@@ -15,13 +15,17 @@ const choicesGroup = cva('min-w-0 gap-[var(--space-stack)]', {
     arrangement: {
       vertical: 'flex flex-col [&>[role=radio]]:w-full',
       wrapping: 'flex flex-row flex-wrap items-start',
+      columns: [
+        'grid items-start grid-cols-[repeat(auto-fill,minmax(min(100%,var(--choice-column-min-width)),1fr))]',
+        '[&>[role=radio][aria-checked=false]]:border-transparent',
+      ].join(' '),
       tiles: [
         'grid grid-cols-[repeat(auto-fill,minmax(min(100%,var(--choice-tile-min-width)),1fr))]',
-        '[&>[role=radio]]:relative [&>[role=radio]]:flex-col [&>[role=radio]]:items-stretch [&>[role=radio]]:text-center',
-        '[&>[role=radio]]:pt-[calc(var(--choice-marker-size)+1rem)]',
-        '[&_[data-choice-marker]]:absolute [&_[data-choice-marker]]:top-2 [&_[data-choice-marker]]:left-3 [&_[data-choice-marker]]:mt-0',
-        '[&_[data-choice-label]]:flex [&_[data-choice-label]]:flex-col [&_[data-choice-label]]:items-center [&_[data-choice-label]]:gap-2',
-        '[&_[data-choice-label]>:not(img)]:max-w-full',
+        '[&>[role=radio]]:grid [&>[role=radio]]:grid-cols-[var(--choice-marker-size)_minmax(0,1fr)] [&>[role=radio]]:content-start [&>[role=radio]]:gap-y-2',
+        '[&_[data-choice-content]]:contents [&_[data-choice-label]]:contents',
+        '[&_[data-choice-label]>img]:order-first [&_[data-choice-label]>img]:col-span-2 [&_[data-choice-label]>img]:justify-self-center',
+        '[&_[data-choice-label]>:not(img)]:col-start-2 [&_[data-choice-label]>:not(img)]:max-w-full',
+        '[&_[data-choice-description]]:col-start-2',
       ].join(' '),
     },
   },
@@ -85,9 +89,9 @@ const ARROW_STEP: Record<string, 1 | -1> = {
 };
 
 export interface IChoicesRootProps extends VariantProps<typeof choicesGroup> {
-  /** Full-width vertical rows by default; wrapping uses content-sized choices that flow onto
-   *  further lines. Tiles share equal columns using the themed minimum tile width.
-   *  All arrangements keep declared-order keyboard movement. */
+  /** Full-width vertical rows by default; wrapping uses content-sized rows. Columns shares equal
+   *  columns of quiet rows; tiles puts each image above its marker/name row. Column counts follow
+   *  available width and independent themed minimum widths; arrows keep declared order. */
   arrangement?: VariantProps<typeof choicesGroup>['arrangement'];
   /** The key of the selected choice. Must name a declared choice; the consumer owns it. */
   selected: string;
@@ -214,7 +218,7 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
         )}
       </span>
       {/* min-w-0 lets long names and descriptions wrap inside the flex row instead of widening it. */}
-      <span className={'flex min-w-0 flex-col'}>
+      <span data-choice-content className={'flex min-w-0 flex-col'}>
         {/* Name and description each declare `font-secondary` on themselves, never on the button
             above - the wrapper would hand the labelling face to a future slot too (docs/adr/0004).
             The name reads `body`, the field-label precedent from Input (#92); inert mutes its ink
@@ -231,6 +235,7 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
         {description && (
           <span
             id={descriptionId}
+            data-choice-description
             className={'font-secondary text-muted text-small'}
           >
             {description}
@@ -266,9 +271,13 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
  * - `arrangement="vertical"` (the default) gives every choice the group's width. `wrapping`
  *   sizes choices to content without sharing surplus width and flows whole choices onto further
  *   lines. Names, unbroken words and supplied descriptions wrap within the available group width.
- * - `tiles` shares equal-width columns according to available width and
- *   `--choice-tile-min-width`, stacking each label's image above its text. A narrower group
- *   fits one column; long and unbroken labels wrap. Selection changes no tile geometry.
+ * - `columns` shares equal-width columns using `--choice-column-min-width`, preserving vertical
+ *   row anatomy and height. Only its unselected row boundaries are transparent; the marker keeps
+ *   its `controlBorder` box and the selected row its dot and `foreground` boundary at fixed thickness.
+ * - `tiles` shares equal-width columns using the independent `--choice-tile-min-width`. Each
+ *   image sits above the marker/name row without a reserved band above it; text-only tiles keep
+ *   the column width. Both grids fit one column below their minimum; long names wrap and selection
+ *   changes no geometry. Artwork remains uncropped.
  * - Arrow order is declared order even across visual line breaks, never spatial row navigation.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
@@ -277,8 +286,8 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
  *   Decorative images carry `alt=""` and other decoration `aria-hidden`; nothing is interactive
  *   or focusable, since the row is the control. All content must be phrasing content valid inside
  *   a button. Figure artwork without caption or overlay renders an img and is the intended source.
- * - Declare `--choice-tile-min-width` as a positive definite CSS length. Ensure fixed artwork
- *   fits inside the tile's content width (including when the group is narrower than the minimum);
+ * - Declare `--choice-column-min-width` and `--choice-tile-min-width` as positive definite CSS
+ *   lengths. Ensure fixed artwork fits the tile's content width (including below the minimum);
  *   artwork retains its own size/contain contract and is never cropped by Choices.
  * - Choice rows are direct children of `Root` (arrays and fragments are supported), each `value`
  *   unique and stable, and `selected` names a declared row. Invalid input is a contract violation,
