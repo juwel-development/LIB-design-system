@@ -547,7 +547,7 @@ export const FullInventory: Story = {
 
 // The consumer's real names (#184), with every syllable boundary a German break may use marked "·".
 // A rendered line break is legitimate after a space, after an explicit hyphen or at a marked point.
-const workload = [
+const WORKLOAD = [
   {
     title: 'Hairstyles',
     lang: 'en',
@@ -684,7 +684,7 @@ const WorkloadGallery = ({
   lang,
   names,
   dash,
-}: (typeof workload)[number] & { dash?: string }) => {
+}: (typeof WORKLOAD)[number] & { dash?: string }) => {
   const [selected, setSelected] = useState(plain(names[0]));
   const [requests, setRequests] = useState<string[]>([]);
   const [onSelect$] = useState(() => new Subject<string>());
@@ -760,7 +760,7 @@ export const ConsumerWorkload: Story = {
       }
     >
       <button type="button">Before galleries</button>
-      {workload.map((gallery) => (
+      {WORKLOAD.map((gallery) => (
         <WorkloadGallery key={gallery.title} {...gallery} />
       ))}
     </div>
@@ -773,7 +773,7 @@ export const ConsumerWorkload: Story = {
       tileWidth: number;
       breaks: string[];
     }[] = [];
-    for (const gallery of workload) {
+    for (const gallery of WORKLOAD) {
       const group = canvas.getByRole('radiogroup', { name: gallery.title });
       const tiles = within(group).getAllByRole('radio');
       await expect(tiles).toHaveLength(gallery.names.length);

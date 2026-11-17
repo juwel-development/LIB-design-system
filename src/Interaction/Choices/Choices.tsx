@@ -22,10 +22,6 @@ const choicesGroup = cva('min-w-0 gap-[var(--space-stack)]', {
         'grid items-start grid-cols-[repeat(auto-fill,minmax(min(100%,var(--choice-column-min-width)),1fr))]',
         '[&>[role=radio][aria-checked=false]]:border-transparent',
       ].join(' '),
-      // A marker-wide gutter on both inline sides of the image row: the marker takes the end
-      // corner, the image stays centred between them and can never sit under the marker. The
-      // name and description span the full content width beneath, as a centred `small` caption
-      // that hyphenates by the `lang` in effect and breaks a word only when nothing else fits.
       tiles: [
         'grid grid-cols-[repeat(auto-fill,minmax(min(100%,var(--choice-tile-min-width)),1fr))]',
         '[&>[role=radio]]:grid [&>[role=radio]]:grid-cols-[var(--choice-marker-size)_minmax(0,1fr)_var(--choice-marker-size)] [&>[role=radio]]:content-start [&>[role=radio]]:gap-x-0 [&>[role=radio]]:gap-y-2',
@@ -252,11 +248,8 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
       </span>
       {/* min-w-0 lets long names and descriptions wrap inside the flex row instead of widening it. */}
       <span data-choice-content className={'flex min-w-0 flex-col'}>
-        {/* Name and description each declare `font-secondary` on themselves, never on the button
-            above - the wrapper would hand the labelling face to a future slot too (docs/adr/0004).
-            The name reads `body`, the field-label precedent from Input (#92), except as a tile
-            caption, which the tiles recipe sets `small`; inert mutes its ink the way Sidebar's
-            inert entry and a disabled Input do. */}
+        {/* Name and description declare their own family role so a future slot cannot inherit
+            the labelling face from the button (docs/adr/0004). */}
         <span
           id={nameId}
           data-choice-label
