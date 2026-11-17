@@ -260,7 +260,8 @@ _Avoid_: Small type, small controls, global spacing scale
 A parent-bounded enclosure with optional content-height head and foot around a scrolling body.
 A short body keeps its content height; an unsized pane grows with its content. Scroll ownership is
 explicit: the body either scrolls ordinary content or passes its bound to one child that owns
-scrolling, such as a bounded Table.
+scrolling, such as a bounded Table. A panel pane is enclosed among other panes; a page pane is the
+page's content area itself, unenclosed, with only a rule before its foot.
 _Avoid_: Scrolling Box, pinned column, nested panel, master-detail
 
 **Pane foot placement**:
