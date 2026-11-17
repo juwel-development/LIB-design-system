@@ -519,9 +519,11 @@ _Avoid_: Toggle button, checkbox, segmented control
 
 **Choices**:
 A single selection from a set of named options with optional descriptions, presented as
-vertical rows, a wrapping row or a gallery of equal tiles, with exactly one selected. A tile shows
-its label's image above its text, and as many tiles share a line as the space allows. The consumer
-owns the selection and wording; an inert group remains visible with its selection and supplied descriptions, but unavailable.
+vertical rows, a wrapping row, rows in equal columns, or a gallery of equal tiles, with exactly one
+selected. In columns each choice keeps its row form, marker beside the label; a tile shows its
+label's image above that same row. Either way, as many columns share a line as the space allows. The
+consumer owns the selection and wording; an inert group remains visible with its selection and
+supplied descriptions, but unavailable.
 _Avoid_: Radio group, radio buttons, option list, picker
 
 **Select**:
