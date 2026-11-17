@@ -1,4 +1,4 @@
-import { cva } from 'class-variance-authority';
+import { cva, type VariantProps } from 'class-variance-authority';
 import {
   Children,
   createContext,
@@ -26,6 +26,21 @@ const stepperList = cva(
     'p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
     'scroll-p-[calc(var(--focus-ring-width)+var(--focus-ring-offset))]',
   ].join(' '),
+  {
+    variants: {
+      presentation: {
+        stacked: '',
+        inline: [
+          '[&>[role=tab]]:grid [&>[role=tab]]:grid-cols-[var(--step-marker-size)_minmax(min-content,1fr)] [&>[role=tab]]:content-start [&>[role=tab]]:items-start [&>[role=tab]]:text-start',
+          '[&>[role=tab]>:not([data-marker])]:col-start-2',
+          '[&>[role=tab]>[data-marker]]:col-start-1 [&>[role=tab]>[data-marker]]:row-start-1 [&>[role=tab]>[data-marker]]:mt-[calc((1lh-var(--step-marker-size))/2)]',
+          '[&>[role=tab]]:after:hidden [&>[role=tab][aria-selected=true]]:bg-selected-surface',
+          'forced-colors:[&>[role=tab]]:pb-[calc(var(--step-inset-block)+var(--step-selection-thickness))] forced-colors:[&>[role=tab][aria-selected=true]]:pb-[var(--step-inset-block)]',
+        ].join(' '),
+      },
+    },
+    defaultVariants: { presentation: 'stacked' },
+  },
 );
 
 const stepperStep = cva([
@@ -113,7 +128,8 @@ export interface IStepperRootProps {
   testId?: string;
 }
 
-export interface IStepperListProps {
+/** Stacked markers above text, or inline markers beside it; no automatic breakpoint switch. */
+export interface IStepperListProps extends VariantProps<typeof stepperList> {
   children: ReactNode;
   testId?: string;
 }
@@ -162,6 +178,7 @@ const StepperRoot: FunctionComponent<IStepperRootProps> = ({
 };
 
 const StepperList: FunctionComponent<IStepperListProps> = ({
+  presentation,
   children,
   testId,
 }) => {
@@ -170,7 +187,7 @@ const StepperList: FunctionComponent<IStepperListProps> = ({
     <div
       role="tablist"
       aria-label={label}
-      className={stepperList()}
+      className={stepperList({ presentation })}
       data-testid={testId}
     >
       {flattenSteps(children).map((child, index) => (
@@ -288,6 +305,9 @@ const StepperPanel: FunctionComponent<IStepperPanelProps> = ({
  * - Done and blocked steps remain selectable. Left/Right wraps focus and requests selection.
  * - Label and value text name each tab; optional visible status content describes it.
  * - Only the active panel mounts content; returning mounts fresh with no state cache.
+ * - List defaults to stacked markers and connectors; inline places markers beside start-aligned
+ *   text without connectors. Its active fill uses selected-surface, retaining the bottom bar.
+ * - Switching presentation preserves nodes, focus and selection; no breakpoint switches it.
  * - The row wraps text before scrolling horizontally and reveals focused steps.
  * - Root takes its parent's height; Panel passes the remainder without owning scrolling.
  *   An unsized parent retains natural content height.
