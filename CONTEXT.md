@@ -523,9 +523,10 @@ _Avoid_: Toggle button, checkbox, segmented control
 A single selection from a set of named options with optional descriptions, presented as
 vertical rows, a wrapping row, rows in equal columns, or a gallery of equal tiles, with exactly one
 selected. In columns each choice keeps its row form, marker beside the label; a tile shows its
-label's image above that same row. Either way, as many columns share a line as the space allows. The
-consumer owns the selection and wording; an inert group remains visible with its selection and
-supplied descriptions, but unavailable.
+label's image above its text, with the marker in the tile's corner and never over the image.
+Either way, as many columns share a line as the space allows. The consumer owns the selection and
+wording; an inert group remains visible with its selection and supplied descriptions, but
+unavailable.
 _Avoid_: Radio group, radio buttons, option list, picker
 
 **Select**:
@@ -554,7 +555,8 @@ One option within Choices - a stable key, a visible label and an optional descri
 activating any part of the row, its text included. The label is text naming the option, optionally
 with decorative content beside it such as an image; nothing in it is interactive, since the row is
 the control. The option is named by its label's text, unless the label does not name it - a dash
-standing for "no beard" - in which case the option carries a name of its own. The selected row is told apart by the marker
+standing for "no beard" - in which case the option carries a name of its own. Choices never shortens
+a label; a consumer that shortens one visibly still names the option in full. The selected row is told apart by the marker
 and highlight rather than by colour alone. Availability belongs to the group: there is no per-row
 inert, and an option that cannot be offered is left out by the caller.
 _Avoid_: Radio button, option, item, entry
