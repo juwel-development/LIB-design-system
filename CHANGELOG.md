@@ -1,3 +1,27 @@
+# [4.8.0](https://github.com/juwel-development/LIB-design-system/compare/v4.7.0...v4.8.0) (2026-11-17)
+
+
+### Bug Fixes
+
+* **choices:** preserve inline tile names and isolate story selection ([dd3c015](https://github.com/juwel-development/LIB-design-system/commit/dd3c015cfb5709ee4d6fbfbd6ef376c3398b322c))
+
+
+### Features
+
+* **choices:** add equal-column rows and compact tiles ([#181](https://github.com/juwel-development/LIB-design-system/issues/181)) ([7bb1b50](https://github.com/juwel-development/LIB-design-system/commit/7bb1b50988880b1c0cd369de294533df75d514c2))
+* **pane:** add opt-in page frame ([#183](https://github.com/juwel-development/LIB-design-system/issues/183)) ([9df4753](https://github.com/juwel-development/LIB-design-system/commit/9df475362bbc4ebd0c055fad1085585ba30c50fe))
+* **stepper:** add opt-in inline presentation ([#182](https://github.com/juwel-development/LIB-design-system/issues/182)) ([e3c667f](https://github.com/juwel-development/LIB-design-system/commit/e3c667fb355fae6fdd53f92eb4d895e11e8d753a))
+
+
+### NOTE
+
+* **choices:** Existing tiles consumers now see the marker beside the name under the image.
+Tiles are shorter; text-only tiles keep their gallery column width.
+* **stepper:** Stepper.List accepts presentation="inline" for markers beside step text without connectors.
+The default remains stacked; inline selection adds selected-surface to the existing bottom bar.
+* **pane:** Pane.Root accepts frame="page" for a flush bounded content area with no border or box inset.
+A present Foot gains a rule above its content; frame="panel" remains the default.
+
 # [4.7.0](https://github.com/juwel-development/LIB-design-system/compare/v4.6.0...v4.7.0) (2026-11-16)
 
 
