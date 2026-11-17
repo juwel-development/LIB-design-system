@@ -1,3 +1,20 @@
+# [4.9.0](https://github.com/juwel-development/LIB-design-system/compare/v4.8.0...v4.9.0) (2026-11-17)
+
+
+### Features
+
+* **choices:** seat the tile marker in the corner above a centred caption ([#184](https://github.com/juwel-development/LIB-design-system/issues/184)) ([3c60cbb](https://github.com/juwel-development/LIB-design-system/commit/3c60cbbdea852eb20ebc16e43509e00725342c0e))
+
+
+### NOTE
+
+* **choices:** In `arrangement="tiles"` the selection marker moved from beside the name to the
+tile's top inline-end corner, and names are now centred `small` captions that hyphenate
+by the `lang` in effect. Set `lang` on the page or an ancestor so German names split at
+syllables. Fixed artwork must now fit the tile's content width less two marker widths.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
 # [4.8.0](https://github.com/juwel-development/LIB-design-system/compare/v4.7.0...v4.8.0) (2026-11-17)
 
 
