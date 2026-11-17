@@ -30,6 +30,9 @@ try {
         'tiles--narrow-tiles',
         'tiles--full-inventory',
         'tiles--inline-names',
+        'tiles--consumer-workload',
+        'tiles--consumer-shortened-name',
+        'tiles--caption-only-in-tiles',
         'columns--consumer-workload',
       ]) {
         const height = width === 1920 ? 1080 : 720;

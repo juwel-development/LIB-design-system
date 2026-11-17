@@ -152,7 +152,39 @@ const Gallery = () => {
   );
 };
 
-const measureGallery = async (group: HTMLElement): Promise<number> => {
+const contentBox = (element: Element) => {
+  const box = element.getBoundingClientRect();
+  const style = getComputedStyle(element);
+  return {
+    left:
+      box.left +
+      parseFloat(style.borderLeftWidth) +
+      parseFloat(style.paddingLeft),
+    right:
+      box.right -
+      parseFloat(style.borderRightWidth) -
+      parseFloat(style.paddingRight),
+    top:
+      box.top + parseFloat(style.borderTopWidth) + parseFloat(style.paddingTop),
+  };
+};
+
+const intersects = (a: DOMRect, b: DOMRect): boolean =>
+  a.left < b.right - 0.5 &&
+  b.left < a.right - 0.5 &&
+  a.top < b.bottom - 0.5 &&
+  b.top < a.bottom - 0.5;
+
+// A type role's size in CSS px: the roles are declared in rem.
+const rolePixels = (role: string): number =>
+  parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(role),
+  ) * parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+const measureGallery = async (
+  group: HTMLElement,
+  artwork = 64,
+): Promise<number> => {
   const bounds = group.getBoundingClientRect();
   const tiles = within(group).getAllByRole('radio');
   const style = getComputedStyle(group);
@@ -181,38 +213,47 @@ const measureGallery = async (group: HTMLElement): Promise<number> => {
     await expect(box.right).toBeLessThanOrEqual(bounds.right + 1);
     await expect(tile.scrollWidth).toBeLessThanOrEqual(tile.clientWidth + 1);
     const marker = tile.querySelector('[data-choice-marker]');
-    const label = tile.querySelector('[data-choice-label]');
-    if (!marker || !label) throw new Error('A tile needs its marker and label');
-    const name = label.querySelector('span') ?? label;
+    const name = tile.querySelector<HTMLElement>('[data-choice-name]');
+    if (!marker || !name) throw new Error('A tile needs its marker and name');
+    const content = contentBox(tile);
+    const markerBox = marker.getBoundingClientRect();
+    const nameCell = name.getBoundingClientRect();
     const nameRange = document.createRange();
     nameRange.selectNodeContents(name);
-    const nameBox = nameRange.getBoundingClientRect();
-    const markerBox = marker.getBoundingClientRect();
-    await expect(markerBox.right).toBeLessThanOrEqual(nameBox.left);
-    await expect(markerBox.top).toBeGreaterThanOrEqual(nameBox.top);
-    await expect(markerBox.top).toBeLessThan(nameBox.bottom);
+    const nameText = nameRange.getBoundingClientRect();
+    // The marker sits in the top inline-end corner; the name spans the content width beneath it.
+    await expect(Math.abs(markerBox.right - content.right)).toBeLessThan(1);
+    await expect(Math.abs(markerBox.top - content.top)).toBeLessThan(1);
+    await expect(Math.abs(nameCell.left - content.left)).toBeLessThan(1);
+    await expect(Math.abs(nameCell.right - content.right)).toBeLessThan(1);
+    await expect(nameCell.top).toBeGreaterThanOrEqual(markerBox.bottom);
+    await expect(nameText.left).toBeGreaterThanOrEqual(content.left - 1);
+    await expect(nameText.right).toBeLessThanOrEqual(content.right + 1);
+    await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth + 1);
+    const caption = getComputedStyle(name);
+    await expect(caption.textAlign).toBe('center');
+    await expect(parseFloat(caption.fontSize)).toBe(rolePixels('--text-small'));
+    await expect(caption.hyphens).toBe('auto');
+    await expect(caption.overflowWrap).toBe('break-word');
     for (const image of tile.querySelectorAll('img')) {
       await image.decode();
       const art = image.getBoundingClientRect();
-      await expect(art.width).toBe(64);
-      await expect(art.height).toBe(64);
+      await expect(art.width).toBe(artwork);
+      await expect(art.height).toBe(artwork);
       await expect(art.left).toBeGreaterThanOrEqual(box.left);
       await expect(art.right).toBeLessThanOrEqual(box.right);
-      await expect(art.top).toBeCloseTo(
-        box.top +
-          parseFloat(getComputedStyle(tile).borderTopWidth) +
-          parseFloat(getComputedStyle(tile).paddingTop),
-        1,
-      );
-      await expect(markerBox.top).toBeGreaterThanOrEqual(art.bottom);
+      await expect(art.top).toBeCloseTo(content.top, 1);
+      await expect(
+        Math.abs((art.left + art.right) / 2 - (box.left + box.right) / 2),
+      ).toBeLessThanOrEqual(1);
+      await expect(intersects(art, markerBox)).toBe(false);
+      await expect(nameCell.top).toBeGreaterThanOrEqual(art.bottom);
       await expect(art.bottom).toBeLessThanOrEqual(box.bottom);
       await expect(getComputedStyle(image).objectFit).toBe('contain');
       const ratio = image.naturalWidth / image.naturalHeight;
       await expect(ratio).toBe(image.getAttribute('width') === '240' ? 2 : 0.5);
       await expect(getComputedStyle(image).clipPath).toBe('none');
       await expect(getComputedStyle(tile).overflow).toBe('visible');
-      const text = image.nextElementSibling?.getBoundingClientRect();
-      await expect(text?.top).toBeGreaterThanOrEqual(art.bottom);
     }
   }
   return columns;
@@ -238,10 +279,10 @@ export const NarrowTiles: Story = {
     <div
       style={
         {
-          width: 100,
+          width: 140,
           maxWidth: '100%',
           '--choice-marker-size': '2rem',
-          '--gallery-artwork-size': '64px',
+          '--gallery-artwork-size': '48px',
         } as GalleryTheme
       }
     >
@@ -274,7 +315,7 @@ export const NarrowTiles: Story = {
   ),
   play: async ({ canvasElement }) => {
     const group = within(canvasElement).getByRole('radiogroup');
-    await expect(await measureGallery(group)).toBe(1);
+    await expect(await measureGallery(group, 48)).toBe(1);
     for (const tile of within(group).getAllByRole('radio')) {
       const marker = tile.querySelector('[data-choice-marker]');
       await expect(marker?.getBoundingClientRect().height).toBe(32);
@@ -331,8 +372,8 @@ export const InlineNames: Story = {
       const nameTop = textBoxes[0]?.top ?? 0;
       for (const box of textBoxes) {
         await expect(box.top).toBeCloseTo(nameTop, 0);
-        await expect(box.left).toBeGreaterThanOrEqual(
-          marker.getBoundingClientRect().right,
+        await expect(box.top).toBeGreaterThanOrEqual(
+          marker.getBoundingClientRect().bottom,
         );
       }
       await expect(tile.scrollWidth).toBeLessThanOrEqual(tile.clientWidth);
@@ -499,6 +540,457 @@ export const FullInventory: Story = {
     );
     await userEvent.tab();
     await expect(canvas.getByRole('radio', { name: 'Bald' })).toHaveFocus();
+    canvasElement.dataset.tileMeasurements = JSON.stringify(measurements);
+    canvasElement.dataset.tilePlay = 'passed';
+  },
+};
+
+// The consumer's real names (#184), with every syllable boundary a German break may use marked "·".
+// A rendered line break is legitimate after a space, after an explicit hyphen or at a marked point.
+const workload = [
+  {
+    title: 'Hairstyles',
+    lang: 'en',
+    names: [
+      'Bald',
+      'Short cut',
+      'Side part',
+      'Curls',
+      'Long',
+      'Buzz cut',
+      'Bob',
+      'Ponytail',
+      'Braids',
+      'Dreadlocks',
+      'High bun',
+      'Braided crown',
+      'Vintage updo',
+      'Asymmetric sidecut',
+    ],
+  },
+  {
+    title: 'Frisuren',
+    lang: 'de',
+    names: [
+      'Glat·ze',
+      'Kurz·haar·schnitt',
+      'Sei·ten·schei·tel',
+      'Lo·cken',
+      'Lang',
+      'Ras·pel·kurz',
+      'Bob',
+      'Pfer·de·schwanz',
+      'Zöp·fe',
+      'Dread·locks',
+      'Ho·her Dutt',
+      'Flecht·kranz',
+      'Vin·tage-Hoch·steck·fri·sur',
+      'A·sym·me·tri·scher Side·cut',
+    ],
+  },
+  {
+    title: 'Hair colours',
+    lang: 'en',
+    names: [
+      'Natural black',
+      'Dark brown',
+      'Chestnut',
+      'Auburn',
+      'Copper red',
+      'Strawberry blonde',
+      'Golden blonde',
+      'Platinum',
+      'Ash grey',
+      'Silver white',
+      'Pastel blue',
+    ],
+  },
+  {
+    title: 'Bärte',
+    lang: 'de',
+    dash: 'Kein Bart',
+    names: [
+      'Kein Bart',
+      'Drei·ta·ge·bart',
+      'Voll·bart',
+      'Kinn·bart',
+      'Schnurr·bart',
+      'Ko·te·let·ten und Schnurr·bart',
+      'Ge·zwir·bel·ter Schnurr·bart',
+    ],
+  },
+  {
+    title: 'Headwear',
+    lang: 'en',
+    dash: 'No headwear',
+    names: ['No headwear', 'Cap', 'Beanie', 'Wide-brimmed hat', 'Headband'],
+  },
+  {
+    title: 'Eyes',
+    lang: 'en',
+    names: [
+      'Round eyes',
+      'Almond eyes',
+      'Hooded eyes',
+      'Monolid eyes',
+      'Upturned eyes',
+      'Downturned eyes',
+    ],
+  },
+] as const;
+
+const plain = (name: string): string => name.replaceAll('·', '');
+const syllableBreaks = (name: string): Set<number> => {
+  const breaks = new Set<number>();
+  let index = 0;
+  for (const character of name) {
+    if (character === '·') breaks.add(index);
+    else index++;
+  }
+  return breaks;
+};
+
+// Where the rendered name breaks: the prefix ending at a character spans one line more than the
+// prefix before it. A single character's own range cannot say - next to a hyphenation point
+// Chromium reports it with the generated hyphen, on the line above.
+const renderedBreaks = (element: Element): { text: string; at: number[] } => {
+  const lines = (range: Range): number =>
+    new Set(
+      [...range.getClientRects()]
+        .filter((box) => box.width > 0)
+        .map((box) => Math.round(box.top)),
+    ).size;
+  let text = '';
+  const at: number[] = [];
+  let previous = 1;
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    for (let index = 0; index < (node.textContent ?? '').length; index++) {
+      const range = document.createRange();
+      range.setStart(element, 0);
+      range.setEnd(node, index + 1);
+      const spanned = lines(range);
+      if (spanned > previous) at.push(text.length);
+      previous = spanned;
+      text += node.textContent?.[index] ?? '';
+    }
+  }
+  return { text, at };
+};
+
+const WorkloadGallery = ({
+  title,
+  lang,
+  names,
+  dash,
+}: (typeof workload)[number] & { dash?: string }) => {
+  const [selected, setSelected] = useState(plain(names[0]));
+  const [requests, setRequests] = useState<string[]>([]);
+  const [onSelect$] = useState(() => new Subject<string>());
+  useEffect(() => {
+    const subscription = onSelect$.subscribe((value) => {
+      setRequests((previous) => [...previous, value]);
+      setSelected(value);
+    });
+    return () => subscription.unsubscribe();
+  }, [onSelect$]);
+  return (
+    <section lang={lang}>
+      <h3>{title}</h3>
+      <Choices.Root
+        arrangement="tiles"
+        selected={selected}
+        onSelect$={onSelect$}
+        label={title}
+      >
+        {names.map((syllables, index) => {
+          const name = plain(syllables);
+          return (
+            <Choices.Choice
+              key={name}
+              value={name}
+              name={name === dash ? name : undefined}
+            >
+              {name === dash ? (
+                '–'
+              ) : (
+                <>
+                  <Figure
+                    presentation="artwork"
+                    size="--gallery-artwork-size"
+                    src={artworkSource(index, false)}
+                    alt=""
+                    width={index % 2 === 0 ? 240 : 120}
+                    height={index % 2 === 0 ? 120 : 240}
+                    priority
+                  />
+                  {name}
+                </>
+              )}
+            </Choices.Choice>
+          );
+        })}
+      </Choices.Root>
+      <output aria-label={`${title} requests`} hidden>
+        {JSON.stringify(requests)}
+      </output>
+    </section>
+  );
+};
+
+export const ConsumerWorkload: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The consumer gallery from #184: 48px artwork in five 130.4px columns of a 684px gallery, with English and German names. German names hyphenate by the `lang` on their section.',
+      },
+    },
+  },
+  render: () => (
+    <div
+      style={
+        {
+          width: 684,
+          maxWidth: '100%',
+          '--choice-tile-min-width': '7.5rem',
+          '--gallery-artwork-size': '48px',
+        } as GalleryTheme
+      }
+    >
+      <button type="button">Before galleries</button>
+      {workload.map((gallery) => (
+        <WorkloadGallery key={gallery.title} {...gallery} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const measurements: {
+      gallery: string;
+      columns: number;
+      tileWidth: number;
+      breaks: string[];
+    }[] = [];
+    for (const gallery of workload) {
+      const group = canvas.getByRole('radiogroup', { name: gallery.title });
+      const tiles = within(group).getAllByRole('radio');
+      await expect(tiles).toHaveLength(gallery.names.length);
+      const columns = await measureGallery(group, 48);
+      const tileWidth = tiles[0]?.getBoundingClientRect().width ?? 0;
+      // The consumer's own gallery: 684px, five columns sharing four 8px gaps.
+      if (group.getBoundingClientRect().width >= 684) {
+        await expect(columns).toBe(5);
+        await expect(tileWidth).toBeCloseTo(130.4, 0);
+      }
+      const breaks: string[] = [];
+      for (const [index, syllables] of gallery.names.entries()) {
+        const name = tiles[index]?.querySelector('[data-choice-name]');
+        if (!name) throw new Error('Every tile needs its name');
+        await expect(tiles[index]).toHaveAccessibleName(plain(syllables));
+        if ('dash' in gallery && plain(syllables) === gallery.dash) continue;
+        const rendered = renderedBreaks(name);
+        const allowed = syllableBreaks(syllables);
+        for (const at of rendered.at) {
+          breaks.push(
+            `${rendered.text.slice(0, at)}|${rendered.text.slice(at)}`,
+          );
+          if (gallery.lang === 'de') {
+            const before = rendered.text[at - 1];
+            await expect(
+              before === ' ' || before === '-' || allowed.has(at),
+              `${rendered.text} breaks mid-syllable at ${at}`,
+            ).toBe(true);
+          }
+        }
+      }
+      measurements.push({ gallery: gallery.title, columns, tileWidth, breaks });
+
+      const before = tileGeometry(group);
+      const second = tiles[1];
+      if (!second) throw new Error('A second choice is needed');
+      await userEvent.click(second);
+      await expect(second).toBeChecked();
+      await expect(tileGeometry(group)).toEqual(before);
+      for (const tile of tiles) {
+        const box = tile.getBoundingClientRect();
+        await expect(box.width).toBeCloseTo(tileWidth, 1);
+      }
+    }
+
+    const frisuren = canvas.getByRole('radiogroup', { name: 'Frisuren' });
+    const [, second, third] = within(frisuren).getAllByRole('radio');
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Before galleries' }),
+    );
+    await userEvent.tab();
+    await userEvent.tab();
+    await expect(second).toHaveFocus();
+    await expect(second?.matches(':focus-visible')).toBe(true);
+    await expect(getComputedStyle(second as Element).outlineStyle).toBe(
+      'solid',
+    );
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(third).toHaveFocus();
+    await expect(third).toBeChecked();
+    const requests = canvas.getByLabelText('Frisuren requests', {
+      selector: 'output',
+    });
+    await expect(JSON.parse(requests.textContent ?? '[]')).toEqual([
+      'Kurzhaarschnitt',
+      'Seitenscheitel',
+    ]);
+    canvasElement.dataset.tileMeasurements = JSON.stringify(measurements);
+    canvasElement.dataset.tilePlay = 'passed';
+  },
+};
+
+export const ConsumerShortenedName: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The library never shortens a name. A consumer that does, here with its own inline-block ellipsis, stays inside the name cell and still names the option in full through `name`.',
+      },
+    },
+  },
+  render: () => (
+    <div
+      lang="de"
+      style={
+        {
+          width: 684,
+          maxWidth: '100%',
+          '--choice-tile-min-width': '7.5rem',
+          '--gallery-artwork-size': '48px',
+        } as GalleryTheme
+      }
+    >
+      <Choices.Root
+        arrangement="tiles"
+        label="Frisuren"
+        selected="sidecut"
+        onSelect$={new Subject<string>()}
+      >
+        <Choices.Choice value="sidecut" name="Asymmetrischer Sidecut">
+          <Figure
+            presentation="artwork"
+            size="--gallery-artwork-size"
+            src={artworkSource(0, false)}
+            alt=""
+            width={240}
+            height={120}
+            priority
+          />
+          <span
+            data-testid="shortened"
+            style={{
+              display: 'inline-block',
+              maxWidth: '100%',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              verticalAlign: 'top',
+            }}
+          >
+            Asymmetrischer Sidecut
+          </span>
+        </Choices.Choice>
+        <Choices.Choice value="bob">
+          <Figure
+            presentation="artwork"
+            size="--gallery-artwork-size"
+            src={artworkSource(1, false)}
+            alt=""
+            width={120}
+            height={240}
+            priority
+          />
+          Bob
+        </Choices.Choice>
+      </Choices.Root>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const group = within(canvasElement).getByRole('radiogroup');
+    const tile = within(group).getByRole('radio', {
+      name: 'Asymmetrischer Sidecut',
+    });
+    const shortened = within(canvasElement).getByTestId('shortened');
+    const cell = tile.querySelector('[data-choice-name]');
+    if (!cell) throw new Error('The tile needs its name cell');
+    const cellBox = cell.getBoundingClientRect();
+    const box = shortened.getBoundingClientRect();
+    await expect(shortened.scrollWidth).toBeGreaterThan(shortened.clientWidth);
+    await expect(box.left).toBeGreaterThanOrEqual(cellBox.left - 0.5);
+    await expect(box.right).toBeLessThanOrEqual(cellBox.right + 0.5);
+    canvasElement.dataset.tileMeasurements = JSON.stringify(
+      tileGeometry(group),
+    );
+    canvasElement.dataset.tilePlay = 'passed';
+  },
+};
+
+export const CaptionOnlyInTiles: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Only tiles set names as centred, hyphenating `small` captions; the other arrangements keep `body` names that wrap anywhere.',
+      },
+    },
+  },
+  render: () => (
+    <div lang="de" style={{ width: 684, maxWidth: '100%' }}>
+      {(['vertical', 'wrapping', 'columns', 'tiles'] as const).map(
+        (arrangement) => (
+          <Choices.Root
+            key={arrangement}
+            arrangement={arrangement}
+            label={arrangement}
+            selected="sidecut"
+            onSelect$={new Subject<string>()}
+          >
+            <Choices.Choice value="sidecut">
+              Asymmetrischer Sidecut
+            </Choices.Choice>
+            <Choices.Choice value="dutt">Hoher Dutt</Choices.Choice>
+          </Choices.Root>
+        ),
+      )}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const measurements: Record<string, string[]> = {};
+    for (const arrangement of ['vertical', 'wrapping', 'columns', 'tiles']) {
+      const group = within(canvasElement).getByRole('radiogroup', {
+        name: arrangement,
+      });
+      for (const choice of within(group).getAllByRole('radio')) {
+        const label = choice.querySelector('[data-choice-label]');
+        const name = choice.querySelector('[data-choice-name]') ?? label;
+        if (!name) throw new Error('Every choice needs its name');
+        const style = getComputedStyle(name);
+        measurements[arrangement] = [
+          ...(measurements[arrangement] ?? []),
+          `${style.fontSize} ${style.hyphens} ${style.textAlign}`,
+        ];
+        if (arrangement === 'tiles') {
+          await expect(parseFloat(style.fontSize)).toBe(
+            rolePixels('--text-small'),
+          );
+          await expect(style.hyphens).toBe('auto');
+          await expect(style.textAlign).toBe('center');
+        } else {
+          await expect(parseFloat(style.fontSize)).toBe(
+            rolePixels('--text-body'),
+          );
+          await expect(style.hyphens).toBe('manual');
+          await expect(style.overflowWrap).toBe('anywhere');
+        }
+      }
+    }
     canvasElement.dataset.tileMeasurements = JSON.stringify(measurements);
     canvasElement.dataset.tilePlay = 'passed';
   },

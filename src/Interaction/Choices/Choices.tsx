@@ -22,13 +22,18 @@ const choicesGroup = cva('min-w-0 gap-[var(--space-stack)]', {
         'grid items-start grid-cols-[repeat(auto-fill,minmax(min(100%,var(--choice-column-min-width)),1fr))]',
         '[&>[role=radio][aria-checked=false]]:border-transparent',
       ].join(' '),
+      // A marker-wide gutter on both inline sides of the image row: the marker takes the end
+      // corner, the image stays centred between them and can never sit under the marker. The
+      // name and description span the full content width beneath, as a centred `small` caption
+      // that hyphenates by the `lang` in effect and breaks a word only when nothing else fits.
       tiles: [
         'grid grid-cols-[repeat(auto-fill,minmax(min(100%,var(--choice-tile-min-width)),1fr))]',
-        '[&>[role=radio]]:grid [&>[role=radio]]:grid-cols-[var(--choice-marker-size)_minmax(0,1fr)] [&>[role=radio]]:content-start [&>[role=radio]]:gap-y-2',
+        '[&>[role=radio]]:grid [&>[role=radio]]:grid-cols-[var(--choice-marker-size)_minmax(0,1fr)_var(--choice-marker-size)] [&>[role=radio]]:content-start [&>[role=radio]]:gap-x-0 [&>[role=radio]]:gap-y-2',
+        '[&_[data-choice-marker]]:col-start-3 [&_[data-choice-marker]]:row-start-1 [&_[data-choice-marker]]:mt-0',
         '[&_[data-choice-content]]:contents [&_[data-choice-label]]:contents',
-        '[&_[data-choice-label]>img]:order-first [&_[data-choice-label]>img]:col-span-2 [&_[data-choice-label]>img]:justify-self-center',
-        '[&_[data-choice-name]]:col-start-2 [&_[data-choice-name]]:min-w-0',
-        '[&_[data-choice-description]]:col-start-2',
+        '[&_[data-choice-label]>img]:col-start-2 [&_[data-choice-label]>img]:row-start-1 [&_[data-choice-label]>img]:justify-self-center',
+        '[&_[data-choice-name]]:col-span-full [&_[data-choice-name]]:min-w-0 [&_[data-choice-name]]:text-center [&_[data-choice-name]]:text-small [&_[data-choice-name]]:hyphens-auto [&_[data-choice-name]]:wrap-break-word',
+        '[&_[data-choice-description]]:col-span-full [&_[data-choice-description]]:text-center',
       ].join(' '),
     },
   },
@@ -116,8 +121,9 @@ const tileLabel = (children: ReactNode): ReactNode => {
 
 export interface IChoicesRootProps extends VariantProps<typeof choicesGroup> {
   /** Full-width vertical rows by default; wrapping uses content-sized rows. Columns shares equal
-   *  columns of quiet rows; tiles puts each image above its marker/name row. Column counts follow
-   *  available width and independent themed minimum widths; arrows keep declared order. */
+   *  columns of quiet rows; tiles puts each image above its centred name, the marker in the tile's
+   *  corner. Column counts follow available width and independent themed minimum widths; arrows
+   *  keep declared order. */
   arrangement?: VariantProps<typeof choicesGroup>['arrangement'];
   /** The key of the selected choice. Must name a declared choice; the consumer owns it. */
   selected: string;
@@ -248,8 +254,9 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
       <span data-choice-content className={'flex min-w-0 flex-col'}>
         {/* Name and description each declare `font-secondary` on themselves, never on the button
             above - the wrapper would hand the labelling face to a future slot too (docs/adr/0004).
-            The name reads `body`, the field-label precedent from Input (#92); inert mutes its ink
-            the way Sidebar's inert entry and a disabled Input do. */}
+            The name reads `body`, the field-label precedent from Input (#92), except as a tile
+            caption, which the tiles recipe sets `small`; inert mutes its ink the way Sidebar's
+            inert entry and a disabled Input do. */}
         <span
           id={nameId}
           data-choice-label
@@ -301,10 +308,15 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
  * - `columns` shares equal-width columns using `--choice-column-min-width`, preserving vertical
  *   row anatomy and height. Only its unselected row boundaries are transparent; the marker keeps
  *   its `controlBorder` box and the selected row its dot and `foreground` boundary at fixed thickness.
- * - `tiles` shares equal-width columns using the independent `--choice-tile-min-width`. Each
- *   image sits above the marker/name row without a reserved band above it; text-only tiles keep
- *   the column width. Both grids fit one column below their minimum; long names wrap and selection
- *   changes no geometry. Artwork remains uncropped.
+ * - `tiles` shares equal-width columns using the independent `--choice-tile-min-width`. The
+ *   marker sits in the tile's top inline-end corner, and the image row keeps a marker-wide gutter
+ *   on both inline sides, so the image is centred and never under the marker. The name spans the
+ *   tile's content width beneath, centred, at the `small` role; it hyphenates by the `lang` in
+ *   effect, breaks a word anywhere only when nothing else fits, and is never truncated or clamped.
+ *   Text-only tiles keep the column width. Both grids fit one column below their minimum, and
+ *   selection changes no geometry. Artwork remains uncropped.
+ * - `vertical`, `wrapping` and `columns` set names at `body` beside the marker, wrapping anywhere
+ *   without hyphenation.
  * - Arrow order is declared order even across visual line breaks, never spatial row navigation.
  *
  * @CallerMustEnsure — the component cannot see these and does not check them
@@ -314,8 +326,14 @@ const ChoicesChoice: FunctionComponent<IChoicesChoiceProps> = ({
  *   or focusable, since the row is the control. All content must be phrasing content valid inside
  *   a button. Figure artwork without caption or overlay renders an img and is the intended source.
  * - Declare `--choice-column-min-width` and `--choice-tile-min-width` as positive definite CSS
- *   lengths. Ensure fixed artwork fits the tile's content width (including below the minimum);
- *   artwork retains its own size/contain contract and is never cropped by Choices.
+ *   lengths. Ensure fixed artwork fits the tile's content width less two `--choice-marker-size`
+ *   gutters (including below the minimum); artwork retains its own size/contain contract and is
+ *   never cropped by Choices.
+ * - Set the correct `lang` on the page or an ancestor of a `tiles` group: tile names hyphenate by
+ *   it, and without it a long word can only break at an arbitrary letter.
+ * - Shortening a tile name is the consumer's decision: content that sizes or shortens itself does
+ *   so within the name cell's width. A label shortened visibly must still name the option in full
+ *   through `name`.
  * - Choice rows are direct children of `Root` (arrays and fragments are supported), each `value`
  *   unique and stable, and `selected` names a declared row. Invalid input is a contract violation,
  *   not a request for a fallback.
